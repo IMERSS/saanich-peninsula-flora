@@ -5,6 +5,18 @@ table {
     display: table !important;
 }
 
+/** Override another insane tailwind default */
+img,
+svg,
+video,
+canvas,
+audio,
+iframe,
+embed,
+object {
+    display: inline-block;
+}
+
 :root {
     --bs-body-font-family: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     /** This only controls the bizarre height calculation for the page **/

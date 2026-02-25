@@ -38,7 +38,7 @@ sf::sf_use_s2(FALSE)
 
 rawObs <- timedFread(obsFile)
 
-filteredObs <- rawObs %>% filter(!is.na(genus) & !is.na(decimalLatitude) & !is.na(decimalLongitude) & !is.na(day))
+filteredObs <- rawObs %>% filter(!is.na(genus) & !is.na(decimalLatitude) & !is.na(decimalLongitude) & !is.na(day) & iNaturalistTaxonId != 0)
 
 filteredObs.sf <- st_as_sf(filteredObs, coords = c("decimalLongitude", "decimalLatitude"), crs=4326) # CRS is WGS:1984
 

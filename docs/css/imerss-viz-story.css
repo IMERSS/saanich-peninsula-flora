@@ -105,15 +105,6 @@
     display: flex;
 }
 
-:root {
-    /* Definition taken from xetthecum-shared.css which is no longer included */
-    --imerss-eco-colour: #DEE0B0;
-}
-
-.imerss-checklist-holder {
-    background: var(--imerss-eco-colour);
-}
-
 .imerss-map-and-taxa {
     flex-direction: row;
     max-height: inherit;

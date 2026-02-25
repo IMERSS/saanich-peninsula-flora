@@ -166,7 +166,7 @@ wg <- function (...) {
   line <- paste(sapply(args, str_glue, .envir = parent.frame()), collapse = "")
 
   # Output the result using writeLines
-  writeLines(line)
+  message(line)
 }
 
 #' Execute a JavaScript file using Node.js

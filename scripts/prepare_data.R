@@ -1,0 +1,14 @@
+library(dplyr)
+library(stringr)
+library(sf)
+
+source("scripts/utils.R")
+
+assignedTaxa <- timedFread("tabular_data/Howe_Sound_vascular_plant_records_consolidated_2024-11-assigned-taxa.csv")
+summary <- timedFread("tabular_data/vascular_plant_summary_resynthesized_2024-11-14.csv")
+summary$inSummary = 1
+
+merged <- assignedTaxa %>%
+  full_join(summary %>% select(-commonName), by = c("id" = "ID"))
+
+timedWrite(merged, "outputs/Howe_Sound_vascular_plant_records_consolidated_2024-11-prepared-taxa.csv")

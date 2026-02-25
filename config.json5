@@ -1,9 +1,53 @@
 {
     reknitJobs: [{
         infiles: "%self/content/story/*.html",
+        outputType: "hugoPartial",
         outfile: "%self/layouts/story/single.html",
+        template: "%self/src/html/template.html",
         options: {
-            template: "%self/src/html/template.html",
+            storyPageOptions: {
+                gradeNames: "reknitr.storyPage.withVizLoader",
+                gridResolution: 1000,
+                selectableRegions: [],
+                selectors: {
+                    /** This one is used for toggling **/
+                    mapHolder: ".mxcw-map"
+                }
+            },
+
+            components: {
+                vizLoader: {
+                    /** Paths relative to docs/story */
+                    obsFile: "../data/tabular/Howe_Sound_vascular_plant_records_consolidated_2024-11-labels.csv",
+                    taxaFile: "../data/tabular/Howe_Sound_vascular_plant_records_consolidated_2024-11-prepared-taxa.csv",
+                    regionIndirectionFile: "../data/tabular/Howe_Sound_vascular_plant_records_consolidated_2024-11-regionIndirection.csv"
+                }
+            },
+            paneHandlers: {
+                Vascular_BEC: {
+                    type: "reknitr.paneHandler"
+                },
+                History: {
+                    type: "reknitr.paneHandler",
+                    widgets: {
+                        speciesPlot: {
+                            type: "reknitr.choroplethSlider",
+                            gradeNames: ["reknitr.withSliderAnimation", "reknitr.withResizableWidth"]
+                        }
+                    }
+                },
+                Status: {
+                    type: "reknitr.paneHandler",
+                    widgets: {
+                        reportingStatus: {
+                            type: "reknitr.regionSelectionBar"
+                            // Expects .imerss-checklist-widgets, query design later
+                            // gradeNames: "reknitr.regionSelectionBar.withHoist"
+                        }
+                    }
+                }
+            }
+            /*
             paneHandlers: {
                 Vascular: {
                     type: "reknitr.scrollyPaneHandler",
@@ -68,24 +112,45 @@
                     }
                 }
             }
+            */
         }
     }],
-    copyJobs: [{
-        source: "%infusion/dist/infusion-framework.js",
-        target: "%self/docs/js/infusion-framework.js",
-        replaceSource: "sourceMappingURL=infusion-framework.js.map",
-        replaceTarget: "sourceMappingURL=../../node_modules/infusion/dist/infusion-framework.js.map"
-    }, { // TODO: Extend module-relative addressing to 3rd-party modules
+    copyJobs: [{ // TODO: Extend module-relative addressing to 3rd-party modules
         source: "%self/node_modules/@imerss/inat-components/dist/standalone.min.js",
-        target: "%self/docs/js/inat-components-standalone.min.js"
+        target: "%self/static/js/inat-components-standalone.min.js"
     }, {
-        source: "%imerss-bioinfo/docs/js/imerss-viz-all.js",
-        target: "%self/docs/js/imerss-viz-all.js"
+        source: "%infusion/src/lib/jquery/core/js/jquery.js",
+        target: "%self/static/js/jquery.js"
     }, {
-        source: "%imerss-bioinfo/docs/js/imerss-viz-all.js.map",
-        target: "%self/docs/js/imerss-viz-all.js.map",
+        source: "%imerss-bioinfo/docs/js/imerss-viz-lib.js",
+        target: "%self/static/js/imerss-viz-lib.js"
+    }, {
+        source: "%imerss-bioinfo/docs/js/imerss-viz-lib.js.map",
+        target: "%self/static/js/imerss-viz-lib.js.map",
         replaceSource: "\"sourceRoot\":\"../..\"",
         replaceTarget: "\"sourceRoot\":\"../../../bagatelle/\""
+    }, {
+        source: "%imerss-bioinfo/docs/js/imerss-viz-new-core.js",
+        target: "%self/static/js/imerss-viz-new-core.js"
+    }, {
+        source: "%imerss-bioinfo/docs/js/imerss-viz-new-core.js.map",
+        target: "%self/static/js/imerss-viz-new-core.js.map",
+        replaceSource: "\"sourceRoot\":\"../..\"",
+        replaceTarget: "\"sourceRoot\":\"../../../bagatelle/\""
+    }, {
+        source: "%imerss-bioinfo/docs/js/imerss-viz-new.js",
+        target: "%self/static/js/imerss-viz-new.js"
+    }, {
+        source: "%imerss-bioinfo/docs/js/imerss-viz-new.js.map",
+        target: "%self/static/js/imerss-viz-new.js.map",
+        replaceSource: "\"sourceRoot\":\"../..\"",
+        replaceTarget: "\"sourceRoot\":\"../../../bagatelle/\""
+    }, {
+        source: "%imerss-bioinfo/docs/js/imerss-viz.js",
+        target: "%self/static/js/imerss-viz.js"
+    }, {
+        source: "%imerss-bioinfo/docs/js/imerss-blitz.js",
+        target: "%self/static/js/imerss-blitz.js"
     }, {
         source: "%imerss-bioinfo/src/client/img/Arrow-up.svg",
         target: "%self/docs/img/Arrow-up.svg"
@@ -105,23 +170,17 @@
         source: "%self/img/12993632-large.jpeg",
         target: "%self/docs/img/12993632-large.jpeg"
     }, {
-        source: "%imerss-bioinfo/docs/css/imerss-viz-all.css",
-        target: "%self/docs/css/imerss-viz-all.css"
+        source: "%imerss-bioinfo/docs/css/imerss-viz-lib.css",
+        target: "%self/static/css/imerss-viz-lib.css"
     }, {
-        source: "%self/src/html/imerss-viz-scrolly.html",
-        target: "%self/docs/html/imerss-viz-scrolly.html"
+        source: "%imerss-bioinfo/docs/css/imerss-viz-new-core.css",
+        target: "%self/static/css/imerss-viz-new-core.css"
     }, {
-        source: "%self/src/html/pane-info.html",
-        target: "%self/docs/html/pane-info.html"
+        source: "%imerss-bioinfo/docs/css/imerss-viz-new.css",
+        target: "%self/static/css/imerss-viz-new.css"
     }, {
-        source: "%self/viz_data/howePhyloMap.json",
-        target: "%self/docs/json/howePhyloMap.json"
-    }, {
-        source: "%self/viz_data/Howe-Sound-Scrolly-Life-Vascular-2025.json.lz4",
-        target: "%self/docs/data/Howe-Sound-Scrolly-Life-Vascular-2025.json.lz4"
-    }, {
-        source: "%self/viz_data/Howe-Sound-Scrolly-Life-Status-2025.json.lz4",
-        target: "%self/docs/data/Howe-Sound-Scrolly-Life-Status-2025.json.lz4"
+        source: "%imerss-bioinfo/docs/css/imerss-blitz.css",
+        target: "%self/static/css/imerss-blitz.css"
     }, {
         source: "%self/outputs",
         target: "%self/docs/data/tabular"

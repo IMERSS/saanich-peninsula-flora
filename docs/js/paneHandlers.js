@@ -3,10 +3,10 @@
 /* global inatComponents */
 
 // noinspection ES6ConvertVarToLetConst // otherwise this is a duplicate on minifying
-var maxwell = fluid.registerNamespace("maxwell");
+var reknitr = fluid.registerNamespace("reknitr");
 
-fluid.defaults("maxwell.iNatComponentsPaneHandler", {
-    gradeNames: ["maxwell.scrollyPaneHandler", "maxwell.templateScrollyPaneHandler"],
+fluid.defaults("reknitr.iNatComponentsPaneHandler", {
+    gradeNames: ["reknitr.scrollyPaneHandler", "reknitr.templateScrollyPaneHandler"],
     taxonId: null,
     taxonName: null,
     containerId: "inat-components",
@@ -59,18 +59,18 @@ fluid.defaults("maxwell.iNatComponentsPaneHandler", {
         }
     },
     listeners: {
-        "onCreate.instantiate" : "maxwell.instantiateINat({that}.options.containerId, {that}.options.iNatOptions, {that}.options.taxonName)"
+        "onCreate.instantiate" : "reknitr.instantiateINat({that}.options.containerId, {that}.options.iNatOptions, {that}.options.taxonName)"
     },
     modelListeners: {
         paneVisible: {
             path: "{paneHandler}.model.isVisible",
-            func: "maxwell.toggleClass",
+            func: "reknitr.toggleClass",
             args: ["{scrollyLeafletMap}.container.0", "{change}.value", "mxcw-hideMap", true]
         }
     }
 });
 
-maxwell.instantiateINat = function (containerId, iNatOptions, taxonName) {
+reknitr.instantiateINat = function (containerId, iNatOptions, taxonName) {
     const toSubs = ["features.0.desc", "features.1.desc", "features.2.desc"];
 
     const target = fluid.copy(iNatOptions);

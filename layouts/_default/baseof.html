@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="{{ .Site.Language.Lang }}">
   {{- partial "head.html" . -}}
-  {{- partial "imerss-aux.html" . -}}
   <body dir="{{ .Site.Language.LanguageDirection | default `ltr` }}">
     {{- partial "navbar.html" . -}}
     <div class="imerss-main">
-      <div class="imerss-map">
+      <div class="mxcw-map fld-imerss-nodismiss-map">
       </div>
       <div class="imerss-page">
     {{ partial "subnav.html" . }}

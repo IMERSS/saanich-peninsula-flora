@@ -4,20 +4,16 @@ weight: 1
 knit: (function(input, ...) { source(here::here("R/knit_render.R"), local = TRUE)$value(input, ...) })
 ---
 
-```{r, echo=FALSE, warning=FALSE}
-options(error = rlang::entrace, rlang_backtrace_on_error = "full")
-library(tidyverse)
-message(getwd())
-plants <- read.csv("tabular_data/Howe_Sound_vascular_plant_records_consolidated_2024-11-14.csv")
-plant.summary <- read.csv("tabular_data/vascular_plant_summary_resynthesized_2024-11-14.csv")
-new <- plant.summary %>% filter(str_detect(reportingStatus, "new")) 
-confirmed <- plant.summary %>% filter(reportingStatus == 'confirmed') 
-reported <- plant.summary %>% filter(reportingStatus == 'reported') 
-observed <- plant.summary %>% filter(iNatObservationStatus == 'observed') 
-```
-Over one thousand vascular plant species are known to occur within the ?tl??a7tsem/Howe Sound Biosphere, represented by `r nrow(plants)` occurrence records. This diverse flora spans nine biogeoclimatic units, from lowland coastal western hemlock forests and associated woodland communities to high elevation subalpine and alpine plant communities.
+## Howe Sound's vascular plant diversity
 
-```{r, echo = FALSE, message=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+plants <- read.csv("tabular_data/Howe_Sound_vascular_plant_records_consolidated_2024-11-labels.csv")
+```
+Over one thousand vascular plant species are known to occur within the Átl’ḵa7tsem/Howe Sound Biosphere, represented
+by `r nrow(plants)` occurrence records. This diverse flora spans nine biogeoclimatic units, from lowland coastal
+western hemlock forests and associated woodland communities to high elevation subalpine and alpine plant communities.
+
+```{r, echo = FALSE, message=FALSE, warning=FALSE}
 source("scripts/Vascular_BEC_map_mapbox.R")
 speciesMap
 ```

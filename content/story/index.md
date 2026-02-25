@@ -1,4 +1,4 @@
 ---
 title: Story page
-type: taxon
+type: story
 ---

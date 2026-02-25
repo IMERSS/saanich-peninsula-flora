@@ -1,4 +1,16 @@
-#map-svg {
+#inline-svg {
     height: 0px;
     position: absolute;
+}
+
+.mxcw-sectionColumn {
+    width: 100%;
+}
+
+.imerss-filter-panel {
+    width: 100%;
+}
+
+.imerss-filters {
+    height: auto;
 }

@@ -6,6 +6,7 @@ const fs = require("fs-extra"),
     glob = require("glob"),
     path = require("path"),
     linkedom = require("linkedom"),
+    yaml = require("js-yaml"),
     fluid = require("infusion");
 
 const reknitr = fluid.registerNamespace("reknitr");
@@ -22,6 +23,11 @@ reknitr.parseDocument = function (path) {
     const resolved = fluid.module.resolvePath(path);
     const text = fs.readFileSync(resolved, "utf8");
     return linkedom.parseHTML(text).document;
+};
+
+reknitr.parseYAMLFrontMatter = function (content) {
+    const match = content.match(/^---\n([\s\S]*?)\n---/);
+    return match ? yaml.load(match[1]) : {};
 };
 
 reknitr.writeFile = function (filename, data) {
@@ -231,6 +237,10 @@ reknitr.encloseSections = function (container, vizColumn) {
             inner.appendChild(vizColumn);
         }
     });
+    const header = container.querySelector("#header");
+    if (header) {
+        header.remove();
+    }
 };
 
 reknitr.transferNodeContent = function (container, template, selector) {
@@ -253,17 +263,54 @@ reknitr.integratePaneHandler = function (paneHandler, key) {
     return {...paneHandler, ...toMerge};
 };
 
-reknitr.reknitFiles = async function (infiles, outfile, options) {
+reknitr.unflattenOptions = function (records) {
+    return fluid.transform(records, record => ({
+        type: record.type,
+        options: fluid.censorKeys(record, ["type"])
+    }));
+};
 
-    const template = reknitr.parseDocument(fluid.module.resolvePath(options.template));
-    const target = template.querySelector(".mxcw-content");
+reknitr.sortedMatterForFiles = function (resolvedFiles) {
+    const fileEntries = resolvedFiles.map(htmlfile => {
+        const rmdFile = htmlfile.replace(/\.[^.]+$/, ".Rmd");
+        const rmdContent = fs.readFileSync(rmdFile, "utf8");
+        const frontMatter = reknitr.parseYAMLFrontMatter(rmdContent);
+        return { htmlfile, frontMatter };
+    });
+
+    fileEntries.sort((a, b) => {
+        const weightA = parseFloat(a.frontMatter.weight) || 0;
+        const weightB = parseFloat(b.frontMatter.weight) || 0;
+        return weightA - weightB;
+    });
+    return fileEntries;
+};
+
+reknitr.outputTypes = {
+    fullDoc: {
+        pre: "<!DOCTYPE html>\n",
+        post: ""
+    },
+    hugoPartial: {
+        pre: "{{ define \"main\" }}\n",
+        post: "{{ end }}"
+    }
+};
+
+reknitr.reknitFiles = async function (rec) {
+    const {infiles, outfile, template, options} = rec;
+
+    const templateDoc = reknitr.parseDocument(fluid.module.resolvePath(template));
+    const target = templateDoc.querySelector(".mxcw-content");
     // reknitr.movePlotlyWidgets(template, sections, container);
 
     const parseResults = reknitr.makeMapboxParseResults();
     const resolvedFiles = glob.sync(fluid.module.resolvePath(infiles));
 
-    resolvedFiles.forEach(infile => {
-        const document = reknitr.parseDocument(infile);
+    const fileEntries = reknitr.sortedMatterForFiles(resolvedFiles);
+
+    fileEntries.forEach(({htmlfile}) => {
+        const document = reknitr.parseDocument(htmlfile);
         const container = document.querySelector(".main-container");
         // TODO: Maybe do transforms here
 
@@ -290,13 +337,18 @@ reknitr.reknitFiles = async function (infiles, outfile, options) {
             const unflattened = reknitr.unflattenOptions(options.components);
             storyPageOptions.components = unflattened;
         }
-        // const storyPageLinkage = reknitr.makeRootLinkage("reknitr.storyPage", storyPageOptions);
-        const scriptNode = template.createElement("script");
-        scriptNode.innerHTML = mapboxDataVar + rawPaneHandlers;
-        const head = template.querySelector("head");
-        head.appendChild(scriptNode);
+        const dataScriptNode = templateDoc.createElement("script");
+        dataScriptNode.innerHTML = mapboxDataVar + rawPaneHandlers;
+
+        const initScriptNode = templateDoc.querySelector(".reknitr-initBlock");
+        // TODO: See if any signature was really supplied - but in practice this should just all be set from the config if necessary
+        const text = `reknitr.storyPage("body", ${JSON.stringify(storyPageOptions, null, 2)})\n`;
+        initScriptNode.innerHTML = text;
+
+        initScriptNode.parentNode.insertBefore(dataScriptNode, initScriptNode);
     }
-    const outMarkup = "<!DOCTYPE html>" + template.documentElement.outerHTML;
+    const outputType = rec.outputType || "fullDoc";
+    const outMarkup = reknitr.outputTypes[outputType].pre + templateDoc.documentElement.outerHTML + reknitr.outputTypes[outputType].post;
     reknitr.writeFile(fluid.module.resolvePath(outfile), outMarkup);
 };
 
@@ -358,7 +410,7 @@ const clearNonMedia = function () {
 
 const reknit = async function () {
     const config = fluid.loadJSON5File("%self/config.json5");
-    await fluid.asyncForEach(config.reknitJobs, async (rec) => reknitr.reknitFiles(rec.infiles, rec.outfile, rec.options, config));
+    await fluid.asyncForEach(config.reknitJobs, async (rec) => reknitr.reknitFiles(rec));
 
     config.copyJobs.forEach(function (dep) {
         copyDep(dep.source, dep.target, dep.replaceSource, dep.replaceTarget);

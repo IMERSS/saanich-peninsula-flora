@@ -1,0 +1,25 @@
+---
+title: Community Science Contributions
+weight: 3
+knit: (function(input, ...) { source(here::here("R/knit_render.R"), local = TRUE)$value(input, ...) })
+---
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+options(error = rlang::entrace, rlang_backtrace_on_error = "full")
+library(tidyverse)
+plants <- read.csv("tabular_data/Howe_Sound_vascular_plant_records_consolidated_2024-11-labels.csv")
+plant.summary <- read.csv("tabular_data/vascular_plant_summary_resynthesized_2024-11-14.csv")
+new <- plant.summary %>% filter(str_detect(reportingStatus, "new")) 
+confirmed <- plant.summary %>% filter(reportingStatus == 'confirmed') 
+reported <- plant.summary %>% filter(reportingStatus == 'reported') 
+observed <- plant.summary %>% filter(iNatObservationStatus == 'observed') 
+```
+
+## Community science contributions
+
+Through the combined efforts of `r length(unique(plants$recordedBy))` individuals, the Átl’ḵa7tsem/Howe Sound naturalist community has now documented a total of `r nrow(plant.summary)` vascular plant species. Based on search efforts over the last decade, `r round((nrow(confirmed)/(nrow(confirmed)+nrow(reported))*100), digits = 0)` percent of the historically reported plant diversity has been confirmed and `r nrow(new)` new species reports added to the list. Community members have now documented `r round((nrow(observed)/(nrow(plant.summary))*100), digits = 0)` percent of the plant diversity known to the region on iNaturalist.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+source("scripts/Community_science_contributions_mapbox.R")
+reportingStatusMap
+reportingStatusFig

@@ -43,7 +43,8 @@ h2 {
 .mxcw-container {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 8rem)
+    height: calc(100vh - 15rem);
+    padding: 0 1.5rem;
 }
 
 .mxcw-container ::-webkit-scrollbar {
@@ -67,9 +68,11 @@ h2 {
     overflow: hidden;
 }
 
+/*
 .main-container {
     height: 100%;
 }
+ */
 
 .section.level2 {
     height: 100%;
@@ -197,13 +200,14 @@ h2 {
 }
 
 .mxcw-map {
-    height: 100%;
+    /*height: 100%; */
     min-height: 0;
-    width: 100%;
+    width: 60%;
     min-width: auto;
     transition-property: height;
     margin: 0px auto;
     overflow: hidden;
+    z-index: 5;
 
     /** Somehow this works when hiding but not when showing */
     transition-duration: 800ms;
