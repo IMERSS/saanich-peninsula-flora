@@ -9,8 +9,13 @@
 
 .imerss-filter-panel {
     width: 100%;
+    min-height: 0;
 }
 
 .imerss-filters {
     height: auto;
+}
+
+.imerss-checklist-holder {
+    padding-top: 0;
 }

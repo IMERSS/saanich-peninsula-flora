@@ -26,12 +26,17 @@ year <- cumulative.history$year
 
 # Plot analysis of historical collection activities
 
-speciesPlot <- plot_ly(width = 700, height = 420)
+speciesPlot <- plot_ly(height = 240)
 
 speciesPlot <- speciesPlot %>%
-      layout(title="Vascular plant species recorded in Átl’ḵa7tsem/Howe Sound 1890-2024", showlegend = FALSE,
-      xaxis = list(title="Year", range = c(1900, 2024)),
-      yaxis = list(title='Reported Species', range=c(0, max(cumulative.history$cum.spp)))
+      layout(
+        title = list(
+          text = "Vascular plant species recorded in Átl'ḵa7tsem/Howe Sound 1890-2024",
+          font = list(size = 14)
+        ),
+        showlegend = FALSE,
+        xaxis = list(title="Year", range = c(1900, 2024)),
+        yaxis = list(title='Reported Species', range=c(0, max(cumulative.history$cum.spp)))
       )
 
 steps <- list()
@@ -63,7 +68,7 @@ speciesPlot
 # Load map layers
 # Layer 1: hillshade raster
 hillshade.source <- geotiff_to_mapbox_source("spatial_data/rasters/Hillshade_80m.tif", id="Hillshade")
-hillshade.feature <- list(type = "raster", source = "Hillshade", rasterOpacity = 0.8, paint = spectral_raster_color_paint())
+hillshade.feature <- list(type = "raster", source = "Hillshade", rasterOpacity = 0.8, paint = spectral_raster_color_paint(), Z_Order = 0.75)
 
 # Layer 2: coastline
 coastline <- mx_read("spatial_data/vectors/Islands_and_Mainland")

@@ -1,0 +1,186 @@
+{
+  "id": "Vascular_BEC",
+  "view": {
+    "type": "view",
+    "lon": -123.2194,
+    "lat": 49.6608,
+    "zoom": 8.5
+  },
+  "layers": [
+    {
+      "id": "plotly-carto-positron",
+      "type": "raster",
+      "source": "plotly-carto-positron",
+      "minzoom": 0,
+      "maxzoom": 22,
+      "metadata": {
+        "sortKey": 0.5
+      }
+    },
+    {
+      "type": "raster",
+      "id": "Hillshade",
+      "source": "Hillshade",
+      "paint": {
+        "raster-opacity": 0.8
+      },
+      "metadata": {
+        "sortKey": 0.75
+      }
+    },
+    {
+      "type": "fill",
+      "id": "CWHxm1",
+      "source": "CWHxm1",
+      "label": "Eastern Very Dry Maritime Coastal Western Hemlock Zone",
+      "paint": {
+        "fill-color": "#440154",
+        "fill-opacity": 0.6
+      },
+      "metadata": {
+        "sortKey": 3,
+        "selectable": true
+      }
+    },
+    {
+      "type": "fill",
+      "id": "CWHdm",
+      "source": "CWHdm",
+      "label": "Dry Maritime Coastal Western Hemlock Zone",
+      "paint": {
+        "fill-color": "#472D7B",
+        "fill-opacity": 0.6
+      },
+      "metadata": {
+        "sortKey": 4,
+        "selectable": true
+      }
+    },
+    {
+      "type": "fill",
+      "id": "CWHvm2",
+      "source": "CWHvm2",
+      "label": "Montane Very Wet Maritime Coastal Western Hemlock Zone",
+      "paint": {
+        "fill-color": "#3B528B",
+        "fill-opacity": 0.6
+      },
+      "metadata": {
+        "sortKey": 5,
+        "selectable": true
+      }
+    },
+    {
+      "type": "fill",
+      "id": "CWHvm1",
+      "source": "CWHvm1",
+      "label": "Submontane Very Wet Maritime Coastal Western Hemlock Zone",
+      "paint": {
+        "fill-color": "#2C728E",
+        "fill-opacity": 0.6
+      },
+      "metadata": {
+        "sortKey": 6,
+        "selectable": true
+      }
+    },
+    {
+      "type": "fill",
+      "id": "CWHds1",
+      "source": "CWHds1",
+      "label": "Southern Dry Submaritime Coastal Western Hemlock Zone",
+      "paint": {
+        "fill-color": "#21908C",
+        "fill-opacity": 0.6
+      },
+      "metadata": {
+        "sortKey": 7,
+        "selectable": true
+      }
+    },
+    {
+      "type": "fill",
+      "id": "CWHms1",
+      "source": "CWHms1",
+      "label": "Southern Moist Submaritime Coastal Western Hemlock Zone",
+      "paint": {
+        "fill-color": "#27AD81",
+        "fill-opacity": 0.6
+      },
+      "metadata": {
+        "sortKey": 8,
+        "selectable": true
+      }
+    },
+    {
+      "type": "fill",
+      "id": "MHmm1",
+      "source": "MHmm1",
+      "label": "Windward Moist Maritime Mountain Hemlock Zone",
+      "paint": {
+        "fill-color": "#5DC863",
+        "fill-opacity": 0.6
+      },
+      "metadata": {
+        "sortKey": 9,
+        "selectable": true
+      }
+    },
+    {
+      "type": "fill",
+      "id": "MHmm2",
+      "source": "MHmm2",
+      "label": "Leeward Moist Maritime Mountain Hemlock Zone",
+      "paint": {
+        "fill-color": "#AADC32",
+        "fill-opacity": 0.6
+      },
+      "metadata": {
+        "sortKey": 10,
+        "selectable": true
+      }
+    },
+    {
+      "type": "fill",
+      "id": "CMAunp",
+      "source": "CMAunp",
+      "label": "Coastal Mountain Heather Alpine Zone",
+      "paint": {
+        "fill-color": "#FDE725",
+        "fill-opacity": 0.6
+      },
+      "metadata": {
+        "sortKey": 11,
+        "selectable": true
+      }
+    },
+    {
+      "type": "line",
+      "id": "Coastline-outline",
+      "source": "Coastline",
+      "paint": {
+        "line-color": "black",
+        "line-width": 1.5,
+        "line-opacity": 1
+      },
+      "metadata": {
+        "sortKey": 12.5
+      }
+    },
+    {
+      "type": "line",
+      "id": "Watershed.Boundary-outline",
+      "source": "Watershed.Boundary",
+      "paint": {
+        "line-color": "black",
+        "line-width": 4,
+        "line-opacity": 1
+      },
+      "metadata": {
+        "sortKey": 13.5
+      }
+    }
+  ],
+  "highlightedSources": {},
+  "regionField": "BEC"
+}

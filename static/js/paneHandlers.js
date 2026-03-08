@@ -6,7 +6,7 @@
 var reknitr = fluid.registerNamespace("reknitr");
 
 fluid.defaults("reknitr.iNatComponentsPaneHandler", {
-    gradeNames: ["reknitr.scrollyPaneHandler", "reknitr.templateScrollyPaneHandler"],
+    gradeNames: ["reknitr.paneHandler", "reknitr.templatePaneHandler", "reknitr.mapHidingPaneHandler"],
     taxonId: null,
     taxonName: null,
     containerId: "inat-components",
@@ -59,18 +59,16 @@ fluid.defaults("reknitr.iNatComponentsPaneHandler", {
         }
     },
     listeners: {
-        "onCreate.instantiate" : "reknitr.instantiateINat({that}.options.containerId, {that}.options.iNatOptions, {that}.options.taxonName)"
-    },
-    modelListeners: {
-        paneVisible: {
-            path: "{paneHandler}.model.isVisible",
-            func: "reknitr.toggleClass",
-            args: ["{scrollyLeafletMap}.container.0", "{change}.value", "mxcw-hideMap", true]
-        }
+        "onCreate.instantiate" : "reknitr.instantiateINat({storyPage}, {that}, {that}.options.containerId, {that}.options.iNatOptions, {that}.options.taxonName)"
     }
 });
 
-reknitr.instantiateINat = function (containerId, iNatOptions, taxonName) {
+reknitr.instantiateINat = function (storyPage, paneHandler, containerId, iNatOptions, taxonName) {
+    const dataPane = storyPage.dataPanes[paneHandler.options.paneIndex];
+    // Shift our container into corresponding dataPane
+    const container = paneHandler.container[0];
+    dataPane.appendChild(container);
+
     const toSubs = ["features.0.desc", "features.1.desc", "features.2.desc"];
 
     const target = fluid.copy(iNatOptions);
@@ -82,19 +80,3 @@ reknitr.instantiateINat = function (containerId, iNatOptions, taxonName) {
     });
     inatComponents.initTaxonPanel(containerId, target);
 };
-
-/*
-We wanted to write
-    modelRelay: {
-        regionTextDisplay: {
-             target: "{that}.model.dom.regionDisplay.text",
-            args: ["{that}.options.markup.region", "{map}.model.mapBlockTooltipId"],
-            func: (template, selectedRegion) => fluid.stringTemplate(template, selectedRegion || "None")
-        }
-    }
-
-But got a circular model evaluation in evaluateContainers - it fires onDomBind immediately after evaluating the
-containers and the model is not done yet for some reason - why is it done usually, so that we can materialise
-against it?
-
- */

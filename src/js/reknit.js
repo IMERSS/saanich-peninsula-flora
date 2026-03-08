@@ -126,10 +126,9 @@ reknitr.parseMapboxWidgets = function (parseResults, container) {
                 const key = layer.id;
                 layerHash[key] = layer;
                 fluid.set(layersByPaneId, [paneId, key], 1);
-                const fillPattern = layer["mx-fill-pattern"];
+                const fillPattern = layer.paint?.["fill-pattern"];
                 if (fillPattern) {
                     fillPatterns[fillPattern] = 1;
-                    layer.paint["fill-pattern"] = fillPattern;
                 }
             });
             if (!rootMap) {
@@ -137,13 +136,8 @@ reknitr.parseMapboxWidgets = function (parseResults, container) {
             }
             mapWidgets[paneId] = reknitr.censorMapbox(data);
 
-            const parent = widget.parentNode;
-            // Remove original widget and data nodes from document and replace by marker span connecting DOM node to pane name
             widget.remove();
             dataNode.remove();
-            const span = parent.ownerDocument.createElement("span");
-            span.setAttribute("class", `mxcw-mapPane mxcw-paneName-${paneId}`);
-            parent.appendChild(span);
         }
     });
 
@@ -155,6 +149,7 @@ reknitr.composeRootMap = function (parseResults) {
     const rootMap = {}; // originally took from first map encountered
     const layers = Object.values(layerHash);
     reknitr.sortLayers(layers);
+    fluid.set(rootMap, "x.layout.mapbox.style.version", 8);
     fluid.set(rootMap, "x.layout.mapbox.style.sources", sources);
     fluid.set(rootMap, "x.layout.mapbox.style.layers", layers);
 
@@ -212,6 +207,17 @@ reknitr.movePlotlyWidgets = function (template, sections, container) {
     return dataDivs;
 };
 
+
+// Remove "style" attributes which include hard-coded dimensions on the outer node which prevents the
+// widget being resized
+reknitr.cleansePlotlyWidgets = function (container) {
+    const plotlys = [...container.querySelectorAll(".html-widget.plotly")];
+    console.log("Found " + plotlys.length + " Plotly widgets");
+    plotlys.forEach(function (plotly) {
+        plotly.removeAttribute("style");
+    });
+};
+
 reknitr.makeCreateElement = function (dokkument) {
     return (tagName, props) => {
         const element = dokkument.createElement(tagName);
@@ -221,22 +227,21 @@ reknitr.makeCreateElement = function (dokkument) {
 };
 
 // Move all children other than the heading itself into nested "sectionInner" node to enable 2-column layout
-reknitr.encloseSections = function (container, vizColumn) {
+reknitr.encloseSection = function (container, paneKey, vizColumn) {
     const h = reknitr.makeCreateElement(container.ownerDocument);
-    const sections = [...container.querySelectorAll(".section.level2")];
-    sections.forEach(function (section) {
-        const children = [...section.childNodes].filter(node => node.tagName !== "H2");
-        const inner = h("div", {"class": "mxcw-sectionInner"});
-        section.appendChild(inner);
-        // Move to inner column - perhaps optional behaviour
-        const innerColumn = h("div", {"class": "mxcw-sectionColumn"});
-        inner.appendChild(innerColumn);
-        children.forEach(child => innerColumn.appendChild(child));
-        if (vizColumn === "right") {
-            const vizColumn = h("div", {"class": "mxcw-sectionColumn mxcw-vizColumn"});
-            inner.appendChild(vizColumn);
-        }
-    });
+    const section = container.querySelector(".section.level2");
+    section.classList.add("mxcw-paneKey-" + paneKey);
+    const children = [...section.childNodes].filter(node => node.tagName !== "H2");
+    const inner = h("div", {"class": "mxcw-sectionInner"});
+    section.appendChild(inner);
+    // Move to inner column - perhaps optional behaviour
+    const innerColumn = h("div", {"class": "mxcw-sectionColumn"});
+    inner.appendChild(innerColumn);
+    children.forEach(child => innerColumn.appendChild(child));
+    if (vizColumn === "right") {
+        const vizColumn = h("div", {"class": "mxcw-sectionColumn mxcw-vizColumn"});
+        inner.appendChild(vizColumn);
+    }
     const header = container.querySelector("#header");
     if (header) {
         header.remove();
@@ -250,17 +255,20 @@ reknitr.transferNodeContent = function (container, template, selector) {
     containerNode.remove();
 };
 
-reknitr.integratePaneHandler = function (paneHandler, key) {
-    const plotDataFile = "%self/viz_data/" + key + "-plotData.json";
-    let plotData;
+reknitr.parseMapData = function (key) {
+    const plotDataFile = "%self/viz_data/" + key + "-mapData.json";
     const resolved = fluid.module.resolvePath(plotDataFile);
+    let selectable = [],
+        topLevel = {};
     if (fs.existsSync(resolved)) {
-        plotData = fluid.loadJSON5File(resolved);
+        const plotData = fluid.loadJSON5File(resolved);
+        const topLevel = fluid.filterKeys(plotData, ["view", "regionField"]);
+        const selectable = plotData.layers.filter(layer => layer.metadata?.selectable).map(layer => layer.id);
+        return {topLevel, selectable};
     } else {
-        console.log("plotData file for pane " + key + " not found");
+        console.log("mapData file for pane " + key + " not found at path " + resolved);
     }
-    const toMerge = fluid.censorKeys(plotData, ["palette", "taxa"]);
-    return {...paneHandler, ...toMerge};
+    return {topLevel, selectable};
 };
 
 reknitr.unflattenOptions = function (records) {
@@ -272,10 +280,12 @@ reknitr.unflattenOptions = function (records) {
 
 reknitr.sortedMatterForFiles = function (resolvedFiles) {
     const fileEntries = resolvedFiles.map(htmlfile => {
-        const rmdFile = htmlfile.replace(/\.[^.]+$/, ".Rmd");
+        const { dir, name } = path.parse(htmlfile);
+        const paneKey = name;
+        const rmdFile = path.format({ dir, name, ext: ".Rmd" });
         const rmdContent = fs.readFileSync(rmdFile, "utf8");
         const frontMatter = reknitr.parseYAMLFrontMatter(rmdContent);
-        return { htmlfile, frontMatter };
+        return { htmlfile, frontMatter, paneKey };
     });
 
     fileEntries.sort((a, b) => {
@@ -302,6 +312,7 @@ reknitr.reknitFiles = async function (rec) {
 
     const templateDoc = reknitr.parseDocument(fluid.module.resolvePath(template));
     const target = templateDoc.querySelector(".mxcw-content");
+    // Don't move, we currently put these inline
     // reknitr.movePlotlyWidgets(template, sections, container);
 
     const parseResults = reknitr.makeMapboxParseResults();
@@ -309,16 +320,23 @@ reknitr.reknitFiles = async function (rec) {
 
     const fileEntries = reknitr.sortedMatterForFiles(resolvedFiles);
 
-    fileEntries.forEach(({htmlfile}) => {
+    const paneInfo = fileEntries.map(({htmlfile, frontMatter, paneKey}) => {
         const document = reknitr.parseDocument(htmlfile);
         const container = document.querySelector(".main-container");
+
+        reknitr.cleansePlotlyWidgets(container);
         // TODO: Maybe do transforms here
 
-        reknitr.encloseSections(container, options.vizColumn);
+        reknitr.encloseSection(container, paneKey, options.vizColumn);
         reknitr.parseMapboxWidgets(parseResults, container);
 
         target.appendChild(container);
+        return {...fluid.censorKeys(frontMatter, ["knit"]), paneKey};
     });
+
+    const paneInfoHash = Object.fromEntries(
+        paneInfo.map(({ paneKey, ...rest }) => [paneKey, rest])
+    );
 
     const mapboxData = reknitr.composeRootMap(parseResults);
 
@@ -326,10 +344,12 @@ reknitr.reknitFiles = async function (rec) {
     const mapboxDataVar = "reknitr.mapboxData = " + JSON.stringify(mapboxData) + ";\n";
 
     const paneHandlers = options.paneHandlers;
+    let selectableRegions = {};
     if (paneHandlers) {
         const integratedHandlers = fluid.transform(paneHandlers, function (paneHandler, key) {
-            // TODO: Allow prefix to be contributed representing entire page, e.g. "Mollusca-"
-            return reknitr.integratePaneHandler(paneHandler, key);
+            const {topLevel, selectable} = reknitr.parseMapData(key);
+            selectable.forEach(oneSelectable => selectableRegions[oneSelectable] = true);
+            return {...paneHandler, ...paneInfoHash[key], ...topLevel};
         });
         const rawPaneHandlers = "reknitr.rawPaneHandlers = " + JSON.stringify(integratedHandlers) + ";\n";
         const storyPageOptions = options.storyPageOptions || {};
@@ -337,6 +357,7 @@ reknitr.reknitFiles = async function (rec) {
             const unflattened = reknitr.unflattenOptions(options.components);
             storyPageOptions.components = unflattened;
         }
+        storyPageOptions.selectableRegions = Object.keys(selectableRegions);
         const dataScriptNode = templateDoc.createElement("script");
         dataScriptNode.innerHTML = mapboxDataVar + rawPaneHandlers;
 

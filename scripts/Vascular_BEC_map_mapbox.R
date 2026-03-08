@@ -8,18 +8,11 @@ if (!isTRUE(getOption('knitr.in.progress'))) {
 # Load libraries
 
 library(dplyr)
-library(raster)
-library(scales)
 library(sf)
-library(jsonlite)
-library(viridis)
-library(htmlwidgets)
 
 # Source dependencies
 
 source("scripts/mapbox_map_common.R")
-
-# Call spatial data
 
 # Create color palette for BEC Zones
 
@@ -43,7 +36,11 @@ becLabels <- list(CMAunp = "Coastal Mountain Heather Alpine Zone",
                   MHmm1 = "Windward Moist Maritime Mountain Hemlock Zone",
                   MHmm2 = "Leeward Moist Maritime Mountain Hemlock Zone")
 
-# Layer 1: BEC zones
+# Layer 1: hillshade raster
+hillshade.source <- geotiff_to_mapbox_source("spatial_data/rasters/Hillshade_80m.tif", id="Hillshade")
+hillshade.feature <- list(type = "raster", source = "Hillshade", rasterOpacity = 0.8, paint = spectral_raster_color_paint(), Z_Order = 0.75)
+
+# Layer 2: BEC zones
 BEC <- mx_read("spatial_data/vectors/BEC")
 BEC.sources <- sf_to_mapbox_sources(BEC, idField = "MAP_LABEL")
 BEC.features <- palette %>%
@@ -51,12 +48,9 @@ BEC.features <- palette %>%
   dplyr::mutate(label = becLabels[source],
                 fillOpacity = 0.6,
                 outlineOpacity = 0,
+                selectable = TRUE,
                 type = "vector"
   ) %>% df_to_list
-
-# Layer 2: hillshade raster
-hillshade.source <- geotiff_to_mapbox_source("spatial_data/rasters/Hillshade_80m.tif", id="Hillshade")
-hillshade.feature <- list(type = "raster", source = "Hillshade", rasterOpacity = 0.8, paint = spectral_raster_color_paint())
 
 # Layer 3: coastline
 coastline <- mx_read("spatial_data/vectors/Islands_and_Mainland")
@@ -72,9 +66,10 @@ allSources <- merge_lists(BEC.sources, hillshade.source, coastline.source, water
 
 view.feature <- list(type = "view", lon = -123.2194, lat = 49.66076, zoom = 8.5)
 
-allFeatures = c(BEC.features, list(view.feature, hillshade.feature, coastline.feature, watershed.feature))
+# Combine features in desired order
+allFeatures = c(list(view.feature, hillshade.feature), BEC.features, list(coastline.feature, watershed.feature))
 
-speciesMap <- plot_mapbox_map("Vascular_BEC", allSources, allFeatures)
+speciesMap <- plot_mapbox_map("Vascular_BEC", allSources, allFeatures, "BEC")
 
 # Note that this statement is only effective in standalone R
 print(speciesMap)

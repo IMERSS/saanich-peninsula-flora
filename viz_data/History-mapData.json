@@ -1,0 +1,59 @@
+{
+  "id": "History",
+  "view": {
+    "type": "view",
+    "lon": -123.2194,
+    "lat": 49.6608,
+    "zoom": 8.5
+  },
+  "layers": [
+    {
+      "id": "plotly-carto-positron",
+      "type": "raster",
+      "source": "plotly-carto-positron",
+      "minzoom": 0,
+      "maxzoom": 22,
+      "metadata": {
+        "sortKey": 0.5
+      }
+    },
+    {
+      "type": "raster",
+      "id": "Hillshade",
+      "source": "Hillshade",
+      "paint": {
+        "raster-opacity": 0.8
+      },
+      "metadata": {
+        "sortKey": 0.75
+      }
+    },
+    {
+      "type": "line",
+      "id": "Coastline-outline",
+      "source": "Coastline",
+      "paint": {
+        "line-color": "black",
+        "line-width": 1.5,
+        "line-opacity": 1
+      },
+      "metadata": {
+        "sortKey": 3.5
+      }
+    },
+    {
+      "type": "line",
+      "id": "Watershed.Boundary-outline",
+      "source": "Watershed.Boundary",
+      "paint": {
+        "line-color": "black",
+        "line-width": 4,
+        "line-opacity": 1
+      },
+      "metadata": {
+        "sortKey": 5.5
+      }
+    }
+  ],
+  "highlightedSources": {}
+}

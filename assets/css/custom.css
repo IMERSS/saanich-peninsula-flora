@@ -15,6 +15,7 @@ iframe,
 embed,
 object {
     display: inline-block;
+    vertical-align: unset;
 }
 
 :root {

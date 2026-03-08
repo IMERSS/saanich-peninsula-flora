@@ -6,8 +6,12 @@ var reknitr = fluid.registerNamespace("reknitr");
 // noinspection ES6ConvertVarToLetConst // otherwise this is a duplicate on minifying
 var hortis = fluid.registerNamespace("hortis");
 
+// Main integration point for imerss-bioinfo "vizLoader" coexisting with storyPage infrastructure
 fluid.defaults("reknitr.storyPage.withVizLoader", {
     components: {
+        // Inject this outwards so that we can forward selectedRegion onto it
+        regionFilter: "{vizLoader}.filters.datasetFilter",
+        statusFilter: "{storyPage}.paneHandlers-Status.statusFilter",
         vizLoader: {
             type: "hortis.blitzVizLoader",
             container: ".imerss-container",
@@ -25,19 +29,108 @@ fluid.defaults("reknitr.storyPage.withVizLoader", {
                             gradeNames: ["hortis.libreMap.inStoryPage", "{storyPage}.options.mapFlavourGrade"]
                         }
                     },
-                    // TODO configure this away for Howe Sound, needs to be viz-dependent
+                    // TODO configure these away for Howe Sound, needs to be viz-dependent
                     tabs: {
                         type: "fluid.emptySubcomponent"
+                    },
+                    blitzRecords: {
+                        type: "fluid.emptySubcomponent"
+                    },
+                    recordReporter: {
+                        type: "hortis.recordAndTaxaReporter",
+                        options: {
+                            members: {
+                                taxa: "{vizLoader}.taxaFromObs",
+                                taxaById: "{vizLoader}.taxa.rowById"
+                            }
+                        }
+                    },
+                    filters: {
+                        options: {
+                            components: {
+                                datasetFilter: {
+                                    options: {
+                                        fieldNames: "{storyPage}.options.regionFilterFieldNames"
+                                    }
+                                },
+                                // Allow for filters in panes
+                                filterRoot: "{storyPage}"
+                            }
+                        }
                     }
                 }
             }
         },
         // Inject out the inner map so that modelListeners etc. can bind to it
-        // TODO: This used to completely overwrite the "story's" map. In practice we need to fuse
-        // the two together somehow, but in the meantime need to get polygons displaying again from the story.
+        // Note that this completely overwites the story's map
         map: "{storyPage}.vizLoader.map"
+    },
+    modelListeners: {
+        listenRegionHash: {
+            path: "{hashManager}.model.region",
+            func: (map, selectedRegion) => map.selectedRegion.value = selectedRegion || null,
+            args: ["{map}", "{change}.value"]
+        }
+    },
+    members: {
+        relayStatusToFilter: "@expand:fluid.effect(reknitr.relayStatusToFilter, {map}.selectedStatus, {storyPage}.statusFilter)",
+        relayRegionsToLegend: "@expand:fluid.effect(reknitr.relayRegionsToLegend, {map}, {vizLoader}.regionIndirection.rows, {storyPage}.activePaneHandler, {map}.mapLoaded)",
+        relayRegionToHash: "@expand:fluid.effect(reknitr.relayRegionToHash, {hashManager}, {map}.selectedRegion)"
     }
 });
+
+// legend/widget names: confirmed/historical/new
+// filter names: confirmed/unconfirmed/new
+reknitr.relayStatusToFilter = function (selectedStatus, statusFilter) {
+    const newFilterState = {
+        confirmed: false,
+        new: false,
+        unconfirmed: false
+    };
+    const applyStatus = selectedStatus === "historical" ? "unconfirmed" : selectedStatus;
+    if (applyStatus) {
+        newFilterState[applyStatus] = true;
+    }
+    fluid.each(newFilterState, (value, key) => statusFilter[key].value = value);
+};
+
+reknitr.relayRegionToHash = function (hashManager, selectedRegion) {
+    hashManager.applier.change("region", selectedRegion);
+};
+
+reknitr.mapboxColorToCSS = function ({ r, g, b, a }) {
+    const to255 = (v) => Math.round(v * 255);
+    return `rgba(${to255(r)}, ${to255(g)}, ${to255(b)}, ${a})`;
+};
+
+// Map is assumed to be a hortis.libreMap.regionLegend
+reknitr.relayRegionsToLegend = function (map, regionIndirection, activePaneHandler) {
+    let regionLegendRows = [];
+    const regionField = activePaneHandler.options.regionField;
+    if (regionField) {
+        if (regionField === "!statusAsRegion") {
+            const colours = activePaneHandler.options.statusColors;
+            regionLegendRows = Object.entries(colours).map(([regionKey, fillColor]) => ({
+                regionKey,
+                fillColor,
+                bindState: "selectedStatus"
+            }));
+        } else {
+            const rows = regionIndirection;
+            regionLegendRows = rows.filter(row => row.regionField === regionField).map(row => {
+                const regionKey = row.label;
+                const layer = map.map.getLayer(regionKey);
+                const rawColor = layer.paint._values["fill-color"].value.value;
+                return {
+                    regionKey,
+                    fillColor: reknitr.mapboxColorToCSS(rawColor),
+                    bindState: "selectedRegion"
+                };
+            });
+        }
+    }
+    map.legend.regionLegendRows.value = regionLegendRows;
+};
 
 /** Forward all configuration from storyMap's map onto viz's map */
 fluid.defaults("hortis.libreMap.inStoryPage", {
@@ -52,8 +145,48 @@ fluid.defaults("hortis.libreMap.inStoryPage", {
         transition: {
             duration: "{that}.options.zoomDuration"
         }
+    },
+    // TODO: Infusion bug - the member declaration for zoomToObsBounds below should work but it doesn't since we don't use C3 properly
+    // and options supplied by a subcomponent override as seen above should take priority over any internal grade names
+    distributeOptions: {
+        target: "{that}.options.members.zoomToObsBounds",
+        record: "@expand:signal()"
+    },
+
+    members: {
+        selectedStatus: "@expand:signal()",
+        regionSelectionEffect: "@expand:fluid.effect(reknitr.forwardRegionSelection, {storyPage}.regionFilter, {that}.selectedRegion)",
+        // Prevent the map zooming to selected obs
+        zoomToObsBounds: "@expand:signal()"
     }
 });
+
+fluid.defaults("reknitr.statusPaneHandler", {
+    gradeNames: "reknitr.paneHandler",
+    components: {
+        statusFilter: {
+            type: "hortis.statusFilter",
+            options: {
+                members: {
+                    isActive: "{paneHandler}.isVisible",
+                    obsRows: "{vizLoader}.obsRows", // ineffective
+                    taxaById: "{vizLoader}.taxa.rowById"
+                }
+            }
+        }
+    }
+});
+
+reknitr.forwardRegionSelection = function (regionFilter, selectedRegion) {
+    let filterState = {};
+    if (selectedRegion) {
+        const regionIndex = regionFilter.filterRows.value.findIndex(row => row.label === selectedRegion);
+        if (regionIndex !== -1) {
+            filterState = {[regionIndex]: true};
+        }
+    }
+    regionFilter.filterState.value = filterState;
+};
 
 // A pane holding some kind of viz from imerss-viz - now just a simple template loader
 fluid.defaults("reknitr.storyVizPane", {
@@ -123,103 +256,10 @@ reknitr.updateTaxonHash = function (hashManager, taxaById, selectedTaxonId, isVi
     }
 };
 
-fluid.registerNamespace("reknitr.legendKey");
-
-reknitr.legendKey.rowTemplate = `
-<div class="imerss-legend-row %rowClass">
-    <span class="imerss-legend-icon"></span>
-    <span class="imerss-legend-preview %previewClass" style="%previewStyle"></span>
-    <span class="imerss-legend-label">%keyLabel</span>
-</div>`;
-
-// Improved version which deals with status|cell style regions seen in Marine Atlas
-// TODO: Do we need this any more?
-hortis.normaliseToClass = function (str) {
-    return str.toLowerCase().replace(/[| ]/g, "-");
-};
-
-reknitr.legendKey.renderMarkup = function (markup, regionInfo, regionName) {
-    const backColour = regionInfo.fillColor || regionInfo.color;
-    const normal = hortis.normaliseToClass(regionName);
-    return fluid.stringTemplate(markup, {
-        rowClass: "imerss-legend-row-" + normal,
-        previewClass: "imerss-region-" + normal,
-        previewStyle: (regionInfo.fillPatternUrl ? `background-image: url(${regionInfo.fillPatternUrl});\n` : "") + "background-color: " + backColour,
-        keyLabel: regionName
-    });
-};
-
-// cf. Xetthecum's hortis.legendKey.drawLegend in leafletMapWithRegions.js - it has a block template and also makes
-// a fire to selectRegion with two arguments.
-reknitr.legendKey.addLegendControl = function (map, regionRowsSignal, isVisibleSignal) {
-    const control = reknitr.legendKey.drawLegend(map, regionRowsSignal, isVisibleSignal);
-    control.onAdd = () => control.container;
-    control.onRemove = () => {
-        console.log("Cleaning up legend attached to ", control.container);
-        control.cleanup();
-    };
-
-    map.map.addControl(control, "bottom-right");
-
-    return control;
-};
-
-reknitr.indexRegionRows = function (regionRows) {
-    return Object.fromEntries(regionRows.map(row => [row.Layer, row]));
-};
-
-reknitr.legendKey.drawLegend = function (map, regionRowsSignal, isVisibleSignal) {
-    const container = document.createElement("div");
-    container.classList.add("mxcw-legend");
-
-    const f = regionName => {
-        const rowSel = ".imerss-legend-row-" + hortis.normaliseToClass(regionName);
-        return container.querySelector(rowSel);
-    };
-
-    const renderLegend = function (regionRows) {
-        console.log("Rendering legend since " + regionRows.length + " rows have arrived");
-
-        // TODO: Do this in the map
-        regionRows.forEach(row => {
-            if (row.fillPattern) {
-                row.fillPatternUrl = map.urlForFillPattern(row.fillPattern);
-            }
-        });
-        const regionIndex = reknitr.indexRegionRows(regionRows);
-
-        const selectableRegions = map.options.selectableRegions;
-
-        const regionMarkupRows = selectableRegions.map(function (regionName) {
-            return reknitr.legendKey.renderMarkup(reknitr.legendKey.rowTemplate, regionIndex[regionName], regionName);
-        });
-        const markup = regionMarkupRows.join("\n");
-        container.innerHTML = markup;
-
-        selectableRegions.forEach(function (regionName) {
-            f(regionName).addEventListener("click", function () {
-                map.selectedRegion.value = regionName;
-            });
-        });
-
-        fluid.effect(function (selectedRegion) {
-            selectableRegions.forEach(selectableRegion => {
-                reknitr.toggleClass(f(selectableRegion), "imerss-selected", selectedRegion === selectableRegion);
-            });
-        }, map.selectedRegion.value);
-
-    };
-
-    fluid.effect(renderLegend, regionRowsSignal);
-    fluid.effect(isVisible => reknitr.toggleClass(container, "mxcw-hidden", !isVisible), isVisibleSignal);
-
-    return {container};
-};
-
 
 // AS has requested the region selection bar to appear in a special area above the taxonomy
 fluid.defaults("reknitr.regionSelectionBar.withHoist", {
-    gradeNames: "reknitr.widgetHandler",
+    gradeNames: "reknitr.htmlWidget",
     listeners: {
         "bindWidget.hoist": {
             funcName: "reknitr.regionSelectionBar.hoist",
@@ -235,25 +275,21 @@ reknitr.regionSelectionBar.hoist = function (element, that, paneHandler) {
 };
 
 fluid.defaults("reknitr.regionSelectionBar", {
-    gradeNames: ["reknitr.widgetHandler", "reknitr.withResizableWidth"],
+    gradeNames: ["reknitr.htmlWidget", "reknitr.withResizableWidth"],
     listeners: {
         "bindWidget.impl": "reknitr.regionSelectionBar.bind"
     }
+    //,
+    // members: {
+    //    selectedStatus: .... - currently configured in config.json5
+    // }
 });
 
-reknitr.regionSelectionBar.bind = function (element, that, paneHandler) {
-    const bar = element;
-    const vizBinder = paneHandler;
+reknitr.regionSelectionBar.bind = function (element, that) {
     const names = fluid.getMembers(element.data, "name");
-    // In theory this should be done via some options distribution, or at the very least, an IoCSS-driven model
-    // listener specification
-    // TODO: sunburstLoaded no longer exists at top level, nor does map.applier.modelChanged - rethink if necessary
-    return;
-    vizBinder.events.sunburstLoaded.addListener(() => {
-        const map = vizBinder.map;
-        map.applier.modelChanged.addListener({path: "selectedRegions.*"}, function (selected, oldSelected, segs) {
-            const changed = fluid.peek(segs);
-            const index = names.indexOf(changed);
+    that.showStatusEffects = names.map((oneStatus, index) =>
+        fluid.effect(selectedStatus => {
+            const selected = selectedStatus === oneStatus;
             Plotly.restyle(element, {
                 // Should agree with .imerss-selected but seems that plotly cannot be reached via CSS
                 "marker.line": selected ? {
@@ -264,12 +300,12 @@ reknitr.regionSelectionBar.bind = function (element, that, paneHandler) {
                     width: 0
                 }
             }, index);
-        });
-    }, "plotlyRegion", "after:fluid-componentConstruction");
+        }
+        , that.selectedStatus));
 
-    bar.on("plotly_click", function (e) {
-        const regionName = e.points[0].data.name;
-        paneHandler.triggerRegionSelection(regionName);
+    element.on("plotly_click", function (e) {
+        const statusName = e.points[0].data.name;
+        that.selectedStatus.value = statusName;
     });
 };
 

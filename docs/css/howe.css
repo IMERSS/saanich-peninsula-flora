@@ -1,15 +1,19 @@
 
-/* Fix the height of the "Status" viz to account for the bar widget above it */
-.mxcw-widgetPane-Status.mxcw-noStretch {
-    height: calc(100% - 135px);
+.mxcw-paneKey-Status .html-widget {
+    margin-top: 1rem;
 }
 
-/*
-.mxcw-widgetPane-Status .html-widget {
-    margin-top: -30px;
-    margin-bottom: 20px;
+.mxcw-dataPane-History {
+    margin-top: 2rem;
+    background-color: white;
 }
-*/
+
+.mxcw-dataPane-TopContributions {
+    background-color: white;
+}
+
+/** These three stale **/
+
 
 .mxcw-widgetPane-Protected div {
     text-align: end;
@@ -21,5 +25,10 @@
 }
 
 .mxcw-widgetPane-Protected .fld-imerss-pane-info {
+    display: none;
+}
+
+/** Don't display these for now, dedicated panels exist **/
+.imerss-blitz-records, .imerss-filters {
     display: none;
 }

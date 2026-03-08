@@ -4,7 +4,11 @@
   <body dir="{{ .Site.Language.LanguageDirection | default `ltr` }}">
     {{- partial "navbar.html" . -}}
     <div class="imerss-main">
-      <div class="mxcw-map fld-imerss-nodismiss-map">
+      <div class="mxcw-leftPane">
+        <div class="mxcw-map fld-imerss-nodismiss-map">
+        </div>
+        <div class="mxcw-data fld-imerss-nodismiss-map">
+        </div>
       </div>
       <div class="imerss-page">
     {{ partial "subnav.html" . }}

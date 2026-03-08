@@ -6,6 +6,8 @@
 .imerss-container {
     flex-direction: column;
     margin-top: 0;
+    background: #eefaff;
+    color: black;
 }
 
 .imerss-pane-info {

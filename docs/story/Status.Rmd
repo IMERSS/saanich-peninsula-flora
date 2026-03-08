@@ -2,6 +2,13 @@
 title: Community Science Contributions
 weight: 3
 knit: (function(input, ...) { source(here::here("R/knit_render.R"), local = TRUE)$value(input, ...) })
+gridVisible: true
+filtersVisible: true
+regionField: "!statusAsRegion"
+statusColors:
+  confirmed: '#5a96d2'
+  historical: '#decb90'
+  new: '#7562b4'
 ---
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
@@ -17,7 +24,12 @@ observed <- plant.summary %>% filter(iNatObservationStatus == 'observed')
 
 ## Community science contributions
 
-Through the combined efforts of `r length(unique(plants$recordedBy))` individuals, the Átl’ḵa7tsem/Howe Sound naturalist community has now documented a total of `r nrow(plant.summary)` vascular plant species. Based on search efforts over the last decade, `r round((nrow(confirmed)/(nrow(confirmed)+nrow(reported))*100), digits = 0)` percent of the historically reported plant diversity has been confirmed and `r nrow(new)` new species reports added to the list. Community members have now documented `r round((nrow(observed)/(nrow(plant.summary))*100), digits = 0)` percent of the plant diversity known to the region on iNaturalist.
+Through the combined efforts of `r length(unique(plants$recordedBy))` individuals, the Átl’ḵa7tsem/Howe Sound naturalist
+community has now documented a total of `r nrow(plant.summary)` vascular plant species. Based on search
+efforts over the last decade, `r round((nrow(confirmed)/(nrow(confirmed)+nrow(reported))*100), digits = 0)` percent
+of the historically reported plant diversity has been confirmed and `r nrow(new)` new species reports added to the
+list. Community members have now documented `r round((nrow(observed)/(nrow(plant.summary))*100), digits = 0)` percent
+of the plant diversity known to the region on iNaturalist.
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 source("scripts/Community_science_contributions_mapbox.R")

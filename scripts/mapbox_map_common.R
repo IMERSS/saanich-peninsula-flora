@@ -1,3 +1,4 @@
+library(rlang)
 library(sf)
 library(dplyr)
 library(plotly)
@@ -12,16 +13,16 @@ source("scripts/utils.R")
 
 #' Convert a GeoTIFF to JPG and return a Mapbox GL JS image source definition
 geotiff_to_mapbox_source <- function(tiff_path, id) {
-  
+
   if (!file.exists(tiff_path)) {
     stop("File not found: ", tiff_path)
   }
-  
+
   # Output to img/<original_filename>.jpg
   # - relative to the Rmd directory if knitting
   # - under static/img/ otherwise
   jpg_filename <- paste0(tools::file_path_sans_ext(basename(tiff_path)), ".jpg")
-  
+
   rmd_input <- knitr::current_input(dir = TRUE)
   if (!is.null(rmd_input)) {
     img_dir <- file.path(dirname(rmd_input), "img")
@@ -30,38 +31,38 @@ geotiff_to_mapbox_source <- function(tiff_path, id) {
   }
   dir.create(img_dir, showWarnings = FALSE, recursive = TRUE)
   jpg_path <- file.path(img_dir, jpg_filename)
-  
+
   r <- terra::rast(tiff_path)
-  
+
   if (!terra::is.lonlat(r)) {
     message("Reprojecting from ", terra::crs(r, describe = TRUE)$name, " to WGS84...")
     r <- terra::project(r, "EPSG:4326")
   }
-  
+
   e <- terra::ext(r)
-  
+
   if (terra::nlyr(r) != 1) {
     message("Using first band only.")
     r <- r[[1]]
   }
-  
+
   # Rescale to 0-255 greyscale
   vals <- terra::values(r, mat = FALSE, na.rm = FALSE)
   vmin <- min(vals, na.rm = TRUE)
   vmax <- max(vals, na.rm = TRUE)
   message("Value range: ", vmin, " to ", vmax)
-  
+
   scaled <- round((vals - vmin) / (vmax - vmin) * 255)
   scaled[is.na(scaled)] <- 255
-  
+
   out <- terra::rast(r)
   terra::values(out) <- scaled
-  
+
   terra::writeRaster(out, jpg_path, filetype = "JPEG", overwrite = TRUE,
                      datatype = "INT1U")
-  
+
   message("Wrote greyscale JPG to: ", jpg_path)
-  
+
   # URL: relative to the Rmd/HTML when knitting, filesystem path otherwise.
   # When knitting, img/<filename>.jpg resolves from the HTML's directory.
   # When running standalone, the caller may need to adjust the URL.
@@ -123,8 +124,11 @@ calc_zoom <- function (bbox) {
   zoom <- min(zoomlon, zoomlat)
 }
 
+# TODO derive this from a "feature" definition
 stylesNonMapbox <- rjson::fromJSON(file = "src/json/stylesNonMapbox.json", simplify = FALSE)
 baseStyle <- stylesNonMapbox[["carto-positron"]]
+# Ensure this slots in above the builtin in imerss-new
+baseStyle$layers[[1]]$metadata = list(sortKey = 0.5)
 
 read_vectors <- function (layerNames) {
   fileNames <- glue('spatial_data/vectors/{layerNames}');
@@ -240,7 +244,7 @@ features_to_sources <- function (features) {
   sources
 }
 
-defaultVectorFeature <- list(fillOpacity = 0, outlineOpacity = 1, Z_Order = 0, fillPattern = "")
+defaultVectorFeature <- list(fillOpacity = 0, outlineOpacity = 1)
 
 #' Converts a data frame of layer styling information into a list of Mapbox layer definitions.
 #'
@@ -268,34 +272,44 @@ defaultVectorFeature <- list(fillOpacity = 0, outlineOpacity = 1, Z_Order = 0, f
 #' @return A list of Mapbox layer objects (as lists), including fill and outline layers for each input row.
 features_to_layers <- function (features, highlightedSources) {
   layers <- list()
-  
-  for (oneFeature in features) {
-    feature <- merge_lists(defaultVectorFeature, oneFeature)
-    message("Layer ", feature, " opacity ", feature$fillOpacity, " outlineOpacity", feature$outlineOpacity)
-    if (feature$type == "vector") {
+
+  for (index in seq_along(features)) {
+    oneFeature <- features[[index]]
+    Z_Order = oneFeature$Z_Order %||% index
+    if (oneFeature$type == "vector") {
+      feature <- merge_lists(defaultVectorFeature, oneFeature)
+      message("Layer ", feature, " opacity ", feature$fillOpacity, " outlineOpacity", feature$outlineOpacity)
       # Due to a limitation in WebGL we need to add separate layers for outline and fill
-      
+
       if (feature$fillOpacity != 0) {
         message("fillLayer ", feature$Layer)
-        fillLayer <- list(type="fill", id=feature$source, source=feature$source, "fill-sort-key"=feature$Z_Order, "mx-fill-pattern"=feature$fillPattern,
+        fillLayer <- list(type="fill", id=feature$source, source=feature$source,
                           label=feature$label,
-                          paint=list("fill-color"=feature$fillColor, "fill-opacity"=feature$fillOpacity))
+                          paint=list("fill-color"=feature$fillColor, "fill-opacity"=feature$fillOpacity),
+                          metadata=list(sortKey=Z_Order, selectable=feature$selectable))
+        if (!is.null(feature$FillPattern)) {
+            fillLayer$paint["fill-pattern"] = feature$fillPattern
+        }
         # Nutty syntax explained in https://stackoverflow.com/questions/14054120/adding-elements-to-a-list-in-r-in-nested-lists
         layers <- c(layers, list(fillLayer))
       }
       if (feature$outlineOpacity != 0) {
         if (feature$source %in% highlightedSources) {
           # ref: https://plotly.com/python/reference/layout/mapbox/
-          outlineLayer <- list(type="line", id=glue("{feature$source}-highlight"), source=feature$source, "line-sort-key"=5,
-                               paint=list("line-color"="yellow", "line-width"=feature$outlineWidth+2, "line-opacity"=feature$outlineOpacity))
+          outlineLayer <- list(type="line", id=glue("{feature$source}-highlight"), source=feature$source,
+                               paint=list("line-color"="yellow", "line-width"=feature$outlineWidth+2, "line-opacity"=feature$outlineOpacity),
+                               metadata=list(sortKey=5))
         } else {
-          outlineLayer <- list(type="line", id=glue("{feature$source}-outline"), source=feature$source, "line-sort-key"=feature$Z_Order + 0.5,
-                               paint=list("line-color"=feature$outlineColor, "line-width"=feature$outlineWidth, "line-opacity"=feature$outlineOpacity))
+          outlineLayer <- list(type="line", id=glue("{feature$source}-outline"), source=feature$source,
+                               paint=list("line-color"=feature$outlineColor, "line-width"=feature$outlineWidth, "line-opacity"=feature$outlineOpacity),
+                               metadata=list(sortKey=Z_Order + 0.5))
         }
         layers <- c(layers, list(outlineLayer))
       }
-    } else if (feature$type == "raster") {
-        rasterLayer <- list(type="raster", id=feature$source, source = feature$source, paint=list("raster-opacity" = feature$rasterOpacity))
+    } else if (oneFeature$type == "raster") {
+        feature <- oneFeature
+        rasterLayer <- list(type="raster", id=feature$source, source = feature$source, paint=list("raster-opacity" = feature$rasterOpacity),
+            metadata=list(sortKey=Z_Order))
         layers <- c(layers, list(rasterLayer))
     }
   }
@@ -311,9 +325,11 @@ features_to_layers <- function (features, highlightedSources) {
 #' @param id Character. Unique identifier for the map style.
 #' @param sources Named list. Mapbox source objects, keyed by source name.
 #' @param features Unnamed list of named lists. Features with styling information; see \code{featuresToLayers} for expected columns.
+#' @param regionField Name of any region field in the region indirection file (column "Label" in Shapefile Index) that
+#' regions plotted in this map are drawn from
 #' @param highlightedSources Character vector. Names of layers to highlight.
 #' @return A Plotly map object with the specified Mapbox style and layers.
-plot_mapbox_map = function (id, sources, features, highlightedSources = c()) {
+plot_mapbox_map = function (id, sources, features, regionField = NULL, highlightedSources = c()) {
 
   allSources <- c(baseStyle$sources, sources);
   allLayers <- c(baseStyle$layers, features_to_layers(features, highlightedSources));
@@ -331,9 +347,15 @@ plot_mapbox_map = function (id, sources, features, highlightedSources = c()) {
      stop("Can't render map without view or bbox");
   }
 
-  mapData = list(id = id, sources = usedSources, layers = allLayers, highlightedSources = highlightedSources);
+  mapData = list(id = id,
+                 view = view,
+                 layers = allLayers,
+                 highlightedSources = highlightedSources);
+  if (!is.null(regionField)) {
+    mapData$regionField = regionField
+  }
 
-  write_json(mapData, str_glue("viz_data/{id}_mapData.json"))
+  write_json(mapData, str_glue("viz_data/{id}-mapData.json"))
 
   style <- list(id=id, version=8, sources=usedSources, layers=allLayers, glyphs=baseStyle$glyphs);
 

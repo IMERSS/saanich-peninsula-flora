@@ -1,0 +1,13 @@
+---
+title: Top contributions to our knowledge of the regional plant diversity
+weight: 4
+knit: (function(input, ...) { source(here::here("R/knit_render.R"), local = TRUE)$value(input, ...) })
+---
+
+## Top contributions to our knowledge of the regional plant diversity
+
+You can contribute to this growing record of the regional plant diversity by submitting your observations
+to the [Atl'ka7tsem Howe Sound Biosphere Region iNaturalist project.](https://www.inaturalist.org/projects/atl-ka7tsem-howe-sound-biosphere-region)
+Here, you can browse photos of some of the most commonly documented plants, as well as recent observations and
+top observers across the region, based on [iNaturalist](http://inaturalist.org/) data.
+Visualisation code courtesy of [Ben Keen](https://github.com/benkeen).

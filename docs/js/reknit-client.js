@@ -41,7 +41,7 @@ var hortis = fluid.registerNamespace("hortis");
  * @property {Array} subPanes - Any subpanes to which the widget's calls are allocated
  */
 
-fluid.defaults("reknitr.widgetHandler", {
+fluid.defaults("reknitr.htmlWidget", {
     gradeNames: "fluid.component",
     widgetKey: "{sourcePath}",
     events: {
@@ -50,22 +50,37 @@ fluid.defaults("reknitr.widgetHandler", {
     listeners: {
         "bindWidget.first": {
             priority: "first",
-            func: "reknitr.widgetHandler.bindFirst"
+            func: "reknitr.htmlWidget.bindFirst"
         }
     }
 });
 
-reknitr.widgetHandler.bindFirst = function (element, that) {
+fluid.defaults("reknitr.dataPaneWidget", {
+    gradeNames: "reknitr.htmlWidget",
+    components: {
+        storyPage: "{storyPage}",
+        paneHandler: "{paneHandler}"
+    },
+    resizableParent: ".mxcw-dataPane",
+    dataPaneWidget: true
+});
+
+reknitr.htmlWidget.bindFirst = function (element, that) {
     that.element = element;
+    if (that.options.dataPaneWidget) {
+        const dataPane = that.storyPage.dataPanes[that.paneHandler.options.paneIndex];
+        dataPane.appendChild(element);
+    }
 };
 
+// Mixin grade for reknitr.htmlWidget
 fluid.defaults("reknitr.withResizableWidth", {
-    // TODO: Was .mxcw-widgetPane
+    // TODO: Is .mxcw-dataPane for dataPaneWidget, wot no interactional grades
     resizableParent: ".mxcw-sectionColumn",
     listeners: {
         "bindWidget.makeResizable": {
             func: "reknitr.makeResizableWidth",
-            args: ["{arguments}.0", "{paneHandler}", "{that}.options.resizableParent"]
+            args: ["{that}", "{arguments}.0", "{paneHandler}", "{that}.options.resizableParent"]
         }
     }
 });
@@ -74,41 +89,47 @@ reknitr.findPlotlyWidgetId = function (widget) {
     return widget.layout?.meta?.mx_widgetId;
 };
 
-reknitr.makeResizableWidth = function (element, paneHandler, selector) {
+reknitr.makeResizableWidth = function (widget, element, paneHandler, selector) {
     // TODO: remove listener on destruction
-    window.addEventListener("resize", function () {
+    const resizeIt = function () {
         const parent = element.closest(selector);
         const newWidth = parent.clientWidth;
         if (newWidth > 0) {
             Plotly.relayout(element, {width: newWidth});
         }
-    });
+    };
+
+    window.addEventListener("resize", resizeIt);
+    // TODO: General notation for disposable effects
+    widget.resizeEffect = fluid.effect(() => {
+        fluid.invokeLater(resizeIt);
+    }, fluid.computed(isVisible => isVisible || undefined, paneHandler.isVisible));
 };
 
-fluid.defaults("reknitr.choroplethSlider", {
-    gradeNames: "reknitr.widgetHandler",
+fluid.defaults("reknitr.plotlySlider", {
+    gradeNames: "reknitr.htmlWidget",
+    members: {
+        sliderIndex: "@expand:signal()",
+        labels: "@expand:signal()"
+    },
     listeners: {
-        "bindWidget.impl": "reknitr.choroplethSlider.bind"
+        "bindWidget.impl": "reknitr.plotlySlider.bind"
     }
 });
 
-reknitr.choroplethSlider.bind = function (element, that, paneHandler, storyPage) {
+reknitr.plotlySlider.bind = function (element, that) {
     const slider = element;
-    const paneIndex = paneHandler.options.paneIndex;
-    // TODO: apply this coordinate to index of queries via some kind of declarative reactive binding
-    return;
 
     slider.on("plotly_sliderchange", function (e) {
         console.log("Slider change ", e);
-        storyPage.applier.change(["activeSubPanes", paneIndex], e.slider.active);
+        that.sliderIndex.value = e.slider.active;
         if (that.timer) {
             window.clearInterval(that.timer);
             delete that.timer;
         }
     });
-    // Initialises with the assumption that the 0th subpane should be initially active - makes sense for choropleths
-    // but what about others?
-    storyPage.applier.change(["activeSubPanes", paneIndex], 0);
+    that.sliderIndex.value = 0;
+    that.labels.value = element.layout.sliders[0].steps.map(step => step.label);
 };
 
 fluid.defaults("reknitr.withSliderAnimation", {
@@ -121,20 +142,45 @@ fluid.defaults("reknitr.withSliderAnimation", {
     }
 });
 
-reknitr.withSliderAnimation.bind = function (element, that, paneHandler, storyPage) {
+reknitr.withSliderAnimation.bind = function (element, that) {
     const limit = element.data.length;
-    const paneIndex = paneHandler.options.paneIndex;
-    // TODO: We no longer maintain activeSubPanes, put this somewhere else
-    return;
     that.timer = window.setInterval(function () {
-        const current = storyPage.model.activeSubPanes[paneIndex];
+        const current = element.layout.sliders[0].active;
         const next = (current + 1) % limit;
         // This updates the slider position and label, but not the plot
         Plotly.relayout(element, {"sliders.0.active": next});
         // This updates visibility of the plot - unknown why this doesn't happen from the former
         Plotly.restyle(element, {visible: element.layout.sliders[0].steps[next].args[1]});
-        storyPage.applier.change(["activeSubPanes", paneIndex], next);
+        that.sliderIndex.value = next;
     }, that.options.delay);
+};
+
+fluid.defaults("reknitr.choroplethSlider", {
+    gradeNames: ["reknitr.plotlySlider", "hortis.obsFilter"],
+    members: {
+        // isActive: "@expand:signal()",
+        // TODO: Interactional grade and syntax for this!
+        isActive: "{paneHandler}.isVisible",
+        queryCache: "@expand:fluid.computed(reknitr.choroplethSlider.queryCache, {that}.obsRows)",
+        filterState: "@expand:fluid.computed(reknitr.choroplethSlider.deriveFilterState, {that}.sliderIndex, {that}.labels, {that}.isActive, {that}.queryCache)"
+    },
+    invokers: {
+        doFilter: "reknitr.choroplethSlider.doFilter({arguments}.0, {arguments}.1)",
+        reset: "fluid.identity()"
+    }
+});
+
+reknitr.choroplethSlider.queryCache = function (obsRows) {
+    obsRows.forEach(row => row.yearCache = +row.eventDate.substring(0, 4));
+    return obsRows.length;
+};
+
+reknitr.choroplethSlider.deriveFilterState = function (sliderIndex, labels, isActive) {
+    return isActive ? +labels[sliderIndex] : null;
+};
+
+reknitr.choroplethSlider.doFilter = function (obsRows, filterState) {
+    return filterState === null ? obsRows : obsRows.filter(row => row.yearCache <= filterState);
 };
 
 reknitr.findPlotlyWidgets = function (storyPage, sectionHolders) {
@@ -142,9 +188,9 @@ reknitr.findPlotlyWidgets = function (storyPage, sectionHolders) {
     const sections = fluid.getMembers(sectionHolders, "section");
 
     console.log("Found " + widgets.length + " plotly widgets");
-    widgets.forEach(function (widget) {
-        const pane = widget.closest(".section");
-        const widgetId = reknitr.findPlotlyWidgetId(widget);
+    widgets.forEach(function (widgetNode) {
+        const pane = widgetNode.closest(".section");
+        const widgetId = reknitr.findPlotlyWidgetId(widgetNode);
         const index = sections.indexOf(pane);
 
         console.log("Plotly widget's pane index is " + index + " with id " + widgetId);
@@ -153,16 +199,17 @@ reknitr.findPlotlyWidgets = function (storyPage, sectionHolders) {
         if (widgetId) {
             const handler = reknitr.widgetHandlerForName(paneHandler, widgetId);
             if (handler) {
-                handler.events.bindWidget.fire(widget, handler, paneHandler, storyPage, paneHandler);
+                handler.events.bindWidget.fire(widgetNode, handler, paneHandler, storyPage);
             } else {
                 console.log("No widget handler configured for widget with id ", widgetId);
             }
         } else {
-            console.log("Warning: no widget id found for plotly widget ", widget);
+            console.log("Warning: no widget id found for plotly widget ", widgetNode);
         }
     });
 };
 
+// No references, currently disused
 fluid.defaults("reknitr.withNativeLegend", {
     modelListeners: {
         legendVisible: {
@@ -174,8 +221,8 @@ fluid.defaults("reknitr.withNativeLegend", {
 });
 
 reknitr.decodePaneName = function (node) {
-    const nameHolder = [...node.classList].find(clazz => clazz.startsWith("mxcw-paneName-"));
-    return nameHolder.substring("mxcw-paneName-".length);
+    const nameHolder = [...node.classList].find(clazz => clazz.startsWith("mxcw-paneKey-"));
+    return nameHolder.substring("mxcw-paneKey-".length);
 };
 
 // Index the collection of sectionHolder structure by paneHandlerName
@@ -197,8 +244,7 @@ reknitr.mapSectionHolders = function (storyPage) {
     console.log("Found " + sections.length + " sections");
     const togo = [...sections].map(function (section) {
         const heading = section.querySelector("h2");
-        const paneNameHolder = section.querySelector(".mxcw-mapPane");
-        const paneName = reknitr.decodePaneName(paneNameHolder);
+        const paneName = reknitr.decodePaneName(section);
         return {
             section, heading, paneName,
             subPanes: [],
@@ -218,31 +264,17 @@ reknitr.toggleClass = function (container, clazz, value, inverse) {
     container.classList[value ^ inverse ? "add" : "remove"](clazz);
 };
 
-reknitr.toggleActiveClass = function (nodes, clazz, selectedIndex) {
+/**
+ * Toggles a CSS class on a collection of nodes, activating it only for the node at the selected index.
+ * @param {Array<HTMLElement>} nodes - The array of DOM nodes to update.
+ * @param {String} clazz - The CSS class to toggle.
+ * @param {Number} selectedIndex - The index of the node to activate (add the class to); all others will have the class removed.
+ * @param {Boolean} [inverse] - If `true`, invert presence of class. All nodes will be given the class *except* selectedIndex.
+ */
+reknitr.toggleActiveClass = function (nodes, clazz, selectedIndex, inverse) {
     nodes.forEach(function (node, i) {
-        reknitr.toggleClass(node, clazz, i === selectedIndex);
+        reknitr.toggleClass(node, clazz, i === selectedIndex, inverse);
     });
-};
-
-reknitr.normaliseBounds = function (bounds) {
-    return [+bounds[0], +bounds[1], +bounds[2], +bounds[3]];
-};
-
-reknitr.expandBounds = function (bounds, factor) {
-    const [lat1, long1, lat2, long2] = reknitr.normaliseBounds(bounds);
-
-    // Calculating the central point of the bounding box
-    const centerLat = (lat1 + lat2) / 2;
-    const centerLong = (long1 + long2) / 2;
-
-    // Calculating the new dimensions of the bounding box
-    const newLat1 = centerLat - (centerLat - lat1) * factor;
-    const newLong1 = centerLong - (centerLong - long1) * factor;
-    const newLat2 = centerLat + (lat2 - centerLat) * factor;
-    const newLong2 = centerLong + (long2 - centerLong) * factor;
-
-    // Creating and returning the expanded bounds array
-    return [newLat1, newLong1, newLat2, newLong2];
 };
 
 reknitr.paneKeyToIndex = function (handler, storyPage) {
@@ -282,24 +314,21 @@ reknitr.paneHandlerForIndex = function (storyPage, paneIndex) {
 };
 
 reknitr.widgetHandlerForName = function (paneHandler, widgetId) {
-    const widgetHandlers = fluid.queryIoCSelector(paneHandler, "reknitr.widgetHandler", true);
+    const widgetHandlers = fluid.queryIoCSelector(paneHandler, "reknitr.htmlWidget", true);
     return widgetHandlers.find(handler => fluid.getForComponent(handler, "options.widgetKey") === widgetId);
 };
 
-reknitr.applyContentClass = function (hash, contentClass) {
-    // TODO: split on space or iterate array etc.
-    if (contentClass) {
-        hash[contentClass] = true;
-    }
+reknitr.allocateDataPanes = function (dataPanesHolder, storyPage) {
+    const paneHandlers = fluid.queryIoCSelector(storyPage, "reknitr.paneHandler", true);
+    return paneHandlers.map((paneHandler) => {
+        const dataPane = document.createElement("div");
+        dataPane.classList.add("mxcw-dataPane");
+        dataPane.classList.add("mxcw-dataPane-" + paneHandler.options.paneKey);
+        dataPanesHolder.appendChild(dataPane);
+        return dataPane;
+    });
 };
 
-reknitr.computeAllContentClassHash = function (storyPage) {
-    const paneHandlers = fluid.queryIoCSelector(storyPage, "reknitr.paneHandler", true);
-    const contentClassHash = {};
-    paneHandlers.map(paneHandler => fluid.getForComponent(paneHandler, ["options", "contentClass"]))
-        .forEach(contentClass => reknitr.applyContentClass(contentClassHash, contentClass));
-    return contentClassHash;
-};
 
 reknitr.unflattenOptions = function (records) {
     return fluid.transform(records, record => ({
@@ -336,59 +365,171 @@ fluid.defaults("hortis.libreMap.withRegions", {
             }
         }
     },
-    modelListeners: {
-        paneToRegion: {
-            path: "{storyPage}.model.activePane",
-            args: ["{storyPage}", "{map}", "{change}.value"],
-            funcName: "reknitr.paneToRegion"
-        }
-    },
     listeners: {
         "onCreate.bindRegionSelect": "hortis.libreMap.bindRegionSelect({that})"
     }
 });
 
-reknitr.paneToRegion = function (storyPage, map, activePane) {
-    const paneHandler = reknitr.paneHandlerForIndex(storyPage, activePane);
-    const selectRegion = paneHandler?.options.selectRegion;
-    map.selectedRegion.value = selectRegion;
-};
-
-hortis.libreMap.layersToLabels = function (layers) {
-    return Object.fromEntries(layers.filter(layer => layer.label).map(layer => [layer.id, layer.label]));
+hortis.libreMap.eventToRegion = function (map, e) {
+    const features = map.queryRenderedFeatures(e.point);
+    const visibleFeatures = features.filter(feature => feature.layer.paint["fill-opacity"] > 0);
+    return visibleFeatures[0]?.layer.id || null;
 };
 
 hortis.libreMap.bindRegionSelect = function (that) {
     const map = that.map;
-    that.options.selectableRegions.forEach(selectableRegion => {
-        map.on("click", selectableRegion, (e) => {
-            console.log("Region ", selectableRegion, " clicked: ", e);
-            that.selectedRegion.value = selectableRegion;
-        });
-        // https://stackoverflow.com/a/59203845
-        map.on("mouseenter", selectableRegion, () => {
-            map.getCanvas().style.cursor = "pointer";
-        });
-        map.on("mouseleave", selectableRegion, () => {
-            map.getCanvas().style.cursor = "";
-        });
-    });
 
     map.on("mousemove", (e) => {
-        const features = map.queryRenderedFeatures(e.point);
-        const visibleFeatures = features.filter(feature => feature.layer.paint["fill-opacity"] > 0);
         that.hoverEvent = e.originalEvent;
-        that.hoverRegion.value = visibleFeatures[0]?.layer.id || null;
+        const regionId = hortis.libreMap.eventToRegion(map, e);
+        that.hoverRegion.value = regionId;
+        map.getCanvas().style.cursor = regionId ? "pointer" : "";
+    });
+
+    map.on("click", (e) => {
+        const regionId = hortis.libreMap.eventToRegion(map, e);
+        if (regionId) {
+            console.log("Region ", regionId, " clicked: ", e);
+            that.selectedRegion.value = regionId;
+        } else {
+            that.selectedRegion.value = null;
+            that.selectedStatus.value = null;
+        }
     });
 
     map.getCanvas().addEventListener("mouseleave", () => hortis.clearAllTooltips(that));
 };
 
+
+fluid.registerNamespace("reknitr.legendKey");
+
+reknitr.legendKey.rowTemplate = `
+<div class="imerss-legend-row %rowClass">
+    <span class="imerss-legend-icon"></span>
+    <span class="imerss-legend-preview %previewClass" style="%previewStyle"></span>
+    <span class="imerss-legend-label">%keyLabel</span>
+</div>`;
+
+// Improved version which deals with status|cell style regions seen in Marine Atlas
+// TODO: Do we need this any more?
+hortis.normaliseToClass = function (str) {
+    return str.toLowerCase().replace(/[| ]/g, "-");
+};
+
+/**
+ * @typedef {Object} RegionInfo
+ * @property {String} [fillColor] - The fill color for the region.
+ * @property {String} [color] - The fallback color for the region if fillColor is not provided.
+ * @property {String} [fillPatternUrl] - Optional URL for a fill pattern image.
+ */
+
+/**
+ * Renders a legend row markup for a given region.
+ *
+ * @param {String} markup - The HTML template string for the legend row.
+ * @param {RegionInfo} regionInfo - Information about the region, including color and optional fill pattern URL.
+ * @param {String} regionKey - The name of the region to be displayed in the legend.
+ * @param {String} regionName - The name of the region to be displayed in the legend.
+ * @return {String} The rendered HTML markup for the legend row with appropriate classes and styles.
+ *
+ * This function generates a legend row by filling in the template with:
+ * - A CSS class for the row and preview, normalized from the region name.
+ * - Inline styles for background color and optional fill pattern.
+ * - The display label for the region.
+ */
+reknitr.legendKey.renderMarkup = function (markup, regionInfo, regionKey, regionName) {
+    const backColour = regionInfo.fillColor || regionInfo.color;
+    const normal = hortis.normaliseToClass(regionKey);
+    return fluid.stringTemplate(markup, {
+        rowClass: "imerss-legend-row-" + normal,
+        previewClass: "imerss-region-" + normal,
+        previewStyle: (regionInfo.fillPatternUrl ? `background-image: url(${regionInfo.fillPatternUrl});\n` : "") + "background-color: " + backColour,
+        keyLabel: regionName
+    });
+};
+
+// cf. Xetthecum's hortis.legendKey.drawLegend in leafletMapWithRegions.js - it has a block template and also makes
+// a fire to selectRegion with two arguments.
+reknitr.legendKey.addLegendControl = function (map, regionRowsSignal, isVisibleSignal) {
+    const control = reknitr.legendKey.drawLegend(map, regionRowsSignal, isVisibleSignal);
+    control.onAdd = () => control.container;
+    control.onRemove = () => {
+        console.log("Cleaning up legend attached to ", control.container);
+        control.cleanup();
+    };
+
+    map.map.addControl(control, "bottom-right");
+
+    return control;
+};
+
+reknitr.indexRegionRows = function (regionRows) {
+    return Object.fromEntries(regionRows.map(row => [row.regionKey, row]));
+};
+
+reknitr.legendKey.drawLegend = function (map, regionRowsSignal, isVisibleSignal) {
+    const container = document.createElement("div");
+    container.classList.add("mxcw-legend");
+    container.classList.add("maplibregl-ctrl"); // to ensure it receives pointer events
+
+    const f = regionKey => {
+        const rowSel = ".imerss-legend-row-" + hortis.normaliseToClass(regionKey);
+        return container.querySelector(rowSel);
+    };
+    let bindSelectionEffect;
+
+    const renderLegend = function (regionRows) {
+        console.log("Rendering legend since " + regionRows.length + " rows have arrived");
+        if (regionRows.length > 0) {
+
+            regionRows.forEach(row => {
+                if (row.fillPattern) {
+                    row.fillPatternUrl = map.urlForFillPattern(row.fillPattern);
+                }
+            });
+            const regionIndex = reknitr.indexRegionRows(regionRows);
+
+            const regionMarkupRows = regionRows.map(function ({regionKey}) {
+                return reknitr.legendKey.renderMarkup(reknitr.legendKey.rowTemplate, regionIndex[regionKey], regionKey, regionKey);
+            });
+            const markup = regionMarkupRows.join("\n");
+            container.innerHTML = markup;
+
+            const bindState = map[regionRows[0].bindState];
+
+            regionRows.forEach(function ({regionKey}) {
+                f(regionKey).addEventListener("click", function () {
+                    bindState.value = regionKey;
+                });
+            });
+            if (bindSelectionEffect) {
+                bindSelectionEffect();
+            }
+
+            bindSelectionEffect = fluid.effect(function (selectedRegion) {
+                regionRows.forEach(({regionKey}) => {
+                    reknitr.toggleClass(f(regionKey), "imerss-selected", selectedRegion === regionKey);
+                });
+            }, bindState.value);
+        }
+
+        isVisibleSignal.value = regionRows.length > 0;
+    };
+
+    fluid.effect(renderLegend, regionRowsSignal);
+    fluid.effect(isVisible => reknitr.toggleClass(container, "mxcw-hidden", !isVisible), isVisibleSignal);
+
+    return {container};
+};
+
+// TODO: This has been designed wrongly, with a single multiplexed structure transmitted by "regionRows" - which
+// then gets demultiplexed by the "bindState" member of the rows. It should be
+// reorganised so that each paneHandler can have its own legend which then ends up being projected onto the map.
 fluid.defaults("hortis.libreMap.regionLegend", {
     gradeNames: "fluid.component",
     members: {
-        regionRows: "{vizLoader}.regionLoader.rows",
-        control: "@expand:reknitr.legendKey.addLegendControl({map}, {that}.regionRows, {that}.isVisible)",
+        regionLegendRows: "@expand:signal([])",
+        control: "@expand:reknitr.legendKey.addLegendControl({map}, {that}.regionLegendRows, {that}.isVisible)",
         isVisible: "@expand:signal(true)"
     }
 });
@@ -427,6 +568,7 @@ fluid.defaults("reknitr.storyPage", {
     //mapFlavourGrade: [],
     selectors: {
         sections: ".section.level2",
+        dataPanesHolder: ".mxcw-data",
         heading: "h2",
         map: ".mxcw-map",
         mapHolder: ".mxcw-map-holder",
@@ -460,15 +602,17 @@ fluid.defaults("reknitr.storyPage", {
         }
     },
     members: {
-        // Special flag used in reknitr.updateActiveMapPane due to lack of zoom callback API
-        mapHasBounds: false,
         sectionHolders: "@expand:reknitr.mapSectionHolders({that})",
+        dataPanes: "@expand:reknitr.allocateDataPanes({that}.dom.dataPanesHolder.0, {that})",
         paneKeyToIndex: "@expand:reknitr.sectionHoldersToIndex({that}.sectionHolders)",
         navRangeHolder: "@expand:reknitr.storyPage.navRangeHolder({that})",
-        allContentClassHash: "@expand:reknitr.computeAllContentClassHash({that})",
+        // state
         activePane: "@expand:signal()",
+        activePaneHandler: "@expand:fluid.computed(reknitr.paneHandlerForIndex, {that}, {that}.activePane)",
         // "model listeners"
-        updateActiveMapPane: "@expand:fluid.effect(reknitr.updateActiveMapPane, {that}, {that}.map, {that}.activePane, {that}.map.mapLoaded)"
+        updateActiveMapPane: "@expand:fluid.effect(reknitr.updateActiveMapPane, {that}, {that}.map, {that}.activePane, {that}.map.mapLoaded)",
+        updateActiveDataPane: "@expand:fluid.effect(reknitr.updateActiveDataPane, {that}, {that}.activePane)",
+        updateGridVisible: "@expand:fluid.effect(reknitr.updateGridVisible, {that}.map, {that}.activePaneHandler)"
     },
     invokers: {
         navSection: "reknitr.navSection({that}.navRangeHolder, {arguments}.0, {arguments}.1)"
@@ -477,8 +621,6 @@ fluid.defaults("reknitr.storyPage", {
         // Currently this is at the head of updates - > activePane in model and then activePane signal
         activeSection: 0,
         activePane: 0,
-        // Map of pane indices to active subpanes
-        activeSubPanes: [],
         // Prevent the component trying to render until plotly's postRenderHandler has fired
         plotlyReady: "{that}.resources.plotlyReady.parsed"
     },
@@ -505,18 +647,6 @@ fluid.defaults("reknitr.storyPage", {
             funcName: "reknitr.updateMapVisible",
             args: ["{that}", "{change}.value"],
             priority: "first" // ensure map becomes visible before we attempt to set its initial bounds
-        },/*
-        // TODO move to withLegend, hoist up
-                legendVisible: {
-            path: "activePane",
-            funcName: "reknitr.updateLegendVisible",
-            args: ["{that}", "{change}.value"],
-            priority: "first"
-        },*/
-        contentClass: {
-            path: "activePane",
-            funcName: "reknitr.updateContentClass",
-            args: ["{that}", "{change}.value"]
         },
         updatePaneHash: {
             // Close any open taxon panel - perhaps better to react to a change in activeSection instead,
@@ -583,6 +713,14 @@ reknitr.listenPaneHash = function (storyPage, paneName) {
 reknitr.layerOpacityProperty = function (layer) {
     return layer.type === "line" ? "line-opacity" :
         layer.type === "fill" ? "fill-opacity" : null;
+};
+
+reknitr.updateGridVisible = function (map, paneHandler) {
+    map.gridVisible.value = !!paneHandler.options.gridVisible;
+};
+
+reknitr.updateActiveDataPane = function (that, activePane) {
+    reknitr.toggleActiveClass(that.dataPanes, "fl-hidden", activePane, true);
 };
 
 reknitr.updateActiveMapPane = function (that, map, activePane) {
@@ -652,6 +790,7 @@ reknitr.updateMapVisible = function (that, activePane) {
     }
     const isVisible = !fluid.componentHasGrade(paneHandler, "reknitr.mapHidingPaneHandler");
     reknitr.toggleClass(that.dom.locate("mapHolder")[0], "mxcw-hideMap", isVisible, true);
+    reknitr.toggleClass(document.querySelector(".imerss-container"), "fl-hidden", isVisible, true);
 };
 
 reknitr.updateLegendVisible = function (that, activePane) {
@@ -661,15 +800,6 @@ reknitr.updateLegendVisible = function (that, activePane) {
     }
     const hideLegend = paneHandler.options.hideLegend;
     that.map.legend.isVisible.value = !hideLegend;
-};
-
-reknitr.updateContentClass = function (that, activePane) {
-    const paneHandler = reknitr.paneHandlerForIndex(that, activePane);
-    const hash = fluid.transform(that.allContentClassHash, () => false);
-    reknitr.applyContentClass(hash, paneHandler.options.contentClass);
-    Object.entries(hash).forEach(([clazz, state]) => {
-        reknitr.toggleClass(that.locate("contentHolder")[0], clazz, state);
-    });
 };
 
 // Compute the destination section for a navigation operation, given a "Range" record, the current active section and the desired offset
@@ -732,7 +862,6 @@ reknitr.updateSectionNav = function (that, activeSection) {
 
 fluid.defaults("reknitr.paneHandler", {
     gradeNames: "fluid.viewComponent",
-    // TODO: normalise paneKey -> paneName
     paneKey: "{sourcePath}",
     paneIndex: "@expand:reknitr.paneKeyToIndex({that}, {reknitr.storyPage})",
     members: {

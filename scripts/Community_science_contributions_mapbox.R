@@ -23,7 +23,7 @@ source("scripts/mapbox_map_common.R")
 # Load map layers
 # Layer 1: hillshade raster
 hillshade.source <- geotiff_to_mapbox_source("spatial_data/rasters/Hillshade_80m.tif", id="Hillshade")
-hillshade.feature <- list(type = "raster", source = "Hillshade", rasterOpacity = 0.8, paint = spectral_raster_color_paint())
+hillshade.feature <- list(type = "raster", source = "Hillshade", rasterOpacity = 0.8, paint = spectral_raster_color_paint(), Z_Order = 0.75)
 
 # Layer 2: coastline
 coastline <- mx_read("spatial_data/vectors/Islands_and_Mainland")
@@ -74,7 +74,6 @@ new.no <- c(nrow(new))
 reporting.status <- data.frame(y, confirmed.no, historical.no, new.no)
 
 reportingStatusFig <- plot_ly(height = 140, reporting.status, x = ~confirmed.no, y = ~y, type = 'bar', orientation = 'h', name = 'confirmed',
-
                       marker = list(color = '#5a96d2',
                              line = list(color = '#5a96d2',
                                          width = 1)))
@@ -97,25 +96,3 @@ reportingStatusFig <- reportingStatusFig %>% layout(barmode = 'stack', autosize=
   config(displayModeBar = FALSE, responsive = TRUE)
 
 reportingStatusFig
-
-reportingPal <- list("confirmed" = "#5a96d2", "historical" = "#decb90", "new" = "#7562b4")
-
-# Write summarised plants to JSON file for viz
-# (selection states corresponding with bar plot selections: 'new', 'historical','confirmed')
-statusData <- structure(list(palette = reportingPal, mapTitle = "Map 3. Species Reporting Status"))
-
-write_json(statusData, "viz_data/Status-plotData.json")
-
-# Export CSVs for confirmed, historical and new reports
-
-plants <- timedFread("tabular_data/Howe_Sound_vascular_plant_records_consolidated_2024-11-14.csv")
-
-confirmed.taxa.records <- plants %>% filter(scientificName %in% confirmed$scientificName)
-new.taxa.records <- plants %>% filter(scientificName %in% new$scientificName)
-historical.taxa.records <- plants %>% filter(scientificName %in% historical$scientificName)
-
-timedWrite(confirmed.taxa.records, "outputs/AHSBR_vascular_plants_confirmed_taxa_records.csv")
-
-timedWrite(new.taxa.records, "outputs/AHSBR_vascular_plants_new_taxa_records.csv")
-
-timedWrite(historical.taxa.records, "outputs/AHSBR_vascular_plants_historical_taxa_records.csv")

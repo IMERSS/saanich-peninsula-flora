@@ -1,5 +1,6 @@
 body {
     font-family: Arial, Helvetica, sans-serif;
+    overflow: hidden;
 }
 
 h2 {
@@ -24,7 +25,9 @@ h2 {
     position: absolute;
     top: 5px;
     width: calc(100% + 50px);
-
+    margin-left: -3rem;
+    margin-right: -3rem;
+    z-index: 200;
 }
 
 .mxcw-section-nav .mxcw-hidden {
@@ -68,11 +71,9 @@ h2 {
     overflow: hidden;
 }
 
-/*
-.main-container {
-    height: 100%;
+.mxcw-content a {
+    text-decoration: underline;
 }
- */
 
 .section.level2 {
     height: 100%;
@@ -151,6 +152,7 @@ h2 {
     transition-property: height;
     transition-duration: 800ms;
     position: relative;
+    color: #eefaff;
 }
 
 .section-button {
@@ -189,6 +191,7 @@ h2 {
     z-index: 50;
     border: solid 1px black;
     background-color: white;
+    color: black;
 }
 
 .section-right-desc {
@@ -199,29 +202,40 @@ h2 {
     display: block;
 }
 
-.mxcw-map {
-    /*height: 100%; */
-    min-height: 0;
+.mxcw-leftPane {
+    display: flex;
+    flex-direction: column;
     width: 60%;
+    /* For God's sake I really mean it! */
+    min-width: 60%;
+}
+
+.mxcw-map {
+    height: 80%;
+    min-height: 0;
+    width: 100%;
     min-width: auto;
     transition-property: height;
     margin: 0px auto;
     overflow: hidden;
     z-index: 5;
+    color: black;
 
     /** Somehow this works when hiding but not when showing */
+    /*
     transition-duration: 800ms;
+     */
 }
 
 .mxcw-hideMap .mxcw-map {
     height: 0;
     min-height: 0;
 }
-
-/* "Data pane" has been abolished, keep around since some widgets might end up in here at some point */
 .mxcw-data {
-    /* height: 50%;*/
-    display: none;
+    z-index: 5;
+    opacity: 1;
+    color: black;
+    padding-top: 1rem;
 }
 
 .mxcw-hideMap ~ .mxcw-content-holder {
@@ -247,6 +261,11 @@ h2 {
     max-width: 100%;
     display: block;
     margin: auto;
+}
+
+.mxcw-content h2 {
+    font-size: larger;
+    font-weight: 700;
 }
 
 .mxcw-mapPane {
@@ -293,6 +312,7 @@ body .mx-header ::-webkit-scrollbar-thumb {
 /* Override Xetthecum definition */
 .imerss-container {
     margin: 0px;
+    height: 50%;
 }
 
 /* Styling for native legends */

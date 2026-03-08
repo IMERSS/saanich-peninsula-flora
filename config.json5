@@ -7,8 +7,12 @@
         options: {
             storyPageOptions: {
                 gradeNames: "reknitr.storyPage.withVizLoader",
+                mapFlavourGrade: ["hortis.libreMap.withMapboxData", "hortis.libreMap.withRegions", "hortis.libreMap.withRegionLegend"],
+                // No zooms in this configuration
+                zoomDuration: 0,
+                slowZoomDuration: 0,
                 gridResolution: 1000,
-                selectableRegions: [],
+                regionFilterFieldNames: ["BEC", "Protected"],
                 selectors: {
                     /** This one is used for toggling **/
                     mapHolder: ".mxcw-map"
@@ -25,58 +29,34 @@
             },
             paneHandlers: {
                 Vascular_BEC: {
-                    type: "reknitr.paneHandler"
+                    type: "reknitr.paneHandler",
+                    gradeNames: ["reknitr.paneHandler.withRegionLegend"]
                 },
                 History: {
                     type: "reknitr.paneHandler",
                     widgets: {
                         speciesPlot: {
                             type: "reknitr.choroplethSlider",
-                            gradeNames: ["reknitr.withSliderAnimation", "reknitr.withResizableWidth"]
+                            gradeNames: ["reknitr.withSliderAnimation", "reknitr.withResizableWidth", "reknitr.dataPaneWidget"],
+                            members: {
+                                obsRows: "{vizLoader}.obsRows"
+                            }
                         }
                     }
                 },
                 Status: {
-                    type: "reknitr.paneHandler",
-                    widgets: {
-                        reportingStatus: {
-                            type: "reknitr.regionSelectionBar"
-                            // Expects .imerss-checklist-widgets, query design later
-                            // gradeNames: "reknitr.regionSelectionBar.withHoist"
-                        }
-                    }
-                }
-            }
-            /*
-            paneHandlers: {
-                Vascular: {
-                    type: "reknitr.scrollyPaneHandler",
-                    gradeNames: ["reknitr.withRegionPaneInfo", "reknitr.scrollyVizBinder.withLegend", "reknitr.scrollyVizBinder"],
-                    regionBinderGrades: ["reknitr.withLabelledRegionName"],
-                    vizFile: "%resourceBase/data/Howe-Sound-Scrolly-Life-Vascular-2025.json.lz4",
-                    phyloMap: "%resourceBase/json/howePhyloMap.json",
-                    downloadTemplate: "data/tabular/AHSBR_%regionName_vascular_plants.csv"
-                },
-                History: {
-                    type: "reknitr.scrollyPaneHandler",
-                    widgets: {
-                        speciesPlot: {
-                            type: "reknitr.choroplethSlider",
-                            gradeNames: ["reknitr.withSliderAnimation", "reknitr.withResizableWidth"]
-                        }
-                    }
-                },
-                Status: {
-                    type: "reknitr.scrollyPaneHandler",
-                    gradeNames: ["reknitr.withPaneInfo", "reknitr.scrollyVizBinder.withLegend", "reknitr.scrollyVizBinder"],
-                    paneInfoGrades: ["reknitr.statusCellPaneInfo"],
-                    vizFile: "%resourceBase/data/Howe-Sound-Scrolly-Life-Status-2025.json.lz4",
-                    phyloMap: "%resourceBase/json/howePhyloMap.json",
-                    regionMarkup: "Selected reporting status: <span class=\"fl-imerss-region-key\">%region</span>",
+                    type: "reknitr.statusPaneHandler",
                     widgets: {
                         reportingStatus: {
                             type: "reknitr.regionSelectionBar",
-                            gradeNames: "reknitr.regionSelectionBar.withHoist"
+                            components: {
+                                statusFilter: "{storyPage}.statusFilter",
+                            },
+                            members: {
+                                selectedStatus: "{storyPage}.map.selectedStatus"
+                            }
+                            // Expects .imerss-checklist-widgets, query design later
+                            // gradeNames: "reknitr.regionSelectionBar.withHoist"
                         }
                     }
                 },
@@ -102,17 +82,15 @@
                     }
                 },
                 Protected: {
-                    type: "reknitr.scrollyPaneHandler",
-                    gradeNames: "reknitr.withPaneInfo",
+                    type: "reknitr.paneHandler",
                     widgets: {
                         protectedAreas: {
-                            type: "reknitr.widgetHandler",
-                            gradeNames: "reknitr.withResizableWidth"
+                            type: "reknitr.htmlWidget",
+                            gradeNames: ["reknitr.withResizableWidth", "reknitr.dataPaneWidget"]
                         }
                     }
                 }
             }
-            */
         }
     }],
     copyJobs: [{ // TODO: Extend module-relative addressing to 3rd-party modules
