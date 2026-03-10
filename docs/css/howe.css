@@ -12,23 +12,12 @@
     background-color: white;
 }
 
-/** These three stale **/
-
-
-.mxcw-widgetPane-Protected div {
-    text-align: end;
-}
-
-.mxcw-widgetPane-Protected p {
-    margin-block-start: 1em;
-    margin-block-end: 0;
-}
-
-.mxcw-widgetPane-Protected .fld-imerss-pane-info {
+/** Don't display these for now, dedicated panels exist **/
+.imerss-blitz-records {
     display: none;
 }
 
-/** Don't display these for now, dedicated panels exist **/
-.imerss-blitz-records, .imerss-filters {
+/** We need the filter impl but no UI */
+.imerss-dataset-filter {
     display: none;
 }

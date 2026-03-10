@@ -266,7 +266,7 @@ fluid.defaults("reknitr.regionSelectionBar.withHoist", {
             priority: "before:impl"
         }
     },
-    resizableParent: ".imerss-checklist-outer"
+    resizableWidthParent: ".imerss-checklist-outer"
 });
 
 reknitr.regionSelectionBar.hoist = function (element, that, paneHandler) {

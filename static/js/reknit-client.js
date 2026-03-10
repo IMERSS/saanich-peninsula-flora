@@ -61,7 +61,7 @@ fluid.defaults("reknitr.dataPaneWidget", {
         storyPage: "{storyPage}",
         paneHandler: "{paneHandler}"
     },
-    resizableParent: ".mxcw-dataPane",
+    resizableWidthParent: ".mxcw-dataPane",
     dataPaneWidget: true
 });
 
@@ -76,11 +76,21 @@ reknitr.htmlWidget.bindFirst = function (element, that) {
 // Mixin grade for reknitr.htmlWidget
 fluid.defaults("reknitr.withResizableWidth", {
     // TODO: Is .mxcw-dataPane for dataPaneWidget, wot no interactional grades
-    resizableParent: ".mxcw-sectionColumn",
+    resizableWidthParent: ".mxcw-sectionColumn",
     listeners: {
-        "bindWidget.makeResizable": {
-            func: "reknitr.makeResizableWidth",
-            args: ["{that}", "{arguments}.0", "{paneHandler}", "{that}.options.resizableParent"]
+        "bindWidget.makeResizableWidth": {
+            func: "reknitr.makeResizable",
+            args: ["{that}", "{arguments}.0", "{paneHandler}", "{that}.options.resizableWidthParent", "width", "clientWidth"]
+        }
+    }
+});
+
+fluid.defaults("reknitr.withResizableHeight", {
+    resizableHeightParent: ".mxcw-data",
+    listeners: {
+        "bindWidget.makeResizableHeight": {
+            func: "reknitr.makeResizable",
+            args: ["{that}", "{arguments}.0", "{paneHandler}", "{that}.options.resizableHeightParent", "height", "clientHeight"]
         }
     }
 });
@@ -89,21 +99,21 @@ reknitr.findPlotlyWidgetId = function (widget) {
     return widget.layout?.meta?.mx_widgetId;
 };
 
-reknitr.makeResizableWidth = function (widget, element, paneHandler, selector) {
+reknitr.makeResizable = function (widget, element, paneHandler, selector, property, measure) {
     // TODO: remove listener on destruction
     const resizeIt = function () {
         const parent = element.closest(selector);
-        const newWidth = parent.clientWidth;
-        if (newWidth > 0) {
-            Plotly.relayout(element, {width: newWidth});
+        const newDimen = parent[measure];
+        if (newDimen > 0) {
+            Plotly.relayout(element, {[property]: newDimen});
         }
     };
 
     window.addEventListener("resize", resizeIt);
     // TODO: General notation for disposable effects
-    widget.resizeEffect = fluid.effect(() => {
+    fluid.pushArray(widget, "widgetEffects", fluid.effect(() => {
         fluid.invokeLater(resizeIt);
-    }, fluid.computed(isVisible => isVisible || undefined, paneHandler.isVisible));
+    }, fluid.computed(isVisible => isVisible || undefined, paneHandler.isVisible)));
 };
 
 fluid.defaults("reknitr.plotlySlider", {
@@ -254,12 +264,14 @@ reknitr.mapSectionHolders = function (storyPage) {
     return togo;
 };
 
-
-// Search through an HTMLWidgets "calls" structure for a method with particular name
-reknitr.findCall = function (calls, method) {
-    return calls.find(call => call.method === method);
-};
-
+/**
+ * Toggles a CSS class on a DOM element based on a boolean value.
+ *
+ * @param {HTMLElement} container - The DOM element to modify.
+ * @param {String} clazz - The CSS class to add or remove.
+ * @param {Boolean} value - If true, the class will be added; if false, it will be removed.
+ * @param {Boolean} [inverse] - If true, inverts the logic (adds the class when value is false).
+ */
 reknitr.toggleClass = function (container, clazz, value, inverse) {
     container.classList[value ^ inverse ? "add" : "remove"](clazz);
 };
@@ -352,8 +364,8 @@ fluid.defaults("hortis.libreMap.withRegions", {
     members: {
         selectedRegion: "@expand:signal()",
         hoverRegion: "@expand:signal(null)",
-        layerToLabel: "@expand:hortis.libreMap.layerToLabel({that}.options.mapOptions.style.layers)"
-
+        layerToLabel: "@expand:hortis.libreMap.layerToLabel({that}.options.mapOptions.style.layers)",
+        highlightSelectedRegion: "@expand:fluid.effect(hortis.libreMap.highlightSelectedRegion, {that}.map, {that}.selectedRegion)"
     },
     tooltipKey: "hoverRegion",
     invokers: {
@@ -369,6 +381,23 @@ fluid.defaults("hortis.libreMap.withRegions", {
         "onCreate.bindRegionSelect": "hortis.libreMap.bindRegionSelect({that})"
     }
 });
+
+hortis.libreMap.highlightSelectedRegion = function (map, selectedRegion) {
+    if (map.getLayer("region-highlight")) {
+        map.removeLayer("region-highlight");
+    }
+    if (selectedRegion) {
+        map.addLayer({
+            id: "region-highlight",
+            type: "line",
+            source: selectedRegion,
+            paint: {
+                "line-color": "yellow",
+                "line-width": 3
+            }
+        });
+    }
+};
 
 hortis.libreMap.eventToRegion = function (map, e) {
     const features = map.queryRenderedFeatures(e.point);
@@ -612,7 +641,8 @@ fluid.defaults("reknitr.storyPage", {
         // "model listeners"
         updateActiveMapPane: "@expand:fluid.effect(reknitr.updateActiveMapPane, {that}, {that}.map, {that}.activePane, {that}.map.mapLoaded)",
         updateActiveDataPane: "@expand:fluid.effect(reknitr.updateActiveDataPane, {that}, {that}.activePane)",
-        updateGridVisible: "@expand:fluid.effect(reknitr.updateGridVisible, {that}.map, {that}.activePaneHandler)"
+        updateGridVisible: "@expand:fluid.effect(reknitr.updateGridVisible, {that}.map, {that}.activePaneHandler)",
+        updateFiltersVisible: "@expand:fluid.effect(reknitr.updateFiltersVisible, {that}.map, {that}.activePaneHandler)"
     },
     invokers: {
         navSection: "reknitr.navSection({that}.navRangeHolder, {arguments}.0, {arguments}.1)"
@@ -717,6 +747,11 @@ reknitr.layerOpacityProperty = function (layer) {
 
 reknitr.updateGridVisible = function (map, paneHandler) {
     map.gridVisible.value = !!paneHandler.options.gridVisible;
+};
+
+reknitr.updateFiltersVisible = function (paneHandler) {
+    const filters = document.querySelector(".imerss-filters");
+    reknitr.toggleClass(filters, "fl-hidden", !paneHandler.options.filtersVisible);
 };
 
 reknitr.updateActiveDataPane = function (that, activePane) {

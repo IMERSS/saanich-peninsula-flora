@@ -34,4 +34,4 @@ of the plant diversity known to the region on iNaturalist.
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 source("scripts/Community_science_contributions_mapbox.R")
 reportingStatusMap
-reportingStatusFig
+```

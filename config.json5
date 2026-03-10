@@ -45,20 +45,7 @@
                     }
                 },
                 Status: {
-                    type: "reknitr.statusPaneHandler",
-                    widgets: {
-                        reportingStatus: {
-                            type: "reknitr.regionSelectionBar",
-                            components: {
-                                statusFilter: "{storyPage}.statusFilter",
-                            },
-                            members: {
-                                selectedStatus: "{storyPage}.map.selectedStatus"
-                            }
-                            // Expects .imerss-checklist-widgets, query design later
-                            // gradeNames: "reknitr.regionSelectionBar.withHoist"
-                        }
-                    }
+                    type: "reknitr.statusPaneHandler"
                 },
                 TopContributions: {
                     type: "reknitr.iNatComponentsPaneHandler",
@@ -86,7 +73,7 @@
                     widgets: {
                         protectedAreas: {
                             type: "reknitr.htmlWidget",
-                            gradeNames: ["reknitr.withResizableWidth", "reknitr.dataPaneWidget"]
+                            gradeNames: ["reknitr.withResizableWidth", "reknitr.withResizableHeight", "reknitr.dataPaneWidget"]
                         }
                     }
                 }
