@@ -1,3 +1,27 @@
 # Content preparation in R and JS before executing Hugo
 
-source("R/utils.R")
+# Copy files from data/tabular_data to docs/data/tabular
+
+src_dir <- "tabular_data"
+dst_dir <- "docs/data/tabular"
+
+# Create destination directory if it doesn't exist
+dir.create(dst_dir, recursive = TRUE, showWarnings = FALSE)
+
+files <- c(
+  "Howe_Sound_vascular_plant_records_consolidated_2024-11-labels.csv",
+  "Howe_Sound_vascular_plant_records_consolidated_2024-11-prepared-taxa.csv",
+  "Howe_Sound_vascular_plant_records_consolidated_2024-11-regionIndirection.csv"
+)
+
+for (f in files) {
+  src <- file.path(src_dir, f)
+  dst <- file.path(dst_dir, f)
+  if (!file.exists(src)) {
+    warning("Source file not found: ", src)
+  } else if (file.copy(src, dst, overwrite = TRUE)) {
+    cat("Copied:", f, "\n")
+  } else {
+    warning("Failed to copy: ", src)
+  }
+}

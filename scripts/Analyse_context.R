@@ -1,6 +1,8 @@
 library(readr)
 library(dplyr)
 
+## Stanza 1: Reduce incoming GBIF data to 
+
 read_GBIF = function (filename) {
   sr_time <- Sys.time()
   # Advice from https://discourse.gbif.org/t/problem-parsing-large-occurrence-downloads/2570
@@ -11,11 +13,15 @@ read_GBIF = function (filename) {
 }
 
 allcat <- read_GBIF("big_data/gbif-howe-context-all-category-2026-03-06-raw.tsv")
+# Rough and ready, just resolve data at species level
+allcat$scientificName <- allcat$species
 
-allcat_reduced <- allcat[!duplicated(allcat$species), ]
+allcat_reduced <- allcat[!duplicated(allcat$scientificName), ] %>% filter(!is.na(scientificName))
 
-write.csv(allcat_reduced, "big_data/gbif-howe-context-all-category-2026-03-06-reduced.csv", row.names = FALSE, na = "")
+write.csv(allcat_reduced, "big_data/gbif-howe-context-all-category-2026-03-06-reduced.csv", row.names = FALSE, na = "", fileEncoding = "UTF-8")
 
+## Stanza 2: Compare GBIF data without taxon restriction to that questioned, which was:
+##Ochrophyta, Plantae, Animalia, Fungi, Protozoa
 
 
 allall <- read_GBIF("big_data/gbif-howe-context-all-2026-03-06-raw.tsv")
@@ -26,3 +32,11 @@ write.csv(allcat_reduced, "big_data/gbif-howe-context-all-2026-03-06-reduced.csv
 
 s1 <- dplyr::anti_join(allcat_reduced, allall_reduced, by=c("species"))
 s2 <- dplyr::anti_join(allall_reduced, allcat_reduced, by=c("species"))
+
+## Stanza 3: Reconstitute original "assigned" data by joining with assigned reduced data
+
+assigned <- readr::read_csv("big_data/gbif-howe-context-all-category-2026-03-06-assigned.csv", col_types = cols(.default = "c")) %>% filter(!is.na(species))
+
+joined <- dplyr::left_join(allcat, assigned, dplyr::join_by("species"))
+
+write.csv(joined, "big_data/gbif-howe-context-all-category-2026-03-06-assigned-full.csv", row.names = FALSE, na = "")

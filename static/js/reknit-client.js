@@ -439,10 +439,19 @@ reknitr.legendKey.rowTemplate = `
     <span class="imerss-legend-label">%keyLabel</span>
 </div>`;
 
-// Improved version which deals with status|cell style regions seen in Marine Atlas
-// TODO: Do we need this any more?
+/**
+ * Normalises a string to a valid CSS class name by lowercasing it, replacing any character that cannot appear in a CSS identifier with
+ * a hyphen, collapsing consecutive hyphens, and trimming leading/ trailing hyphens.
+ *
+ * @param {String} str - The raw string to normalise.
+ * @return {String} A lowercase, CSS-safe class name.
+ */
 hortis.normaliseToClass = function (str) {
-    return str.toLowerCase().replace(/[| ]/g, "-");
+    return str
+        .toLowerCase()
+        .replace(/[^a-z0-9_-]+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
 };
 
 /**

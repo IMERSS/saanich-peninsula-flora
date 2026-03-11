@@ -15,7 +15,7 @@ statusColors:
 options(error = rlang::entrace, rlang_backtrace_on_error = "full")
 library(tidyverse)
 plants <- read.csv("tabular_data/Howe_Sound_vascular_plant_records_consolidated_2024-11-labels.csv")
-plant.summary <- read.csv("tabular_data/vascular_plant_summary_resynthesized_2024-11-14.csv")
+plant.summary <- read.csv("tabular_data/vascular_plant_summary_resynthesized_2024-11-14.csv", fileEncoding = "UTF-8")
 new <- plant.summary %>% filter(str_detect(reportingStatus, "new")) 
 confirmed <- plant.summary %>% filter(reportingStatus == 'confirmed') 
 reported <- plant.summary %>% filter(reportingStatus == 'reported') 
