@@ -172,7 +172,7 @@ fluid.defaults("reknitr.choroplethSlider", {
         // TODO: Interactional grade and syntax for this!
         isActive: "{paneHandler}.isVisible",
         queryCache: "@expand:fluid.computed(reknitr.choroplethSlider.queryCache, {that}.obsRows)",
-        filterState: "@expand:fluid.computed(reknitr.choroplethSlider.deriveFilterState, {that}.sliderIndex, {that}.labels, {that}.isActive, {that}.queryCache)"
+        filterState: "@expand:fluid.computed(reknitr.choroplethSlider.deriveFilterState, {that}.sliderIndex, {that}.labels, {that}.queryCache)"
     },
     invokers: {
         doFilter: "reknitr.choroplethSlider.doFilter({arguments}.0, {arguments}.1)",
@@ -185,8 +185,8 @@ reknitr.choroplethSlider.queryCache = function (obsRows) {
     return obsRows.length;
 };
 
-reknitr.choroplethSlider.deriveFilterState = function (sliderIndex, labels, isActive) {
-    return isActive ? +labels[sliderIndex] : null;
+reknitr.choroplethSlider.deriveFilterState = function (sliderIndex, labels) {
+    return +labels[sliderIndex];
 };
 
 reknitr.choroplethSlider.doFilter = function (obsRows, filterState) {
@@ -224,7 +224,7 @@ fluid.defaults("reknitr.withNativeLegend", {
     modelListeners: {
         legendVisible: {
             path: "{paneHandler}.model.isVisible",
-            func: "reknitr.toggleClass",
+            func: "hortis.toggleClass",
             args: ["{that}.legendContainer", "mxcw-hidden", "{change}.value", true]
         }
     }
@@ -265,18 +265,6 @@ reknitr.mapSectionHolders = function (storyPage) {
 };
 
 /**
- * Toggles a CSS class on a DOM element based on a boolean value.
- *
- * @param {HTMLElement} container - The DOM element to modify.
- * @param {String} clazz - The CSS class to add or remove.
- * @param {Boolean} value - If true, the class will be added; if false, it will be removed.
- * @param {Boolean} [inverse] - If true, inverts the logic (adds the class when value is false).
- */
-reknitr.toggleClass = function (container, clazz, value, inverse) {
-    container.classList[value ^ inverse ? "add" : "remove"](clazz);
-};
-
-/**
  * Toggles a CSS class on a collection of nodes, activating it only for the node at the selected index.
  * @param {Array<HTMLElement>} nodes - The array of DOM nodes to update.
  * @param {String} clazz - The CSS class to toggle.
@@ -285,7 +273,7 @@ reknitr.toggleClass = function (container, clazz, value, inverse) {
  */
 reknitr.toggleActiveClass = function (nodes, clazz, selectedIndex, inverse) {
     nodes.forEach(function (node, i) {
-        reknitr.toggleClass(node, clazz, i === selectedIndex, inverse);
+        hortis.toggleClass(node, clazz, i === selectedIndex, inverse);
     });
 };
 
@@ -417,7 +405,10 @@ hortis.libreMap.bindRegionSelect = function (that) {
 
     map.on("click", (e) => {
         const regionId = hortis.libreMap.eventToRegion(map, e);
-        if (regionId) {
+        if (regionId === "obsgrid-layer") {
+            // TODO: Perhaps forward to base map, but in any case select cell somehow
+        }
+        else if (regionId) {
             console.log("Region ", regionId, " clicked: ", e);
             that.selectedRegion.value = regionId;
         } else {
@@ -527,8 +518,8 @@ reknitr.legendKey.drawLegend = function (map, regionRowsSignal, isVisibleSignal)
             });
             const regionIndex = reknitr.indexRegionRows(regionRows);
 
-            const regionMarkupRows = regionRows.map(function ({regionKey}) {
-                return reknitr.legendKey.renderMarkup(reknitr.legendKey.rowTemplate, regionIndex[regionKey], regionKey, regionKey);
+            const regionMarkupRows = regionRows.map(function ({regionKey, regionLabel}) {
+                return reknitr.legendKey.renderMarkup(reknitr.legendKey.rowTemplate, regionIndex[regionKey], regionKey, regionLabel || regionKey);
             });
             const markup = regionMarkupRows.join("\n");
             container.innerHTML = markup;
@@ -546,7 +537,7 @@ reknitr.legendKey.drawLegend = function (map, regionRowsSignal, isVisibleSignal)
 
             bindSelectionEffect = fluid.effect(function (selectedRegion) {
                 regionRows.forEach(({regionKey}) => {
-                    reknitr.toggleClass(f(regionKey), "imerss-selected", selectedRegion === regionKey);
+                    hortis.toggleClass(f(regionKey), "imerss-selected", selectedRegion === regionKey);
                 });
             }, bindState.value);
         }
@@ -555,7 +546,7 @@ reknitr.legendKey.drawLegend = function (map, regionRowsSignal, isVisibleSignal)
     };
 
     fluid.effect(renderLegend, regionRowsSignal);
-    fluid.effect(isVisible => reknitr.toggleClass(container, "mxcw-hidden", !isVisible), isVisibleSignal);
+    fluid.effect(isVisible => hortis.toggleClass(container, "mxcw-hidden", !isVisible), isVisibleSignal);
 
     return {container};
 };
@@ -651,7 +642,7 @@ fluid.defaults("reknitr.storyPage", {
         updateActiveMapPane: "@expand:fluid.effect(reknitr.updateActiveMapPane, {that}, {that}.map, {that}.activePane, {that}.map.mapLoaded)",
         updateActiveDataPane: "@expand:fluid.effect(reknitr.updateActiveDataPane, {that}, {that}.activePane)",
         updateGridVisible: "@expand:fluid.effect(reknitr.updateGridVisible, {that}.map, {that}.activePaneHandler)",
-        updateFiltersVisible: "@expand:fluid.effect(reknitr.updateFiltersVisible, {that}.map, {that}.activePaneHandler)"
+        updateFiltersVisible: "@expand:fluid.effect(reknitr.updateFiltersVisible, {that}, {that}.activePaneHandler)"
     },
     invokers: {
         navSection: "reknitr.navSection({that}.navRangeHolder, {arguments}.0, {arguments}.1)"
@@ -758,9 +749,21 @@ reknitr.updateGridVisible = function (map, paneHandler) {
     map.gridVisible.value = !!paneHandler.options.gridVisible;
 };
 
-reknitr.updateFiltersVisible = function (paneHandler) {
-    const filters = document.querySelector(".imerss-filters");
-    reknitr.toggleClass(filters, "fl-hidden", !paneHandler.options.filtersVisible);
+reknitr.updateFiltersVisible = function (that, paneHandler) {
+    const filtersVisible = paneHandler.options.filtersVisible;
+    const filterNodes = document.querySelector(".imerss-filters");
+    hortis.toggleClass(filterNodes, "fl-hidden", !filtersVisible);
+    // Note that there was a terrible bug here with flat = true - we would end up iterating over
+    // ALL the filters since filterRoot is injected inside filters and hence we hit the choroplethFilter also.
+    // Hard to see what to do here - should make a qIS which doesn't follow "portals"?
+    // And this kind of thing would always be in literal code, so how would we expect to trap it?
+    const filters = fluid.queryIoCSelector(that.vizLoader.filters, "hortis.filter", true);
+    filters.map(filter => {
+        if (!filter.options.alwaysActive) {
+            filter.isActive.value = filtersVisible;
+        }
+    });
+
 };
 
 reknitr.updateActiveDataPane = function (that, activePane) {
@@ -833,17 +836,9 @@ reknitr.updateMapVisible = function (that, activePane) {
         fluid.fail("No pane handler found for section with index ", activePane);
     }
     const isVisible = !fluid.componentHasGrade(paneHandler, "reknitr.mapHidingPaneHandler");
-    reknitr.toggleClass(that.dom.locate("mapHolder")[0], "mxcw-hideMap", isVisible, true);
-    reknitr.toggleClass(document.querySelector(".imerss-container"), "fl-hidden", isVisible, true);
-};
-
-reknitr.updateLegendVisible = function (that, activePane) {
-    const paneHandler = reknitr.paneHandlerForIndex(that, activePane);
-    if (!paneHandler) {
-        fluid.fail("No pane handler found for section with index ", activePane);
-    }
-    const hideLegend = paneHandler.options.hideLegend;
-    that.map.legend.isVisible.value = !hideLegend;
+    hortis.toggleClass(that.dom.locate("mapHolder")[0], "mxcw-hideMap", isVisible, true);
+    hortis.toggleClass(document.querySelector(".imerss-container"), "fl-hidden", isVisible, true);
+    that.map.maxObsCountOverride.value = paneHandler.options.maxObsCountOverride;
 };
 
 // Compute the destination section for a navigation operation, given a "Range" record, the current active section and the desired offset
@@ -889,15 +884,15 @@ reknitr.updateSectionNav = function (that, activeSection) {
     const navRight = that.navSection(activeSection, 1);
     const last = navRight === undefined;
 
-    reknitr.toggleClass(l("sectionLeft"), "disabled", first);
+    hortis.toggleClass(l("sectionLeft"), "disabled", first);
     l("sectionLeftText").innerText = first ? "" : that.sectionHolders[navLeft].headingText;
-    reknitr.toggleClass(l("sectionLeftDesc"), "mxcw-hidden", first);
+    hortis.toggleClass(l("sectionLeftDesc"), "mxcw-hidden", first);
     const paneHandlerLeft = reknitr.paneHandlerForIndex(that, navLeft);
     l("sectionLeft").style.setProperty("--section-circle-fill", paneHandlerLeft?.options.sectionButtonFill || "#eee");
 
-    reknitr.toggleClass(l("sectionRight"), "disabled", last);
+    hortis.toggleClass(l("sectionRight"), "disabled", last);
     l("sectionRightText").innerText = last ? "" : that.sectionHolders[navRight].headingText;
-    reknitr.toggleClass(l("sectionRightDesc"), "mxcw-hidden", last);
+    hortis.toggleClass(l("sectionRightDesc"), "mxcw-hidden", last);
     const paneHandlerRight = reknitr.paneHandlerForIndex(that, navRight);
     l("sectionRight").style.setProperty("--section-circle-fill", paneHandlerRight?.options.sectionButtonFill || "#eee");
 };
@@ -916,7 +911,9 @@ fluid.defaults("reknitr.paneHandler", {
         isVisibleToSignal: {
             path: "isVisible",
             args: ["{that}.isVisible", "{change}.value"],
-            func: (isVisibleSignal, isVisible) => isVisibleSignal.value = isVisible
+            func: (isVisibleSignal, isVisible) => {
+                isVisibleSignal.value = isVisible;
+            }
         },
         stopMedia: {
             path: "isVisible",

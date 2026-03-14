@@ -183,7 +183,7 @@ h2 {
 .mxcw-container {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 15rem);
+    height: calc(100vh - 14rem);
     padding: 0 1.5rem;
 }
 
@@ -282,7 +282,7 @@ h2 {
 .mxcw-content-holder {
     display: flex;
     flex-direction: column;
-    height: 50%;
+    height: 40%;
     font-size: 18px;
     padding: 0.5rem 0.5rem 1rem 0.5rem;
     align-items: center;
@@ -447,10 +447,9 @@ body .mx-header ::-webkit-scrollbar-thumb {
     border-radius: 4px;
 }
 
-/* Override Xetthecum definition */
 .imerss-container {
     margin: 0px;
-    height: 50%;
+    height: 60%;
 }
 
 /* Styling for native legends */

@@ -34,6 +34,7 @@
                 },
                 History: {
                     type: "reknitr.paneHandler",
+                    maxObsCountOverride: 5273,
                     widgets: {
                         speciesPlot: {
                             type: "reknitr.choroplethSlider",

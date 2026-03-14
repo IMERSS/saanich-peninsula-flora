@@ -3,11 +3,6 @@
     margin-top: 1rem;
 }
 
-.mxcw-dataPane-History {
-    margin-top: 2rem;
-    background-color: white;
-}
-
 .mxcw-dataPane-TopContributions {
     background-color: white;
 }
@@ -18,6 +13,6 @@
 }
 
 /** We need the filter impl but no UI */
-.imerss-dataset-filter {
+.imerss-region-filter {
     display: none;
 }

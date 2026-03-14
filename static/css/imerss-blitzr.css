@@ -14,6 +14,18 @@
 
 .imerss-filters {
     height: auto;
+    flex-shrink: 0;
+    overflow: visible; /* So that autocomplete dropdowns don't get clipped - entire hierarchy needs this! */
+}
+
+.imerss-status-filter .imerss-filter-body {
+    flex-direction: row;
+}
+
+.imerss-status-filter .imerss-filter-row {
+    flex: 0 0 auto;
+    width: auto;
+    padding-right: 1rem;
 }
 
 .imerss-checklist-holder {

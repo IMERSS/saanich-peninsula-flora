@@ -10,8 +10,7 @@ var hortis = fluid.registerNamespace("hortis");
 fluid.defaults("reknitr.storyPage.withVizLoader", {
     components: {
         // Inject this outwards so that we can forward selectedRegion onto it
-        regionFilter: "{vizLoader}.filters.datasetFilter",
-        statusFilter: "{storyPage}.paneHandlers-Status.statusFilter",
+        regionFilter: "{vizLoader}.filters.regionFilter",
         vizLoader: {
             type: "hortis.blitzVizLoader",
             container: ".imerss-container",
@@ -46,15 +45,14 @@ fluid.defaults("reknitr.storyPage.withVizLoader", {
                         }
                     },
                     filters: {
+                        type: "reknitr.storyFilters",
                         options: {
                             components: {
-                                datasetFilter: {
+                                regionFilter: {
                                     options: {
                                         fieldNames: "{storyPage}.options.regionFilterFieldNames"
                                     }
-                                },
-                                // Allow for filters in panes
-                                filterRoot: "{storyPage}"
+                                }
                             }
                         }
                     }
@@ -73,11 +71,113 @@ fluid.defaults("reknitr.storyPage.withVizLoader", {
         }
     },
     members: {
-        relayStatusToFilter: "@expand:fluid.effect(reknitr.relayStatusToFilter, {map}.selectedStatus, {storyPage}.statusFilter)",
+        relayStatusToFilter: "@expand:fluid.effect(reknitr.relayStatusToFilter, {map}.selectedStatus, {storyPage}.vizLoader.filters.statusFilter)",
         relayRegionsToLegend: "@expand:fluid.effect(reknitr.relayRegionsToLegend, {map}, {vizLoader}.regionIndirection.rows, {storyPage}.activePaneHandler, {map}.mapLoaded)",
         relayRegionToHash: "@expand:fluid.effect(reknitr.relayRegionToHash, {hashManager}, {map}.selectedRegion)"
     }
 });
+
+fluid.defaults("reknitr.statusFilter", {
+    gradeNames: ["hortis.statusFilter", "hortis.obsDrivenFilter", "hortis.repeatingRowFilter", "fluid.stringTemplateRenderingView"],
+    members: {
+        taxaById: "{taxa}.rowById",
+        filterRows: [
+            {id: "confirmed", label: "confirmed"},
+            {id: "unconfirmed", label: "historical"},
+            {id: "new", label: "new"}
+        ],
+        renderModel: `@expand:fluid.computed(reknitr.statusFilter.renderModel, {that}.selectedStatus, {that}.filterRows,
+            {that}.options.markup, {that}.options.filterName)`
+    },
+    filterName: "Status",
+    markup: {
+        container: `
+        <div class="imerss-status-filter">
+            <div class="imerss-filter-title">%filterName:</div>
+            <div class="imerss-filter-body imerss-region-filter-rows">%rows</div>
+        </div>
+        `
+    },
+    listeners: {
+        "onCreate.bindClick": "reknitr.statusFilter.bindClick({that}, {that}.selectedStatus)"
+    }
+});
+
+reknitr.statusFilter.renderModel = function (selectedStatus, filterRows, markup, filterName) {
+    return {
+        filterName,
+        rows: filterRows.map(row =>
+            hortis.repeatingRowFilter.renderRow(markup.row, row.label, row.id, selectedStatus === row.id ? "selected" : "unselected")).join("\n")
+    };
+};
+
+reknitr.statusFilter.bindClick = function (that, selectedStatus) {
+    that.container.on("click", ".pretty input", function () {
+        const id = this.dataset.rowId;
+        const oldStatus = selectedStatus.peek();
+        fluid.log("Status filter clicked with row " + id);
+        selectedStatus.value = id === oldStatus ? null : id;
+    });
+};
+
+reknitr.storyFiltersTemplate = `
+    <div class="imerss-filters">
+        <div class="imerss-filter"></div>
+        <div class="imerss-status-filter imerss-filter"></div>
+        <div class="imerss-collector-filter imerss-filter"></div>
+        <div class="imerss-region-filter imerss-filter"></div>
+    </div>
+`;
+
+fluid.defaults("reknitr.storyFilters", {
+    gradeNames: ["hortis.obsFilters", "fluid.stringTemplateRenderingView"],
+    markup: { // Clearly unsatisfactory, have to move over to preactish rendering before long
+        container: reknitr.storyFiltersTemplate,
+        fallbackContainer: reknitr.storyFiltersTemplate
+    },
+    members: {
+        obsRows: "{vizLoader}.obsRows"
+    },
+    selectors: {
+        collectorFilter: ".imerss-collector-filter",
+        regionFilter: ".imerss-region-filter",
+        statusFilter: ".imerss-status-filter"
+    },
+    components: {
+        filterRoot: "{storyPage}", // allow for filters in panes e.g. choropleth
+        statusFilter: {
+            type: "reknitr.statusFilter",
+            container: "{that}.dom.statusFilter",
+            options: {
+                members: {
+                    selectedStatus: "{storyPage}.map.selectedStatus"
+                }
+            }
+        },
+        collectorFilter: {
+            type: "hortis.collectorFilter",
+            container: "{that}.dom.collectorFilter",
+            options: {
+                filterName: "Recorder",
+                fieldName: "recordedBy"
+            }
+        },
+        regionFilter: { // this one is hidden, just used for state
+            type: "hortis.regionFilter",
+            container: "{that}.dom.regionFilter",
+            options: {
+                filterName: "Region",
+                fieldNames: ["region"],
+                alwaysActive: true, // don't hide this along with others
+                members: {
+                    indirectionRows: "{regionIndirection}.rows",
+                    isActive: "@expand:signal(true)"
+                }
+            }
+        }
+    }
+});
+
 
 // legend/widget names: confirmed/historical/new
 // filter names: confirmed/unconfirmed/new
@@ -87,9 +187,8 @@ reknitr.relayStatusToFilter = function (selectedStatus, statusFilter) {
         new: false,
         unconfirmed: false
     };
-    const applyStatus = selectedStatus === "historical" ? "unconfirmed" : selectedStatus;
-    if (applyStatus) {
-        newFilterState[applyStatus] = true;
+    if (selectedStatus) {
+        newFilterState[selectedStatus] = true;
     }
     fluid.each(newFilterState, (value, key) => statusFilter[key].value = value);
 };
@@ -110,8 +209,10 @@ reknitr.relayRegionsToLegend = function (map, regionIndirection, activePaneHandl
     if (regionField) {
         if (regionField === "!statusAsRegion") {
             const colours = activePaneHandler.options.statusColors;
-            regionLegendRows = Object.entries(colours).map(([regionKey, fillColor]) => ({
-                regionKey,
+            // TODO: Fix this in the front matter to properly separate key/label
+            regionLegendRows = Object.entries(colours).map(([regionLabel, fillColor]) => ({
+                regionKey: regionLabel === "historical" ? "unconfirmed" : regionLabel,
+                regionLabel,
                 fillColor,
                 bindState: "selectedStatus"
             }));
@@ -154,7 +255,8 @@ fluid.defaults("hortis.libreMap.inStoryPage", {
     },
 
     members: {
-        selectedStatus: "@expand:signal()",
+        // Primary state for status selection
+        selectedStatus: "@expand:signal(null)",
         regionSelectionEffect: "@expand:fluid.effect(reknitr.forwardRegionSelection, {storyPage}.regionFilter, {that}.selectedRegion)",
         // Prevent the map zooming to selected obs
         zoomToObsBounds: "@expand:signal()"
@@ -162,19 +264,7 @@ fluid.defaults("hortis.libreMap.inStoryPage", {
 });
 
 fluid.defaults("reknitr.statusPaneHandler", {
-    gradeNames: "reknitr.paneHandler",
-    components: {
-        statusFilter: {
-            type: "hortis.statusFilter",
-            options: {
-                members: {
-                    isActive: "{paneHandler}.isVisible",
-                    obsRows: "{vizLoader}.obsRows", // ineffective
-                    taxaById: "{vizLoader}.taxa.rowById"
-                }
-            }
-        }
-    }
+    gradeNames: "reknitr.paneHandler"
 });
 
 reknitr.forwardRegionSelection = function (regionFilter, selectedRegion) {
@@ -322,7 +412,7 @@ fluid.defaults("reknitr.bareRegionsExtra.withLegend", {
         },
         legendVisible: {
             path: "{paneHandler}.model.isVisible",
-            func: "reknitr.toggleClass",
+            func: "hortis.toggleClass",
             args: ["{that}.legendContainer", "mxcw-hidden", "{change}.value", true]
         }
     },
@@ -333,7 +423,7 @@ fluid.defaults("reknitr.bareRegionsExtra.withLegend", {
         // BUG only one of the legendVisible modelListeners fires onCreate! Perhaps because of the namespace?
         "onCreate.legendVisible": {
             path: "{paneHandler}.model.isVisible",
-            func: "reknitr.toggleClass",
+            func: "hortis.toggleClass",
             args: ["{that}.legendContainer", "mxcw-hidden", "{paneHandler}.model.isVisible", true]
         }
     }

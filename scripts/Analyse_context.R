@@ -1,5 +1,6 @@
 library(readr)
 library(dplyr)
+library(data.table)
 
 ## Stanza 1: Reduce incoming GBIF data to 
 
@@ -37,6 +38,7 @@ s2 <- dplyr::anti_join(allall_reduced, allcat_reduced, by=c("species"))
 
 assigned <- readr::read_csv("big_data/gbif-howe-context-all-category-2026-03-06-assigned.csv", col_types = cols(.default = "c")) %>% filter(!is.na(species))
 
-joined <- dplyr::left_join(allcat, assigned, dplyr::join_by("species"))
+joined <- dplyr::left_join(allcat, assigned, by = dplyr::join_by("scientificName"), suffix = c("", ".dup")) |>
+  dplyr::select(-dplyr::ends_with(".dup"))
 
-write.csv(joined, "big_data/gbif-howe-context-all-category-2026-03-06-assigned-full.csv", row.names = FALSE, na = "")
+data.table::fwrite(joined, "big_data/gbif-howe-context-all-category-2026-03-06-assigned-full.csv")
