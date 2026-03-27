@@ -156,6 +156,7 @@ reknitr.composeRootMap = function (parseResults) {
     return {rootMap, layersByPaneId, mapWidgets, fillPatterns};
 };
 
+// CURRENTLY DISUSED
 /** Compute figures to move to data pane, by searching for selector `.data-pane`, and if any parent is found
  * with class `figure`, widening the scope to that
  * @param {Element} container - The DOM container to be searched for elements to move
@@ -170,6 +171,7 @@ reknitr.figuresToMove = function (container) {
     return widened;
 };
 
+// CURRENTLY DISUSED
 /** Move plotly widgets which have siblings which are maps into children of the .mxcw-data pane
  * @param {Document} template - The document for the template structure into which markup is being integrated
  * @param {Element[]} sections - The array of section elements found holding leaflet maps

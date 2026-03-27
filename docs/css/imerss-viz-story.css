@@ -10,6 +10,35 @@
     color: black;
 }
 
+.mxcw-data {
+    --data-table-surface: #eefaff;
+}
+
+.mxcw-data-widget-text {
+    color: #eefaff;
+}
+
+.mxcw-obs-table-holder {
+    flex-direction: column;
+    height: 100%;
+    display: flex;
+}
+
+.mxcw-obs-table-controls {
+    display: flex;
+    margin-left: 1rem;
+    margin-top: -0.1rem;
+    margin-bottom: 0.25rem;
+}
+
+.mxcw-obs-table-controls .imerss-download-button {
+    fill: #ddd
+}
+
+.mxcw-obs-table {
+    height: 100%;
+}
+
 .imerss-pane-info {
     padding: 1em 0.8em 0.7em 0.8em;
     display: flex;

@@ -1,5 +1,5 @@
 "use strict";
-/* global Plotly */
+/* global Plotly, Papa */
 
 // noinspection ES6ConvertVarToLetConst // otherwise this is a duplicate on minifying
 var reknitr = fluid.registerNamespace("reknitr");
@@ -55,6 +55,15 @@ fluid.defaults("reknitr.storyPage.withVizLoader", {
                                 }
                             }
                         }
+                    },
+                    obsTable: {
+                        type: "hortis.dataTable",
+                        options: {
+                            parentContainer: ".mxcw-obs-table",
+                            members: {
+                                rows: "{vizLoader}.finalFilteredObs"
+                            }
+                        }
                     }
                 }
             }
@@ -62,6 +71,12 @@ fluid.defaults("reknitr.storyPage.withVizLoader", {
         // Inject out the inner map so that modelListeners etc. can bind to it
         // Note that this completely overwites the story's map
         map: "{storyPage}.vizLoader.map"
+    },
+    selectors: {
+        downloadObsButton: ".mxcw-obs-table-holder .imerss-download-button"
+    },
+    listeners: {
+        "onCreate.bindObsDownload": "reknitr.storyPage.bindObsDownloadClick"
     },
     modelListeners: {
         listenRegionHash: {
@@ -76,6 +91,18 @@ fluid.defaults("reknitr.storyPage.withVizLoader", {
         relayRegionToHash: "@expand:fluid.effect(reknitr.relayRegionToHash, {hashManager}, {map}.selectedRegion)"
     }
 });
+
+reknitr.storyPage.bindObsDownloadClick = function (that) {
+    that.dom.locate("downloadObsButton").on("click", () =>
+        reknitr.storyPage.triggerObsDownload(that)
+    );
+};
+
+reknitr.storyPage.triggerObsDownload = function (that) {
+    const data = that.vizLoader.finalFilteredObs.value;
+    const text = Papa.unparse(data);
+    hortis.triggerDownload(text, "text/csv;charset=utf-8;", "observations.csv");
+};
 
 fluid.defaults("reknitr.statusFilter", {
     gradeNames: ["hortis.statusFilter", "hortis.obsDrivenFilter", "hortis.repeatingRowFilter", "fluid.stringTemplateRenderingView"],

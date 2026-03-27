@@ -55,6 +55,9 @@ fluid.defaults("reknitr.htmlWidget", {
     }
 });
 
+/** Special marker grade that marks a pane's widgets to be slung into the special "data pane" area which is currently
+ * below the map
+ */
 fluid.defaults("reknitr.dataPaneWidget", {
     gradeNames: "reknitr.htmlWidget",
     components: {
@@ -155,13 +158,15 @@ fluid.defaults("reknitr.withSliderAnimation", {
 reknitr.withSliderAnimation.bind = function (element, that) {
     const limit = element.data.length;
     that.timer = window.setInterval(function () {
-        const current = element.layout.sliders[0].active;
-        const next = (current + 1) % limit;
-        // This updates the slider position and label, but not the plot
-        Plotly.relayout(element, {"sliders.0.active": next});
-        // This updates visibility of the plot - unknown why this doesn't happen from the former
-        Plotly.restyle(element, {visible: element.layout.sliders[0].steps[next].args[1]});
-        that.sliderIndex.value = next;
+        if (that.isActive.value) {
+            const current = element.layout.sliders[0].active;
+            const next = (current + 1) % limit;
+            // This updates the slider position and label, but not the plot
+            Plotly.relayout(element, {"sliders.0.active": next});
+            // This updates visibility of the plot - unknown why this doesn't happen from the former
+            Plotly.restyle(element, {visible: element.layout.sliders[0].steps[next].args[1]});
+            that.sliderIndex.value = next;
+        }
     }, that.options.delay);
 };
 
@@ -180,8 +185,10 @@ fluid.defaults("reknitr.choroplethSlider", {
     }
 });
 
+reknitr.yearCache = Symbol("yearCache");
+
 reknitr.choroplethSlider.queryCache = function (obsRows) {
-    obsRows.forEach(row => row.yearCache = +row.eventDate.substring(0, 4));
+    obsRows.forEach(row => row[reknitr.yearCache] = +row.eventDate.substring(0, 4));
     return obsRows.length;
 };
 
@@ -190,7 +197,7 @@ reknitr.choroplethSlider.deriveFilterState = function (sliderIndex, labels) {
 };
 
 reknitr.choroplethSlider.doFilter = function (obsRows, filterState) {
-    return filterState === null ? obsRows : obsRows.filter(row => row.yearCache <= filterState);
+    return filterState === null ? obsRows : obsRows.filter(row => row[reknitr.yearCache] <= filterState);
 };
 
 reknitr.findPlotlyWidgets = function (storyPage, sectionHolders) {
@@ -319,6 +326,10 @@ reknitr.widgetHandlerForName = function (paneHandler, widgetId) {
 };
 
 reknitr.allocateDataPanes = function (dataPanesHolder, storyPage) {
+    // And in addition sling any statically declared widgets, e.g. the obs data table there
+    const staticWidgets = [...document.querySelectorAll(".mxcw-data-pane-widget")];
+    staticWidgets.forEach(widget => dataPanesHolder.appendChild(widget));
+
     const paneHandlers = fluid.queryIoCSelector(storyPage, "reknitr.paneHandler", true);
     return paneHandlers.map((paneHandler) => {
         const dataPane = document.createElement("div");
@@ -348,23 +359,33 @@ hortis.libreMap.layerToLabel = function (layers) {
 };
 
 fluid.defaults("hortis.libreMap.withRegions", {
-    gradeNames: ["hortis.withTooltip"],
     members: {
         selectedRegion: "@expand:signal()",
         hoverRegion: "@expand:signal(null)",
         layerToLabel: "@expand:hortis.libreMap.layerToLabel({that}.options.mapOptions.style.layers)",
         highlightSelectedRegion: "@expand:fluid.effect(hortis.libreMap.highlightSelectedRegion, {that}.map, {that}.selectedRegion)"
     },
-    tooltipKey: "hoverRegion",
-    invokers: {
-        renderTooltip: {
-            args: ["{that}.layerToLabel", "{arguments}.0"],
-            func: (layerToLabel, id) => {
-                const label = layerToLabel[id];
-                return label ? `<div class="imerss-tooltip">${label}</div>` : null;
+    components: {
+        regionTooltip: {
+            type: "hortis.tooltip",
+            options: {
+                tooltipKey: "hoverRegion",
+                members: {
+                    hoverRegion: "{withRegions}.hoverRegion"
+                },
+                invokers: {
+                    renderTooltip: {
+                        args: ["{withRegions}.layerToLabel", "{arguments}.0"],
+                        func: (layerToLabel, id) => {
+                            const label = layerToLabel[id];
+                            return label ? `<div class="imerss-tooltip">${label}</div>` : null;
+                        }
+                    }
+                }
             }
         }
     },
+
     listeners: {
         "onCreate.bindRegionSelect": "hortis.libreMap.bindRegionSelect({that})"
     }
@@ -387,37 +408,46 @@ hortis.libreMap.highlightSelectedRegion = function (map, selectedRegion) {
     }
 };
 
+/**
+ * Resolves a map event to the ID of the topmost visible, selectable region at the event's point.
+ * @param {fluid.libreMap} map - Map component housing the MapLibre map
+ * @param {MapMouseEvent} e - A map mouse event containing a `point` property.
+ * @return {String|null} The region ID, or null if no selectable region was found.
+ */
 hortis.libreMap.eventToRegion = function (map, e) {
-    const features = map.queryRenderedFeatures(e.point);
+    const features = map.map.queryRenderedFeatures(e.point);
     const visibleFeatures = features.filter(feature => feature.layer.paint["fill-opacity"] > 0);
-    return visibleFeatures[0]?.layer.id || null;
+    const match = visibleFeatures.find(feature => map.options.selectableRegions.includes(feature.layer.id));
+    return match?.layer.id || null;
 };
 
 hortis.libreMap.bindRegionSelect = function (that) {
     const map = that.map;
 
     map.on("mousemove", (e) => {
-        that.hoverEvent = e.originalEvent;
-        const regionId = hortis.libreMap.eventToRegion(map, e);
-        that.hoverRegion.value = regionId;
-        map.getCanvas().style.cursor = regionId ? "pointer" : "";
+        const regionId = hortis.libreMap.eventToRegion(that, e);
+        if (that.options.selectableRegions.includes(regionId)) {
+            that.regionTooltip.hoverEvent = e.originalEvent;
+            that.hoverRegion.value = regionId;
+            map.getCanvas().style.cursor = regionId ? "pointer" : "";
+        }
     });
 
-    map.on("click", (e) => {
-        const regionId = hortis.libreMap.eventToRegion(map, e);
-        if (regionId === "obsgrid-layer") {
-            // TODO: Perhaps forward to base map, but in any case select cell somehow
-        }
-        else if (regionId) {
-            console.log("Region ", regionId, " clicked: ", e);
-            that.selectedRegion.value = regionId;
-        } else {
+    that.clickHandlers.push({
+        handle: e => {
+            const regionId = hortis.libreMap.eventToRegion(that, e);
+            if (regionId) {
+                that.selectedRegion.value = regionId;
+                return true;
+            }
+        },
+        reset: () => {
             that.selectedRegion.value = null;
             that.selectedStatus.value = null;
         }
     });
 
-    map.getCanvas().addEventListener("mouseleave", () => hortis.clearAllTooltips(that));
+    map.getCanvas().addEventListener("mouseleave", () => hortis.clearAllTooltips(that.regionTooltip));
 };
 
 
@@ -763,6 +793,10 @@ reknitr.updateFiltersVisible = function (that, paneHandler) {
             filter.isActive.value = filtersVisible;
         }
     });
+
+    const obsTableVisible = paneHandler.options.obsTableVisible;
+    const obsTable = document.querySelector(".mxcw-obs-table-holder");
+    hortis.toggleClass(obsTable, "fl-hidden", !obsTableVisible);
 
 };
 

@@ -155,7 +155,6 @@ h2 {
 
 .mxcw-section-nav {
     display: flex;
-    width: 100%;
     align-items: center;
     padding-bottom: 1rem;
 
@@ -289,6 +288,7 @@ h2 {
     transition-property: height;
     transition-duration: 800ms;
     position: relative;
+    /* TODO hoist this main text colour to a variable */
     color: #eefaff;
 }
 

@@ -2,7 +2,7 @@ library(readr)
 library(dplyr)
 library(data.table)
 
-## Stanza 1: Reduce incoming GBIF data to 
+## Stanza 1: Reduce incoming GBIF data to one row per taxa
 
 read_GBIF = function (filename) {
   sr_time <- Sys.time()
@@ -26,6 +26,7 @@ write.csv(allcat_reduced, "big_data/gbif-howe-context-all-category-2026-03-06-re
 
 
 allall <- read_GBIF("big_data/gbif-howe-context-all-2026-03-06-raw.tsv")
+allall$scientificName <- allall$species
 
 allall_reduced <- allall[!duplicated(allall$species), ]
 
@@ -42,3 +43,12 @@ joined <- dplyr::left_join(allcat, assigned, by = dplyr::join_by("scientificName
   dplyr::select(-dplyr::ends_with(".dup"))
 
 data.table::fwrite(joined, "big_data/gbif-howe-context-all-category-2026-03-06-assigned-full.csv")
+
+## Stanza 3b: Reconstitute original "assigned" all data by joining with assigned reduced data
+
+assignedall <- readr::read_csv("big_data/gbif-howe-context-all-2026-03-06-assigned.csv", col_types = cols(.default = "c")) %>% filter(!is.na(species))
+
+joined <- dplyr::left_join(allall, assignedall, by = dplyr::join_by("scientificName"), suffix = c("", ".dup")) |>
+  dplyr::select(-dplyr::ends_with(".dup"))
+
+data.table::fwrite(joined, "big_data/gbif-howe-context-all-2026-03-06-assigned-full.csv")

@@ -38,6 +38,13 @@ sf::sf_use_s2(FALSE)
 
 rawObs <- timedFread(obsFile)
 
+emptyCols <- colSums(is.na(rawObs)) == nrow(rawObs)
+
+emptyColNames = names(emptyCols[emptyCols])
+cat("Removing ", length(emptyColNames), " empty columns ", paste(emptyColNames, collapse = ", "))
+
+rawObs <- rawObs[!emptyCols]
+
 filteredObs <- rawObs %>% filter(!is.na(genus) & iNaturalistTaxonId != 0)
 
 filteredObs.sf <- st_as_sf(filteredObs, coords = c("decimalLongitude", "decimalLatitude"), crs=4326, na.fail = FALSE) # CRS is WGS:1984

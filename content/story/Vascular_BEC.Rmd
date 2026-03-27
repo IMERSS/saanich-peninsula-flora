@@ -4,6 +4,7 @@ weight: 1
 knit: (function(input, ...) { source(here::here("R/knit_render.R"), local = TRUE)$value(input, ...) })
 paneKey: Vascular_BEC
 regionField: BEC
+obsTableVisible: true
 ---
 
 ## Howe Sound's vascular plant diversity
