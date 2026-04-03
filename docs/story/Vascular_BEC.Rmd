@@ -1,5 +1,5 @@
 ---
-title: Howe Sound's vascular plant diversity
+title: Saanich peninsula plant diversity
 weight: 1
 knit: (function(input, ...) { source(here::here("R/knit_render.R"), local = TRUE)$value(input, ...) })
 paneKey: Vascular_BEC
@@ -7,22 +7,18 @@ regionField: BEC
 obsTableVisible: true
 ---
 
-## Howe Sound's vascular plant diversity
+## Saanich peninsula plant diversity
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-plants <- read.csv("tabular_data/Howe_Sound_vascular_plant_records_consolidated_2024-11-labels.csv")
+plants <- read.csv("tabular_data/Saanich_Tracheophyta_incomplete-aligned-catalogue_2025-08-26-reduced-labels.csv")
 ```
-Over one thousand vascular plant species are known to occur within the Átl’ḵa7tsem/Howe Sound Biosphere, represented
-by `r nrow(plants)` occurrence records. This diverse flora spans nine biogeoclimatic units, from lowland coastal
-western hemlock forests and associated woodland communities to high elevation subalpine and alpine plant communities.
+Over one thousand vascular plant species are known to occur within the Saanich peninsula, represented
+by `r nrow(plants)` occurrence records. This diverse flora spans two biogeoclimatic units.
+
+TODO: Do we want to bother with BEC zones since just two are represented?
 
 ```{r, echo = FALSE, message=FALSE, warning=FALSE}
 source("scripts/Vascular_BEC_map_mapbox.R")
 speciesMap
 ```
 
-Explore the region's flora by selecting from the biogeoclimatic units displayed on the map:
-
-* Alpine Tundra zone ([CMAunp](#region:CMAunp))
-* Mountain Hemlock zone ([MHmm1](#region:MHmm1), [MHmm2](#region:MHmm2))
-* Coastal Western Hemlock zone ([CWHdm](#region:CWHdm), [CWHds1](#region:CWHds1), [CWHms1](#region:CWHms1), [CWHvm1](#region:CWHvm1), [CWHvm2](#region:CWHvm2), [CWHxm1](#region:CWHxm1))

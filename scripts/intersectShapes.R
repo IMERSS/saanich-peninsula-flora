@@ -8,8 +8,8 @@ runDataset = "Howe";
 
 datasets <- list(
   Howe = list(
-    obs_file = "tabular_data/Howe_Sound_vascular_plant_records_consolidated_2024-11-assigned.csv",
-    shp_index_file = "tabular_data/Howe Shapefile Index.csv"
+    obs_file = "tabular_data/Saanich_Tracheophyta_incomplete-aligned-catalogue_2025-08-26-reduced-assigned.csv",
+    shp_index_file = "tabular_data/Saanich Shapefile Index.csv"
   )
 )
 
@@ -45,7 +45,7 @@ cat("Removing ", length(emptyColNames), " empty columns ", paste(emptyColNames, 
 
 rawObs <- rawObs[!emptyCols]
 
-filteredObs <- rawObs %>% filter(!is.na(genus) & iNaturalistTaxonId != 0)
+filteredObs <- rawObs %>% filter(iNaturalistTaxonId != 0)
 
 filteredObs.sf <- st_as_sf(filteredObs, coords = c("decimalLongitude", "decimalLatitude"), crs=4326, na.fail = FALSE) # CRS is WGS:1984
 

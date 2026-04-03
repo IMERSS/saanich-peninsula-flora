@@ -12,7 +12,7 @@
                 zoomDuration: 0,
                 slowZoomDuration: 0,
                 gridResolution: 1000,
-                regionFilterFieldNames: ["BEC", "Protected"],
+                regionFilterFieldNames: ["BEC"],
                 selectors: {
                     /** This one is used for toggling **/
                     mapHolder: ".mxcw-map"
@@ -22,28 +22,15 @@
             components: {
                 vizLoader: {
                     /** Paths relative to docs/story */
-                    obsFile: "../data/tabular/Howe_Sound_vascular_plant_records_consolidated_2024-11-labels.csv",
-                    taxaFile: "../data/tabular/Howe_Sound_vascular_plant_records_consolidated_2024-11-prepared-taxa.csv",
-                    regionIndirectionFile: "../data/tabular/Howe_Sound_vascular_plant_records_consolidated_2024-11-regionIndirection.csv"
+                    obsFile: "../data/tabular/Saanich_Tracheophyta_incomplete-aligned-catalogue_2025-08-26-reduced-labels.csv",
+                    taxaFile: "../data/tabular/Saanich_Tracheophyta_incomplete-aligned-catalogue_2025-08-26-prepared-taxa.csv",
+                    regionIndirectionFile: "../data/tabular/Saanich_Tracheophyta_incomplete-aligned-catalogue_2025-08-26-reduced-regionIndirection.csv"
                 }
             },
             paneHandlers: {
                 Vascular_BEC: {
                     type: "reknitr.paneHandler",
                     gradeNames: ["reknitr.paneHandler.withRegionLegend"]
-                },
-                History: {
-                    type: "reknitr.paneHandler",
-                    maxObsCountOverride: 5273,
-                    widgets: {
-                        speciesPlot: {
-                            type: "reknitr.choroplethSlider",
-                            gradeNames: ["reknitr.withSliderAnimation", "reknitr.withResizableWidth", "reknitr.dataPaneWidget"],
-                            members: {
-                                obsRows: "{vizLoader}.obsRows"
-                            }
-                        }
-                    }
                 },
                 Status: {
                     type: "reknitr.statusPaneHandler"
@@ -56,26 +43,17 @@
                             str: "Vascular plants"
                         },
                         place: {
-                            id: 121270,
-                            str: "howesound"
+                            id: 81137,
+                            str: "saanich"
                         },
                         features: [{ // recentObservations
-                            desc: "This page lists the most recent observations of vascular plants made in the the \xc1tl\u2019\u1e35a7tsem/Howe Sound Biosphere Region. Click on any of them to go to the iNaturalist site for more information."
+                            desc: "This page lists the most recent observations of vascular plants made in the Saanich Peninsula. Click on any of them to go to the iNaturalist site for more information."
                         }, { // "commonTaxa"
-                            desc: "This page lists the most commonly reported species in \xc1tl\u2019\u1e35a7tsem/Howe Sound. You can use the dropdown at the top right to filter the results to a particular year."
+                            desc: "This page lists the most commonly reported species in the Saanich Peninsula. You can use the dropdown at the top right to filter the results to a particular year."
                         }, { // "favourites",
                             desc: "Any time iNaturalist users encounter an observation they like, they can choose to \"favourite\" it. This page lists the most favourited vascular plants observations made in the the \xc1tl\u2019\u1e35a7tsem/Howe Sound Biosphere Region."
                         }
                         ]
-                    }
-                },
-                Protected: {
-                    type: "reknitr.paneHandler",
-                    widgets: {
-                        protectedAreas: {
-                            type: "reknitr.htmlWidget",
-                            gradeNames: ["reknitr.withResizableWidth", "reknitr.withResizableHeight", "reknitr.dataPaneWidget"]
-                        }
                     }
                 }
             }

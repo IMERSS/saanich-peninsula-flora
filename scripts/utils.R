@@ -5,7 +5,7 @@ lat_lon <- function (data) {
   return (st_transform(data, "+proj=longlat +datum=WGS84"))
 }
 
-round_geom <- function (geom, digits) {
+round_geom <- function(geom, digits) {
   if (inherits(geom, "POINT")) {
     st_point(round(as.numeric(geom), digits))
   } else if (inherits(geom, "MULTIPOINT")) {
@@ -28,22 +28,18 @@ round_geom <- function (geom, digits) {
   }
 }
 
-round_and_simplify_geom <- function (geom, digits = 2) {
-  dTolerance = 10^(-digits) / 2
-  rounded_geoms <- lapply(geom, round_geom, digits = digits)
-  rounded_geoms_sf <- st_sfc(rounded_geoms, crs = st_crs(geom))
-
-  # TODO: If we really want to simplify, should really use https://github.com/ateucher/rmapshaper but
-  # this will work better in GeoJSON so let's do it later
-  # simple  <- rounded_geoms_sf %>% st_simplify(preserveTopology = TRUE, dTolerance = dTolerance)
-  # https://gis.stackexchange.com/questions/329110/removing-empty-polygon-from-sf-object-in-r
-  # %>% dplyr::filter(!st_is_empty(.))
+# Bug fix: the original used lapply(geom, round_geom) which decomposed the sfg
+# into sub-elements (ring matrices). Call round_geom on the whole sfg instead.
+round_and_simplify_geom <- function(geom, digits = 2) {
+  round_geom(geom, digits = digits)
 }
 
-round_and_simplify_sf <- function (sf_data, digits) {
+# Bug fix: the original assigned a plain list to st_geometry<-. Wrap the
+# rounded sfg objects in st_sfc() with the CRS from the input sf.
+round_and_simplify_sf <- function(sf_data, digits) {
+  crs <- st_crs(sf_data)
   rounded_geoms <- lapply(st_geometry(sf_data), round_and_simplify_geom, digits = digits)
-  st_geometry(sf_data) <- rounded_geoms
-
+  st_geometry(sf_data) <- st_sfc(rounded_geoms, crs = crs)
   sf_data
 }
 

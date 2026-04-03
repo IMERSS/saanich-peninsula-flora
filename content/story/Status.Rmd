@@ -15,21 +15,22 @@ statusColors:
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 options(error = rlang::entrace, rlang_backtrace_on_error = "full")
 library(tidyverse)
-plants <- read.csv("tabular_data/Howe_Sound_vascular_plant_records_consolidated_2024-11-labels.csv")
-plant.summary <- read.csv("tabular_data/vascular_plant_summary_resynthesized_2024-11-14.csv", fileEncoding = "UTF-8")
+plants <- read.csv("tabular_data/Saanich_Tracheophyta_incomplete-aligned-catalogue_2025-08-26-reduced-labels.csv")
+plant.summary <- read.csv("tabular_data/Saanich_Tracheophyta_incomplete-aligned-catalogue_2025-08-26-prepared-taxa.csv", fileEncoding = "UTF-8") %>%
+  filter(inSummary == 1)
 new <- plant.summary %>% filter(str_detect(reportingStatus, "new")) 
 confirmed <- plant.summary %>% filter(reportingStatus == 'confirmed') 
 reported <- plant.summary %>% filter(reportingStatus == 'reported') 
-observed <- plant.summary %>% filter(iNatObservationStatus == 'observed') 
+# observed <- plant.summary %>% filter(iNatObservationStatus == 'observed')
 ```
 
 ## Community science contributions
 
-Through the combined efforts of `r length(unique(plants$recordedBy))` individuals, the Átl’ḵa7tsem/Howe Sound naturalist
+Through the combined efforts of `r length(unique(plants$recordedBy))` individuals, the Saanich naturalist
 community has now documented a total of `r nrow(plant.summary)` vascular plant species. Based on search
 efforts over the last decade, `r round((nrow(confirmed)/(nrow(confirmed)+nrow(reported))*100), digits = 0)` percent
 of the historically reported plant diversity has been confirmed and `r nrow(new)` new species reports added to the
-list. Community members have now documented `r round((nrow(observed)/(nrow(plant.summary))*100), digits = 0)` percent
+list. Community members have now documented `r round((nrow(confirmed)/(nrow(plant.summary))*100), digits = 0)` percent
 of the plant diversity known to the region on iNaturalist.
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}

@@ -9,9 +9,9 @@ dst_dir <- "docs/data/tabular"
 dir.create(dst_dir, recursive = TRUE, showWarnings = FALSE)
 
 files <- c(
-  "Howe_Sound_vascular_plant_records_consolidated_2024-11-labels.csv",
-  "Howe_Sound_vascular_plant_records_consolidated_2024-11-prepared-taxa.csv",
-  "Howe_Sound_vascular_plant_records_consolidated_2024-11-regionIndirection.csv"
+  "Saanich_Tracheophyta_incomplete-aligned-catalogue_2025-08-26-reduced-labels.csv",
+  "Saanich_Tracheophyta_incomplete-aligned-catalogue_2025-08-26-prepared-taxa.csv",
+  "Saanich_Tracheophyta_incomplete-aligned-catalogue_2025-08-26-reduced-regionIndirection.csv"
 )
 
 for (f in files) {

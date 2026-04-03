@@ -2,9 +2,9 @@
   "id": "Status",
   "view": {
     "type": "view",
-    "lon": -123.2194,
-    "lat": 49.6608,
-    "zoom": 8.5
+    "lon": -123.4015,
+    "lat": 48.51,
+    "zoom": 9
   },
   "layers": [
     {
@@ -18,30 +18,6 @@
       }
     },
     {
-      "type": "raster",
-      "id": "Hillshade",
-      "source": "Hillshade",
-      "paint": {
-        "raster-opacity": 0.8
-      },
-      "metadata": {
-        "sortKey": 0.75
-      }
-    },
-    {
-      "type": "line",
-      "id": "Coastline-outline",
-      "source": "Coastline",
-      "paint": {
-        "line-color": "black",
-        "line-width": 1.5,
-        "line-opacity": 1
-      },
-      "metadata": {
-        "sortKey": 3.5
-      }
-    },
-    {
       "type": "line",
       "id": "Watershed.Boundary-outline",
       "source": "Watershed.Boundary",
@@ -51,7 +27,7 @@
         "line-opacity": 1
       },
       "metadata": {
-        "sortKey": 5.5
+        "sortKey": 3.5
       }
     }
   ],

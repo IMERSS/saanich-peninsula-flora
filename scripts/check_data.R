@@ -2,13 +2,15 @@ library(dplyr)
 
 source("scripts/utils.R")
 
-raw <- timedFread("tabular_data/Howe_Sound_vascular_plant_records_consolidated_2024-11-14.csv")
+raw <- timedFread("big_data/Saanich_Tracheophyta_incomplete-aligned-catalogue_2025-08-26-reduced.csv")
 
-emptyCols <- colSums(is.na(raw)) == nrow(raw)
+tib <- raw %>% filter(taxonName == "Heterocodon rariflorus")
 
-emptyColNames = names(emptyCols[emptyCols])
-cat("Removing ", length(emptyColNames), " empty columns ", paste(emptyColNames, collapse = ", "))
+write.csv(tib, "big_data/Saanich_Tracheophyta_incomplete-aligned-catalogue_2025-08-26-reduced-one.csv", row.names = FALSE)
 
-tib <- raw %>% filter(scientificName == "Linaria dalmatica ssp. dalmatica")
 
-write.csv(tib, "tabular_data/test-ldd-orig.csv", row.names = FALSE)
+summary <- timedFread("big_data/Saanich_Tracheophyta_incomplete-summary_2025-08-27.csv")
+
+filtered <- summary %>% filter(taxonName == "Clarkia quadrivulnera") %>% slice(1)
+
+write.csv(filtered, "big_data/Saanich_Tracheophyta_incomplete-summary_2025-08-27-one-orig.csv", row.names = FALSE)

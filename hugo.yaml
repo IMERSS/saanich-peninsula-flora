@@ -1,6 +1,6 @@
 # Configuration
 baseURL: "/"
-title: Átl’ḵa7tsem/Howe Sound Biosphere Vegetation Analysis
+title: Flora of the Saanich Peninsula
 
 relativeUrls: true
 publishDir: docs
@@ -69,12 +69,12 @@ menu:
         type: search
     - name: GitHub
       weight: 6
-      url: "https://github.com/IMERSS/howe-sound-mapping-2026"
+      url: "https://github.com/IMERSS/saanich-peninsula-flora"
       params:
         icon: github
 
 params:
-  description: Átl’ḵa7tsem/Howe Sound Biosphere Vegetation Analysis
+  description: Flora of the Saanich Peninsula
 
   # Displays bizarrely on hextra once we change background colour
   toc: false

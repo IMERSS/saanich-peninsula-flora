@@ -4,14 +4,14 @@
   <PAMRasterBand band="1">
     <Description>Hillshade_80m</Description>
     <NoDataValue>2.55000000000000E+02</NoDataValue>
-    <Metadata domain="IMAGE_STRUCTURE">
-      <MDI key="COMPRESSION">JPEG</MDI>
-    </Metadata>
     <Metadata>
-      <MDI key="STATISTICS_MAXIMUM">255</MDI>
+      <MDI key="STATISTICS_MAXIMUM">254</MDI>
       <MDI key="STATISTICS_MEAN">-9999</MDI>
       <MDI key="STATISTICS_MINIMUM">0</MDI>
       <MDI key="STATISTICS_STDDEV">-9999</MDI>
+    </Metadata>
+    <Metadata domain="IMAGE_STRUCTURE">
+      <MDI key="COMPRESSION">JPEG</MDI>
     </Metadata>
   </PAMRasterBand>
 </PAMDataset>
