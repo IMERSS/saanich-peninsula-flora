@@ -22,6 +22,7 @@
     flex-direction: column;
     height: 100%;
     display: flex;
+    overflow: auto; /* Without this, massive horizontal overflow on parent */
 }
 
 .mxcw-obs-table-controls {
@@ -37,6 +38,7 @@
 
 .mxcw-obs-table {
     height: 100%;
+    min-height: 0;
 }
 
 .imerss-pane-info {
@@ -49,7 +51,7 @@
 .imerss-panel-label {
     font-weight: 700;
     font-size: 1.5rem;
-    padding: 0.2rem 1rem 0.2rem 1.4rem;
+    padding: 0.2rem 1rem 0.2rem 0.3rem;
 }
 
 .imerss-download {

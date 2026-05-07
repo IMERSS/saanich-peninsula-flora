@@ -650,6 +650,13 @@ fluid.defaults("reknitr.storyPage", {
         },
         hashManager: {
             type: "reknitr.hashManager"
+        },
+        resizeBar: {
+            type: "hortis.resizeBar",
+            options: {
+                before: "{storyPage}.dom.map.0",
+                axis: "vertical"
+            }
         }
     },
     paneHandlers: "@expand:reknitr.resolvePaneHandlers()",

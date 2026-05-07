@@ -283,7 +283,7 @@ h2 {
     flex-direction: column;
     height: 40%;
     font-size: 18px;
-    padding: 0.5rem 0.5rem 1rem 0.5rem;
+    padding: 0.5rem 0.5rem 0.5rem 0.5rem;
     align-items: center;
     transition-property: height;
     transition-duration: 800ms;
@@ -374,6 +374,8 @@ h2 {
     color: black;
     margin: 0.5rem 0;
     height: 20%;
+    min-height: 200px;
+    display: flex;
 }
 
 .mxcw-hideMap ~ .mxcw-content-holder {
@@ -391,7 +393,7 @@ h2 {
 
 .mxcw-content .section {
     /* We've got the scrollbar at the right, eat into it a bit */
-    padding: 8px 0 8px 8px;
+    padding: 8px 0 8px 12px;
 }
 
 .mxcw-content img {

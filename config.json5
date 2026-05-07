@@ -28,10 +28,6 @@
                 }
             },
             paneHandlers: {
-                Vascular_BEC: {
-                    type: "reknitr.paneHandler",
-                    gradeNames: ["reknitr.paneHandler.withRegionLegend"]
-                },
                 Status: {
                     type: "reknitr.statusPaneHandler"
                 },
