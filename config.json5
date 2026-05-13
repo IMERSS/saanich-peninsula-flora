@@ -6,7 +6,7 @@
         template: "%self/src/html/template.html",
         options: {
             storyPageOptions: {
-                gradeNames: "reknitr.storyPage.withVizLoader",
+                gradeNames: ["reknitr.storyPage.withVizLoader", "reknitr.storyPage.withSaanichWeibull"],
                 mapFlavourGrade: ["hortis.libreMap.withMapboxData", "hortis.libreMap.withRegions", "hortis.libreMap.withRegionLegend"],
                 // No zooms in this configuration
                 zoomDuration: 0,
@@ -18,14 +18,14 @@
                     mapHolder: ".mxcw-map"
                 }
             },
-
             components: {
                 vizLoader: {
                     /** Paths relative to docs/story */
-                    obsFile: "../data/tabular/Saanich_Tracheophyta_incomplete-aligned-catalogue_2025-08-26-reduced-labels.csv",
-                    taxaFile: "../data/tabular/Saanich_Tracheophyta_incomplete-aligned-catalogue_2025-08-26-prepared-taxa.csv",
-                    regionIndirectionFile: "../data/tabular/Saanich_Tracheophyta_incomplete-aligned-catalogue_2025-08-26-reduced-regionIndirection.csv"
-                }
+                    obsFile: "../data/tabular/Saanich_Tracheophyta_incomplete-ultimate-catalogue_2026-04-08-selected-labels.csv",
+                    taxaFile: "../data/tabular/Saanich_Tracheophyta_incomplete-ultimate-merged-summary_2026-04-08-prepared-taxa.csv",
+                    regionIndirectionFile: "../data/tabular/Saanich_Tracheophyta_incomplete-ultimate-catalogue_2026-04-08-selected-regionIndirection.csv"
+                },
+
             },
             paneHandlers: {
                 Status: {

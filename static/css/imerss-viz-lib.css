@@ -1130,6 +1130,10 @@ a.ui-button:active,
 
 .imerss-filter {
     padding: 2px 0 2px;
+    margin-top: -1px;
+    margin-bottom: 1px;
+    display: flex;
+    flex-direction: column;
     border-bottom: 1px solid #dbe3e7;
 }
 

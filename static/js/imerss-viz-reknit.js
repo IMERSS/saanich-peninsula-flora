@@ -85,8 +85,11 @@ fluid.defaults("reknitr.storyPage.withVizLoader", {
             args: ["{map}", "{change}.value"]
         }
     },
+
     members: {
         relayStatusToFilter: "@expand:fluid.effect(reknitr.relayStatusToFilter, {map}.selectedStatus, {storyPage}.vizLoader.filters.statusFilter)",
+        // Abominable failure of bidirectionality
+        relayFilterToStatus: "@expand:fluid.effect(reknitr.relayFilterToStatus, {storyPage}.vizLoader.filters.statusFilter.filterState, {map})",
         relayRegionsToLegend: "@expand:fluid.effect(reknitr.relayRegionsToLegend, {map}, {vizLoader}.regionIndirection.rows, {storyPage}.activePaneHandler, {map}.mapLoaded)",
         relayRegionToHash: "@expand:fluid.effect(reknitr.relayRegionToHash, {hashManager}, {map}.selectedRegion)"
     }
@@ -107,6 +110,7 @@ reknitr.storyPage.triggerObsDownload = function (that) {
 fluid.defaults("reknitr.statusFilter", {
     gradeNames: ["hortis.statusFilter", "hortis.obsDrivenFilter", "hortis.repeatingRowFilter", "fluid.stringTemplateRenderingView"],
     members: {
+        // selectedStatus
         taxaById: "{taxa}.rowById",
         filterRows: [
             {id: "confirmed", label: "confirmed"},
@@ -218,6 +222,16 @@ reknitr.relayStatusToFilter = function (selectedStatus, statusFilter) {
         newFilterState[selectedStatus] = true;
     }
     fluid.each(newFilterState, (value, key) => statusFilter[key].value = value);
+};
+
+
+// Listen for reset status and relay it back onto map
+reknitr.relayFilterToStatus = function (filterState, map) {
+// Counts the number of true flags in filterState using reduce
+    const flagsSet = Object.values(filterState).reduce((count, flag) => count + (flag === true ? 1 : 0), 0);
+    if (flagsSet === 0) {
+        map.selectedStatus.value = null;
+    }
 };
 
 reknitr.relayRegionToHash = function (hashManager, selectedRegion) {

@@ -5,12 +5,18 @@ library(sf)
 
 source("scripts/utils.R")
 
-raw <- timedFread("big_data/Saanich_Tracheophyta_incomplete-summary_2025-08-27-edited.csv")
+# Merge together the two summaries, reduce columns ready for assignment
 
-normalised <- raw %>% mutate(scientificName = sub(";.*", "", iNatTaxon)) %>% select(-iNatTaxon) %>%
-  mutate(reportingStatus = replace_na(occurrence_status, "reported")) %>% select(-occurrence_status) %>%
-  mutate(phylum = "Tracheophyta")
+rawList <- timedFread("tabular_data/Saanich_Tracheophyta_incomplete-ultimate-list_2026-04-08.csv")
+reducedList <- rawList %>% select(c("taxonName", "linkName", "linkTaxonID", "taxonRank"))
 
-timedWrite(normalised, "big_data/Saanich_Tracheophyta_incomplete-summary_2025-08-27-normalised.csv")
+rawSummary <- timedFread("tabular_data/Saanich_Tracheophyta_incomplete-summary_2026-04-08.csv")
+reducedSummary <- rawSummary %>% select(c("taxonName", "occurrence_status", "direct_solow_pp"))
 
-# Next: node ../bagatelle/src/assignBNames.js big_data/Saanich_Tracheophyta_incomplete-summary_2025-08-27-normalised.csv --DwCA
+joinedList <- merge(reducedList, reducedSummary, by="taxonName")
+joinedList <- joinedList %>% rename("reportingStatus" = "occurrence_status", "scientificName" = "taxonName")
+joinedList$phylum = "Tracheophyta"
+
+timedWrite(joinedList, "tabular_data/Saanich_Tracheophyta_incomplete-ultimate-merged-summary_2026-04-08-orig.csv")
+
+# Next: node ../bagatelle/src/assignBNames.js tabular_data/Saanich_Tracheophyta_incomplete-ultimate-merged-summary_2026-04-08-orig.csv --DwCA --swaps tabular_data/taxon_swaps.csv

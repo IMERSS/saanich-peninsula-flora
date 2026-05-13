@@ -66,13 +66,25 @@ timedFread <- function (toread) {
   as.data.frame(frame)
 }
 
+# Derived in ChatGPT conversation at https://chatgpt.com/c/68c83b3b-ccc0-8329-9aef-230d4a0bd888 to
+# correctly apply quoting as specified in https://www.ietf.org/rfc/rfc4180.txt
+quote_only_if_needed <- function(x) {
+  x_char <- as.character(x)
+  x_char[is.na(x_char)] <- ""  # encode NA as empty string
+  needs <- grepl('[,"\n]', x_char)
+  x_char[needs] <- paste0('"', gsub('"', '""', x_char[needs], fixed = TRUE), '"')
+  x_char
+}
+
+write_csv_correctly <- function(x, towrite) {
+  data.table::fwrite(x, towrite, quote = "auto", qmethod = "double", eol = "\r\n")
+}
+
 timedWrite <- function (x, towrite) {
   start <- Sys.time()
-  # Approach for selective quoting taken from https://stackoverflow.com/a/25810538/1381443
-  commas <- which(sapply(x, function(y) any(grepl(",",y))))
-  write.csv(x, towrite, na = "", row.names = FALSE, quote = commas, fileEncoding = "UTF-8")
+  write_csv_correctly(x, towrite)
   end <- Sys.time()
-  message("Written ", nrow(x), " rows to ", towrite, " in ", round((end - start), digits = 3), "s")
+  cat("Written ", nrow(x), " rows to ", towrite, " in ", (end - start), "s")
 }
 
 #' Merge Multiple Named Lists

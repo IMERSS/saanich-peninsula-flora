@@ -70,8 +70,10 @@ main .content h3, main.content h2, main h1 {
     background-color: #ffffff80;
 }
 
+/** Needs to be more specific to beat hextra's abominable theming **/
+
 nav a span {
-    color: #FDF2CE;
+    color: #dff1f4;
     text-transform: uppercase;
     font-weight: 600;
     letter-spacing: 1px;
@@ -118,6 +120,7 @@ nav a {
 }
 
 .imerss-subnav {
+    color: #dff1f4;
     position: relative;
     font-size: 16px;
 }
@@ -129,7 +132,10 @@ nav a {
     background-color: #184E62b0;
 }
 
-
+/* Fix up wonky height of links inside subnav e.g. GitHub icon */
+.imerss-subnav a {
+    display: flex;
+}
 
 footer {
     color: black;
@@ -156,13 +162,11 @@ h2 {
 .mxcw-section-nav {
     display: flex;
     align-items: center;
-    padding-bottom: 1rem;
+    padding-bottom: 5px;
 
-    position: absolute;
     top: 5px;
-    width: calc(100% + 50px);
-    margin-left: -3rem;
-    margin-right: -3rem;
+    width: 100%;
+    margin: 0 10px;
     z-index: 200;
 }
 
@@ -209,6 +213,11 @@ h2 {
 
 .mxcw-content a {
     text-decoration: underline;
+}
+
+.mxcw-data a {
+    text-decoration: underline;
+    color: blue;
 }
 
 .section.level2 {
@@ -292,6 +301,87 @@ h2 {
     color: #eefaff;
 }
 
+
+
+.chevron-nav {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+}
+
+.chevron-tab {
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.2rem 24px 0.2rem 8px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    user-select: none;
+    background: #4b778f;
+    border: none;
+    outline: none;
+    margin-right: -18px;
+    z-index: 1;
+    transition: background 0.15s, color 0.15s;
+    clip-path: polygon(
+            0 0,
+            calc(100% - 18px) 0,
+            100% 50%,
+            calc(100% - 18px) 100%,
+            0 100%,
+            18px 50%
+    );
+}
+
+.chevron-tab:first-child {
+    clip-path: polygon(
+            0 0,
+            calc(100% - 18px) 0,
+            100% 50%,
+            calc(100% - 18px) 100%,
+            0 100%
+    );
+    padding-left: 1.1rem;
+    z-index: 5;
+}
+
+
+
+.chevron-tab:last-child {
+    margin-right: 0;
+    clip-path: polygon(
+            0 0,
+            100% 0,
+            100% 100%,
+            0 100%,
+            18px 50%
+    );
+    z-index: 1;
+}
+
+.chevron-tab:hover {
+    background: #6f96a8;
+    z-index: 10;
+}
+
+.chevron-tab.active {
+    background: #9aaeb8;
+    z-index: 10;
+}
+
+.chevron-tab.active:hover {
+    background: #a8bec8;
+}
+
+
+
+
 .section-button {
     stroke: #362F24;
     fill: #FFFDFD;
@@ -372,7 +462,7 @@ h2 {
     z-index: 5;
     opacity: 1;
     color: black;
-    margin: 0.5rem 0;
+    margin-bottom: 5px;
     height: 20%;
     min-height: 200px;
     display: flex;

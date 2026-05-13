@@ -1,5 +1,6 @@
 ---
 title: Community Science Contributions
+shortTitle: Community Science
 weight: 3
 knit: (function(input, ...) { source(here::here("R/knit_render.R"), local = TRUE)$value(input, ...) })
 gridVisible: true
