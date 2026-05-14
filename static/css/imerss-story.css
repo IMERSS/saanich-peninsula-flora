@@ -141,6 +141,10 @@ footer {
     color: black;
 }
 
+html[class~=dark] footer {
+    color: #a8bec8;
+}
+
 .imerss-copyright {
     padding: 0.5rem 1rem;
 }

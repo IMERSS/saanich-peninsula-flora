@@ -3,7 +3,7 @@
 # Copy files from data/tabular_data to docs/data/tabular
 
 src_dir <- "tabular_data"
-dst_dir <- "docs/data/tabular"
+dst_dir <- "static/data/tabular"
 
 # Create destination directory if it doesn't exist
 dir.create(dst_dir, recursive = TRUE, showWarnings = FALSE)
