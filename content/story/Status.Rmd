@@ -16,8 +16,8 @@ statusColors:
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 options(error = rlang::entrace, rlang_backtrace_on_error = "full")
 library(tidyverse)
-plants <- read.csv("tabular_data/Saanich_Tracheophyta_incomplete-aligned-catalogue_2025-08-26-reduced-labels.csv")
-plant.summary <- read.csv("tabular_data/Saanich_Tracheophyta_incomplete-aligned-catalogue_2025-08-26-prepared-taxa.csv", fileEncoding = "UTF-8") %>%
+plants <- read.csv("tabular_data/Saanich_Tracheophyta_incomplete-ultimate-catalogue_2026-04-08-selected-labels.csv")
+plant.summary <- read.csv("tabular_data/Saanich_Tracheophyta_incomplete-ultimate-merged-summary_2026-04-08-prepared-taxa.csv", fileEncoding = "UTF-8") %>%
   filter(inSummary == 1)
 new <- plant.summary %>% filter(str_detect(reportingStatus, "new")) 
 confirmed <- plant.summary %>% filter(reportingStatus == 'confirmed') 

@@ -45,7 +45,8 @@ allSources <- watershed.source
 view.feature <- list(type = "view", lon = -123.4015, lat = 48.510, zoom = 9)
 
 allFeatures = list(view.feature, # hillshade.feature, coastline.feature,
-                   choropleth.feature, watershed.feature)
+                   choropleth.feature #, watershed.feature
+                   )
 
 reportingStatusMap <- plot_mapbox_map("Status", allSources, allFeatures)
 

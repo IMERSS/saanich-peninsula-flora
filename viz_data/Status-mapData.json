@@ -16,19 +16,6 @@
       "metadata": {
         "sortKey": 0.5
       }
-    },
-    {
-      "type": "line",
-      "id": "Watershed.Boundary-outline",
-      "source": "Watershed.Boundary",
-      "paint": {
-        "line-color": "black",
-        "line-width": 4,
-        "line-opacity": 1
-      },
-      "metadata": {
-        "sortKey": 3.5
-      }
     }
   ],
   "highlightedSources": {}
