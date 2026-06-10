@@ -31,4 +31,7 @@ merged <- assignedTaxa %>%
 merged <- merged %>% select(-c("kingdom", "phylum", "class", "order", "infraorder", "superfamily", "subfamily", "genus", "family",
                                "subphylum", "subclass", "superorder", "linkName", "linkTaxonID", "tribe"))
 
+# TODO Solow values are pretty corrupt with many missing and negative
+merged <- merged %>% mutate(direct_solow_pp = round(pmax(coalesce(direct_solow_pp, 1), 0), 3))
+
 timedWrite(merged, "tabular_data/Saanich_Tracheophyta_incomplete-ultimate-merged-summary_2026-04-08-prepared-taxa.csv")

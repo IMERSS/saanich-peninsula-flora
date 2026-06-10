@@ -20,6 +20,29 @@
             },
             components: {
                 vizLoader: {
+                    gradeNames: "reknitr.vizLoader.withSolow",
+                    taxonColumns: [{
+                        key: "scientificName",
+                        label: "Taxon name"
+                    }, {
+                        key: "direct_solow_pp",
+                        label: "PP"
+                    }, {
+                        key: "rank",
+                        label: "Rank"
+                    }, {
+                        key: "commonName",
+                        label: "Common Name"
+                    }, {
+                        key: "reportingStatus",
+                        label: "Reporting status",
+                    }, {
+                        key: "id",
+                        label: "ID"
+                    }, {
+                        key: "iNaturalistTaxonName",
+                        label: "Link name"
+                    }],
                     /** Paths relative to docs/story */
                     obsFile: "../data/tabular/Saanich_Tracheophyta_incomplete-ultimate-catalogue_2026-04-08-selected-labels.csv",
                     taxaFile: "../data/tabular/Saanich_Tracheophyta_incomplete-ultimate-merged-summary_2026-04-08-prepared-taxa.csv",
@@ -28,6 +51,7 @@
 
             },
             paneHandlers: {
+                /** These names need to match the names of pages in content/story **/
                 Status: {
                     type: "reknitr.statusPaneHandler"
                 },
@@ -51,6 +75,9 @@
                         }
                         ]
                     }
+                },
+                Solow: {
+                    type: "reknitr.solowPaneHandler"
                 }
             }
         }
@@ -107,9 +134,6 @@
         source: "%self/img/download.svg",
         target: "%self/docs/img/download.svg"
     }, {
-        source: "%self/img/12993632-large.jpeg",
-        target: "%self/docs/img/12993632-large.jpeg"
-    }, {
         source: "%imerss-bioinfo/docs/css/imerss-viz-lib.css",
         target: "%self/static/css/imerss-viz-lib.css"
     }, {
@@ -121,8 +145,5 @@
     }, {
         source: "%imerss-bioinfo/docs/css/imerss-blitz.css",
         target: "%self/static/css/imerss-blitz.css"
-    }, {
-        source: "%self/outputs",
-        target: "%self/docs/data/tabular"
     }]
 }

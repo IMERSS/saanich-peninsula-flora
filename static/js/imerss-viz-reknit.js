@@ -95,6 +95,57 @@ fluid.defaults("reknitr.storyPage.withVizLoader", {
     }
 });
 
+reknitr.renderTaxaRows = function (rows) {
+    return rows.filter(row => row.inSummary);
+};
+
+fluid.defaults("reknitr.vizLoader.withSolow", {
+    components: {
+        taxaTable: {
+            type: "hortis.dataTable",
+            options: {
+                parentContainer: ".mxcw-solow-taxa",
+                sortable: true,
+                rowSelectable: true,
+                columns: "{vizLoader}.options.taxonColumns",
+                members: {
+                    rows: "@expand:fluid.computed(reknitr.renderTaxaRows, {vizLoader}.taxa.rows)",
+                    sortColumn: "@expand:signal(direct_solow_pp)"
+                }
+            }
+        },
+        solowRadius: {
+            type: "reknitr.solowRadius",
+            options: {
+                parentContainer: ".mxcw-solow-radius-holder"
+            }
+        },
+        solowTaxonInfo: {
+            type: "reknitr.solowTaxonInfo",
+            options: {
+                parentContainer: ".mxcw-solow-taxon-holder",
+                members: {
+                    selectedTaxon: "{vizLoader}.taxaTable.selectedRow",
+                    rowById: "{vizLoader}.taxa.rowById",
+                    obsRows: "{vizLoader}.obsRows"
+                }
+            }
+        },
+        solowMapLayer: {
+            type: "reknitr.solowMapLayer",
+            options: {
+                components: {
+                    map: "{vizLoader}.map"
+                },
+                members: {
+                    solowRadius: "{solowRadius}.radius",
+                    taxonObsRows: "{solowTaxonInfo}.taxonObsRows"
+                }
+            }
+        }
+    }
+});
+
 reknitr.storyPage.bindObsDownloadClick = function (that) {
     that.dom.locate("downloadObsButton").on("click", () =>
         reknitr.storyPage.triggerObsDownload(that)
@@ -304,10 +355,6 @@ fluid.defaults("hortis.libreMap.inStoryPage", {
     }
 });
 
-fluid.defaults("reknitr.statusPaneHandler", {
-    gradeNames: "reknitr.paneHandler"
-});
-
 reknitr.forwardRegionSelection = function (regionFilter, selectedRegion) {
     let filterState = {};
     if (selectedRegion) {
@@ -470,7 +517,7 @@ fluid.defaults("reknitr.bareRegionsExtra.withLegend", {
     }
 });
 
-
+// Ancient thing, vizColumn no longer exists
 reknitr.addToVizColumn = function (parentContainer, jNode) {
     const target = parentContainer.find(".mxcw-vizColumn");
     target.append(jNode);

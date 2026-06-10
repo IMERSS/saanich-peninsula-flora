@@ -2,10 +2,9 @@
 
 /* global Plotly */
 
-// noinspection ES6ConvertVarToLetConst // otherwise this is a duplicate on minifying
+// noinspection ES6ConvertVarToLetConst
 var reknitr = fluid.registerNamespace("reknitr");
-
-// noinspection ES6ConvertVarToLetConst // otherwise this is a duplicate on minifying
+// noinspection ES6ConvertVarToLetConst
 var hortis = fluid.registerNamespace("hortis");
 
 /**
@@ -707,9 +706,11 @@ fluid.defaults("reknitr.storyPage", {
         activePane: "@expand:signal()",
         activePaneHandler: "@expand:fluid.computed(reknitr.paneHandlerForIndex, {that}, {that}.activePane)",
         // "model listeners"
+
         updateActiveMapPane: "@expand:fluid.effect(reknitr.updateActiveMapPane, {that}, {that}.map, {that}.activePane, {that}.map.mapLoaded)",
         updateActiveDataPane: "@expand:fluid.effect(reknitr.updateActiveDataPane, {that}, {that}.activePane)",
         updateGridVisible: "@expand:fluid.effect(reknitr.updateGridVisible, {that}.map, {that}.activePaneHandler)",
+        updatePaneVisibility: "@expand:fluid.effect(reknitr.updatePaneVisibility, {that}, {that}.activePaneHandler)",
         updateFiltersVisible: "@expand:fluid.effect(reknitr.updateFiltersVisible, {that}, {that}.activePaneHandler)",
         renderSectionNav: "@expand:reknitr.renderSectionNav({that})"
     },
@@ -812,31 +813,6 @@ reknitr.layerOpacityProperty = function (layer) {
         layer.type === "fill" ? "fill-opacity" : null;
 };
 
-reknitr.updateGridVisible = function (map, paneHandler) {
-    map.gridVisible.value = !!paneHandler.options.gridVisible;
-};
-
-reknitr.updateFiltersVisible = function (that, paneHandler) {
-    const filtersVisible = paneHandler.options.filtersVisible;
-    const filterNodes = document.querySelector(".imerss-filters");
-    hortis.toggleClass(filterNodes, "fl-hidden", !filtersVisible);
-    // Note that there was a terrible bug here with flat = true - we would end up iterating over
-    // ALL the filters since filterRoot is injected inside filters and hence we hit the choroplethFilter also.
-    // Hard to see what to do here - should make a qIS which doesn't follow "portals"?
-    // And this kind of thing would always be in literal code, so how would we expect to trap it?
-    const filters = fluid.queryIoCSelector(that.vizLoader.filters, "hortis.filter", true);
-    filters.map(filter => {
-        if (!filter.options.alwaysActive) {
-            filter.isActive.value = filtersVisible;
-        }
-    });
-
-    const obsTableVisible = paneHandler.options.obsTableVisible;
-    const obsTable = document.querySelector(".mxcw-obs-table-holder");
-    hortis.toggleClass(obsTable, "fl-hidden", !obsTableVisible);
-
-};
-
 reknitr.updateActiveDataPane = function (that, activePane) {
     reknitr.toggleActiveClass(that.dataPanes, "fl-hidden", activePane, true);
 };
@@ -901,17 +877,75 @@ reknitr.updateActiveMapPane = function (that, map, activePane) {
     });
 };
 
+fluid.defaults("reknitr.obsMapPaneHandler", {
+    gradeNames: "reknitr.paneHandler",
+    visibleMap: true,
+    visibleGrid: true,
+    visibleObsFilters: true,
+    visibleObsTable: true,
+    visibleVizControls: true
+});
+
+fluid.defaults("reknitr.statusPaneHandler", {
+    gradeNames: "reknitr.obsMapPaneHandler"
+});
+
+fluid.defaults("reknitr.solowPaneHandler", {
+    gradeNames: "reknitr.paneHandler",
+    visibleMap: true,
+    visibleVizControls: true,
+    visibleSolow: true
+});
+
+reknitr.visiblePropsToSelectors = {
+    visibleVizControls: ".imerss-container",
+    visibleSolow: ".mxcw-solow",
+    visibleObsFilters: ".imerss-filter-panel"
+};
+
+reknitr.updatePaneVisibility = function (/*that, paneHandler*/) {
+    // TODO: Generalise stuff from updateMapVisible via table above
+};
+
+reknitr.updateGridVisible = function (map, paneHandler) {
+    map.gridVisible.value = !!paneHandler.options.visibleGrid;
+};
+
+reknitr.updateFiltersVisible = function (that, paneHandler) {
+    const visibleFilters = paneHandler.options.visibleFilters;
+    const filterNodes = document.querySelector(".imerss-filters");
+    hortis.toggleClass(filterNodes, "fl-hidden", !visibleFilters);
+    // Note that there was a terrible bug here with flat = true - we would end up iterating over
+    // ALL the filters since filterRoot is injected inside filters and hence we hit the choroplethFilter also.
+    // Hard to see what to do here - should make a qIS which doesn't follow "portals"?
+    // And this kind of thing would always be in literal code, so how would we expect to trap it?
+    const filters = fluid.queryIoCSelector(that.vizLoader.filters, "hortis.obsFilter", true);
+    filters.map(filter => {
+        if (!filter.options.alwaysActive) {
+            filter.isActive.value = visibleFilters;
+        }
+    });
+
+    const obsTableVisible = paneHandler.options.visibleObsTable;
+    const obsTable = document.querySelector(".mxcw-obs-table-holder");
+    hortis.toggleClass(obsTable, "fl-hidden", !obsTableVisible);
+};
+
 reknitr.updateMapVisible = function (that, activePane) {
     const paneHandler = reknitr.paneHandlerForIndex(that, activePane);
     if (!paneHandler) {
         fluid.fail("No pane handler found for section with index ", activePane);
     }
-    const isVisible = !fluid.componentHasGrade(paneHandler, "reknitr.mapHidingPaneHandler");
-    hortis.toggleClass(that.dom.locate("mapHolder")[0], "mxcw-hideMap", isVisible, true);
-    hortis.toggleClass(document.querySelector(".imerss-container"), "fl-hidden", isVisible, true);
+    hortis.toggleClass(that.dom.locate("mapHolder")[0], "mxcw-hideMap", paneHandler.options.visibleMap, true);
+    hortis.toggleClass(document.querySelector(".imerss-container"), "fl-hidden", paneHandler.options.visibleVizControls, true);
+    hortis.toggleClass(document.querySelector(".mxcw-solow-taxa"), "fl-hidden", paneHandler.options.visibleSolow, true);
+    hortis.toggleClass(document.querySelector(".mxcw-solow-widgets-holder"), "fl-hidden", paneHandler.options.visibleSolow, true);
+
+    hortis.toggleClass(document.querySelector(".imerss-filter-panel"), "fl-hidden", paneHandler.options.visibleObsFilters, true);
     that.map.maxObsCountOverride.value = paneHandler.options.maxObsCountOverride;
 };
 
+;
 // Base definitions
 
 fluid.defaults("reknitr.paneHandler", {
@@ -969,14 +1003,6 @@ reknitr.stopMedia = function (container, isVisible) {
 reknitr.paneHandler.addPaneClass = function (that, parentContainer) {
     parentContainer[0].classList.add("mxcw-widgetPane-" + that.options.paneKey);
 };
-
-fluid.defaults("reknitr.librePaneHandler", {
-    gradeNames: "reknitr.paneHandler"
-});
-
-// Tag interpreted by reknitr.updateMapVisible
-fluid.defaults("reknitr.mapHidingPaneHandler", {
-});
 
 fluid.defaults("reknitr.templatePaneHandler", {
     gradeNames: ["reknitr.paneHandler", "fluid.templateRenderingView"],
