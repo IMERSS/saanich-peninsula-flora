@@ -45,7 +45,7 @@ reknitr.solowRadius.markup = `
 /** Discrete logarithmic snap values available for selection (metres).
  * @type {Number[]}
  */
-reknitr.solowRadius.SNAP_VALUES = [10, 50, 100, 500, 1000, 5000, 10000];
+reknitr.solowRadius.SNAP_VALUES = [500, 750, 1000, 2000, 5000, 7500, 10000];
 
 /** Default slider index corresponding to 1000 m.
  * @type {Number}
@@ -215,7 +215,7 @@ reknitr.solowTaxonInfo.markup = `
         <dt>Date first seen:</dt> <dd>%dateFirstSeen</dd>
         <dt>Date last seen:</dt>  <dd>%dateLastSeen</dd>
         <dt>Total sightings:</dt> <dd>%numObs</dd>
-        <dt>Regional PP:</dt>     <dd>%regionalPP</dd>
+        <dt>Regional EP:</dt>     <dd>%regionalEP</dd>
       </dl>
   </div>
 </div>
@@ -238,7 +238,7 @@ reknitr.solowTaxonInfo.renderModel = function (taxon, taxonObsRows) {
             dateFirstSeen: taxonObsRows[0].eventDate,
             dateLastSeen: fluid.peek(taxonObsRows).eventDate,
             numObs: taxonObsRows.length,
-            regionalPP: taxon.direct_solow_pp,
+            regionalEP: taxon.direct_solow_ep,
             taxonImage: hortis.renderTaxonImage(taxon.iNaturalistTaxonImage, taxon.id)
         };
         return model;
@@ -275,7 +275,7 @@ fluid.defaults("reknitr.solowTaxonInfo", {
  * @return {Number} - Distance in metres.
  */
 reknitr.haversineDistance = function (lat1, lon1, lat2, lon2) {
-    const R = 6371000;
+    const R = 6367445;
     const toRad = deg => deg * Math.PI / 180;
     const dLat = toRad(lat2 - lat1);
     const dLon = toRad(lon2 - lon1);
@@ -291,6 +291,12 @@ reknitr.haversineDistance = function (lat1, lon1, lat2, lon2) {
 // Clustering
 // ══════════════════════════════════════════════════════════════════════════════
 
+/** @typedef {Object} ClusterInfo
+ * @property {Object[]} obsRows - Observation rows assigned to this cluster
+ * @property {Number} id - ID of this cluster
+ * @property {Number} PP - Solow PP for this cluster
+ */
+
 /**
  * Partitions an array of observation rows into clusters using single-linkage
  * (any-neighbour) connectivity: two observations belong to the same cluster if
@@ -301,7 +307,7 @@ reknitr.haversineDistance = function (lat1, lon1, lat2, lon2) {
  *   decimalLatitude and decimalLongitude fields.
  * @param {Number} solowRadius - Maximum distance in metres that still links two
  *   observations into the same cluster.
- * @return {Object[][]} - Array of clusters, each cluster being an array of
+ * @return {ClusterInfo[]} - Array of clusters, each cluster being an array of
  *   observation rows.
  */
 reknitr.clusterObsByRadius = function (obsRows, solowRadius) {
@@ -356,9 +362,9 @@ reknitr.clusterObsByRadius = function (obsRows, solowRadius) {
     for (let i = 0; i < n; i++) {
         const root = find(i);
         if (!clusterMap[root]) {
-            clusterMap[root] = [];
+            clusterMap[root] = {obsRows: []};
         }
-        clusterMap[root].push(obsRows[i]);
+        clusterMap[root].obsRows.push(obsRows[i]);
     }
 
     return Object.values(clusterMap);
@@ -429,7 +435,7 @@ reknitr.solowBayesFactor = function (sortedCluster) {
         const ratio = Math.pow(T / t_n, n - 1);
         const denominator = ratio - 1;
         if (denominator <= 0) {
-            B = 0;
+            B = Number.POSITIVE_INFINITY;
         } else {
             B = (n - 1) / denominator;
         }
@@ -446,8 +452,14 @@ reknitr.solowBayesFactor = function (sortedCluster) {
  * @return {Number} - Prior probability of presence in the range [0, 1].
  */
 reknitr.solowBayesFactorToPP = function (B) {
-    return B / (1 + B);
+    return B === Number.POSITIVE_INFINITY ? 1 : B / (1 + B);
 };
+
+/**
+ * @typedef {Object} ClusterPPResult
+ * @property {ClusterInfo[]} clusters - Array of cluster objects, each with an id and pp property.
+ * @property {Map<Object, ClusterInfo>} rowToCluster - Map from each observation row object to its cluster object.
+ */
 
 /**
  * Given a flat array of observation rows for a single taxon, groups them into
@@ -457,28 +469,25 @@ reknitr.solowBayesFactorToPP = function (B) {
  * @param {Object[]} taxonObs - Observation rows, each with decimalLatitude,
  *   decimalLongitude and eventDate.
  * @param {Number} solowRadius - Clustering radius in metres.
- * @return {Map} - A Map from each observation row object to its cluster PP
- *   value (Number in [0, 1]).
+ * @return {ClusterPPResult} - An object containing the array of clusters and a Map from each observation row to its cluster.
  */
 reknitr.computeClusterPPs = function (taxonObs, solowRadius) {
-    const result = new Map();
-
-    if (taxonObs.length === 0) {
-        return result;
-    }
+    const rowToCluster = new Map();
 
     const clusters = reknitr.clusterObsByRadius(taxonObs, solowRadius);
 
-    clusters.forEach(function (cluster) {
-        const sorted = cluster.slice().sort(reknitr.obsDateComparator);
-        const B = reknitr.solowBayesFactor(sorted);
+    clusters.forEach(function (cluster, index) {
+        cluster.id = index;
+        const obsRows = cluster.obsRows.sort(reknitr.obsDateComparator);
+        const B = reknitr.solowBayesFactor(obsRows);
         const pp = reknitr.solowBayesFactorToPP(B);
-        cluster.forEach(function (obs) {
-            result.set(obs, pp);
+        cluster.pp = pp;
+        obsRows.forEach(function (obs) {
+            rowToCluster.set(obs, cluster);
         });
     });
 
-    return result;
+    return {clusters, rowToCluster};
 };
 
 fluid.registerNamespace("reknitr.solowMapLayer");
@@ -498,23 +507,24 @@ fluid.registerNamespace("reknitr.solowMapLayer");
  * @return {Object} - A GeoJSON FeatureCollection of Point features.
  */
 reknitr.solowMapLayer.buildGeoJSON = function (taxonObs, solowRadius) {
-    const ppByObs = reknitr.computeClusterPPs(taxonObs, solowRadius);
+    const {clusters, rowToCluster} = reknitr.computeClusterPPs(taxonObs, solowRadius);
 
-    const features = Array.from(ppByObs.entries()).map(([obs, pp]) => ({
+    const features = Array.from(rowToCluster.entries()).map(([obs, cluster]) => ({
         type: "Feature",
         geometry: {
             type: "Point",
             coordinates: obs[hortis.pointSymbol]
         },
         properties: {
-            solowPP: pp
+            solowEP: 1 - cluster.pp,
+            clusterId: cluster.id
         }
     }));
-
-    return {
+    const geoJSON = {
         type: "FeatureCollection",
         features: features
     };
+    return {geoJSON, clusters};
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -553,21 +563,23 @@ reknitr.solowMapLayer.metresToPixels = function (radiusMetres, zoom, lat) {
  * @param {Object} that - The reknitr.solowMapLayer component instance.
  * @param {Object[]} taxonObs - Current array of observation rows.
  * @param {Number} solowRadius - Current clustering/drawing radius in metres.
+ * @param {Number} layerOpacity - Opacity to render the layer with
  */
-reknitr.solowMapLayer.update = function (that, taxonObs, solowRadius) {
+reknitr.solowMapLayer.update = function (that, taxonObs, solowRadius, layerOpacity) {
     const map = that.map.map;
 
     const withCoords = taxonObs.filter(obs => obs[hortis.cellIdSymbol] !== "0|0");
 
-    const geojson = reknitr.solowMapLayer.buildGeoJSON(withCoords, solowRadius);
+    const {geoJSON, clusters} = reknitr.solowMapLayer.buildGeoJSON(withCoords, solowRadius);
+    that.solowClusters = clusters;
 
     const existingSource = map.getSource(reknitr.solowMapLayer.SOURCE_ID);
     if (existingSource) {
-        existingSource.setData(geojson);
+        existingSource.setData(geoJSON);
     } else {
         map.addSource(reknitr.solowMapLayer.SOURCE_ID, {
             type: "geojson",
-            data: geojson
+            data: geoJSON
         });
     }
 
@@ -579,6 +591,7 @@ reknitr.solowMapLayer.update = function (that, taxonObs, solowRadius) {
     const existingLayer = map.getLayer(reknitr.solowMapLayer.LAYER_ID);
     if (existingLayer) {
         map.setPaintProperty(reknitr.solowMapLayer.LAYER_ID, "circle-radius", pixelRadius);
+        map.setPaintProperty(reknitr.solowMapLayer.LAYER_ID, "circle-opacity", layerOpacity);
     } else {
         map.addLayer({
             id: reknitr.solowMapLayer.LAYER_ID,
@@ -587,11 +600,11 @@ reknitr.solowMapLayer.update = function (that, taxonObs, solowRadius) {
             paint: {
                 "circle-radius": pixelRadius,
                 "circle-color": {
-                    property: "solowPP",
+                    property: "solowEP",
                     stops: hortis.libreMap.viridisStops
                 },
-                "circle-opacity": 1,
-                "circle-stroke-width": 0,
+                "circle-opacity": layerOpacity,
+                "circle-stroke-width": 0
             },
             metadata: {
                 sortKey: 110
@@ -617,23 +630,135 @@ reknitr.solowMapLayer.cleanup = function (that) {
     }
 };
 
+// TODO: Nearly duplicates hortis.libreMap.eventToCell
+/**
+ * Resolves a map event to the cell ID of the topmost visible feature at the event's point.
+ * @param {Map} map - The Mapbox/MapLibre map instance.
+ * @param {MapMouseEvent} e - A map mouse event containing a `point` property.
+ * @return {String|null} The cell ID, or null if no visible feature was found.
+ */
+reknitr.solowMapLayer.eventToCell = function (map, e) {
+    const features = map.queryRenderedFeatures(e.point);
+    const visibleFeatures = features.filter(feature => feature.layer.paint["fill-opacity"] > 0);
+    return visibleFeatures[0]?.properties.clusterId || null;
+};
+
+reknitr.solowMapLayer.bindClusterSelect = function (that) {
+    const map = that.map.map;
+
+    map.on("mousemove", e => {
+        if (that.layerVisible.value) {
+            that.solowTooltip.hoverEvent = e.originalEvent;
+            const clusterId = hortis.libreMap.eventToProp(map, e, "clusterId");
+            that.hoverCluster.value = clusterId;
+            map.getCanvas().style.cursor = fluid.isValue(clusterId) ? "default" : "";
+        }
+    });
+    map.getCanvas().addEventListener("mouseleave", () => hortis.clearAllTooltips(that.solowTooltip));
+};
+
+
+reknitr.solowTooltipTemplate =
+    `<div class="imerss-tooltip imerss-bbea-grid-tooltip">
+      <dl class="mxcw-taxon-fields">
+        <dt>Cluster ID: </dt>     <dd>%clusterId</dd>
+        <dt>Date first seen:</dt> <dd>%dateFirstSeen</dd>
+        <dt>Date last seen:</dt>  <dd>%dateLastSeen</dd>
+        <dt>Total sightings:</dt> <dd>%numObs</dd>
+        <dt>Cluster EP:</dt>      <dd>%clusterEP</dd>
+      </dl>
+</div>`;
+
+reknitr.solowMapLayer.renderTooltip = function (that, clusterId) {
+    /** @type {ClusterInfo} **/
+    const cluster = that.solowClusters[clusterId];
+    const obsRows = cluster.obsRows;
+    const model = {
+        clusterId,
+        dateFirstSeen: obsRows[0].eventDate,
+        dateLastSeen: fluid.peek(obsRows).eventDate,
+        numObs: obsRows.length,
+        clusterEP: (1 - cluster.pp).toFixed(3)
+    };
+    return fluid.stringTemplate(reknitr.solowTooltipTemplate, model);
+};
+
+reknitr.solowMapLayer.visibleToOpacity = visible => visible ? 1 : 0;
+
+reknitr.solowMapLayer.drawLegend = function (map, that) {
+    const container = document.createElement("div");
+    container.classList.add("imerss-legend");
+    container.classList.add("mxcw-solow-legend");
+    const cstops = that.options.legendStops;
+    const stops = fluid.iota(cstops);
+    // Proportions from 0 to 1 at which legend entries are generated
+    const legendStopProps = fluid.iota(cstops + 1).map(stop => stop / cstops);
+
+    const renderLegend = function () {
+        const legendMarkupRows = stops.map(function (stop) {
+            const midProp = (legendStopProps[stop] + legendStopProps[stop + 1]) / 2;
+            const colour = fluid.colour.lookupStop(map.memoStops, midProp);
+            const label = legendStopProps[stop] + " - " + legendStopProps[stop + 1];
+            return fluid.stringTemplate(hortis.legend.rowTemplate, {
+                previewStyle: "background-color: " + colour,
+                keyLabel: label
+            });
+        });
+
+        const markup = `<div class="imerss-legend-title">Extirpation probability</div>`
+            + legendMarkupRows.join("\n");
+        container.innerHTML = markup;
+    };
+
+    renderLegend();
+    return {container};
+};
+
+
 // ══════════════════════════════════════════════════════════════════════════════
 // fluid.defaults — component registration
 // ══════════════════════════════════════════════════════════════════════════════
 
 fluid.defaults("reknitr.solowMapLayer", {
     gradeNames: "fluid.component",
+    legendStops: 10,
+    legendPosition: "top-right",
     members: {
+        layerVisible: "@expand:signal(true)",
+        layerOpacity: "@expand:fluid.computed(reknitr.solowMapLayer.visibleToOpacity, {that}.layerVisible)",
         // Injected by reknitr.vizLoader.withSolow
         solowRadius:  "@expand:signal(500)",
         taxonObsRows: "@expand:signal([])",
 
-        updateEffect: "@expand:fluid.effect(reknitr.solowMapLayer.update, {that}, {that}.taxonObsRows, {that}.solowRadius, {that}.map.mapLoaded)"
+        updateEffect: "@expand:fluid.effect(reknitr.solowMapLayer.update, {that}, {that}.taxonObsRows, {that}.solowRadius, {that}.layerOpacity, {that}.map.mapLoaded)",
+        hoverCluster: "@expand:signal(null)",
+
+        control: "@expand:hortis.libreMap.addLegendControl({map}, {that}.options.legendPosition, {that}.drawLegend, {that}.layerVisible)"
+        // solowClusters: dynamic
+        // map: injected
+    },
+    invokers: {
+        drawLegend: "reknitr.solowMapLayer.drawLegend({map}, {that})"
     },
     listeners: {
+        "onCreate.bindClusterSelect": "reknitr.solowMapLayer.bindClusterSelect({that})",
         "onDestroy.cleanup": {
             funcName: "reknitr.solowMapLayer.cleanup",
             args: ["{that}"]
+        }
+    },
+    components: {
+        solowTooltip: {
+            type: "hortis.tooltip",
+            options: {
+                tooltipKey: "hoverCluster",
+                members: {
+                    hoverCluster: "{solowMapLayer}.hoverCluster"
+                },
+                invokers: {
+                    renderTooltip: "reknitr.solowMapLayer.renderTooltip({solowMapLayer}, {arguments}.0)"
+                }
+            }
         }
     }
 });

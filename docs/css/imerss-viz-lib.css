@@ -776,6 +776,7 @@ a.ui-button:active,
     width: 10em;
     margin-left: auto;
     margin-right: 10px;
+    margin-top: 8px;
     background: #555e;
     pointer-events: all;
     display: flex;

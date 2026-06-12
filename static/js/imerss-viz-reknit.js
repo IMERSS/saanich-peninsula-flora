@@ -110,7 +110,8 @@ fluid.defaults("reknitr.vizLoader.withSolow", {
                 columns: "{vizLoader}.options.taxonColumns",
                 members: {
                     rows: "@expand:fluid.computed(reknitr.renderTaxaRows, {vizLoader}.taxa.rows)",
-                    sortColumn: "@expand:signal(direct_solow_pp)"
+                    sortColumn: "@expand:signal(direct_solow_ep)",
+                    sortDirection: "@expand:signal(-1)"
                 }
             }
         },

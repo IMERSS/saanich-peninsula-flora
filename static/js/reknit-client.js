@@ -528,6 +528,7 @@ reknitr.indexRegionRows = function (regionRows) {
 reknitr.legendKey.drawLegend = function (map, regionRowsSignal, isVisibleSignal) {
     const container = document.createElement("div");
     container.classList.add("mxcw-legend");
+    container.classList.add("mxcw-region-legend");
     container.classList.add("maplibregl-ctrl"); // to ensure it receives pointer events
 
     const f = regionKey => {
@@ -769,9 +770,7 @@ fluid.defaults("reknitr.storyPage", {
     },
     listeners: {
         "onCreate.listenSectionNav": "reknitr.listenSectionNav({that})",
-        // This will initialise subPaneIndices quite late
-        "onCreate.findPlotlyWidgets": "reknitr.findPlotlyWidgets({that}, {that}.sectionHolders)",
-        // "onCreate.renderSectionNav": "reknitr.renderSectionNav({that})"
+        "onCreate.findPlotlyWidgets": "reknitr.findPlotlyWidgets({that}, {that}.sectionHolders)"
     }
 });
 
@@ -941,11 +940,12 @@ reknitr.updateMapVisible = function (that, activePane) {
     hortis.toggleClass(document.querySelector(".mxcw-solow-taxa"), "fl-hidden", paneHandler.options.visibleSolow, true);
     hortis.toggleClass(document.querySelector(".mxcw-solow-widgets-holder"), "fl-hidden", paneHandler.options.visibleSolow, true);
 
+    that.vizLoader.solowMapLayer.layerVisible.value = !!paneHandler.options.visibleSolow;
+
     hortis.toggleClass(document.querySelector(".imerss-filter-panel"), "fl-hidden", paneHandler.options.visibleObsFilters, true);
     that.map.maxObsCountOverride.value = paneHandler.options.maxObsCountOverride;
 };
 
-;
 // Base definitions
 
 fluid.defaults("reknitr.paneHandler", {

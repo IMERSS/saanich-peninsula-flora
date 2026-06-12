@@ -157,6 +157,10 @@
     transition-duration: 400ms;
 }
 
+.mxcw-region-legend .imerss-legend-preview {
+    margin: 2px;
+}
+
 .mxcw-hidden.mxcw-legend {
     opacity: 0;
     visibility: hidden;
@@ -168,9 +172,7 @@
     width: 1.2rem;
     height: 1.2rem;
     outline: 1px solid #353030;
-    margin: 2px;
-    position: relative;
-    top: 3px;
+    margin: 1px;
     cursor: pointer;
 }
 

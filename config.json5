@@ -25,8 +25,8 @@
                         key: "scientificName",
                         label: "Taxon name"
                     }, {
-                        key: "direct_solow_pp",
-                        label: "PP"
+                        key: "direct_solow_ep",
+                        label: "EP"
                     }, {
                         key: "rank",
                         label: "Rank"

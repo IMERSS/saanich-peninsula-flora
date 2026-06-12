@@ -32,6 +32,10 @@ merged <- merged %>% select(-c("kingdom", "phylum", "class", "order", "infraorde
                                "subphylum", "subclass", "superorder", "linkName", "linkTaxonID", "tribe"))
 
 # TODO Solow values are pretty corrupt with many missing and negative
-merged <- merged %>% mutate(direct_solow_pp = round(pmax(coalesce(direct_solow_pp, 1), 0), 3))
+merged <- merged %>% mutate(direct_solow_pp = pmax(coalesce(direct_solow_pp, 1), 0))
+
+# Convert to ep for viz
+merged <- merged %>% mutate(direct_solow_ep = round(1 - direct_solow_pp, 3))
+merged <- merged %>% select(-direct_solow_pp)
 
 timedWrite(merged, "tabular_data/Saanich_Tracheophyta_incomplete-ultimate-merged-summary_2026-04-08-prepared-taxa.csv")
