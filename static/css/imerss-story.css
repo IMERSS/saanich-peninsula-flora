@@ -404,6 +404,7 @@ h2 {
 .mxcw-taxa-filters-holder .imerss-filters {
     display: flex;
     padding-top: 6px;
+    overflow-x: scroll;
 }
 
 .mxcw-taxa-filters-holder .imerss-filter {
