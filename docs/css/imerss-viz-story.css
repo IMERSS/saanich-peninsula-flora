@@ -12,6 +12,7 @@
 
 .imerss-main {
     --data-table-surface: #eefaff;
+    --data-table-border: #ddd;
 }
 
 .mxcw-data-widget-text {

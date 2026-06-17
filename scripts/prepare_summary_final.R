@@ -31,6 +31,8 @@ merged <- assignedTaxa %>%
 merged <- merged %>% select(-c("kingdom", "phylum", "class", "order", "infraorder", "superfamily", "subfamily", "genus", "family",
                                "subphylum", "subclass", "superorder", "linkName", "linkTaxonID", "tribe"))
 
+merged <- merged %>% mutate(has_voucher = if_else(has_voucher == "yes", 1, 0))
+
 # TODO Solow values are pretty corrupt with many missing and negative
 merged <- merged %>% mutate(direct_solow_pp = pmax(coalesce(direct_solow_pp, 1), 0))
 

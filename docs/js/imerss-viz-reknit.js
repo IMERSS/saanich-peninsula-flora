@@ -44,8 +44,9 @@ fluid.defaults("reknitr.storyPage.withVizLoader", {
                             }
                         }
                     },
+                    // Override definition in hortis.standardVizLoader which is a base grade of hortis.blitzVizLoader
                     filters: {
-                        type: "reknitr.storyFilters",
+                        type: "reknitr.storyObsFilters",
                         options: {
                             components: {
                                 regionFilter: {
@@ -95,12 +96,21 @@ fluid.defaults("reknitr.storyPage.withVizLoader", {
     }
 });
 
-reknitr.renderTaxaRows = function (rows) {
+reknitr.summaryTaxaRows = function (rows) {
     return rows.filter(row => row.inSummary);
 };
 
 fluid.defaults("reknitr.vizLoader.withSolow", {
+    members: {
+        filteredTaxa: "{taxaFiltersHolder}.filters.allOutput"
+    },
     components: {
+        taxaFiltersHolder: {
+            type: "reknitr.saanichTaxaFiltersHolder",
+            options: {
+                parentContainer: ".mxcw-solow-taxa"
+            }
+        },
         taxaTable: {
             type: "hortis.dataTable",
             options: {
@@ -109,7 +119,7 @@ fluid.defaults("reknitr.vizLoader.withSolow", {
                 rowSelectable: true,
                 columns: "{vizLoader}.options.taxonColumns",
                 members: {
-                    rows: "@expand:fluid.computed(reknitr.renderTaxaRows, {vizLoader}.taxa.rows)",
+                    rows: "{vizLoader}.filteredTaxa",
                     sortColumn: "@expand:signal(direct_solow_ep)",
                     sortDirection: "@expand:signal(-1)"
                 }
@@ -203,7 +213,7 @@ reknitr.statusFilter.bindClick = function (that, selectedStatus) {
     });
 };
 
-reknitr.storyFiltersTemplate = `
+reknitr.storyObsFiltersTemplate = `
     <div class="imerss-filters">
         <div class="imerss-filter"></div>
         <div class="imerss-status-filter imerss-filter"></div>
@@ -212,11 +222,11 @@ reknitr.storyFiltersTemplate = `
     </div>
 `;
 
-fluid.defaults("reknitr.storyFilters", {
+fluid.defaults("reknitr.storyObsFilters", {
     gradeNames: ["hortis.obsFilters", "fluid.stringTemplateRenderingView"],
     markup: { // Clearly unsatisfactory, have to move over to preactish rendering before long
-        container: reknitr.storyFiltersTemplate,
-        fallbackContainer: reknitr.storyFiltersTemplate
+        container: reknitr.storyObsFiltersTemplate,
+        fallbackContainer: reknitr.storyObsFiltersTemplate
     },
     members: {
         obsRows: "{vizLoader}.obsRows"

@@ -28,8 +28,14 @@
                         key: "direct_solow_ep",
                         label: "EP"
                     }, {
-                        key: "rank",
+                        key: "taxonRank",
                         label: "Rank"
+                    }, {
+                        key: "introduction_status",
+                        label: "Introduction"
+                    }, {
+                        key: "has_voucher",
+                        label: "Has Voucher"
                     }, {
                         key: "commonName",
                         label: "Common Name"
@@ -118,6 +124,9 @@
     }, {
         source: "%imerss-bioinfo/docs/js/imerss-blitz.js",
         target: "%self/static/js/imerss-blitz.js"
+    }, {
+        source: "%imerss-bioinfo/docs/js/imerss-plants.js",
+        target: "%self/static/js/imerss-plants.js"
     }, {
         source: "%imerss-bioinfo/src/client/img/Arrow-up.svg",
         target: "%self/docs/img/Arrow-up.svg"
