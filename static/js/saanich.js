@@ -69,9 +69,11 @@ reknitr.saanichFiltersTemplate = `
         <div class="imerss-rank-filter imerss-filter"></div>
         <div class="imerss-introduction-filter imerss-filter"></div>
         <div class="imerss-provenance-filter imerss-filter"></div>
+        <div class="imerss-conservation-filter imerss-filter"></div>
         <div class="imerss-graminoid-filter imerss-filter"></div>
     </div>
 `;
+
 
 fluid.defaults("reknitr.saanichFilters", {
     gradeNames: ["hortis.taxaFilters", "fluid.stringTemplateRenderingView"],
@@ -83,6 +85,7 @@ fluid.defaults("reknitr.saanichFilters", {
         rankFilter: ".imerss-rank-filter",
         introductionFilter: ".imerss-introduction-filter",
         provenanceFilter: ".imerss-provenance-filter",
+        conservationFilter: ".imerss-conservation-filter",
         graminoidFilter: ".imerss-graminoid-filter"
     },
     components: {
@@ -92,9 +95,9 @@ fluid.defaults("reknitr.saanichFilters", {
             container: "{that}.dom.rankFilter",
             options: {
                 gradeNames: "hortis.taxaFilter",
-                filterName: "Taxon rank",
-                fieldName: "taxonRank",
-                fieldValues: ["species", "variety", "subspecies"]
+                filterName: "Infrataxon Status",
+                fieldName: "infrataxon_status",
+                fieldValues: ["infrataxon", "non-infrataxon"]
             }
         },
         introductionFilter: {
@@ -113,9 +116,18 @@ fluid.defaults("reknitr.saanichFilters", {
             options: {
                 gradeNames: "hortis.taxaFilter",
                 filterName: "Provenance Status",
-                fieldName: "has_voucher",
-                fieldValues: ["1", "0"],
-                fieldLabels: ["voucher", "no voucher"]
+                fieldName: "provenance_status",
+                fieldValues: ["voucher", "no_voucher", "unknown"],
+            }
+        },
+        conservationFilter: {
+            type: "hortis.valueFilter",
+            container: "{that}.dom.conservationFilter",
+            options: {
+                gradeNames: "hortis.taxaFilter",
+                filterName: "Conservation Status",
+                fieldName: "provincial_concern",
+                fieldValues: ["concern", "secure"]
             }
         },
         graminoidFilter: {

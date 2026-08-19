@@ -74,7 +74,8 @@ fluid.defaults("reknitr.storyPage.withVizLoader", {
         map: "{storyPage}.vizLoader.map"
     },
     selectors: {
-        downloadObsButton: ".mxcw-obs-table-holder .imerss-download-button"
+        downloadObsButton: ".mxcw-obs-table-holder .imerss-download-button",
+        mapHolder: ".mxcw-map" // This one is used for toggling visibility
     },
     listeners: {
         "onCreate.bindObsDownload": "reknitr.storyPage.bindObsDownloadClick"
@@ -120,7 +121,7 @@ fluid.defaults("reknitr.vizLoader.withSolow", {
                 columns: "{vizLoader}.options.taxonColumns",
                 members: {
                     rows: "{vizLoader}.filteredTaxa",
-                    sortColumn: "@expand:signal(direct_solow_ep)",
+                    sortColumn: "@expand:signal(solow_EP)",
                     sortDirection: "@expand:signal(-1)"
                 }
             }
@@ -147,6 +148,10 @@ fluid.defaults("reknitr.vizLoader.withSolow", {
             options: {
                 components: {
                     map: "{vizLoader}.map"
+                },
+                solowParams: {
+                    baselineYear: "{storyPage}.options.SolowBaselineYear",
+                    analysisYear: "{storyPage}.options.SolowAnalysisYear"
                 },
                 members: {
                     solowRadius: "{solowRadius}.radius",

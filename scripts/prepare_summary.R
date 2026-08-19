@@ -7,16 +7,13 @@ source("scripts/utils.R")
 
 # Merge together the two summaries, reduce columns ready for assignment
 
-rawList <- timedFread("tabular_data/Saanich_Tracheophyta_incomplete-ultimate-list_2026-04-08.csv")
-reducedList <- rawList %>% select(c("taxonName", "linkName", "linkTaxonID", "taxonRank"))
+rawList <- timedFread("tabular_data/Saanich_Tracheophyta_ultimate-list_2026-08-17.csv")
+reducedList <- rawList %>% select(c("taxon_name", "link_name", "link_taxon_id", "taxon_rank", "infrataxon_status",
+                                    "provenance_status", "provincial_concern", "introduction_status", "occurrence_status", "solow_EP"))
 
-rawSummary <- timedFread("tabular_data/Saanich_Tracheophyta_incomplete-summary_2026-04-08.csv")
-reducedSummary <- rawSummary %>% select(c("taxonName", "occurrence_status", "direct_solow_pp", "has_voucher", "introduction_status"))
+reducedList <- reducedList %>% rename("reportingStatus" = "occurrence_status", "scientificName" = "taxon_name")
+reducedList$phylum = "Tracheophyta"
 
-joinedList <- merge(reducedList, reducedSummary, by="taxonName")
-joinedList <- joinedList %>% rename("reportingStatus" = "occurrence_status", "scientificName" = "taxonName")
-joinedList$phylum = "Tracheophyta"
+timedWrite(reducedList, "tabular_data/Saanich_Tracheophyta_ultimate-summary_2026-08-17.csv")
 
-timedWrite(joinedList, "tabular_data/Saanich_Tracheophyta_incomplete-ultimate-merged-summary_2026-04-08-orig.csv")
-
-# Next: node ../bagatelle/src/assignBNames.js tabular_data/Saanich_Tracheophyta_incomplete-ultimate-merged-summary_2026-04-08-orig.csv --DwCA --swaps tabular_data/taxon-swaps.csv
+# Next: node ../bagatelle/src/assignBNames.js tabular_data/Saanich_Tracheophyta_ultimate-summary_2026-08-17.csv --DwCA --swaps tabular_data/taxon-swaps.csv

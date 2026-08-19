@@ -1,6 +1,6 @@
 # Content preparation in R and JS before executing Hugo
 
-# Copy files from data/tabular_data to docs/data/tabular
+# Copy files from tabular_data to static/data/tabular
 
 src_dir <- "tabular_data"
 dst_dir <- "static/data/tabular"
@@ -9,9 +9,9 @@ dst_dir <- "static/data/tabular"
 dir.create(dst_dir, recursive = TRUE, showWarnings = FALSE)
 
 files <- c(
-  "Saanich_Tracheophyta_incomplete-ultimate-catalogue_2026-04-08-selected-labels.csv",
-  "Saanich_Tracheophyta_incomplete-ultimate-catalogue_2026-04-08-selected-regionIndirection.csv",
-  "Saanich_Tracheophyta_incomplete-ultimate-merged-summary_2026-04-08-prepared-taxa.csv"
+  "Saanich_Tracheophyta_ultimate-catalogue_2026-08-17-selected-labels.csv",
+  "Saanich_Tracheophyta_ultimate-catalogue_2026-08-17-selected-regionIndirection.csv",
+  "Saanich_Tracheophyta_ultimate-summary_2026-08-17-prepared-taxa.csv"
 )
 
 for (f in files) {

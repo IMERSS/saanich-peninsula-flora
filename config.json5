@@ -7,16 +7,14 @@
         options: {
             storyPageOptions: {
                 gradeNames: ["reknitr.storyPage.withVizLoader", "reknitr.storyPage.withSaanichWeibull"],
-                mapFlavourGrade: ["hortis.libreMap.withMapboxData", "hortis.libreMap.withRegions", "hortis.libreMap.withRegionLegend"],
+                mapFlavourGrade: ["hortis.libreMap.withMapboxData", "hortis.libreMap.withRegions", "hortis.libreMap.withRegionLegend", "hortis.libreMap.esriTiles"],
                 // No zooms in this configuration
                 zoomDuration: 0,
                 slowZoomDuration: 0,
                 gridResolution: 1000,
                 regionFilterFieldNames: ["BEC"],
-                selectors: {
-                    /** This one is used for toggling **/
-                    mapHolder: ".mxcw-map"
-                }
+                SolowBaselineYear: 1859,
+                SolowAnalysisYear: 2025
             },
             components: {
                 vizLoader: {
@@ -25,16 +23,16 @@
                         key: "scientificName",
                         label: "Taxon name"
                     }, {
-                        key: "direct_solow_ep",
+                        key: "solow_EP",
                         label: "EP"
                     }, {
-                        key: "taxonRank",
+                        key: "taxon_rank",
                         label: "Rank"
                     }, {
                         key: "introduction_status",
                         label: "Introduction"
                     }, {
-                        key: "has_voucher",
+                        key: "provenance_status",
                         label: "Has Voucher"
                     }, {
                         key: "commonName",
@@ -50,9 +48,9 @@
                         label: "Link name"
                     }],
                     /** Paths relative to docs/story */
-                    obsFile: "../data/tabular/Saanich_Tracheophyta_incomplete-ultimate-catalogue_2026-04-08-selected-labels.csv",
-                    taxaFile: "../data/tabular/Saanich_Tracheophyta_incomplete-ultimate-merged-summary_2026-04-08-prepared-taxa.csv",
-                    regionIndirectionFile: "../data/tabular/Saanich_Tracheophyta_incomplete-ultimate-catalogue_2026-04-08-selected-regionIndirection.csv"
+                    obsFile: "../data/tabular/Saanich_Tracheophyta_ultimate-catalogue_2026-08-17-selected-labels.csv",
+                    taxaFile: "../data/tabular/Saanich_Tracheophyta_ultimate-summary_2026-08-17-prepared-taxa.csv",
+                    regionIndirectionFile: "../data/tabular/Saanich_Tracheophyta_ultimate-catalogue_2026-08-17-selected-regionIndirection.csv"
                 },
 
             },

@@ -4,8 +4,8 @@ library(sf)
 
 source("scripts/utils.R")
 
-assignedTaxa <-    timedFread("tabular_data/Saanich_Tracheophyta_incomplete-ultimate-merged-summary_2026-04-08-assigned-taxa.csv")
-assignedSummary <- timedFread("tabular_data/Saanich_Tracheophyta_incomplete-ultimate-merged-summary_2026-04-08-assigned.csv")
+assignedTaxa <-    timedFread("tabular_data/Saanich_Tracheophyta_ultimate-summary_2026-08-17-assigned-taxa.csv")
+assignedSummary <- timedFread("tabular_data/Saanich_Tracheophyta_ultimate-summary_2026-08-17-assigned.csv")
 assignedSummary$inSummary = 1
 
 assignedSummaryDupes <- assignedSummary %>%
@@ -15,10 +15,10 @@ assignedSummaryDupes <- assignedSummary %>%
 if (nrow(assignedSummaryDupes > 0)) {
   cat("Warning, there were ", nrow(assignedSummaryDupes), "duplicate entries found in the summary")
   assignedSummaryDupes$scientificName
-  timedWrite(assignedSummaryDupes, "tabular_data/Saanich_Tracheophyta_incomplete-ultimate-merged-summary_2026-04-08-assigned-dupes.csv")
+  timedWrite(assignedSummaryDupes, "tabular_data/Saanich_Tracheophyta_ultimate-summary_2026-08-17-assigned-dupes.csv")
   
   toRemove <- assignedSummaryDupes %>%
-    filter(linkTaxonID == "")
+    filter(link_taxon_id == "")
   
   assignedSummary <- assignedSummary %>%
     anti_join(toRemove %>% select(scientificName, iNaturalistTaxonId), 
@@ -29,15 +29,12 @@ merged <- assignedTaxa %>%
   full_join(assignedSummary %>% select(-c("iNaturalistTaxonName")), by = c("id" = "iNaturalistTaxonId"))
 
 merged <- merged %>% select(-c("kingdom", "phylum", "class", "order", "infraorder", "superfamily", "subfamily", "genus", "family",
-                               "subphylum", "subclass", "superorder", "linkName", "linkTaxonID", "tribe"))
+                               "subphylum", "subclass", "superorder", "link_name", "link_taxon_id", "tribe"))
 
-merged <- merged %>% mutate(has_voucher = if_else(has_voucher == "yes", 1, 0))
+merged$provenance_status <- ifelse(
+  merged$provenance_status %in% c("voucher", "no_voucher"),
+  merged$provenance_status,
+  "unknown"
+)
 
-# TODO Solow values are pretty corrupt with many missing and negative
-merged <- merged %>% mutate(direct_solow_pp = pmax(coalesce(direct_solow_pp, 1), 0))
-
-# Convert to ep for viz
-merged <- merged %>% mutate(direct_solow_ep = round(1 - direct_solow_pp, 3))
-merged <- merged %>% select(-direct_solow_pp)
-
-timedWrite(merged, "tabular_data/Saanich_Tracheophyta_incomplete-ultimate-merged-summary_2026-04-08-prepared-taxa.csv")
+timedWrite(merged, "tabular_data/Saanich_Tracheophyta_ultimate-summary_2026-08-17-prepared-taxa.csv")

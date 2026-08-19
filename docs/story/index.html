@@ -476,7 +476,8 @@ reknitr.rawPaneHandlers = {"Status":{"type":"reknitr.statusPaneHandler","title":
   "mapFlavourGrade": [
     "hortis.libreMap.withMapboxData",
     "hortis.libreMap.withRegions",
-    "hortis.libreMap.withRegionLegend"
+    "hortis.libreMap.withRegionLegend",
+    "hortis.libreMap.esriTiles"
   ],
   "zoomDuration": 0,
   "slowZoomDuration": 0,
@@ -484,9 +485,8 @@ reknitr.rawPaneHandlers = {"Status":{"type":"reknitr.statusPaneHandler","title":
   "regionFilterFieldNames": [
     "BEC"
   ],
-  "selectors": {
-    "mapHolder": ".mxcw-map"
-  },
+  "SolowBaselineYear": 1859,
+  "SolowAnalysisYear": 2025,
   "components": {
     "vizLoader": {
       "options": {
@@ -497,11 +497,11 @@ reknitr.rawPaneHandlers = {"Status":{"type":"reknitr.statusPaneHandler","title":
             "label": "Taxon name"
           },
           {
-            "key": "direct_solow_ep",
+            "key": "solow_EP",
             "label": "EP"
           },
           {
-            "key": "taxonRank",
+            "key": "taxon_rank",
             "label": "Rank"
           },
           {
@@ -509,7 +509,7 @@ reknitr.rawPaneHandlers = {"Status":{"type":"reknitr.statusPaneHandler","title":
             "label": "Introduction"
           },
           {
-            "key": "has_voucher",
+            "key": "provenance_status",
             "label": "Has Voucher"
           },
           {
@@ -529,9 +529,9 @@ reknitr.rawPaneHandlers = {"Status":{"type":"reknitr.statusPaneHandler","title":
             "label": "Link name"
           }
         ],
-        "obsFile": "../data/tabular/Saanich_Tracheophyta_incomplete-ultimate-catalogue_2026-04-08-selected-labels.csv",
-        "taxaFile": "../data/tabular/Saanich_Tracheophyta_incomplete-ultimate-merged-summary_2026-04-08-prepared-taxa.csv",
-        "regionIndirectionFile": "../data/tabular/Saanich_Tracheophyta_incomplete-ultimate-catalogue_2026-04-08-selected-regionIndirection.csv"
+        "obsFile": "../data/tabular/Saanich_Tracheophyta_ultimate-catalogue_2026-08-17-selected-labels.csv",
+        "taxaFile": "../data/tabular/Saanich_Tracheophyta_ultimate-summary_2026-08-17-prepared-taxa.csv",
+        "regionIndirectionFile": "../data/tabular/Saanich_Tracheophyta_ultimate-catalogue_2026-08-17-selected-regionIndirection.csv"
       }
     }
   },

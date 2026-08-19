@@ -63,7 +63,7 @@ fluid.defaults("reknitr.dataPaneWidget", {
         storyPage: "{storyPage}",
         paneHandler: "{paneHandler}"
     },
-    resizableWidthParent: ".mxcw-dataPane",
+    resizableWidthParent: ".mxcw-data",
     dataPaneWidget: true
 });
 
@@ -635,6 +635,7 @@ reknitr.updateSectionNav = function (that, activeSection) {
         hortis.toggleClass(sectionNode, "active", index === activeSection);
         sectionNode.setAttribute("aria-selected", index === activeSection ? "true" : "false");
     });
+    that.locate("sectionNav")[0].querySelector(".active").scrollIntoView();
 };
 
 
@@ -809,7 +810,8 @@ reknitr.listenPaneHash = function (storyPage, paneName) {
 
 reknitr.layerOpacityProperty = function (layer) {
     return layer.type === "line" ? "line-opacity" :
-        layer.type === "fill" ? "fill-opacity" : null;
+        layer.type === "fill" ? "fill-opacity" :
+            layer.type === "raster" ? "raster-opacity" : null;
 };
 
 reknitr.updateActiveDataPane = function (that, activePane) {
@@ -829,7 +831,7 @@ reknitr.updateActiveMapPane = function (that, map, activePane) {
             // TODO: possible optimisation here from maplibre-gl-dev.js
             //         this.style.setPaintProperty(layerId, name, value, options);
             //         return this._update(true);
-            const origOpacity = layer.paint[opacityProp];
+            const origOpacity = layer.paint?.[opacityProp] ?? 1;
             map.map.setPaintProperty(layer.id, opacityProp, layerVisibility[layer.id] ? origOpacity : 0);
         }
     });
