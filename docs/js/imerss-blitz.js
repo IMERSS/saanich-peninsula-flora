@@ -106,7 +106,7 @@ fluid.defaults("hortis.statusFilter", {
         reset: "hortis.statusFilter.reset({that})"
     },
     members: {
-        queryCache: "@expand:fluid.computed(hortis.statusFilter.queryCache, {that}.taxaById)",
+        queryCache: "@expand:fluid.computed(hortis.statusFilter.queryCache, {that}.taxaById, {vizLoader}.obsRows)",
         // cf. Strategy in "hortis.sexFilter" - can we do any better?
         confirmed: "@expand:signal(false)",
         unconfirmed: "@expand:signal(false)",
@@ -121,29 +121,42 @@ hortis.statusFilter.toState = function (confirmed, unconfirmed, noo) {
     return {confirmed, unconfirmed, new: noo};
 };
 
+hortis.statusFilter.reportingStatus = Symbol("filterReportingStatus");
+
+const $f = hortis.statusFilter.reportingStatus;
+
 hortis.statusFilter.doFilter = function (obsRows, filterState, taxaById) {
     const count = filterState.confirmed + filterState.unconfirmed + filterState.new;
     const all = count === 0 || count === 3;
     return all ? obsRows : obsRows.filter(obsRow => {
         const taxonRow = taxaById[obsRow.iNaturalistTaxonId];
-        return filterState.confirmed && taxonRow.filterReportingStatus === "confirmed"
-            || filterState.unconfirmed && taxonRow.filterReportingStatus === "unconfirmed"
-            || filterState.new && taxonRow.filterReportingStatus === "new";
+        return filterState.confirmed && taxonRow[$f] === "confirmed"
+            || filterState.unconfirmed && taxonRow[$f] === "unconfirmed"
+            || filterState.new && taxonRow[$f] === "new";
     });
 };
 
-hortis.statusFilter.queryCache = function (taxaById) {
-    // OCTOPOKHO: Side effect initialising filterReportingStatus
+hortis.statusFilter.queryCache = function (taxaById, obsRows) {
+    // OCTOPOKHO: Side effect initialising $f and n_obs
     const taxaRows = Object.values(taxaById);
-    Object.values(taxaById).forEach(row => {
+    taxaRows.forEach(row => {
         if (row.reportingStatus === "confirmed") {
-            row.filterReportingStatus = "confirmed";
+            row[$f] = "confirmed";
         } else if (row.reportingStatus === "reported" || row.reportingStatus === "unconfirmed") {
-            row.filterReportingStatus = "unconfirmed";
+            row[$f] = "unconfirmed";
         } else if (row.reportingStatus.startsWith("new")) {
-            row.filterReportingStatus = "new";
+            row[$f] = "new";
         }
     });
+    const obsCounts = Object.create(null);
+    obsRows.forEach(obsRow => {
+        hortis.addCount(obsCounts, obsRow.iNaturalistTaxonId);
+    });
+    taxaRows.forEach(row => {
+        row["n_obs"] = obsCounts[row.id] || 0;
+    });
+
+
     return taxaRows.length;
 };
 

@@ -882,6 +882,7 @@ fluid.defaults("reknitr.obsMapPaneHandler", {
     gradeNames: "reknitr.paneHandler",
     visibleMap: true,
     visibleGrid: true,
+    visibleFilters: true,
     visibleObsFilters: true,
     visibleObsTable: true,
     visibleVizControls: true

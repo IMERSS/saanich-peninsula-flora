@@ -6,7 +6,7 @@ source("scripts/utils.R")
 
 # Reduce columns in obs data for visualisation
 
-rawObs <- timedFread("big_data/Saanich_Tracheophyta_ultimate-catalogue_2026-08-17.csv")
+rawObs <- timedFread("big_data/Saanich_Tracheophyta_ultimate-catalogue_2026-08-20.csv")
 
 filtered <- rawObs %>% select(-c(day, month, year, quality_grade, phylum, kingdom, class, order, family, verbatimScientificName,
                               verbatimScientificNameAuthorship, commonName, elevationAccuracy, image_url, taxonRank, taxonKey,
@@ -26,7 +26,7 @@ withId <- merge(filtered, assigned, by.x = "taxon_name", by.y = "scientificName"
 
 withId <- withId %>% filter(!is.na(iNaturalistTaxonId) & iNaturalistTaxonId != 0)
 
-timedWrite(withId, "tabular_data/Saanich_Tracheophyta_ultimate-catalogue_2026-08-17-selected-orig.csv")
+timedWrite(withId, "tabular_data/Saanich_Tracheophyta_ultimate-catalogue_2026-08-20-selected-orig.csv")
 
 
 

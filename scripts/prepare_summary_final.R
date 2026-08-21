@@ -4,8 +4,8 @@ library(sf)
 
 source("scripts/utils.R")
 
-assignedTaxa <-    timedFread("tabular_data/Saanich_Tracheophyta_ultimate-summary_2026-08-17-assigned-taxa.csv")
-assignedSummary <- timedFread("tabular_data/Saanich_Tracheophyta_ultimate-summary_2026-08-17-assigned.csv")
+assignedTaxa <-    timedFread("tabular_data/Saanich_Tracheophyta_ultimate-summary_2026-08-20-assigned-taxa.csv")
+assignedSummary <- timedFread("tabular_data/Saanich_Tracheophyta_ultimate-summary_2026-08-20-assigned.csv")
 assignedSummary$inSummary = 1
 
 assignedSummaryDupes <- assignedSummary %>%
@@ -15,7 +15,7 @@ assignedSummaryDupes <- assignedSummary %>%
 if (nrow(assignedSummaryDupes > 0)) {
   cat("Warning, there were ", nrow(assignedSummaryDupes), "duplicate entries found in the summary")
   assignedSummaryDupes$scientificName
-  timedWrite(assignedSummaryDupes, "tabular_data/Saanich_Tracheophyta_ultimate-summary_2026-08-17-assigned-dupes.csv")
+  timedWrite(assignedSummaryDupes, "tabular_data/Saanich_Tracheophyta_ultimate-summary_2026-08-20-assigned-dupes.csv")
   
   toRemove <- assignedSummaryDupes %>%
     filter(link_taxon_id == "")
@@ -37,4 +37,4 @@ merged$provenance_status <- ifelse(
   "unknown"
 )
 
-timedWrite(merged, "tabular_data/Saanich_Tracheophyta_ultimate-summary_2026-08-17-prepared-taxa.csv")
+timedWrite(merged, "tabular_data/Saanich_Tracheophyta_ultimate-summary_2026-08-20-prepared-taxa.csv")
