@@ -1,22 +1,22 @@
-# Átl’ka7tsem/Howe Sound Biosphere Vegetation Analysis
+# Saanich Peninsula Flora
 
-This project hosts a structure for building out and publishing a map-based scrollytelling
-interface for the [Átl’ka7tsem/Howe Sound Biosphere Reserve](https://en.unesco.org/biosphere/eu-na/atlka7tsem_howe-sound)
+This project hosts a structure for building out and publishing a map-based storymapping
+interface for the Flora of the Saanich Peninsula
 based on [R Markdown](https://rmarkdown.rstudio.com/).
 
-You can browse the published output of this project in these documents:
+You can browse the published output of this project at [https://imerss.github.io/saanich-peninsula-flora/story](Flora
+of the Saanich Peninsula].
 
-* [Raw Storymapping Output](https://imerss.github.io/howe-sound-mapping-2025/R-Markdown-AHSBR_Vascular_Plants_Story_Map_2025.html)
-* [Storymapping Reknitted into Scrollytelling Interface](https://imerss.github.io/howe-sound-mapping-2025/R-Markdown-AHSBR_Vascular_Plants_Story_Map_2025-Reknitted.html)
+The project's publishing pipeline is based on the [bioReportR](https://IMERSS/bioreportr) publishing system, which
+is based on R and R Markdown, using free tools such as git, R and R studio, and published and hosted for free using
+[GitHub Pages](https://pages.github.com/). BioReportR is based on the [blogdown](https://pkg.yihui.org/blogdown/)
+R package for publishing web sites using the popular [hugo](https://gohugo.io/) framework.
 
-This was built using R and R Markdown, using free tools such as git, R and R studio, and publish and host it for free using
-[GitHub Pages](https://pages.github.com/).
-
-These files were distilled from work done for the
+This system grew out of work done in 2023 for the
 [Maxwell Creek Watershed Project](https://transitionsaltspring.com/maxwell-creek-watershed-project/) which is being
 undertaken by [Transition Salt Spring](https://transitionsaltspring.com/).
 
-As a general guide to the potential of storymapping frameworks to use data to tell stories, you can visit two
+To see the potential of storymapping frameworks to use data to tell stories, you can visit two
 thoroughly elaborated [data explorations](https://www.data-arc.org/my-front-page/example-data-explorations/) from
 the dataARC project which present two stories, "Quantifying an ever-changing landscape" and "Data mining the past"
 using two mature storymapping frameworks, [ESRI/ArcGIS Storymaps](https://storymaps.arcgis.com/) and [HTML + Binder/Jupyter](https://mybinder.org/).

@@ -10,7 +10,7 @@
                                 "type": "raster",
                                 "attribution": "© <a target=\"_blank\" href=\"https://carto.com/\">Carto</a> © <a target=\"_blank\" href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors",
                                 "tiles": [
-                                    "https://cartodb-basemaps-c.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"
+                                    "https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png?key=${CARTO_API_KEY}"
                                 ],
                                 "tileSize": 256
                             }
@@ -41,14 +41,14 @@
         "Status": {
             "x": {
                 "visdat": {
-                    "28d8523b7209": [
+                    "1124476c52e8": [
                         "function () ",
                         "plotlyVisDat"
                     ]
                 },
-                "cur_data": "28d8523b7209",
+                "cur_data": "1124476c52e8",
                 "attrs": {
-                    "28d8523b7209": {
+                    "1124476c52e8": {
                         "alpha_stroke": 1,
                         "sizes": [
                             10,

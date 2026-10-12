@@ -49,7 +49,7 @@ menu:
   main:
     - identifier: home
       name: Home
-      pageRef: /
+      url: "https://imerss.github.io/salish-sea-biodiversity/"
       weight: 1
     - identifier: data
       name: Data
@@ -74,6 +74,11 @@ menu:
         icon: github
 
 params:
+  # The IMERSS index site, linked from the top left of the navigation banner
+  indexSite:
+    title: Biodiversity Change in the Salish Sea
+    url: "https://imerss.github.io/salish-sea-biodiversity/"
+
   description: Flora of the Saanich Peninsula
 
   # Displays bizarrely on hextra once we change background colour

@@ -1,8 +1,10 @@
 .idea
 
 .Rproj.user
-
+.RData
 .Rhistory
+
+.hugo_build.lock
 
 .DS_Store
 

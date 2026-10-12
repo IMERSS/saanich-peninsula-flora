@@ -119,10 +119,34 @@ nav a {
     margin-left: 16px;
 }
 
+/* Shared navigation banner - a project site shows a link back to the index site above its title */
+
+.imerss-navbar .imerss-navbar-titles {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.imerss-navbar .imerss-navbar-index span {
+    color: #FDF2CE;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1rem;
+    margin-left: 24px;
+}
+
+.imerss-main > .resize-bar {
+    /* Avoid creating visible gap to right */
+    margin-right: -10px;
+}
+
 .imerss-subnav {
     color: #dff1f4;
     position: relative;
     font-size: 16px;
+    /* Creep over the resize bar so that the header image is dimmed */
+    margin-left: -4px;
 }
 
 .imerss-subnav::after {
@@ -300,7 +324,7 @@ h2 {
     display: flex;
     flex-direction: column;
     height: 40%;
-    font-size: 18px;
+    font-size: 16px;
     padding: 0.5rem 0.5rem 0.5rem 0.5rem;
     align-items: center;
     transition-property: height;
@@ -660,10 +684,11 @@ h2 {
 .mxcw-leftPane {
     display: flex;
     flex-direction: column;
+    /* Small gap so that different resize bars are detached */
+    margin-right: 2px;
     width: 60%;
-    /* For God's sake I really mean it! */
-    min-width: 60%;
 }
+
 
 .mxcw-map {
     height: 80%;
@@ -691,12 +716,9 @@ h2 {
     z-index: 5;
     opacity: 1;
     color: black;
-    margin-bottom: 8px;
-    margin-left: 8px;
     height: 20%;
     min-height: 230px;
     display: flex;
-    width: calc(100% - 16px);
 }
 
 
@@ -706,6 +728,10 @@ h2 {
 
 .mxcw-hideMap {
     height: 0;
+}
+
+.mxcw-hideMap + div {
+    display: none;
 }
 
 .mxcw-content {

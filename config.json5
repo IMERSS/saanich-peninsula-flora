@@ -16,6 +16,7 @@
                 SolowBaselineYear: 1859,
                 SolowAnalysisYear: 2025
             },
+
             components: {
                 vizLoader: {
                     gradeNames: "reknitr.vizLoader.withSolow",

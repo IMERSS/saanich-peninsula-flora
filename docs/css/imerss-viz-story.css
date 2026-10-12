@@ -19,9 +19,14 @@
     color: #eefaff;
 }
 
+.mxcw-data-pane-widget {
+    margin-left: 8px;
+    margin-right: 8px;
+    height: calc(100% - 8px);
+}
+
 .mxcw-obs-table-holder {
     flex-direction: column;
-    height: 100%;
     display: flex;
     overflow: auto; /* Without this, massive horizontal overflow on parent */
 }

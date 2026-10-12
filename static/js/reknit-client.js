@@ -670,7 +670,8 @@ fluid.defaults("reknitr.storyPage", {
         mapHolder: ".mxcw-map-holder",
         contentHolder: ".mxcw-content-holder",
         content: ".mxcw-content",
-        sectionNav: ".mxcw-section-nav"
+        sectionNav: ".mxcw-section-nav",
+        leftPane: ".mxcw-leftPane"
     },
     components: {
         map: {
@@ -683,11 +684,18 @@ fluid.defaults("reknitr.storyPage", {
         hashManager: {
             type: "reknitr.hashManager"
         },
-        resizeBar: {
+        mapResizeBar: {
             type: "hortis.resizeBar",
             options: {
                 before: "{storyPage}.dom.map.0",
                 axis: "vertical"
+            }
+        },
+        mainResizeBar: {
+            type: "hortis.resizeBar",
+            options: {
+                before: "{storyPage}.dom.leftPane.0",
+                axis: "horizontal"
             }
         }
     },
