@@ -11,14 +11,16 @@ rawObs <- timedFread("big_data/Saanich_Tracheophyta_ultimate-catalogue_2026-08-2
 filtered <- rawObs %>% select(-c(day, month, year, quality_grade, phylum, kingdom, class, order, family, verbatimScientificName,
                               verbatimScientificNameAuthorship, commonName, elevationAccuracy, image_url, taxonRank, taxonKey,
                               publishingOrgKey, iNatObsID, link_taxon_id, link_name, coordinatePrecision, scientificNameAuthority,
-                              countryCode, stateProvince, occurrenceStatus, speciesKey, lastInterpreted, mediaType, issue))
+                              countryCode, stateProvince, occurrenceStatus, speciesKey, lastInterpreted, mediaType, issue,
+                              # Grouping columns leaked by get_unique_obs() in checklist-catalogue-alignment-workflow
+                              `as.character(rounded_lat)`, `as.character(rounded_lon)`))
 
 filtered$decimalLatitude[filtered$coordinates_obscured == TRUE] <- NA
 filtered$decimalLongitude[filtered$coordinates_obscured == TRUE] <- NA
 
 filtered <- filtered %>% select(-c(coordinates_obscured))
 
-rawAssigned <- timedFread("tabular_data/Saanich_Tracheophyta_ultimate-summary_2026-08-assigned.csv")
+rawAssigned <- timedFread("tabular_data/Saanich_Tracheophyta_ultimate-summary_2026-08-20-assigned.csv")
 
 assigned <- rawAssigned %>% select(c(scientificName, iNaturalistTaxonId))
 
