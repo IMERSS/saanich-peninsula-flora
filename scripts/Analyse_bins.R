@@ -11,7 +11,7 @@ alpha  <- 1 + length(v) / sum(log(v / x_min))
 alpha = 1.2
 cat("Estimated power-law exponent (alpha):", round(alpha, 4), "\n")
 
-transform_exp <- alpha - 1   
+transform_exp <- alpha - 1
 cat("Transform exponent (1/(alpha-1)):", round(transform_exp, 4), "\n")
 
 # --- 3. Transform the raw data, then rebin ---

@@ -5,7 +5,7 @@ lat_lon <- function (data) {
   return (st_transform(data, "+proj=longlat +datum=WGS84"))
 }
 
-round_geom <- function(geom, digits) {
+round_geom <- function (geom, digits) {
   if (inherits(geom, "POINT")) {
     st_point(round(as.numeric(geom), digits))
   } else if (inherits(geom, "MULTIPOINT")) {
@@ -28,18 +28,23 @@ round_geom <- function(geom, digits) {
   }
 }
 
-# Bug fix: the original used lapply(geom, round_geom) which decomposed the sfg
-# into sub-elements (ring matrices). Call round_geom on the whole sfg instead.
-round_and_simplify_geom <- function(geom, digits = 2) {
-  round_geom(geom, digits = digits)
+# Accepts either a geometry list (sfc, as passed from feature_to_geojson in mapbox_map_common.R) or a single
+# geometry (sfg). Note that lapply over an sfg would decompose it into its ring matrices.
+round_and_simplify_geom <- function (geom, digits = 2) {
+  if (inherits(geom, "sfg")) {
+    return(round_geom(geom, digits = digits))
+  }
+  rounded_geoms <- lapply(geom, round_geom, digits = digits)
+  # TODO: If we really want to simplify, should really use https://github.com/ateucher/rmapshaper but
+  # this will work better in GeoJSON so let's do it later
+  # simple  <- rounded_geoms_sf %>% st_simplify(preserveTopology = TRUE, dTolerance = 10^(-digits) / 2)
+  # https://gis.stackexchange.com/questions/329110/removing-empty-polygon-from-sf-object-in-r
+  # %>% dplyr::filter(!st_is_empty(.))
+  st_sfc(rounded_geoms, crs = st_crs(geom))
 }
 
-# Bug fix: the original assigned a plain list to st_geometry<-. Wrap the
-# rounded sfg objects in st_sfc() with the CRS from the input sf.
-round_and_simplify_sf <- function(sf_data, digits) {
-  crs <- st_crs(sf_data)
-  rounded_geoms <- lapply(st_geometry(sf_data), round_and_simplify_geom, digits = digits)
-  st_geometry(sf_data) <- st_sfc(rounded_geoms, crs = crs)
+round_and_simplify_sf <- function (sf_data, digits) {
+  st_geometry(sf_data) <- round_and_simplify_geom(st_geometry(sf_data), digits = digits)
   sf_data
 }
 
@@ -66,17 +71,9 @@ timedFread <- function (toread) {
   as.data.frame(frame)
 }
 
-# Derived in ChatGPT conversation at https://chatgpt.com/c/68c83b3b-ccc0-8329-9aef-230d4a0bd888 to
-# correctly apply quoting as specified in https://www.ietf.org/rfc/rfc4180.txt
-quote_only_if_needed <- function(x) {
-  x_char <- as.character(x)
-  x_char[is.na(x_char)] <- ""  # encode NA as empty string
-  needs <- grepl('[,"\n]', x_char)
-  x_char[needs] <- paste0('"', gsub('"', '""', x_char[needs], fixed = TRUE), '"')
-  x_char
-}
-
-write_csv_correctly <- function(x, towrite) {
+# Write CSV quoting fields only where required (containing separator, quote or newline) as specified in
+# https://www.ietf.org/rfc/rfc4180.txt - NA is written as an empty field
+write_csv_correctly <- function (x, towrite) {
   data.table::fwrite(x, towrite, quote = "auto", qmethod = "double", eol = "\r\n")
 }
 
@@ -84,7 +81,7 @@ timedWrite <- function (x, towrite) {
   start <- Sys.time()
   write_csv_correctly(x, towrite)
   end <- Sys.time()
-  cat("Written ", nrow(x), " rows to ", towrite, " in ", (end - start), "s")
+  message("Written ", nrow(x), " rows to ", towrite, " in ", round((end - start), digits = 3), "s")
 }
 
 #' Merge Multiple Named Lists

@@ -1,0 +1,11 @@
+I've merged the two versions into Saanich's scripts/utils.R, so copyFramework.sh will carry it to the other projects. Howe 2026 and bioReportR share the other version. I only checked that the file parses: sf isn't installed here, so none of the geometry code has been run.
+
+Geometry rounding. Each version broke the caller the other one was fixed for:
+- round_and_simplify_geom now accepts either a whole geometry list (sfc) or a single geometry (sfg). The mapbox path in mapbox_map_common.R:209 passes a list, which is what Howe's version expects.
+- round_and_simplify_sf now passes its whole geometry column to that function in one call. This keeps the CRS, which was the bug Saanich's version was fixing.
+
+Saanich's mapbox geometry may not have been rounded. With Saanich's earlier version, the call at mapbox_map_common.R:209 would just produce an Unknown geometry type: sfc_... warning and return the coordinates unrounded. So the GeoJSON in its maps may be full precision, and the next rebuild may make it noticeably smaller.
+
+CSV writing. I kept Saanich's data.table::fwrite approach. It correctly quotes fields containing quotes or newlines, which Howe's comma-only quoting did not. I also:
+- put back Howe's message(...) log line, because Saanich's cat had no newline and printed the time unrounded;
+- removed quote_only_if_needed, which no project calls since fwrite does that job.
