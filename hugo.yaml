@@ -49,24 +49,20 @@ menu:
   main:
     - identifier: home
       name: Home
-      url: "https://imerss.github.io/salish-sea-biodiversity/"
+      url: "https://salishseabiodiversity.org/"
       weight: 1
     - identifier: data
       name: Data
-      pageRef: /story
+      url: "https://salishseabiodiversity.org/data/"
       weight: 2
     - identifier: projects
       name: Projects
-      pageRef: /projects
+      url: "https://salishseabiodiversity.org/projects/"
       weight: 3
     - identifier: docs
       name: Docs
-      url: "https://imerss.github.io/detecting-local-extinction/docs/"
+      url: "https://salishseabiodiversity.org/documentation/"
       weight: 4
-    - name: Search
-      weight: 5
-      params:
-        type: search
     - name: GitHub
       weight: 6
       url: "https://github.com/IMERSS/saanich-peninsula-flora"
@@ -76,8 +72,8 @@ menu:
 params:
   # The IMERSS index site, linked from the top left of the navigation banner
   indexSite:
-    title: Biodiversity Change in the Salish Sea
-    url: "https://imerss.github.io/salish-sea-biodiversity/"
+    title: Salish Sea Biodiversity Atlas
+    url: "https://salishseabiodiversity.org/"
 
   description: Flora of the Saanich Peninsula
 
@@ -91,7 +87,8 @@ params:
       path: images/imerss.png
       width: 200
       # height: 60
-      # link: /
+      # The logo links to IMERSS, while the site title links to this site's home page
+      link: https://www.imerss.org/
     width: wide
 
   page:
@@ -113,9 +110,10 @@ params:
   dateFormat: "January 2, 2006"
 
   # Search
-  # flexsearch is enabled by default
+  # Disabled since the static search index only covers this site - Hextra's search has no query URL through which we could
+  # dispatch to the Salish Sea Biodiversity Atlas instead
   search:
-    enable: true
+    enable: false
     type: flexsearch
 
     flexsearch:

@@ -149,6 +149,11 @@ nav a {
     margin-left: -4px;
 }
 
+/* Menu items are left justified, with the icon links (e.g. GitHub) pushed over to the right */
+.imerss-subnav nav > :not(.imerss-subnav-icon) + .imerss-subnav-icon {
+    margin-left: auto;
+}
+
 .imerss-subnav::after {
     content: "";
     position: absolute;
@@ -691,7 +696,8 @@ h2 {
 
 
 .mxcw-map {
-    height: 80%;
+    /* Initially fill whatever .mxcw-data leaves, less 12px resize bar and 2px gap */
+    height: calc(100% - 280px);
     min-height: 0;
     width: 100%;
     min-width: auto;
@@ -716,7 +722,8 @@ h2 {
     z-index: 5;
     opacity: 1;
     color: black;
-    height: 20%;
+    /* Initial height which shows 5 rows of the observations table - header 30.5px, rows 26.5px plus controls and pagination */
+    height: 266px;
     min-height: 230px;
     display: flex;
 }
