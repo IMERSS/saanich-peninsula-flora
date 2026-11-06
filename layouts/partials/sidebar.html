@@ -25,8 +25,8 @@
   {{- end }}
   <div class="hextra-scrollbar hx-overflow-y-auto hx-overflow-x-hidden hx-p-4 hx-grow md:hx-h-[calc(100vh-var(--navbar-height)-var(--menu-height))]">
     <ul class="hx-flex hx-flex-col hx-gap-1 md:hx-hidden">
-      <!-- Nav -->
-      {{ template "sidebar-main" (dict "context" site.Home "pageURL" $pageURL "page" $context "toc" true) -}}
+      <!-- Nav - the same main menu as the subnav, whose own links are hidden on small screens -->
+      {{ template "sidebar-main-menu" (dict "page" $context) -}}
       {{ template "sidebar-footer" }}
     </ul>
 
@@ -138,6 +138,25 @@
   {{ end }}
 {{- end -}}
 
+{{- /* Renders site.Menus.main as for subnav.html - links back up to the index site open in the same tab. Icon entries are
+       left out since the subnav keeps showing those on small screens */ -}}
+{{- define "sidebar-main-menu" -}}
+  {{- $page := .page -}}
+  {{- range site.Menus.main -}}
+    {{- if and (ne .Params.type "search") (not .Params.icon) -}}
+      {{- $link := .URL -}}
+      {{- $external := and (strings.HasPrefix $link "http") (not (strings.HasPrefix $link site.Params.indexSite.url)) -}}
+      {{- with .PageRef -}}
+        {{- if hasPrefix . "/" -}}
+          {{- $link = relLangURL (strings.TrimPrefix "/" .) -}}
+        {{- end -}}
+      {{- end -}}
+      {{- $active := or ($page.HasMenuCurrent "main" .) ($page.IsMenuCurrent "main" .) -}}
+      <li>{{ template "sidebar-item-link" dict "active" $active "title" (or (T .Identifier) .Name) "link" $link "external" $external }}</li>
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
 {{- define "sidebar-footer" -}}
   {{- range site.Menus.sidebar -}}
     {{- $name := or (T .Identifier) .Name -}}
@@ -152,7 +171,7 @@
 {{- end -}}
 
 {{- define "sidebar-item-link" -}}
-  {{- $external := strings.HasPrefix .link "http" -}}
+  {{- $external := cond (isset . "external") .external (strings.HasPrefix .link "http") -}}
   {{- $open := .open | default true -}}
   <a
     class="hx-flex hx-items-center hx-justify-between hx-gap-2 hx-cursor-pointer hx-rounded hx-px-2 hx-py-1.5 hx-text-sm hx-transition-colors [-webkit-tap-highlight-color:transparent] [-webkit-touch-callout:none] [word-break:break-word]

@@ -82,9 +82,11 @@ params:
 
   navbar:
     displayTitle: true
+    # The site's home page is only a placeholder - see content/_index.md
+    titleLink: story/
     displayLogo: true
     logo:
-      path: images/imerss.png
+      path: local/images/imerss.png
       width: 200
       # height: 60
       # The logo links to IMERSS, while the site title links to this site's home page

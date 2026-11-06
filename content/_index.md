@@ -1,12 +1,10 @@
 ---
 ---
 
-### Welcome!
+### This page is a placeholder
 
-This framework represents the outcome of over a decade of research, beginning with baseline analysis of biodiversity
-data in the region of the Salish Sea.
+You would not normally expect to see this page. This site's content is reached from the
+[Salish Sea Biodiversity Atlas](https://salishseabiodiversity.org/), which also hosts the data, projects and
+documentation that belong alongside it.
 
-Explore the map to access several baseline datasets and projects that exemplify our efforts to understand
-biodiversity change following a novel protocol for biodiversity assessment that communities can
-harness to conduct similar studies. Check out the documentation behind our methodology here.
-
+All of this site's content is in its [story](story/).

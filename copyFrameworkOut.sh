@@ -5,10 +5,11 @@
 #   -n   Dry run - report what would change without copying anything
 #
 # Deliberately NOT copied:
-#  - Files produced by the config.json5 copyJobs (imerss-viz-*.js/css, imerss-viz.js, imerss-blitz.*, imerss-plants.js,
-#    jquery.js, inat-components-standalone.min.js, docs/img/*.svg) - regenerate these in the target with "npm run build"
+#  - Files produced by the config.json5 copyJobs (static/imerss-bioinfo/*, static/inat-components/*,
+#    static/bioreportr/img/download.svg) - regenerate these in the target with "npm run build"
 #  - Project-local content and configuration: config.json5, hugo.yaml, package.json, mapboxData.json, content/,
-#    layouts/partials/custom/head-end.html, static/js/<project>.js (e.g. saanich.js, howe.js), static/css/howe.css,
+#    layouts/partials/custom/head-end.html, layouts/partials/favicons.html, static/local/ (including
+#    static/local/js/<project>.js, e.g. saanich.js, howe.js),
 #    R/build.R (lists the project's data files), scripts/*.R map and analysis scripts
 #  - Experimental R parsing work: src/js/parseR.mjs, src/js/r-parser/
 #  - Generated output: layouts/story/single.html (written by reknit from src/html/template.html), docs/
@@ -42,7 +43,6 @@ fi
 FILES=(
     # Ourselves
     copyFrameworkOut.sh
-
     # Node-side reknitting pipeline
     index.js
     src/js/reknit.js
@@ -50,27 +50,25 @@ FILES=(
     src/json/stylesNonMapbox.json
     src/json/provenance.txt
 
-    # HTML templates consumed by reknit
+    # HTML template consumed by reknit
     src/html/template.html
-    src/html/pane-info.html
-    src/html/imerss-viz-scrolly.html
-    static/html/imerss-viz-story-blank.html
 
     # Client-side story page runtime
-    static/js/reknit-client.js
-    static/js/imerss-viz-reknit.js
-    static/js/paneHandlers.js
-    static/js/solowControls.js
+    static/bioreportr/js/reknit-client.js
+    static/bioreportr/js/imerss-viz-reknit.js
+    static/bioreportr/js/paneHandlers.js
+    static/bioreportr/js/solowControls.js
 
     # Vendored client libraries not managed by copyJobs
-    static/js/htmlwidgets.js
-    static/js/htmlwidgets-plotly.js
-    static/js/plotly-2.1.1.js
+    static/bioreportr/js/htmlwidgets.js
+    static/bioreportr/js/htmlwidgets-plotly.js
+    static/bioreportr/js/plotly-2.1.1.js
 
     # Story page styling
-    static/css/imerss-story.css
-    static/css/imerss-viz-story.css
-    static/css/imerss-blitzr.css
+    static/bioreportr/css/imerss-story.css
+    static/bioreportr/css/imerss-viz-story.css
+    static/bioreportr/css/imerss-blitzr.css
+    static/bioreportr/images/imerss-header-cropped.jpg
 
     # Hugo layout overrides of the hextra theme
     layouts/_default/baseof.html
@@ -97,7 +95,7 @@ FILES=(
 
 # imerss-viz-reknit.js hardwires the project's taxa filter holder grade (e.g. reknitr.saanichTaxaFiltersHolder,
 # reknitr.howeTaxaFiltersHolder) - keep whatever the target currently uses until this is made configurable
-HOLDER_FILE=static/js/imerss-viz-reknit.js
+HOLDER_FILE=static/bioreportr/js/imerss-viz-reknit.js
 HOLDER_PATTERN='reknitr\.[A-Za-z0-9_]*TaxaFiltersHolder'
 TARGET_HOLDER=""
 if [ -f "$TARGET/$HOLDER_FILE" ]; then

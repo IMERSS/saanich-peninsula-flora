@@ -20,14 +20,14 @@ geotiff_to_mapbox_source <- function(tiff_path, id) {
 
   # Output to img/<original_filename>.jpg
   # - relative to the Rmd directory if knitting
-  # - under static/img/ otherwise
+  # - under static/local/img/ otherwise
   jpg_filename <- paste0(tools::file_path_sans_ext(basename(tiff_path)), ".jpg")
 
   rmd_input <- knitr::current_input(dir = TRUE)
   if (!is.null(rmd_input)) {
     img_dir <- file.path(dirname(rmd_input), "img")
   } else {
-    img_dir <- file.path("static", "img")
+    img_dir <- file.path("static", "local", "img")
   }
   dir.create(img_dir, showWarnings = FALSE, recursive = TRUE)
   jpg_path <- file.path(img_dir, jpg_filename)

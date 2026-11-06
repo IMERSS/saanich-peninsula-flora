@@ -181,14 +181,16 @@ et al., 2025</a></p>
 			</div>
 		</div>
 		<div class="imerss-container">
-			<div class="imerss-filter-panel">
-				<div class="imerss-filter-controls">
-					<svg width="24" height="24" class="imerss-reset-filter">
-						<use href="#filter-reset" />
-					</svg>
-					<div>Reset filters</div>
+			<div class="imerss-filter-panel imerss-filters-collapsed">
+				<div class="imerss-panel-label imerss-filters-header">
+					<button type="button" class="imerss-filters-toggle" aria-expanded="false" aria-controls="imerss-main-filters">Filters:</button>
+					<div class="imerss-filter-controls imerss-basic-tooltip" title="Reset filters">
+						<svg width="24" height="24" class="imerss-reset-filter">
+							<use href="#filter-reset" />
+						</svg>
+					</div>
 				</div>
-				<div class="imerss-filters imerss-main-filters">
+				<div id="imerss-main-filters" class="imerss-filters imerss-main-filters">
 				</div>
 				<div class="imerss-record-reporter">
 				</div>
@@ -283,9 +285,9 @@ reknitr.rawPaneHandlers = {"Status":{"type":"reknitr.statusPaneHandler","title":
             "label": "Link name"
           }
         ],
-        "obsFile": "../data/tabular/Saanich_Tracheophyta_ultimate-catalogue_2026-08-20-selected-labels.csv",
-        "taxaFile": "../data/tabular/Saanich_Tracheophyta_ultimate-summary_2026-08-20-prepared-taxa.csv",
-        "regionIndirectionFile": "../data/tabular/Saanich_Tracheophyta_ultimate-catalogue_2026-08-20-selected-regionIndirection.csv"
+        "obsFile": "../local/data/tabular/Saanich_Tracheophyta_ultimate-catalogue_2026-08-20-selected-labels.csv",
+        "taxaFile": "../local/data/tabular/Saanich_Tracheophyta_ultimate-summary_2026-08-20-prepared-taxa.csv",
+        "regionIndirectionFile": "../local/data/tabular/Saanich_Tracheophyta_ultimate-catalogue_2026-08-20-selected-regionIndirection.csv"
       }
     }
   },

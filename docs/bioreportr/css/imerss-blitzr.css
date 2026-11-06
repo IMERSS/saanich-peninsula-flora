@@ -1,0 +1,71 @@
+#inline-svg {
+    height: 0px;
+    position: absolute;
+}
+
+.mxcw-sectionColumn {
+    width: 100%;
+}
+
+.imerss-filter-panel {
+    width: 100%;
+    min-height: 0;
+    padding: 2px 0.7rem;
+}
+
+.imerss-filters {
+    height: auto;
+    flex-shrink: 0;
+    overflow: visible; /* So that autocomplete dropdowns don't get clipped - entire hierarchy needs this! */
+}
+
+.imerss-filters-header {
+    font-size: larger;
+    flex-shrink: 0;
+    gap: 1rem;
+}
+
+.imerss-filters-toggle {
+    display: flex;
+    align-items: center;
+    font-weight: inherit;
+    cursor: pointer;
+}
+
+.imerss-filters-toggle::before {
+    content: "\25B8";
+    margin-right: 0.3rem;
+    transform: rotate(90deg);
+}
+
+.imerss-filters-collapsed .imerss-filters-toggle::before {
+    transform: none;
+}
+
+.imerss-filters-header .imerss-filter-controls {
+    margin-left: auto;
+}
+
+.imerss-filters-collapsed .imerss-main-filters,
+.imerss-filters-collapsed .imerss-taxa-filters {
+    display: none;
+}
+
+.imerss-status-filter .imerss-filter-body {
+    flex-direction: row;
+}
+
+.imerss-status-filter .imerss-filter-row {
+    flex: 0 0 auto;
+    width: auto;
+    padding-right: 1rem;
+}
+
+.imerss-checklist-holder {
+    padding-top: 0;
+}
+
+/* Specifically override definition in hextra main theme */
+body:is(html[class~=dark] *) {
+    background-color: #002a35;
+}

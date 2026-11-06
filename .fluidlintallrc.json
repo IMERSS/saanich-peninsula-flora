@@ -1,7 +1,7 @@
 {
     "sources": {
         "md": ["./*.md"],
-        "css": ["src/css/**/*.css"],
+        "css": ["static/bioreportr/css/**/*.css"],
         "js": ["src/js/**/*.js"],
         "json": ["./*.json", "src/**/*.json"]
     },
