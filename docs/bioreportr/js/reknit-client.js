@@ -704,7 +704,9 @@ fluid.defaults("reknitr.storyPage", {
         sectionNav: ".mxcw-section-nav",
         leftPane: ".mxcw-leftPane",
         filterPanel: ".imerss-filter-panel",
-        filtersToggle: ".imerss-filters-toggle"
+        filtersToggle: ".imerss-filters-toggle",
+        recordsHolder: ".mxcw-obs-table-holder",
+        recordsToggle: ".mxcw-records-toggle"
     },
     components: {
         map: {
@@ -820,6 +822,8 @@ fluid.defaults("reknitr.storyPage", {
     listeners: {
         "onCreate.listenSectionNav": "reknitr.listenSectionNav({that})",
         "onCreate.bindFiltersToggle": "reknitr.bindFiltersToggle({that}.dom.filterPanel.0, {that}.dom.filtersToggle.0)",
+        "onCreate.bindRecordsToggle": "reknitr.bindRecordsToggle({that}.dom.recordsHolder.0, {that}.dom.recordsToggle.0)",
+        "onCreate.trackMapSize": "reknitr.trackMapSize({that}.map.map, {that}.dom.map.0)",
         "onCreate.findPlotlyWidgets": "reknitr.findPlotlyWidgets({that}, {that}.sectionHolders)"
     }
 });
@@ -957,6 +961,31 @@ fluid.defaults("reknitr.solowPaneHandler", {
 reknitr.bindFiltersToggle = function (filterPanel, toggle) {
     toggle.addEventListener("click", () => {
         const collapsed = filterPanel.classList.toggle("imerss-filters-collapsed");
+        toggle.setAttribute("aria-expanded", String(!collapsed));
+    });
+};
+
+/**
+ * Have the map follow any change in the size of its element, e.g. from
+ * the records panel opening or closing or moving into place on startup.
+ * @param {maplibregl.Map} map - The map to be kept in step.
+ * @param {HTMLElement} mapElement - The element holding the map.
+ */
+reknitr.trackMapSize = function (map, mapElement) {
+    new ResizeObserver(() => map.resize()).observe(mapElement);
+    // A resize before the map has finished loading is not retained
+    map.once("load", () => map.resize());
+};
+
+/**
+ * Bind the "Records:" header button so that it opens and closes the records panel as an accordion. Closing overrides
+ * any height set by dragging mapResizeBar through CSS, so that opening the panel again restores it.
+ * @param {HTMLElement} holder - The records panel, which receives the `mxcw-records-collapsed` class.
+ * @param {HTMLButtonElement} toggle - The button which toggles the state of the panel.
+ */
+reknitr.bindRecordsToggle = function (holder, toggle) {
+    toggle.addEventListener("click", () => {
+        const collapsed = holder.classList.toggle("mxcw-records-collapsed");
         toggle.setAttribute("aria-expanded", String(!collapsed));
     });
 };

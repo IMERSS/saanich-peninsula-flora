@@ -266,3 +266,43 @@
 html[class~=dark] #inat-components select {
     color: white;
 }
+
+/* Records panel as an accordion - !important overrides any heights set by dragging mapResizeBar, restored on opening */
+.mxcw-records-toggle {
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+    cursor: pointer;
+}
+
+.mxcw-records-toggle::before {
+    content: "\25B8";
+    margin-right: 0.3rem;
+    transform: rotate(90deg);
+}
+
+.mxcw-records-collapsed .mxcw-records-toggle::before {
+    transform: none;
+}
+
+.mxcw-records-collapsed .mxcw-obs-table {
+    display: none;
+}
+
+.mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)) {
+    --mxcw-records-header-height: 2.25rem;
+}
+
+.mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)) .mxcw-map {
+    height: calc(100% - var(--mxcw-records-header-height)) !important;
+}
+
+.mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)) > .resize-bar {
+    display: none;
+}
+
+.mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)) > .mxcw-data {
+    height: var(--mxcw-records-header-height) !important;
+    min-height: 0;
+    align-items: center;
+}

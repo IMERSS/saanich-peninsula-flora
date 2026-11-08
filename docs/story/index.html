@@ -400,13 +400,13 @@ weigh.</p>
 
 </div></div>
 			<div class="mxcw-data">
-				<div class="mxcw-data-pane-widget mxcw-obs-table-holder">
+				<div class="mxcw-data-pane-widget mxcw-obs-table-holder mxcw-records-collapsed">
 					<div class="mxcw-obs-table-controls">
-					<span class="mxcw-data-widget-text">Observations:</span><span class="imerss-download-button imerss-basic-tooltip" title="Download observations as CSV"><svg width="24" height="24">
+					<button type="button" class="mxcw-records-toggle mxcw-data-widget-text" aria-expanded="false" aria-controls="mxcw-records-table">Records:</button><span class="imerss-download-button imerss-basic-tooltip" title="Download records as CSV"><svg width="24" height="24">
                             <use href="#download" />
                         </svg></span>
 					</div>
-					<div class="mxcw-obs-table hortis-datatable">
+					<div id="mxcw-records-table" class="mxcw-obs-table hortis-datatable">
 					</div>
 				</div>
 				<div class="mxcw-data-pane-widget mxcw-solow-widgets-holder">
