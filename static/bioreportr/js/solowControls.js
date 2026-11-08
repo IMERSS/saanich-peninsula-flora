@@ -235,8 +235,8 @@ reknitr.solowTaxonInfo.renderModel = function (taxon, taxonObsRows) {
     } else {
         const model = {
             taxonName: taxon.scientificName,
-            dateFirstSeen: taxonObsRows[0].eventDate,
-            dateLastSeen: fluid.peek(taxonObsRows).eventDate,
+            dateFirstSeen: taxonObsRows[0].eventDate.substring(0, 10),
+            dateLastSeen: fluid.peek(taxonObsRows).eventDate.substring(0, 10),
             numObs: taxonObsRows.length,
             regionalEP: taxon.solow_EP, // taxon.direct_solow_ep, TODO: Standardise this or look it up
             taxonImage: hortis.renderTaxonImage(taxon.iNaturalistTaxonImage, taxon.id)

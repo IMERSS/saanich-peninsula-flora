@@ -289,19 +289,19 @@ html[class~=dark] #inat-components select {
     display: none;
 }
 
-.mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)) {
+.mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)):not(:has(.mxcw-atlas-has-taxon)) {
     --mxcw-records-header-height: 2.25rem;
 }
 
-.mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)) .mxcw-map {
+.mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)):not(:has(.mxcw-atlas-has-taxon)) .mxcw-map {
     height: calc(100% - var(--mxcw-records-header-height)) !important;
 }
 
-.mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)) > .resize-bar {
+.mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)):not(:has(.mxcw-atlas-has-taxon)) > .resize-bar {
     display: none;
 }
 
-.mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)) > .mxcw-data {
+.mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)):not(:has(.mxcw-atlas-has-taxon)) > .mxcw-data {
     height: var(--mxcw-records-header-height) !important;
     min-height: 0;
     align-items: center;
@@ -384,4 +384,41 @@ html[class~=dark] #inat-components select {
 
 .mxcw-records-toggle {
     min-width: 0;
+}
+
+/* Holds the species panel of the atlas, shown only while a species is selected - see .mxcw-atlas-has-taxon */
+.mxcw-atlas-taxon-holder {
+    display: none;
+}
+
+/* The bars between a taxon panel and its records are only shown while the records are open beneath it */
+.mxcw-data > .resize-bar {
+    display: none;
+}
+
+.mxcw-solow-widgets-holder:not(.fl-hidden) + .resize-bar:has(+ .mxcw-solow-records-holder:not(.mxcw-solow-records-collapsed)),
+.mxcw-atlas-has-taxon + .resize-bar:has(+ .mxcw-obs-table-holder:not(.mxcw-records-collapsed):not(.fl-hidden)) {
+    display: block;
+    flex-shrink: 0;
+    margin: 2px 8px;
+}
+
+/* With no species selected on the extirpation pane the map takes the whole column until one is chosen */
+.mxcw-leftPane:has(> .mxcw-data > .mxcw-solow-widgets-holder:not(.fl-hidden):not(.mxcw-solow-has-taxon)) .mxcw-map {
+    height: 100% !important;
+}
+
+.mxcw-leftPane:has(> .mxcw-data > .mxcw-solow-widgets-holder:not(.fl-hidden):not(.mxcw-solow-has-taxon)) > .mxcw-data {
+    height: 0 !important;
+    min-height: 0 !important;
+}
+
+.mxcw-leftPane:has(> .mxcw-data > .mxcw-solow-widgets-holder:not(.fl-hidden):not(.mxcw-solow-has-taxon)) > .resize-bar {
+    display: none;
+}
+
+/* ... and its panels must not spill out of the empty space left for them */
+.mxcw-data > .mxcw-solow-widgets-holder:not(.mxcw-solow-has-taxon),
+.mxcw-data:has(> .mxcw-solow-widgets-holder:not(.mxcw-solow-has-taxon)) > .mxcw-solow-records-holder {
+    display: none;
 }

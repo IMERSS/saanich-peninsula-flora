@@ -61,6 +61,7 @@ fluid.defaults("reknitr.storyPage.withVizLoader", {
                         type: "hortis.dataTable",
                         options: {
                             parentContainer: ".mxcw-obs-table",
+                            columns: "{vizLoader}.options.recordColumns",
                             members: {
                                 rows: "{vizLoader}.finalFilteredObs"
                             }
@@ -104,10 +105,22 @@ reknitr.summaryTaxaRows = function (rows) {
 };
 
 /**
+ * Omit a column from a table's columns, for a table listing only one species.
+ * @param {Object[]|undefined} columns - The column definitions, if the site has configured any
+ * @param {String} key - The key of the column to be omitted
+ * @return {Object[]|undefined} - The remaining columns
+ */
+reknitr.withoutColumn = function (columns, key) {
+    return columns?.filter(column => column.key !== key);
+};
+
+/**
  * Show which species the Extirpation Risk records panel is currently listing in its header.
  * @param {Object|null} taxon - The taxon row selected in the taxa table, if any.
  */
 reknitr.updateSolowRecordsLabel = function (taxon) {
+    // Without a species there is nothing for the taxon panel, radius or records to show - see .mxcw-solow-has-taxon
+    hortis.toggleClass(document.querySelector(".mxcw-solow-widgets-holder"), "mxcw-solow-has-taxon", !!taxon);
     document.querySelector(".mxcw-solow-records-species").textContent = taxon ? "\u2014 " + taxon.scientificName : "";
 };
 
@@ -141,8 +154,12 @@ fluid.defaults("reknitr.vizLoader.withSolow", {
             type: "hortis.dataTable",
             options: {
                 parentContainer: ".mxcw-solow-records-table",
+                columns: "@expand:reknitr.withoutColumn({vizLoader}.options.recordColumns, taxon_name)",
                 members: {
-                    rows: "{solowTaxonInfo}.taxonObsRows"
+                    rows: "{solowTaxonInfo}.taxonObsRows",
+                    // Most recent first, since the last known sightings are the best guide to where to look
+                    sortColumn: "@expand:signal(eventDate)",
+                    sortDirection: "@expand:signal(-1)"
                 }
             }
         },
@@ -182,12 +199,15 @@ fluid.defaults("reknitr.vizLoader.withSolow", {
     }
 });
 
+// Status belongs to a species rather than to any one of its records, whatever its date
+reknitr.statusRecordLabels = {confirmed: "confirmed species", unconfirmed: "historical species", new: "newly reported species"};
+
 /** Each filter which can narrow the records panel of an observation map pane, in the order described in its header.
  * Each entry renders a filter's state, as a string or an array of strings, or a falsy value if it is not narrowing.
  */
 reknitr.recordsFilterDescribers = {
     "hortis.checklist.search": taxon => taxon?.scientificName,
-    "reknitr.statusFilter": (state, comp) => comp.filterRows.filter(row => state[row.id]).map(row => row.label),
+    "reknitr.statusFilter": state => Object.keys(reknitr.statusRecordLabels).filter(id => state[id]).map(id => reknitr.statusRecordLabels[id]),
     "hortis.regionFilter": (state, comp) => Object.keys(state).map(index => comp.filterRows.value[index].label),
     "hortis.collectorFilter": recorder => recorder && "recorded by " + recorder,
     "hortis.obsGridFilter": cell => cell && "selected map cell",
@@ -206,7 +226,8 @@ reknitr.storyPage.bindRecordsFilterLabel = function (that) {
     fluid.effect((...states) => {
         const parts = comps.flatMap((comp, i) => describers[comp.typeName](states[i], comp) || []);
         const text = parts.join(" \u00b7 ");
-        label.textContent = text && "\u2014 " + text;
+        const statusAlone = parts.length === 1 && Object.values(reknitr.statusRecordLabels).includes(parts[0]);
+        label.textContent = text && (statusAlone ? "of " : "\u2014 ") + text;
         label.title = text;
     }, ...comps.map(comp => comp.filterState));
 };

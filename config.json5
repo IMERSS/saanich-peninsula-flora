@@ -51,6 +51,32 @@
                         key: "iNaturalistTaxonName",
                         label: "Link name"
                     }],
+                    // Ordered to bring forward what helps in assessing a record and in targeting the plant
+                    recordColumns: [
+                        {key: "eventDate", label: "Date"},
+                        {key: "taxon_name", label: "Taxon"},
+                        {key: "locality", label: "Locality"},
+                        {key: "recordedBy", label: "Recorder"},
+                        {key: "basisOfRecord", label: "Record type"},
+                        {key: "institutionCode", label: "Institution"},
+                        {key: "catalogNumber", label: "Catalogue no."},
+                        {key: "decimalLatitude", label: "Latitude"},
+                        {key: "decimalLongitude", label: "Longitude"},
+                        {key: "coordinateUncertaintyInMetres", label: "Uncertainty (m)"},
+                        {key: "elevation", label: "Elevation"},
+                        {key: "individualCount", label: "Count"},
+                        {key: "BEC", label: "BEC zone"},
+                        {key: "establishmentMeans", label: "Establishment"},
+                        {key: "identifiedBy", label: "Identified by"},
+                        {key: "dateIdentified", label: "Date identified"},
+                        {key: "typeStatus", label: "Type status"},
+                        {key: "collectionCode", label: "Collection"},
+                        {key: "recordNumber", label: "Record no."},
+                        {key: "license", label: "Licence"},
+                        {key: "rightsHolder", label: "Rights holder"},
+                        {key: "occurrenceID", label: "Occurrence ID"},
+                        {key: "gbifID", label: "GBIF ID"}
+                    ],
                     /** Paths relative to docs/story */
                     obsFile: "../local/data/tabular/Saanich_Tracheophyta_ultimate-catalogue_2026-08-20-selected-labels.csv",
                     taxaFile: "../local/data/tabular/Saanich_Tracheophyta_ultimate-summary_2026-08-20-prepared-taxa.csv",
@@ -60,8 +86,11 @@
             },
             paneHandlers: {
                 /** These names need to match the names of pages in content/story **/
+                LostPlants: {
+                    type: "reknitr.lostPlantsPaneHandler"
+                },
                 Status: {
-                    type: "reknitr.statusPaneHandler"
+                    type: "reknitr.saanichAtlasPaneHandler"
                 },
                 TopContributions: {
                     type: "reknitr.iNatComponentsPaneHandler",
@@ -88,6 +117,9 @@
                 },
                 Solow: {
                     type: "reknitr.solowPaneHandler"
+                },
+                Remembering: {
+                    type: "reknitr.rememberingPaneHandler"
                 }
             }
         }

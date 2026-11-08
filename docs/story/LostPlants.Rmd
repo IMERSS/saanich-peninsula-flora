@@ -1,0 +1,24 @@
+---
+title: The lost plants of the Saanich Peninsula
+shortTitle: Lost Plants
+weight: 2
+knit: (function(input, ...) { source(here::here("R/knit_render.R"), local = TRUE)$value(input, ...) })
+---
+
+## The lost plants of the Saanich Peninsula
+
+**Can you find these plants?** These <span class="saanich-lost-count"></span> native species were once recorded on the
+Saanich Peninsula, but no one has reported them in decades. Some may be lost *to us*—overlooked, forgotten, or waiting to be rediscovered. Others may be
+lost *because of us*, through habitat change and invasive species.
+
+We’re bringing together local naturalists and community members to search for these “lost” plants, update the
+historical flora, and better understand how biodiversity is changing across the Saanich Peninsula. Pick a plant from the
+gallery to see where and when it was last found, and join the search through the
+**[“Lost” Plants of the Saanich Peninsula](https://www.inaturalist.org/projects/lost-plants-of-the-saanich-peninsula)**
+project on iNaturalist.
+
+The Saanich Peninsula is part of the homeland of the W̱SÁNEĆ people, whose knowledge of its plants and landscapes
+extends back countless generations. Among the region's published botanical references, Szczawinski and Harrison’s
+(1972) *Flora of the Saanich Peninsula* remains a classic. Harvey Janszen devoted much of his life to revising this
+work but passed away before completing it. Local naturalists have since carried his efforts forward, and this website
+shares that continuing legacy.

@@ -708,7 +708,9 @@ fluid.defaults("reknitr.storyPage", {
         recordsHolder: ".mxcw-obs-table-holder",
         recordsToggle: ".mxcw-obs-table-holder .mxcw-records-toggle",
         solowRecordsHolder: ".mxcw-solow-records-holder",
-        solowRecordsToggle: ".mxcw-solow-records-holder .mxcw-records-toggle"
+        solowRecordsToggle: ".mxcw-solow-records-holder .mxcw-records-toggle",
+        solowWidgetsHolder: ".mxcw-solow-widgets-holder",
+        atlasTaxonHolder: ".mxcw-atlas-taxon-holder"
     },
     components: {
         map: {
@@ -740,6 +742,25 @@ fluid.defaults("reknitr.storyPage", {
             options: {
                 before: "{storyPage}.dom.contentHolder.0",
                 axis: "vertical"
+            }
+        },
+        // Between the taxon panel and its open records panel, shown by CSS only when both are visible
+        solowRecordsResizeBar: {
+            type: "hortis.resizeBar",
+            options: {
+                before: "{storyPage}.dom.solowWidgetsHolder.0",
+                axis: "vertical",
+                minBefore: 120,
+                minAfter: 96
+            }
+        },
+        atlasRecordsResizeBar: {
+            type: "hortis.resizeBar",
+            options: {
+                before: "{storyPage}.dom.atlasTaxonHolder.0",
+                axis: "vertical",
+                minBefore: 120,
+                minAfter: 96
             }
         }
     },
