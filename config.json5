@@ -79,7 +79,7 @@
                         }, { // "commonTaxa"
                             desc: "This page lists the most commonly reported species in the Saanich Peninsula. You can use the dropdown at the top right to filter the results to a particular year."
                         }, { // "favourites",
-                            desc: "Any time iNaturalist users encounter an observation they like, they can choose to \"favourite\" it. This page lists the most favourited vascular plants observations made in the the \xc1tl\u2019\u1e35a7tsem/Howe Sound Biosphere Region."
+                            desc: "Any time iNaturalist users encounter an observation they like, they can choose to \"favourite\" it. This page lists the most favourited vascular plants observations made in the Saanich Peninsula."
                         }
                         ]
                     }
