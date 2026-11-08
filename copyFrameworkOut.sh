@@ -73,6 +73,7 @@ FILES=(
     # Hugo layout overrides of the hextra theme
     layouts/_default/baseof.html
     layouts/partials/footer.html
+    layouts/partials/language-switch.html
     layouts/partials/navbar.html
     layouts/partials/search.html
     layouts/partials/sidebar.html
@@ -131,7 +132,9 @@ done
 if [ -n "$TARGET_HOLDER" ] && [ -n "$SOURCE_HOLDER" ] && [ "$TARGET_HOLDER" != "$SOURCE_HOLDER" ]; then
     echo "Preserving target's $TARGET_HOLDER in $HOLDER_FILE (source uses $SOURCE_HOLDER)"
     if [ $DRY_RUN -eq 0 ]; then
-        sed -i "s/type: \"$SOURCE_HOLDER\"/type: \"$TARGET_HOLDER\"/" "$TARGET/$HOLDER_FILE"
+        # A backup suffix attached to -i is the only form which both GNU and BSD (macOS) sed accept
+        sed -i.bak "s/type: \"$SOURCE_HOLDER\"/type: \"$TARGET_HOLDER\"/" "$TARGET/$HOLDER_FILE"
+        rm -f "$TARGET/$HOLDER_FILE.bak"
     fi
 fi
 

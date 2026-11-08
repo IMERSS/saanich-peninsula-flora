@@ -898,6 +898,11 @@ body .mx-header ::-webkit-scrollbar-thumb {
     display: none;
 }
 
+/* These panes also leave the content the whole column - !important overrides any height set by dragging contentResizeBar */
+.mxcw-content-holder:has(~ .imerss-container.fl-hidden) {
+    height: 100% !important;
+}
+
 /* Styling for native legends */
 
 .legend {
