@@ -1204,3 +1204,8 @@ body {
 .imerss-copyright a {
     text-decoration: underline;
 }
+
+.saanich-callout {
+    color: #FDF2CE;
+    font-weight: 700;
+}

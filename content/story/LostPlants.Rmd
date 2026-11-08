@@ -12,8 +12,7 @@ Saanich Peninsula, but no one has reported them in decades. Some may be lost *to
 lost *because of us*, through habitat change and invasive species.
 
 We’re bringing together local naturalists and community members to search for these “lost” plants, update the
-historical flora, and better understand how biodiversity is changing across the Saanich Peninsula. Pick a plant from the
-gallery to see where and when it was last found, and join the search through the
+historical flora, and better understand how biodiversity is changing across the Saanich Peninsula. <span class="saanich-callout">Pick a plant from the gallery</span> to see where and when it was last found, and join the search through the
 **[“Lost” Plants of the Saanich Peninsula](https://www.inaturalist.org/projects/lost-plants-of-the-saanich-peninsula)**
 project on iNaturalist.
 
