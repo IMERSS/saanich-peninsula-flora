@@ -210,7 +210,7 @@ reknitr.solowTaxonInfo.markup = `
       %taxonImage
   </div>
   <div class="mxcw-taxon-info">
-  <div class="mxcw-taxon-name">Taxon: %taxonName</div>
+  <div class="mxcw-taxon-name">%taxonName</div>
       <dl class="mxcw-taxon-fields">
         <dt>Date first seen:</dt> <dd>%dateFirstSeen</dd>
         <dt>Date last seen:</dt>  <dd>%dateLastSeen</dd>

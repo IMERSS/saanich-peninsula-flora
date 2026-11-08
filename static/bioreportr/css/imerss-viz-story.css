@@ -372,3 +372,16 @@ html[class~=dark] #inat-components select {
 .mxcw-solow-records-species {
     margin-left: 0.4rem;
 }
+
+/* Clarifies what a records panel is listing - long combinations of filters are cut short, with the full text in a tooltip */
+.mxcw-records-filter-label {
+    margin-left: 0.4rem;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mxcw-records-toggle {
+    min-width: 0;
+}

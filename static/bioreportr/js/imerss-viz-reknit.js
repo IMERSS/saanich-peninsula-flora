@@ -79,6 +79,7 @@ fluid.defaults("reknitr.storyPage.withVizLoader", {
         mapHolder: ".mxcw-map" // This one is used for toggling visibility
     },
     listeners: {
+        "onCreate.bindRecordsFilterLabel": "reknitr.storyPage.bindRecordsFilterLabel({that})",
         "onCreate.bindObsDownload": "reknitr.storyPage.bindObsDownloadClick"
     },
     modelListeners: {
@@ -107,7 +108,7 @@ reknitr.summaryTaxaRows = function (rows) {
  * @param {Object|null} taxon - The taxon row selected in the taxa table, if any.
  */
 reknitr.updateSolowRecordsLabel = function (taxon) {
-    document.querySelector(".mxcw-solow-records-species").textContent = taxon ? "\u2014 " + taxon.scientificName : "\u2014 tick a species to list its records";
+    document.querySelector(".mxcw-solow-records-species").textContent = taxon ? "\u2014 " + taxon.scientificName : "";
 };
 
 fluid.defaults("reknitr.vizLoader.withSolow", {
@@ -180,6 +181,35 @@ fluid.defaults("reknitr.vizLoader.withSolow", {
         }
     }
 });
+
+/** Each filter which can narrow the records panel of an observation map pane, in the order described in its header.
+ * Each entry renders a filter's state, as a string or an array of strings, or a falsy value if it is not narrowing.
+ */
+reknitr.recordsFilterDescribers = {
+    "hortis.checklist.search": taxon => taxon?.scientificName,
+    "reknitr.statusFilter": (state, comp) => comp.filterRows.filter(row => state[row.id]).map(row => row.label),
+    "hortis.regionFilter": (state, comp) => Object.keys(state).map(index => comp.filterRows.value[index].label),
+    "hortis.collectorFilter": recorder => recorder && "recorded by " + recorder,
+    "hortis.obsGridFilter": cell => cell && "selected map cell",
+    "hortis.libreMap.polygonFilter": features => features.length > 0 && "drawn area"
+};
+
+/**
+ * Keep the header of the records panel showing which filters are currently narrowing its list.
+ * @param {reknitr.storyPage} that - The story page holding the filters
+ */
+reknitr.storyPage.bindRecordsFilterLabel = function (that) {
+    const describers = reknitr.recordsFilterDescribers;
+    const comps = fluid.queryIoCSelector(that, "hortis.obsFilter", false).filter(comp => describers[comp.typeName]);
+    comps.sort((a, b) => Object.keys(describers).indexOf(a.typeName) - Object.keys(describers).indexOf(b.typeName));
+    const label = document.querySelector(".mxcw-records-filter-label");
+    fluid.effect((...states) => {
+        const parts = comps.flatMap((comp, i) => describers[comp.typeName](states[i], comp) || []);
+        const text = parts.join(" \u00b7 ");
+        label.textContent = text && "\u2014 " + text;
+        label.title = text;
+    }, ...comps.map(comp => comp.filterState));
+};
 
 reknitr.storyPage.bindObsDownloadClick = function (that) {
     that.dom.locate("downloadObsButton").on("click", () =>

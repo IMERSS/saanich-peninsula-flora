@@ -9,8 +9,7 @@ knit: (function(input, ...) { source(here::here("R/knit_render.R"), local = TRUE
 
 Which plants may have disappeared from the Saanich Peninsula? This tool gives a first indication from the pattern of
 past sightings alone, applying one component of our
-[protocol for detecting local extinction](https://imerss.github.io/detecting-local-extinction/docs/assessing_extirpation_risk/)
-([Simon et al., 2025](https://nph.onlinelibrary.wiley.com/doi/full/10.1002/ppp3.70130)).
+[protocol for detecting local extinction](https://imerss.github.io/detecting-local-extinction/docs/assessing_extirpation_risk/).
 
 **Extirpation probability (EP)** runs from 0 (likely still present) to 1 (likely lost locally). Using
 [Solow's (1993)](https://esajournals.onlinelibrary.wiley.com/doi/10.2307/1940821) method, it compares when a species was
