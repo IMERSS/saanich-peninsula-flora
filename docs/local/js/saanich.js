@@ -22,14 +22,16 @@ fluid.defaults("reknitr.storyPage.withSaanichWeibull", {
 fluid.registerNamespace("reknitr.saanichTaxaFiltersHolder");
 
 reknitr.saanichTaxaFiltersHolder.markup = `
-<div class="mxcw-taxa-filters-holder">
-    <div class="imerss-filter-controls">
-        <svg width="24" height="24" class="imerss-reset-filter">
-            <use href="#filter-reset" />
-        </svg>
-        <div>Reset filters</div>
+<div class="mxcw-taxa-filters-holder imerss-filters-collapsed">
+    <div class="imerss-panel-label imerss-filters-header">
+        <button type="button" class="imerss-filters-toggle" aria-expanded="false" aria-controls="imerss-taxa-filters">Filters:</button>
+        <div class="imerss-filter-controls imerss-basic-tooltip" title="Reset filters">
+            <svg width="24" height="24" class="imerss-reset-filter">
+                <use href="#filter-reset" />
+            </svg>
+        </div>
     </div>
-    <div class="imerss-filters imerss-taxa-filters">
+    <div id="imerss-taxa-filters" class="imerss-filters imerss-taxa-filters">
     </div>
 </div>`;
 
@@ -43,7 +45,11 @@ fluid.defaults("reknitr.saanichTaxaFiltersHolder", {
     },
     selectors: {
         filterControls: ".imerss-filter-controls",
+        filtersToggle: ".imerss-filters-toggle",
         filters: ".imerss-taxa-filters"
+    },
+    listeners: {
+        "onCreate.bindFiltersToggle": "reknitr.bindFiltersToggle({that}.container.0, {that}.dom.filtersToggle.0)"
     },
     components: {
         filterControls: {
