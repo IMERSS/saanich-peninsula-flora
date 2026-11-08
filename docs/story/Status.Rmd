@@ -1,5 +1,5 @@
 ---
-title: Community Science Contributions
+title: Welcome to the Flora of the Saanich Peninsula
 shortTitle: Welcome
 weight: 3
 knit: (function(input, ...) { source(here::here("R/knit_render.R"), local = TRUE)$value(input, ...) })
@@ -11,7 +11,31 @@ statusColors:
   new: '#7562b4'
 ---
 
-## Community science contributions
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+options(error = rlang::entrace, rlang_backtrace_on_error = "full")
+library(tidyverse)
+plant.summary <- read.csv("tabular_data/Saanich_Tracheophyta_ultimate-summary_2026-08-20-prepared-taxa.csv", fileEncoding = "UTF-8") %>%
+  filter(inSummary == 1)
+```
+
+## Welcome to the Flora of the Saanich Peninsula
+
+The Saanich Peninsula is part of the homeland of the W̱SÁNEĆ people, whose knowledge of its plants and landscapes
+extends back countless generations. Among the region's published botanical references, Szczawinski and Harrison’s
+(1972) *Flora of the Saanich Peninsula* remains a classic. Harvey Janszen devoted much of his life to revising this
+work but passed away before completing it. Local naturalists have since carried his efforts forward, and this website
+shares that continuing legacy.
+
+To date, `r format(nrow(plant.summary), big.mark = ",")` vascular plant species have been recorded on the Saanich
+Peninsula, but many have not been seen in recent years. Some may be lost *to us*—overlooked, forgotten, or waiting to
+be rediscovered. Others may be lost *because of us*, through habitat change and invasive species.
+
+We’re bringing together local naturalists and community members to search for these “lost” plants, update the
+historical flora, and better understand how biodiversity is changing across the Saanich Peninsula.
+
+Explore the map and tabs above to discover which species may still be out there, and join the search through the
+**[“Lost” Plants of the Saanich Peninsula](https://www.inaturalist.org/projects/lost-plants-of-the-saanich-peninsula)**
+project on iNaturalist.
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 source("scripts/Community_science_contributions_mapbox.R")
