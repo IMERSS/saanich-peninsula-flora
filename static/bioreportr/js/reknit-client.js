@@ -853,6 +853,7 @@ fluid.defaults("reknitr.storyPage", {
             funcName: "reknitr.bindRecordsToggle",
             args: ["{that}.dom.solowRecordsHolder.0", "{that}.dom.solowRecordsToggle.0", "mxcw-solow-records-collapsed"]
         },
+        "onCreate.startAtProjectArea": "reknitr.startAtProjectArea({that}.map)",
         "onCreate.trackMapSize": "reknitr.trackMapSize({that}.map.map, {that}.dom.map.0)",
         "onCreate.findPlotlyWidgets": "reknitr.findPlotlyWidgets({that}, {that}.sectionHolders)"
     }
@@ -920,7 +921,9 @@ reknitr.updateActiveMapPane = function (that, map, activePane) {
     });
 
     // TODO: Perhaps assign these into paneHandlers if frequently used?
-    const widgetData = mapboxData.mapWidgets[activePaneName]?.x.layout.mapbox;
+    // A pane without a view of its own must still open on the project area if it is the first map shown
+    const widgetData = mapboxData.mapWidgets[activePaneName]?.x.layout.mapbox ||
+        (map.hasBounds ? undefined : Object.values(mapboxData.mapWidgets).find(widget => widget.x?.layout?.mapbox?.center)?.x.layout.mapbox);
     const currentZoom = map.map.getZoom();
 
     // Pretty terrible, there is no longer an ability to specify a callback: https://github.com/mapbox/mapbox-gl-js/issues/1794
@@ -993,6 +996,18 @@ reknitr.bindFiltersToggle = function (filterPanel, toggle) {
         const collapsed = filterPanel.classList.toggle("imerss-filters-collapsed");
         toggle.setAttribute("aria-expanded", String(!collapsed));
     });
+};
+
+/**
+ * Place the map on the project area from the moment it exists, so that it is never seen at its default view of the
+ * whole world while its style and tiles are still loading.
+ * @param {Object} map - The map component
+ */
+reknitr.startAtProjectArea = function (map) {
+    const view = Object.values(map.options.mapboxData.mapWidgets).find(widget => widget.x?.layout?.mapbox?.center)?.x.layout.mapbox;
+    if (view) {
+        map.map.jumpTo({center: view.center, zoom: view.zoom});
+    }
 };
 
 /**

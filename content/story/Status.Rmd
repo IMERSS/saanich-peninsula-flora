@@ -1,5 +1,5 @@
 ---
-title: The atlas of the Saanich Peninsula flora
+title: Flora of W̱SÁNEĆ/Saanich Peninsula
 shortTitle: The Atlas
 weight: 3
 knit: (function(input, ...) { source(here::here("R/knit_render.R"), local = TRUE)$value(input, ...) })
@@ -17,22 +17,18 @@ library(tidyverse)
 plants <- read.csv("tabular_data/Saanich_Tracheophyta_ultimate-catalogue_2026-08-20-selected-labels.csv")
 plant.summary <- read.csv("tabular_data/Saanich_Tracheophyta_ultimate-summary_2026-08-20-prepared-taxa.csv", fileEncoding = "UTF-8") %>%
   filter(inSummary == 1)
-counts <- plant.summary %>% count(reportingStatus)
-statusCount <- function (status) format(counts$n[counts$reportingStatus == status], big.mark = ",")
 ```
 
-## The atlas of the Saanich Peninsula flora
+## Flora of W̱SÁNEĆ/Saanich Peninsula
 
 To date, `r format(nrow(plant.summary), big.mark = ",")` vascular plant species have been recorded on the Saanich
 Peninsula, drawing together `r format(nrow(plants), big.mark = ",")` records from historical collections, iNaturalist
 observations and other sources. Each species falls into one of three groups:
 
-* <button type="button" class="saanich-status-link" data-status="confirmed">Confirmed</button> (`r statusCount("confirmed")` species): reported historically and found again since 2000.
-* <button type="button" class="saanich-status-link" data-status="unconfirmed">Historical</button> (`r statusCount("unconfirmed")` species): reported in the past but not recorded since 2000.
-* <button type="button" class="saanich-status-link" data-status="new">Newly reported</button> (`r statusCount("new")` species): additions to the flora from recent reports.
+<div class="saanich-status-tiles"></div>
 
-These groups describe species. Choosing one shows every record of those species, old and recent, on the map and in the
-list, and choosing it again returns to all of them.
+These groups describe species. Click a group to show only the records of those species, old and recent, on the map and
+in the list. Click the same group again to clear the selection and show all species.
 The map shows where records are concentrated. Open *Filters* to narrow them by recorder, pick a plant from the list to
 see only its records, or draw an area on the map. Open *Records* below the map for the details behind each
 selection.

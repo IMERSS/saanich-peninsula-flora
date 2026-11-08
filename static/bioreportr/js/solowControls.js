@@ -217,6 +217,7 @@ reknitr.solowTaxonInfo.markup = `
         <dt>Total sightings:</dt> <dd>%numObs</dd>
         <dt>Regional EP:</dt>     <dd>%regionalEP</dd>
       </dl>
+      %georefNote
   </div>
 </div>
 `;
@@ -229,6 +230,28 @@ reknitr.solowObsForTaxon = (obsRows, taxonRow) => {
         : [];
 };
 
+/**
+ * Determine whether a record has coordinates and so can be mapped.
+ * @param {Object} record - An observation row
+ * @return {Boolean} - `true` if the record is georeferenced
+ */
+reknitr.hasCoordinates = function (record) {
+    const lat = parseFloat(record.decimalLatitude), long = parseFloat(record.decimalLongitude);
+    return Number.isFinite(lat) && Number.isFinite(long) && lat !== 0 && long !== 0;
+};
+
+/**
+ * Explain any records of a plant which lack coordinates, so that what is shown on the map can be read accurately.
+ * @param {Object[]} records - The records of the plant
+ * @return {String} - Markup for a note, empty if every record is georeferenced
+ */
+reknitr.georefNote = function (records) {
+    const missing = records.filter(record => !reknitr.hasCoordinates(record)).length;
+    const message = missing === 0 ? "" : missing === records.length ? "No mapped records: coordinates missing" :
+        `${missing} of ${records.length} records not mapped: coordinates missing`;
+    return message && `<div class="mxcw-georef-note">\u26A0 ${message}</div>`;
+};
+
 reknitr.solowTaxonInfo.renderModel = function (taxon, taxonObsRows) {
     if (taxon === null) {
         return undefined;
@@ -239,6 +262,7 @@ reknitr.solowTaxonInfo.renderModel = function (taxon, taxonObsRows) {
             dateLastSeen: fluid.peek(taxonObsRows).eventDate.substring(0, 10),
             numObs: taxonObsRows.length,
             regionalEP: taxon.solow_EP, // taxon.direct_solow_ep, TODO: Standardise this or look it up
+            georefNote: reknitr.georefNote(taxonObsRows),
             taxonImage: hortis.renderTaxonImage(taxon.iNaturalistTaxonImage, taxon.id)
         };
         return model;
@@ -572,7 +596,7 @@ reknitr.solowMapLayer.metresToPixels = function (radiusMetres, zoom, lat) {
 reknitr.solowMapLayer.update = function (that, taxonObs, solowRadius, solowParams, layerOpacity, zoomLevel) {
     const map = that.map.map;
 
-    const withCoords = taxonObs.filter(obs => obs[hortis.cellIdSymbol] !== "0|0");
+    const withCoords = taxonObs.filter(reknitr.hasCoordinates);
 
     const {geoJSON, clusters} = reknitr.solowMapLayer.buildGeoJSON(withCoords, solowRadius, solowParams);
     that.solowClusters = clusters;

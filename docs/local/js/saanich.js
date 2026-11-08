@@ -72,6 +72,7 @@ fluid.defaults("reknitr.saanichTaxaFiltersHolder", {
 reknitr.saanichFiltersTemplate = `
     <div class="imerss-filters">
         <div class="imerss-filter"></div>
+        <div class="imerss-ep-filter imerss-filter"></div>
         <div class="imerss-rank-filter imerss-filter"></div>
         <div class="imerss-introduction-filter imerss-filter"></div>
         <div class="imerss-provenance-filter imerss-filter"></div>
@@ -88,6 +89,7 @@ fluid.defaults("reknitr.saanichFilters", {
         fallbackContainer: reknitr.saanichFiltersTemplate
     },
     selectors: {
+        epFilter: ".imerss-ep-filter",
         rankFilter: ".imerss-rank-filter",
         introductionFilter: ".imerss-introduction-filter",
         provenanceFilter: ".imerss-provenance-filter",
@@ -96,6 +98,10 @@ fluid.defaults("reknitr.saanichFilters", {
     },
     components: {
         filterRoot: "{vizLoader}",
+        epFilter: {
+            type: "reknitr.epFilter",
+            container: "{that}.dom.epFilter"
+        },
         rankFilter: {
             type: "hortis.valueFilter",
             container: "{that}.dom.rankFilter",
@@ -158,6 +164,75 @@ fluid.defaults("reknitr.saanichFilters", {
 });
 
 
+// Filters species by their range of extirpation probability
+fluid.registerNamespace("reknitr.epFilter");
+
+reknitr.epFilter.markup = `
+<div class="imerss-ep-filter">
+    <div class="imerss-filter-title">Extirpation probability (EP):</div>
+    <div class="imerss-filter-body saanich-ep-range">
+        <label><span>Min</span><input type="range" class="saanich-ep-min" min="0" max="100" step="5" value="0" aria-label="Minimum extirpation probability"><output class="saanich-ep-min-value">0.00</output></label>
+        <label><span>Max</span><input type="range" class="saanich-ep-max" min="0" max="100" step="5" value="100" aria-label="Maximum extirpation probability"><output class="saanich-ep-max-value">1.00</output></label>
+    </div>
+</div>
+`;
+
+reknitr.epFilter.initialState = () => signal({min: 0, max: 1});
+
+fluid.defaults("reknitr.epFilter", {
+    gradeNames: ["hortis.taxaFilter", "fluid.stringTemplateRenderingView"],
+    markup: {
+        container: reknitr.epFilter.markup
+    },
+    members: {
+        filterState: "@expand:reknitr.epFilter.initialState()"
+    },
+    invokers: {
+        doFilter: "reknitr.epFilter.doFilter",
+        reset: "reknitr.epFilter.reset({that})"
+    },
+    listeners: {
+        "onCreate.bindInput": "reknitr.epFilter.bindInput({that})"
+    }
+});
+
+reknitr.epFilter.doFilter = function (rows, state) {
+    return state.min <= 0 && state.max >= 1 ? rows : rows.filter(row => +row.solow_EP >= state.min && +row.solow_EP <= state.max);
+};
+
+/**
+ * Show a pair of slider positions, given as percentages, and make them the state of the filter.
+ * @param {reknitr.epFilter} that - The filter
+ * @param {Number} min - The position of the minimum slider
+ * @param {Number} max - The position of the maximum slider
+ */
+reknitr.epFilter.apply = function (that, min, max) {
+    const root = that.container[0];
+    root.querySelector(".saanich-ep-min").value = min;
+    root.querySelector(".saanich-ep-max").value = max;
+    root.querySelector(".saanich-ep-min-value").textContent = (min / 100).toFixed(2);
+    root.querySelector(".saanich-ep-max-value").textContent = (max / 100).toFixed(2);
+    that.filterState.value = {min: min / 100, max: max / 100};
+};
+
+reknitr.epFilter.reset = that => reknitr.epFilter.apply(that, 0, 100);
+
+reknitr.epFilter.bindInput = function (that) {
+    that.container[0].addEventListener("input", event => {
+        const root = that.container[0];
+        let min = +root.querySelector(".saanich-ep-min").value, max = +root.querySelector(".saanich-ep-max").value;
+        // The handle being moved pushes the other along rather than crossing it
+        if (min > max) {
+            if (event.target.classList.contains("saanich-ep-min")) {
+                max = min;
+            } else {
+                min = max;
+            }
+        }
+        reknitr.epFilter.apply(that, min, max);
+    });
+};
+
 fluid.registerNamespace("reknitr.lostPlants");
 
 // The first page of the story, with a gallery of "lost" plants in place of the map. The plants are selected from the
@@ -182,7 +257,8 @@ fluid.defaults("reknitr.lostPlantsPaneHandler", {
     members: {
         pendingTaxonId: "@expand:signal(null)",
         showPendingTaxon: "@expand:fluid.effect(reknitr.lostPlants.showTaxon, {that}, {reknitr.storyPage}, {vizLoader}.taxa.rowById, {that}.pendingTaxonId)",
-        loadGallery: "@expand:fluid.effect(reknitr.lostPlants.loadGallery, {that}, {vizLoader}.taxaRows, {vizLoader}.obsRows)"
+        loadGallery: "@expand:fluid.effect(reknitr.lostPlants.loadGallery, {that}, {vizLoader}.taxaRows, {vizLoader}.obsRows)",
+        annotateGeoref: "@expand:fluid.effect(reknitr.lostPlants.annotateGeoref, {vizLoader}, {vizLoader}.taxaRows, {vizLoader}.obsRows)"
     },
     listeners: {
         "onCreate.bindGallery": "reknitr.lostPlants.bindGallery({reknitr.storyPage}, {that})"
@@ -213,6 +289,30 @@ reknitr.lostPlants.selectPlants = function (taxaRows, obsRows, options) {
 };
 
 /**
+ * Note on each taxon row its number of records and how many of them lack coordinates, for the table of taxa. These are
+ * display values held in the browser alone.
+ * @param {Object} vizLoader - The viz loader
+ * @param {Object[]} taxaRows - All taxon rows
+ * @param {Object[]} obsRows - All observation rows
+ */
+reknitr.lostPlants.annotateGeoref = function (vizLoader, taxaRows, obsRows) {
+    const counts = new Map();
+    obsRows.forEach(record => {
+        const entry = counts.get(record.iNaturalistTaxonId) || {total: 0, unmapped: 0};
+        entry.total++;
+        entry.unmapped += reknitr.hasCoordinates(record) ? 0 : 1;
+        counts.set(record.iNaturalistTaxonId, entry);
+    });
+    taxaRows.forEach(taxon => {
+        const entry = counts.get(taxon.id) || {total: 0, unmapped: 0};
+        taxon.n_obs = entry.total;
+        taxon.n_unmapped = entry.unmapped;
+    });
+    // Deferred since this runs within an effect, which may not both read and write a signal
+    fluid.invokeLater(() => vizLoader.taxaTable.resizeCount.value = vizLoader.taxaTable.resizeCount.peek() + 1);
+};
+
+/**
  * Find a photo of a taxon which may be republished. iNaturalist records no licence code for a photo with all rights
  * reserved, and photos licensed against derivatives are passed over since the gallery crops them to squares. The taxon's default photo is preferred, followed by the others curated for it.
  * @param {Object} taxon - A taxon record from the iNaturalist API
@@ -232,11 +332,13 @@ reknitr.lostPlants.licensedPhoto = function (taxon) {
 reknitr.lostPlants.renderCard = function (plant, photo) {
     const name = fluid.XMLEncode(plant.taxon.scientificName);
     const details = [plant.taxon.commonName, plant.lastRecorded && "last recorded " + plant.lastRecorded].filter(Boolean).join(" · ");
+    const unmapped = plant.taxon.n_obs > 0 && plant.taxon.n_unmapped === plant.taxon.n_obs ? `<span class="saanich-lost-unmapped">\u26A0 no mapped records</span>` : "";
     const credit = photo.attribution.replace(/, uploaded by .*$/, "").replace(", some rights reserved", "");
     return `<button type="button" class="saanich-lost-card" data-taxon-id="${fluid.XMLEncode(plant.taxon.id)}">
         <img src="${fluid.XMLEncode(photo.medium_url)}" alt="${name}" loading="lazy">
         <span class="saanich-lost-name">${name}</span>
         <span class="saanich-lost-details">${fluid.XMLEncode(details)}</span>
+        ${unmapped}
         <span class="saanich-lost-credit">${fluid.XMLEncode(credit)}</span>
     </button>`;
 };
@@ -325,7 +427,7 @@ fluid.registerNamespace("reknitr.saanichAtlas");
 fluid.defaults("reknitr.saanichAtlasPaneHandler", {
     gradeNames: "reknitr.statusPaneHandler",
     members: {
-        updateStatusLinks: "@expand:fluid.effect(reknitr.saanichAtlas.updateLinks, {that}.container, {reknitr.storyPage}.map.selectedStatus)"
+        updateStatusTiles: "@expand:fluid.effect(reknitr.saanichAtlas.updateTiles, {that}.container, {vizLoader}.taxaRows, {vizLoader}.obsRows, {reknitr.storyPage}.map.selectedStatus)"
     },
     components: {
         atlasTaxonInfo: {
@@ -415,6 +517,7 @@ reknitr.atlasTaxonInfo.markup = `
         <dt>Total records:</dt> <dd>%numObs</dd>
         %status
       </dl>
+      %georefNote
   </div>
 </div>
 `;
@@ -450,6 +553,7 @@ reknitr.atlasTaxonInfo.renderModel = function (taxon, records) {
         dateLastSeen: fluid.peek(records).eventDate.substring(0, 10),
         numObs: records.length.toLocaleString("en-CA"),
         status: reknitr.atlasTaxonInfo.field("Status", reknitr.atlasTaxonInfo.statusLabels[taxon.reportingStatus]),
+        georefNote: reknitr.georefNote(records),
         taxonImage: hortis.renderTaxonImage(taxon.iNaturalistTaxonImage, taxon.id)
     } : undefined;
 };
@@ -620,7 +724,8 @@ reknitr.statusTooltip.bind = function (vizLoader) {
 
 // iNaturalist's records carry a full timestamp - show only the date in the tables of records
 const dataTableRenderCell = hortis.dataTable.renderCell;
-hortis.dataTable.renderCell = (col, row) => col.key === "eventDate" ? fluid.XMLEncode(String(row.eventDate ?? "").substring(0, 10)) : dataTableRenderCell(col, row);
+hortis.dataTable.renderCell = (col, row) => col.key === "eventDate" ? fluid.XMLEncode(String(row.eventDate ?? "").substring(0, 10)) :
+    col.key === "n_unmapped" ? (row.n_unmapped > 0 ? `<span class="mxcw-georef-flag" title="${row.n_unmapped} of ${row.n_obs} records have no coordinates">\u26A0 ${row.n_unmapped}</span>` : "") : dataTableRenderCell(col, row);
 
 // A summary of a map cell, leading with what matters most to the search for lost plants: the historical species
 // recorded there, followed by what has newly been found there and what is well documented
@@ -697,4 +802,74 @@ hortis.renderVizGridTooltip = function (that, grid, rowById, cellId) {
         <div class="saanich-tip-title">${plants.length.toLocaleString("en-CA")} species <span>${reknitr.cellTooltip.plural(bucket.obsCount, "record")}</span></div>
         ${stack}${sections}
     </div>`;
+};
+
+// Tiles summarizing the three groups of species in the atlas text, computed from the site's data. Each is a link which
+// selects its group, and carries a small chart of the question that matters for that group
+reknitr.saanichAtlas.yearBins = (start, end, width) =>
+    fluid.iota(Math.ceil((end - start + 1) / width)).map(index => start + index * width);
+
+reknitr.saanichAtlas.tiles = [{
+    status: "confirmed",
+    name: "Confirmed",
+    meaning: "Reported historically and found again since 2000.",
+    caption: "First found again",
+    bins: reknitr.saanichAtlas.yearBins(2000, 2025, 5),
+    year: records => parseInt(records.find(record => parseInt(record.eventDate, 10) >= 2000)?.eventDate, 10)
+}, {
+    status: "unconfirmed",
+    name: "Historical",
+    meaning: "Reported in the past but not recorded since 2000.",
+    caption: "Last recorded",
+    bins: reknitr.saanichAtlas.yearBins(1860, 1999, 20),
+    year: records => parseInt(fluid.peek(records).eventDate, 10)
+}, {
+    status: "new",
+    name: "Newly reported",
+    meaning: "Additions to the flora from recent reports.",
+    caption: "Earliest record in this atlas",
+    bins: reknitr.saanichAtlas.yearBins(2000, 2025, 5),
+    year: records => parseInt(records[0].eventDate, 10)
+}];
+
+/**
+ * Render the tile for one group of species.
+ * @param {Object} tile - One entry of `reknitr.saanichAtlas.tiles`
+ * @param {Object[]} taxa - The species of this group
+ * @param {Map} byTaxon - Dated records indexed by taxon id
+ * @return {String} - The markup for the tile
+ */
+reknitr.saanichAtlas.renderTile = function (tile, taxa, byTaxon) {
+    const counts = tile.bins.map(() => 0);
+    const width = tile.bins[1] - tile.bins[0];
+    taxa.forEach(taxon => {
+        const records = byTaxon.get(taxon.id);
+        const year = records ? tile.year(records.slice().sort(reknitr.obsDateComparator)) : NaN;
+        const index = Math.floor((year - tile.bins[0]) / width);
+        if (index >= 0 && index < counts.length) {
+            counts[index]++;
+        }
+    });
+    const max = Math.max(...counts, 1);
+    const columns = counts.map(count => `<span style="height:${count / max * 100}%"></span>`).join("");
+    // Each label starts beneath the bar for the period beginning in that year, and every other bar is labelled to leave room
+    const axis = tile.bins.filter((bin, index) => index % 2 === 0).map(bin => `<span>${bin}</span>`).join("");
+    return `<button type="button" class="saanich-status-link saanich-status-tile" data-status="${tile.status}" aria-pressed="false" style="--tip-colour:${reknitr.statusTooltip.colours[tile.status]}">
+        <span class="saanich-tile-name">${tile.name}</span>
+        <span class="saanich-tile-count">${taxa.length.toLocaleString("en-CA")} <small>species</small></span>
+        <span class="saanich-tile-meaning">${tile.meaning}</span>
+        <span class="saanich-tile-caption">${tile.caption}, species per ${width} years</span>
+        <span class="saanich-tile-chart" style="--tile-bins:${counts.length}">${columns}</span>
+        <span class="saanich-tile-axis" style="--tile-bins:${counts.length}">${axis}</span>
+    </button>`;
+};
+
+reknitr.saanichAtlas.updateTiles = function (container, taxaRows, obsRows, selectedStatus) {
+    const holder = container.find(".saanich-status-tiles")[0];
+    if (holder && !holder.firstElementChild) {
+        const byTaxon = reknitr.statusTooltip.groupRecords(obsRows);
+        holder.innerHTML = reknitr.saanichAtlas.tiles.map(tile => reknitr.saanichAtlas.renderTile(tile,
+            taxaRows.filter(taxon => taxon.inSummary && taxon.reportingStatus === tile.status), byTaxon)).join("");
+    }
+    reknitr.saanichAtlas.updateLinks(container, selectedStatus);
 };

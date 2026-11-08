@@ -23,7 +23,7 @@ nearer the middle, since so few records say little either way.
    example to native species.
 2. **See where it grew.** Each circle on the map is a group of sightings treated as one population, coloured by its EP.
    Hover over one for its *Cluster EP*. A smaller *Population radius* can reveal sites where a plant has gone unseen
-   even though it persists elsewhere.
+   even though it persists elsewhere. A ⚠ marks plants with records that have no coordinates and so cannot be mapped.
 3. **Read its history.** Open *Records* to see who found it, when and where. The dates show what time of year it was
    collected.
 4. **Go looking.** Search the places and habitats where it was last recorded, at the season it was last seen.

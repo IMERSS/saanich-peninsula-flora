@@ -1,6 +1,6 @@
 # Configuration
 baseURL: "/"
-title: Flora of the Saanich Peninsula
+title: Flora of W̱SÁNEĆ/Saanich Peninsula
 
 relativeUrls: true
 publishDir: docs
@@ -75,7 +75,7 @@ params:
     title: Salish Sea Biodiversity Atlas
     url: "https://salishseabiodiversity.org/"
 
-  description: Flora of the Saanich Peninsula
+  description: Flora of W̱SÁNEĆ/Saanich Peninsula
 
   # Displays bizarrely on hextra once we change background colour
   toc: false

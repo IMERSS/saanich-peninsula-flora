@@ -41,14 +41,14 @@
         "Status": {
             "x": {
                 "visdat": {
-                    "127b35fcfd6b": [
+                    "13478735db245": [
                         "function () ",
                         "plotlyVisDat"
                     ]
                 },
-                "cur_data": "127b35fcfd6b",
+                "cur_data": "13478735db245",
                 "attrs": {
-                    "127b35fcfd6b": {
+                    "13478735db245": {
                         "alpha_stroke": 1,
                         "sizes": [
                             10,

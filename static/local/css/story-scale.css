@@ -983,3 +983,224 @@ body {
 .saanich-cell-key {
     flex-wrap: wrap;
 }
+
+/* ── Records without coordinates ─────────────────────────── */
+
+.mxcw-georef-note {
+    margin-top: var(--story-gap);
+    font-size: var(--story-small);
+    line-height: 1.35;
+    color: #7a4f00;
+}
+
+.mxcw-georef-flag {
+    color: #7a4f00;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.saanich-lost-unmapped {
+    font-size: var(--story-small);
+    line-height: 1.3;
+    color: #FDF2CE;
+}
+
+/* Drawn inside the card, since the scrollbar's gutter would clip it at the right hand edge of the gallery */
+.saanich-lost-card {
+    outline-offset: -2px;
+}
+
+/* ── Atlas tiles for the three groups of species ─────────── */
+
+.saanich-status-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: var(--story-gap);
+    min-height: 150px;
+    margin: 0 0 0.6em;
+}
+
+.saanich-status-tile {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    margin: 0;
+    padding: var(--story-gap);
+    text-align: left;
+    font-weight: 400;
+    color: #eefaff;
+    text-decoration: none;
+    background: #0d3040;
+    border-top: 3px solid var(--tip-colour);
+    border-radius: var(--data-table-radius);
+    outline: 2px solid transparent;
+    outline-offset: -2px;
+}
+
+.saanich-status-tile:hover,
+.saanich-status-tile:focus-visible,
+.saanich-status-tile[aria-pressed="true"] {
+    color: #eefaff;
+    background: #0d3040;
+    outline-color: #FDF2CE;
+}
+
+.saanich-tile-name {
+    font-size: var(--story-data);
+    font-weight: 700;
+}
+
+.saanich-tile-count {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.15;
+}
+
+.saanich-tile-count small {
+    font-size: var(--story-small);
+    font-weight: 400;
+    color: #a8c8d0;
+}
+
+.saanich-tile-meaning {
+    flex: 1;
+    font-size: var(--story-small);
+    line-height: 1.3;
+    color: #a8c8d0;
+    margin: 2px 0 var(--story-gap);
+}
+
+.saanich-tile-caption {
+    font-size: var(--story-small);
+    line-height: 1.3;
+    color: #a8c8d0;
+    margin-bottom: 2px;
+}
+
+.saanich-tile-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 34px;
+}
+
+.saanich-tile-chart span {
+    flex: 1;
+    min-height: 1px;
+    border-radius: 4px 4px 0 0;
+    background: var(--tip-colour);
+}
+
+.saanich-tile-axis {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #a8c8d0;
+}
+
+/* ── Extirpation probability filter ──────────────────────── */
+
+.saanich-ep-range {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 170px;
+}
+
+.saanich-ep-range label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--story-data);
+}
+
+.saanich-ep-range label span {
+    width: 2em;
+}
+
+.saanich-ep-range input {
+    flex: 1;
+    min-width: 0;
+    accent-color: #4b778f;
+}
+
+.saanich-ep-range output {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Compact table footers ───────────────────────────────── */
+
+.imerss-main .hortis-dataTable-pagination {
+    padding: 2px 8px;
+    font-size: var(--story-small);
+}
+
+.imerss-main .hortis-dataTable-pageControls {
+    gap: 2px;
+}
+
+.imerss-main .hortis-dataTable-pagination button {
+    padding: 0 6px;
+    line-height: 1.5;
+    border-radius: 4px;
+}
+
+/* Year labels line up with the bars above them, each spanning a pair of bars */
+.saanich-tile-chart,
+.saanich-tile-axis {
+    display: grid;
+    grid-template-columns: repeat(var(--tile-bins), minmax(0, 1fr));
+    column-gap: 2px;
+    flex-shrink: 0;
+}
+
+.saanich-tile-chart {
+    align-items: end;
+}
+
+.saanich-tile-axis {
+    justify-content: stretch;
+    margin-top: 3px;
+    font-size: 11px;
+    line-height: 1.2;
+    color: #dfeef3;
+}
+
+.saanich-tile-axis span {
+    grid-column: span 2;
+    white-space: nowrap;
+}
+
+/* An odd number of bars leaves the last label with only one bar to sit beneath */
+.saanich-tile-axis span:last-child:nth-child(4) {
+    grid-column: span 1;
+}
+
+/* ── Right hand column and species list: tighter margins ─── */
+
+.mxcw-container {
+    --mxcw-container-padding: 8px;
+}
+
+.imerss-filter-panel {
+    padding: 2px 6px;
+}
+
+.imerss-main-checklist {
+    padding: 0 0 2px;
+}
+
+.imerss-checklist {
+    padding: 0 2px 0 0;
+}
+
+@media (min-width: 768px) {
+    /* The column now runs down to just above the footer */
+    .mxcw-container {
+        height: calc(100vh - 188px);
+    }
+}
+
+.imerss-copyright a {
+    text-decoration: underline;
+}

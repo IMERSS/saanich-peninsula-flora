@@ -30,6 +30,9 @@
                         key: "n_obs",
                         label: "obs"
                     }, {
+                        key: "n_unmapped",
+                        label: "No coords"
+                    }, {
                         key: "taxon_rank",
                         label: "Rank"
                     }, {
