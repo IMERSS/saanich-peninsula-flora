@@ -706,7 +706,9 @@ fluid.defaults("reknitr.storyPage", {
         filterPanel: ".imerss-filter-panel",
         filtersToggle: ".imerss-filters-toggle",
         recordsHolder: ".mxcw-obs-table-holder",
-        recordsToggle: ".mxcw-records-toggle"
+        recordsToggle: ".mxcw-obs-table-holder .mxcw-records-toggle",
+        solowRecordsHolder: ".mxcw-solow-records-holder",
+        solowRecordsToggle: ".mxcw-solow-records-holder .mxcw-records-toggle"
     },
     components: {
         map: {
@@ -822,7 +824,14 @@ fluid.defaults("reknitr.storyPage", {
     listeners: {
         "onCreate.listenSectionNav": "reknitr.listenSectionNav({that})",
         "onCreate.bindFiltersToggle": "reknitr.bindFiltersToggle({that}.dom.filterPanel.0, {that}.dom.filtersToggle.0)",
-        "onCreate.bindRecordsToggle": "reknitr.bindRecordsToggle({that}.dom.recordsHolder.0, {that}.dom.recordsToggle.0)",
+        "onCreate.bindRecordsToggle": {
+            funcName: "reknitr.bindRecordsToggle",
+            args: ["{that}.dom.recordsHolder.0", "{that}.dom.recordsToggle.0", "mxcw-records-collapsed"]
+        },
+        "onCreate.bindSolowRecordsToggle": {
+            funcName: "reknitr.bindRecordsToggle",
+            args: ["{that}.dom.solowRecordsHolder.0", "{that}.dom.solowRecordsToggle.0", "mxcw-solow-records-collapsed"]
+        },
         "onCreate.trackMapSize": "reknitr.trackMapSize({that}.map.map, {that}.dom.map.0)",
         "onCreate.findPlotlyWidgets": "reknitr.findPlotlyWidgets({that}, {that}.sectionHolders)"
     }
@@ -978,14 +987,15 @@ reknitr.trackMapSize = function (map, mapElement) {
 };
 
 /**
- * Bind the "Records:" header button so that it opens and closes the records panel as an accordion. Closing overrides
+ * Bind a "Records" header button so that it opens and closes its records panel as an accordion. Closing overrides
  * any height set by dragging mapResizeBar through CSS, so that opening the panel again restores it.
- * @param {HTMLElement} holder - The records panel, which receives the `mxcw-records-collapsed` class.
+ * @param {HTMLElement} holder - The records panel, which receives the collapsed class.
  * @param {HTMLButtonElement} toggle - The button which toggles the state of the panel.
+ * @param {String} collapsedClass - The class marking the panel as closed.
  */
-reknitr.bindRecordsToggle = function (holder, toggle) {
+reknitr.bindRecordsToggle = function (holder, toggle, collapsedClass) {
     toggle.addEventListener("click", () => {
-        const collapsed = holder.classList.toggle("mxcw-records-collapsed");
+        const collapsed = holder.classList.toggle(collapsedClass);
         toggle.setAttribute("aria-expanded", String(!collapsed));
     });
 };
@@ -1033,6 +1043,7 @@ reknitr.updateMapVisible = function (that, activePane) {
     hortis.toggleClass(document.querySelector(".imerss-container"), "fl-hidden", paneHandler.options.visibleVizControls, true);
     hortis.toggleClass(document.querySelector(".mxcw-solow-taxa"), "fl-hidden", paneHandler.options.visibleSolow, true);
     hortis.toggleClass(document.querySelector(".mxcw-solow-widgets-holder"), "fl-hidden", paneHandler.options.visibleSolow, true);
+    hortis.toggleClass(document.querySelector(".mxcw-solow-records-holder"), "fl-hidden", paneHandler.options.visibleSolow, true);
 
     that.vizLoader.solowMapLayer.layerVisible.value = !!paneHandler.options.visibleSolow;
 

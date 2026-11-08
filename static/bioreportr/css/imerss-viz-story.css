@@ -306,3 +306,69 @@ html[class~=dark] #inat-components select {
     min-height: 0;
     align-items: center;
 }
+
+/* Records panel of the Extirpation Risk vignette, listing the records of the selected species below the Solow widgets.
+   Non-!important heights leave any drag of mapResizeBar in force. */
+.mxcw-leftPane:has(> .mxcw-data > .mxcw-solow-widgets-holder:not(.fl-hidden)) .mxcw-map {
+    height: calc(100% - 280px - 2.25rem);
+}
+
+.mxcw-leftPane > .mxcw-data:has(> .mxcw-solow-widgets-holder:not(.fl-hidden)) {
+    flex-direction: column;
+    height: calc(266px + 2.25rem);
+}
+
+.mxcw-data > .mxcw-solow-widgets-holder {
+    flex: 1 1 0;
+    min-height: 0;
+    width: auto;
+}
+
+.mxcw-data > .mxcw-solow-records-holder {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: auto;
+}
+
+.mxcw-data > .mxcw-solow-records-holder.fl-hidden {
+    display: none;
+}
+
+.mxcw-solow-records-table {
+    height: 100%;
+    min-height: 0;
+}
+
+.mxcw-data > .mxcw-solow-records-collapsed {
+    flex: 0 0 2.25rem;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.mxcw-solow-records-collapsed .mxcw-records-toggle::before {
+    transform: none;
+}
+
+.mxcw-solow-records-collapsed .mxcw-solow-records-table {
+    display: none;
+}
+
+/* While the table is open the Solow widgets compact to share the space with it, drawing a default extra height from the map */
+.mxcw-leftPane:has(> .mxcw-data > .mxcw-solow-records-holder:not(.mxcw-solow-records-collapsed):not(.fl-hidden)) .mxcw-map {
+    height: calc(100% - 440px);
+}
+
+.mxcw-leftPane > .mxcw-data:has(> .mxcw-solow-records-holder:not(.mxcw-solow-records-collapsed):not(.fl-hidden)) {
+    height: 426px;
+}
+
+.mxcw-data:has(> .mxcw-solow-records-holder:not(.mxcw-solow-records-collapsed)) > .mxcw-solow-widgets-holder {
+    flex: 0 0 min(190px, 45%);
+    margin-bottom: 0.5rem;
+}
+
+.mxcw-solow-records-species {
+    margin-left: 0.4rem;
+}

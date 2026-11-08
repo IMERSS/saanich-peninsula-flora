@@ -75,6 +75,7 @@ fluid.defaults("reknitr.storyPage.withVizLoader", {
     },
     selectors: {
         downloadObsButton: ".mxcw-obs-table-holder .imerss-download-button",
+        downloadSolowRecordsButton: ".mxcw-solow-records-holder .imerss-download-button",
         mapHolder: ".mxcw-map" // This one is used for toggling visibility
     },
     listeners: {
@@ -101,9 +102,18 @@ reknitr.summaryTaxaRows = function (rows) {
     return rows.filter(row => row.inSummary);
 };
 
+/**
+ * Show which species the Extirpation Risk records panel is currently listing in its header.
+ * @param {Object|null} taxon - The taxon row selected in the taxa table, if any.
+ */
+reknitr.updateSolowRecordsLabel = function (taxon) {
+    document.querySelector(".mxcw-solow-records-species").textContent = taxon ? "\u2014 " + taxon.scientificName : "\u2014 tick a species to list its records";
+};
+
 fluid.defaults("reknitr.vizLoader.withSolow", {
     members: {
-        filteredTaxa: "{taxaFiltersHolder}.filters.allOutput"
+        filteredTaxa: "{taxaFiltersHolder}.filters.allOutput",
+        updateSolowRecordsLabel: "@expand:fluid.effect(reknitr.updateSolowRecordsLabel, {that}.taxaTable.selectedRow)"
     },
     components: {
         taxaFiltersHolder: {
@@ -123,6 +133,15 @@ fluid.defaults("reknitr.vizLoader.withSolow", {
                     rows: "{vizLoader}.filteredTaxa",
                     sortColumn: "@expand:signal(solow_EP)",
                     sortDirection: "@expand:signal(-1)"
+                }
+            }
+        },
+        solowRecordsTable: {
+            type: "hortis.dataTable",
+            options: {
+                parentContainer: ".mxcw-solow-records-table",
+                members: {
+                    rows: "{solowTaxonInfo}.taxonObsRows"
                 }
             }
         },
@@ -166,12 +185,24 @@ reknitr.storyPage.bindObsDownloadClick = function (that) {
     that.dom.locate("downloadObsButton").on("click", () =>
         reknitr.storyPage.triggerObsDownload(that)
     );
+    that.dom.locate("downloadSolowRecordsButton").on("click", () =>
+        reknitr.storyPage.triggerSolowRecordsDownload(that)
+    );
 };
 
 reknitr.storyPage.triggerObsDownload = function (that) {
     const data = that.vizLoader.finalFilteredObs.value;
     const text = Papa.unparse(data);
     hortis.triggerDownload(text, "text/csv;charset=utf-8;", "observations.csv");
+};
+
+reknitr.storyPage.triggerSolowRecordsDownload = function (that) {
+    const solowTaxonInfo = that.vizLoader.solowTaxonInfo;
+    const taxon = solowTaxonInfo.selectedTaxon.value;
+    if (taxon) {
+        const text = Papa.unparse(solowTaxonInfo.taxonObsRows.value);
+        hortis.triggerDownload(text, "text/csv;charset=utf-8;", "records-" + taxon.scientificName.replace(/\W+/g, "-") + ".csv");
+    }
 };
 
 fluid.defaults("reknitr.statusFilter", {
