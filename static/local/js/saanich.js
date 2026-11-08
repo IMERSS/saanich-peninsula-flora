@@ -101,7 +101,7 @@ fluid.defaults("reknitr.saanichFilters", {
             container: "{that}.dom.rankFilter",
             options: {
                 gradeNames: "hortis.taxaFilter",
-                filterName: "Infrataxon Status",
+                filterName: "Infrataxon",
                 fieldName: "infrataxon_status",
                 fieldValues: ["infrataxon", "non-infrataxon"]
             }
@@ -111,7 +111,7 @@ fluid.defaults("reknitr.saanichFilters", {
             container: "{that}.dom.introductionFilter",
             options: {
                 gradeNames: "hortis.taxaFilter",
-                filterName: "Introduction Status",
+                filterName: "Introduction",
                 fieldName: "introduction_status",
                 fieldValues: ["native", "exotic", "unknown"]
             }
@@ -121,7 +121,7 @@ fluid.defaults("reknitr.saanichFilters", {
             container: "{that}.dom.provenanceFilter",
             options: {
                 gradeNames: "hortis.taxaFilter",
-                filterName: "Provenance Status",
+                filterName: "Provenance",
                 fieldName: "provenance_status",
                 fieldValues: ["voucher", "no_voucher", "unknown"],
             }
@@ -131,14 +131,28 @@ fluid.defaults("reknitr.saanichFilters", {
             container: "{that}.dom.conservationFilter",
             options: {
                 gradeNames: "hortis.taxaFilter",
-                filterName: "Conservation Status",
+                filterName: "Conservation",
                 fieldName: "provincial_concern",
                 fieldValues: ["concern", "secure"]
             }
         },
         graminoidFilter: {
             type: "hortis.graminoidFilter",
-            container: "{that}.dom.graminoidFilter"
+            container: "{that}.dom.graminoidFilter",
+            options: {
+                // As hortis.graminoidFilter's markup, with its title shortened to match our other filters
+                markup: {
+                    container: `
+                    <div class="imerss-graminoid-filter">
+                        <div class="imerss-filter-title">Graminoid:</div>
+                        <div class="imerss-filter-body imerss-graminoid-filter-checks">
+                        <div class="imerss-filter-row"><div class="imerss-graminoid-check"></div> graminoid</div>
+                        <div class="imerss-filter-row"><div class="imerss-nongraminoid-check"></div> non-graminoid</div>
+                        </div>
+                    </div>
+                    `
+                }
+            }
         }
     }
 });
