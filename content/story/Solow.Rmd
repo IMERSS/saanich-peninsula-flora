@@ -7,9 +7,26 @@ knit: (function(input, ...) { source(here::here("R/knit_render.R"), local = TRUE
 
 ## Extirpation Risk
 
-[Simon et al., 2025](https://nph.onlinelibrary.wiley.com/doi/full/10.1002/ppp3.70130)
+Which plants may have disappeared from the Saanich Peninsula? This tool gives a first indication from the pattern of
+past sightings alone, applying one component of our
+[protocol for detecting local extinction](https://imerss.github.io/detecting-local-extinction/docs/assessing_extirpation_risk/)
+([Simon et al., 2025](https://nph.onlinelibrary.wiley.com/doi/full/10.1002/ppp3.70130)).
 
-|   |   |
-|---|---|
-|PP = Solow probability of presence| Baseline year = 1859|
-|EP = Solow probability of extirpation (1 - PP) | Analysis year = 2025|
+**Extirpation probability (EP)** runs from 0 (likely still present) to 1 (likely lost locally). Using
+[Solow's (1993)](https://esajournals.onlinelibrary.wiley.com/doi/10.2307/1940821) method, it compares when a species was
+sighted with the whole period of record, from the earliest collection in our data (1859) to 2025. EP is highest for
+plants that were recorded repeatedly and then stopped being seen. Plants recorded only once or twice tend to score
+nearer the middle, since so few records say little either way.
+
+**To explore the results:**
+
+* Tick a species in the table, which lists the highest EP first, to map its records and see its *Regional EP*, based on
+  all of its sightings together.
+* Each circle on the map is a group of sightings treated as one population, coloured by its EP. Hover over a circle to
+  see its *Cluster EP*.
+* *Population radius* sets how close sightings must be to count as one population. A smaller radius can reveal sites
+  where a plant has gone unseen even though it persists elsewhere.
+* Use *Filters* to narrow the list, for example to native species.
+
+**A high EP is a reason to go looking, not proof of loss.** It does not account for where or how hard people have
+searched, or for suitable habitat, which the full protocol goes on to weigh.
