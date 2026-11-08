@@ -1007,6 +1007,7 @@ reknitr.startAtProjectArea = function (map) {
     const view = Object.values(map.options.mapboxData.mapWidgets).find(widget => widget.x?.layout?.mapbox?.center)?.x.layout.mapbox;
     if (view) {
         map.map.jumpTo({center: view.center, zoom: view.zoom});
+        map.hasBounds = true;
     }
 };
 

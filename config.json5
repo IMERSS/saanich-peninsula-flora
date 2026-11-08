@@ -119,7 +119,7 @@
                     }
                 },
                 Solow: {
-                    type: "reknitr.solowPaneHandler"
+                    type: "reknitr.saanichSolowPaneHandler"
                 },
                 Remembering: {
                     type: "reknitr.rememberingPaneHandler"

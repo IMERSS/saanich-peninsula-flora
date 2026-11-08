@@ -873,3 +873,56 @@ reknitr.saanichAtlas.updateTiles = function (container, taxaRows, obsRows, selec
     }
     reknitr.saanichAtlas.updateLinks(container, selectedStatus);
 };
+
+// The map's grid counts records of every type of evidence, not only observations. The legend is redrawn whenever the
+// grid changes, so its title is corrected each time
+const drawObsGridLegend = hortis.libreMap.withObsGrid.drawLegend;
+hortis.libreMap.withObsGrid.drawLegend = function (...args) {
+    const legend = drawObsGridLegend(...args);
+    const retitle = () => {
+        const title = legend.container.querySelector(".imerss-legend-title");
+        if (title) {
+            title.textContent = "Record count";
+        }
+    };
+    new MutationObserver(retitle).observe(legend.container, {childList: true});
+    retitle();
+    return legend;
+};
+
+fluid.registerNamespace("reknitr.saanichSolow");
+
+// Opens on whichever species is at the top of the list, as it stands in the data, with the map fitted to its records
+fluid.defaults("reknitr.saanichSolowPaneHandler", {
+    gradeNames: "reknitr.solowPaneHandler",
+    members: {
+        selectTopSpecies: "@expand:fluid.effect(reknitr.saanichSolow.selectTopSpecies, {that}, {vizLoader}, {vizLoader}.taxaTable.rows, {that}.isVisible)"
+    }
+});
+
+/**
+ * The first time the pane is shown, select the species at the top of the list unless one has already been chosen.
+ * @param {Object} that - This pane handler
+ * @param {Object} vizLoader - The viz loader
+ * @param {Object[]} rows - The rows of the species list
+ * @param {Boolean} isVisible - Whether this pane is showing
+ */
+reknitr.saanichSolow.selectTopSpecies = function (that, vizLoader, rows, isVisible) {
+    if (isVisible && !that.topSpeciesSelected && rows.length > 0) {
+        that.topSpeciesSelected = true;
+        // Deferred since an effect may not write signals, and so that the pane's own positioning of the map comes first
+        fluid.invokeLater(() => {
+            const table = vizLoader.taxaTable;
+            if (!table.selectedRow.peek()) {
+                const top = hortis.dataTable.sortRows(rows, table.sortColumn.peek(), table.sortDirection.peek())[0];
+                table.selectedRow.value = top;
+                const points = reknitr.solowObsForTaxon(vizLoader.obsRows.value, top).filter(reknitr.hasCoordinates)
+                    .map(record => [parseFloat(record.decimalLongitude), parseFloat(record.decimalLatitude)]);
+                if (points.length > 0) {
+                    const bounds = points.reduce((box, point) => box.extend(point), new maplibregl.LngLatBounds(points[0], points[0]));
+                    vizLoader.map.map.fitBounds(bounds, {padding: 80, maxZoom: 11, duration: 0});
+                }
+            }
+        });
+    }
+};
