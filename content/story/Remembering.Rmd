@@ -5,12 +5,17 @@ weight: 6
 knit: (function(input, ...) { source(here::here("R/knit_render.R"), local = TRUE)$value(input, ...) })
 ---
 
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+source("scripts/record_period.R")
+period <- recordPeriod()
+```
+
 ## Harvey’s footsteps
 
 The plants of the Saanich Peninsula have been known, named and cared for by many people. The W̱SÁNEĆ people have known
 them for countless generations, and their relationships with these plants and places continue today.
 
-Since the earliest collection in this atlas, in 1859, many others have added what they noticed: botanists and collectors,
+Since the earliest collection in this atlas, in `r period$first`, many others have added what they noticed: botanists and collectors,
 professionals and amateurs, neighbours and naturalists still out looking today. Some wrote down the names of plants
 growing in places. Many more carried what they knew in memory, and though it was never recorded, that knowledge was
 vital to the stewardship of these lands.

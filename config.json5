@@ -12,9 +12,8 @@
                 zoomDuration: 0,
                 slowZoomDuration: 0,
                 gridResolution: 1000,
-                regionFilterFieldNames: ["BEC"],
-                SolowBaselineYear: 1859,
-                SolowAnalysisYear: 2025
+                // The period of the Solow analysis is taken from the records as they load: see reknitr.recordPeriod
+                regionFilterFieldNames: ["BEC"]
             },
 
             components: {
@@ -89,6 +88,9 @@
             },
             paneHandlers: {
                 /** These names need to match the names of pages in content/story **/
+                Traces: {
+                    type: "reknitr.tracesPaneHandler"
+                },
                 LostPlants: {
                     type: "reknitr.lostPlantsPaneHandler"
                 },

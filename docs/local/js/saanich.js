@@ -405,15 +405,21 @@ reknitr.lostPlants.showTaxon = function (that, storyPage, rowById, taxonId) {
         const table = storyPage.vizLoader.taxaTable;
         storyPage.applier.change("activeSection", storyPage.paneKeyToIndex[that.options.targetPane]);
         table.selectedRow.value = row;
-        // Bring the selected row into view once the table has its size in the newly visible pane
-        requestAnimationFrame(() => {
-            const index = table.displayRows.indexOf(row);
-            if (index >= 0) {
-                table.dom.locate("scrollEl")[0].scrollTop = index * hortis.dataTable.rowHeight(table);
-                hortis.dataTable.renderRows(table);
-            }
-        });
+        requestAnimationFrame(() => reknitr.lostPlants.revealRow(table, row));
         fluid.invokeLater(() => that.pendingTaxonId.value = null);
+    }
+};
+
+/**
+ * Bring a row of a table into view, which must wait until the table has its size in a newly visible pane.
+ * @param {Object} table - The table
+ * @param {Object} row - The row to show
+ */
+reknitr.lostPlants.revealRow = function (table, row) {
+    const index = table.displayRows.indexOf(row);
+    if (index >= 0) {
+        table.dom.locate("scrollEl")[0].scrollTop = index * hortis.dataTable.rowHeight(table);
+        hortis.dataTable.renderRows(table);
     }
 };
 
@@ -806,6 +812,18 @@ hortis.renderVizGridTooltip = function (that, grid, rowById, cellId) {
 
 // Tiles summarizing the three groups of species in the atlas text, computed from the site's data. Each is a link which
 // selects its group, and carries a small chart of the question that matters for that group
+/**
+ * Find the period covered by the dated records.
+ * @param {Object[]} obsRows - All observation rows
+ * @return {Object} - The earliest and latest years, as `first` and `last`
+ */
+reknitr.recordPeriod = function (obsRows) {
+    return obsRows.reduce((period, obs) => {
+        const year = parseInt(obs.eventDate, 10);
+        return Number.isFinite(year) ? {first: Math.min(period.first, year), last: Math.max(period.last, year)} : period;
+    }, {first: Infinity, last: -Infinity});
+};
+
 reknitr.saanichAtlas.yearBins = (start, end, width) =>
     fluid.iota(Math.ceil((end - start + 1) / width)).map(index => start + index * width);
 
@@ -814,21 +832,21 @@ reknitr.saanichAtlas.tiles = [{
     name: "Confirmed",
     meaning: "Reported historically and found again since 2000.",
     caption: "First found again",
-    bins: reknitr.saanichAtlas.yearBins(2000, 2025, 5),
+    bins: lastYear => reknitr.saanichAtlas.yearBins(2000, lastYear, 5),
     year: records => parseInt(records.find(record => parseInt(record.eventDate, 10) >= 2000)?.eventDate, 10)
 }, {
     status: "unconfirmed",
     name: "Historical",
     meaning: "Reported in the past but not recorded since 2000.",
     caption: "Last recorded",
-    bins: reknitr.saanichAtlas.yearBins(1860, 1999, 20),
+    bins: () => reknitr.saanichAtlas.yearBins(1860, 1999, 20),
     year: records => parseInt(fluid.peek(records).eventDate, 10)
 }, {
     status: "new",
     name: "Newly reported",
     meaning: "Additions to the flora from recent reports.",
     caption: "Earliest record in this atlas",
-    bins: reknitr.saanichAtlas.yearBins(2000, 2025, 5),
+    bins: lastYear => reknitr.saanichAtlas.yearBins(2000, lastYear, 5),
     year: records => parseInt(records[0].eventDate, 10)
 }];
 
@@ -837,15 +855,17 @@ reknitr.saanichAtlas.tiles = [{
  * @param {Object} tile - One entry of `reknitr.saanichAtlas.tiles`
  * @param {Object[]} taxa - The species of this group
  * @param {Map} byTaxon - Dated records indexed by taxon id
+ * @param {Number} lastYear - The latest year of the records
  * @return {String} - The markup for the tile
  */
-reknitr.saanichAtlas.renderTile = function (tile, taxa, byTaxon) {
-    const counts = tile.bins.map(() => 0);
-    const width = tile.bins[1] - tile.bins[0];
+reknitr.saanichAtlas.renderTile = function (tile, taxa, byTaxon, lastYear) {
+    const bins = tile.bins(lastYear);
+    const counts = bins.map(() => 0);
+    const width = bins[1] - bins[0];
     taxa.forEach(taxon => {
         const records = byTaxon.get(taxon.id);
         const year = records ? tile.year(records.slice().sort(reknitr.obsDateComparator)) : NaN;
-        const index = Math.floor((year - tile.bins[0]) / width);
+        const index = Math.floor((year - bins[0]) / width);
         if (index >= 0 && index < counts.length) {
             counts[index]++;
         }
@@ -853,7 +873,7 @@ reknitr.saanichAtlas.renderTile = function (tile, taxa, byTaxon) {
     const max = Math.max(...counts, 1);
     const columns = counts.map(count => `<span style="height:${count / max * 100}%"></span>`).join("");
     // Each label starts beneath the bar for the period beginning in that year, and every other bar is labelled to leave room
-    const axis = tile.bins.filter((bin, index) => index % 2 === 0).map(bin => `<span>${bin}</span>`).join("");
+    const axis = bins.filter((bin, index) => index % 2 === 0).map(bin => `<span>${bin}</span>`).join("");
     return `<button type="button" class="saanich-status-link saanich-status-tile" data-status="${tile.status}" aria-pressed="false" style="--tip-colour:${reknitr.statusTooltip.colours[tile.status]}">
         <span class="saanich-tile-name">${tile.name}</span>
         <span class="saanich-tile-count">${taxa.length.toLocaleString("en-CA")} <small>species</small></span>
@@ -868,8 +888,9 @@ reknitr.saanichAtlas.updateTiles = function (container, taxaRows, obsRows, selec
     const holder = container.find(".saanich-status-tiles")[0];
     if (holder && !holder.firstElementChild) {
         const byTaxon = reknitr.statusTooltip.groupRecords(obsRows);
+        const lastYear = reknitr.recordPeriod(obsRows).last;
         holder.innerHTML = reknitr.saanichAtlas.tiles.map(tile => reknitr.saanichAtlas.renderTile(tile,
-            taxaRows.filter(taxon => taxon.inSummary && taxon.reportingStatus === tile.status), byTaxon)).join("");
+            taxaRows.filter(taxon => taxon.inSummary && taxon.reportingStatus === tile.status), byTaxon, lastYear)).join("");
     }
     reknitr.saanichAtlas.updateLinks(container, selectedStatus);
 };
@@ -896,9 +917,25 @@ fluid.registerNamespace("reknitr.saanichSolow");
 fluid.defaults("reknitr.saanichSolowPaneHandler", {
     gradeNames: "reknitr.solowPaneHandler",
     members: {
-        selectTopSpecies: "@expand:fluid.effect(reknitr.saanichSolow.selectTopSpecies, {that}, {vizLoader}, {vizLoader}.taxaTable.rows, {that}.isVisible)"
+        selectTopSpecies: "@expand:fluid.effect(reknitr.saanichSolow.selectTopSpecies, {that}, {vizLoader}, {vizLoader}.taxaTable.rows, {that}.isVisible)",
+        setAnalysisPeriod: "@expand:fluid.effect(reknitr.saanichSolow.setAnalysisPeriod, {vizLoader}.obsRows)"
     }
 });
+
+/**
+ * Note the period which the records cover, before any plant can be selected, as the period of the Solow analysis.
+ * @param {Object[]} obsRows - All observation rows
+ */
+reknitr.saanichSolow.setAnalysisPeriod = function (obsRows) {
+    reknitr.saanichSolow.analysisPeriod = reknitr.recordPeriod(obsRows);
+};
+
+// The analysis always runs over the period of the records, in place of the fixed years of the shared framework
+const frameworkSolowBayesFactor = reknitr.solowBayesFactor;
+reknitr.solowBayesFactor = function (sortedCluster) {
+    const {first, last} = reknitr.saanichSolow.analysisPeriod;
+    return frameworkSolowBayesFactor(sortedCluster, {baselineYear: first, analysisYear: last});
+};
 
 /**
  * The first time the pane is shown, select the species at the top of the list unless one has already been chosen.
@@ -916,13 +953,395 @@ reknitr.saanichSolow.selectTopSpecies = function (that, vizLoader, rows, isVisib
             if (!table.selectedRow.peek()) {
                 const top = hortis.dataTable.sortRows(rows, table.sortColumn.peek(), table.sortDirection.peek())[0];
                 table.selectedRow.value = top;
-                const points = reknitr.solowObsForTaxon(vizLoader.obsRows.value, top).filter(reknitr.hasCoordinates)
-                    .map(record => [parseFloat(record.decimalLongitude), parseFloat(record.decimalLatitude)]);
-                if (points.length > 0) {
-                    const bounds = points.reduce((box, point) => box.extend(point), new maplibregl.LngLatBounds(points[0], points[0]));
-                    vizLoader.map.map.fitBounds(bounds, {padding: 80, maxZoom: 11, duration: 0});
-                }
+                reknitr.saanichSolow.fitToTaxon(vizLoader, top);
             }
         });
+    }
+};
+
+/**
+ * Fit the map to the mapped records of a species.
+ * @param {Object} vizLoader - The viz loader
+ * @param {Object} taxon - The row of the species
+ */
+reknitr.saanichSolow.fitToTaxon = function (vizLoader, taxon) {
+    const points = reknitr.solowObsForTaxon(vizLoader.obsRows.value, taxon).filter(reknitr.hasCoordinates)
+        .map(record => [parseFloat(record.decimalLongitude), parseFloat(record.decimalLatitude)]);
+    if (points.length > 0) {
+        const bounds = points.reduce((box, point) => box.extend(point), new maplibregl.LngLatBounds(points[0], points[0]));
+        vizLoader.map.map.fitBounds(bounds, {padding: 80, maxZoom: 11, duration: 0});
+    }
+};
+
+/**
+ * Open the Find the Plants pane on a species, with its row in view and the map fitted to its records.
+ * @param {reknitr.storyPage} storyPage - The story page
+ * @param {Object} taxon - The row of the species
+ */
+reknitr.saanichSolow.openTaxon = function (storyPage, taxon) {
+    const {vizLoader} = storyPage, table = vizLoader.taxaTable;
+    storyPage.applier.change("activeSection", storyPage.paneKeyToIndex.Solow);
+    table.selectedRow.value = taxon;
+    // Once the map and table have taken up their sizes in the newly visible pane
+    requestAnimationFrame(() => {
+        vizLoader.map.map.resize();
+        reknitr.saanichSolow.fitToTaxon(vizLoader, taxon);
+        reknitr.lostPlants.revealRow(table, taxon);
+    });
+};
+
+// The opening page of the story: plants' key moments appear across the landscape as a timeline plays, starting from a
+// random year on each visit. Everything is derived from the site's data whenever it loads
+fluid.registerNamespace("reknitr.traces");
+
+reknitr.traces.kinds = {
+    first: {
+        label: "First noted",
+        significance: "The earliest record of this plant in the atlas.",
+        icon: `<path d="M12 3 C18 8 18 15 12 21 C6 15 6 8 12 3 Z" fill="#dfeef3" fill-opacity="0.3" stroke="#dfeef3" stroke-width="1.4"/>`
+    },
+    found: {
+        label: "Seen again",
+        significance: "The first record since 2000 of a plant known from earlier reports.",
+        icon: `<path d="M12 22V12" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/><path d="M12 12C12 7 8 5 3 5C3 10 7 13 12 12Z" fill="#5a96d2" stroke="#ffffff" stroke-width="1"/><path d="M12 12C12 7 16 5 21 5C21 10 17 13 12 12Z" fill="#5a96d2" stroke="#ffffff" stroke-width="1"/>`
+    },
+    last: {
+        label: "Last seen",
+        significance: "The last known record in this atlas. Is it still out there?",
+        icon: `<g fill="none" stroke="#decb90" stroke-width="1.4" stroke-linecap="round"><path d="M12 23V3"/><path d="M12 9L6 4M12 9L18 4M12 15L5 10M12 15L19 10"/></g><g fill="#decb90"><circle cx="6" cy="4" r="1.5"/><circle cx="19" cy="10" r="1.5"/></g>`
+    },
+    fresh: {
+        label: "Newly noticed",
+        significance: "The earliest record in this atlas of a plant newly added to the flora.",
+        icon: `<g fill="#7562b4" stroke="#ffffff" stroke-width="0.9"><path d="M12 12C7 9 8 3 12 1.5C16 3 17 9 12 12Z"/><path d="M12 12C17 9 22 12 22 17C18 21 13 17 12 12Z"/><path d="M12 12C7 9 2 12 2 17C6 21 11 17 12 12Z"/></g><circle cx="12" cy="12" r="2.2" fill="#FDF2CE"/>`
+    }
+};
+
+reknitr.traces.icon = kind => `<svg viewBox="0 0 24 24" aria-hidden="true">${reknitr.traces.kinds[kind].icon}</svg>`;
+
+// How many seconds a marker takes to fade away: the last record of a plant lingers
+reknitr.traces.life = kind => kind === "last" ? 18 : 12;
+
+reknitr.traces.playIcons = {
+    play: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z" fill="currentColor"/></svg>`,
+    pause: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"/></svg>`
+};
+
+/**
+ * Derive the events of the timeline: each marks a key moment in the record of a species, and is shown only if the record
+ * concerned can be mapped. A record which is both the first and last of a lost plant appears once, as its last.
+ * @param {Object[]} taxaRows - All taxon rows
+ * @param {Object[]} obsRows - All observation rows
+ * @return {Object[]} - The events, in date order
+ */
+reknitr.traces.buildEvents = function (taxaRows, obsRows) {
+    const byTaxon = reknitr.statusTooltip.groupRecords(obsRows);
+    const events = [];
+    const add = (taxon, kind, record) => {
+        if (record && reknitr.hasCoordinates(record)) {
+            events.push({taxon, kind, record, year: parseInt(record.eventDate, 10)});
+        }
+    };
+    taxaRows.filter(taxon => taxon.inSummary).forEach(taxon => {
+        const records = (byTaxon.get(taxon.id) || []).slice().sort(reknitr.obsDateComparator);
+        if (records.length > 0) {
+            const first = records[0], last = fluid.peek(records);
+            if (taxon.reportingStatus === "unconfirmed") {
+                add(taxon, "last", last);
+                add(taxon, "first", first === last ? null : first);
+            } else if (taxon.reportingStatus === "confirmed") {
+                const found = records.find(record => parseInt(record.eventDate, 10) >= 2000);
+                add(taxon, "found", found);
+                add(taxon, "first", first === found ? null : first);
+            } else if (taxon.reportingStatus === "new") {
+                add(taxon, "fresh", first);
+            }
+        }
+    });
+    return events.filter(event => Number.isFinite(event.year)).sort((a, b) => reknitr.obsDateComparator(a.record, b.record));
+};
+
+reknitr.traces.formatDate = function (eventDate) {
+    const [year, month, day] = eventDate.substring(0, 10).split("-").map(Number);
+    return day ? new Date(Date.UTC(year, month - 1, day)).toLocaleDateString("en-CA", {year: "numeric", month: "long", day: "numeric", timeZone: "UTC"}) :
+        String(year);
+};
+
+reknitr.traces.renderCard = function (event) {
+    const {taxon, kind, record} = event;
+    const recorder = (record.recordedBy || "").split(";")[0].trim();
+    const common = taxon.commonName ? `<div class="saanich-trace-common">${fluid.XMLEncode(taxon.commonName)}</div>` : "";
+    const place = record.locality ? `<div>${fluid.XMLEncode(record.locality)}</div>` : "";
+    return `<div class="saanich-trace-photo"></div><div class="saanich-trace-kind" data-kind="${kind}">${reknitr.traces.icon(kind)}${reknitr.traces.kinds[kind].label}</div>
+        <div class="saanich-trace-name">${fluid.XMLEncode(taxon.scientificName)}</div>${common}
+        <div>${reknitr.traces.formatDate(record.eventDate)}${recorder ? ", " + fluid.XMLEncode(recorder) : ""}</div>${place}
+        <div class="saanich-trace-significance">${reknitr.traces.kinds[kind].significance}</div>
+        <div class="saanich-trace-action">Click to find this plant &rarr;</div>`;
+};
+
+fluid.defaults("reknitr.tracesPaneHandler", {
+    gradeNames: "reknitr.paneHandler",
+    visibleMap: true,
+    members: {
+        controlPlayback: "@expand:fluid.effect(reknitr.traces.controlPlayback, {that}, {reknitr.storyPage}, {vizLoader}.taxaRows, {vizLoader}.obsRows, {that}.isVisible)"
+    },
+    listeners: {
+        "onCreate.bindNext": "reknitr.traces.bindNext({that}.container, {reknitr.storyPage})"
+    }
+});
+
+reknitr.traces.bindNext = function (container, storyPage) {
+    container.on("click", ".saanich-traces-next", event => {
+        event.preventDefault();
+        storyPage.applier.change("activeSection", storyPage.paneKeyToIndex.LostPlants);
+    });
+};
+
+/**
+ * Create the elements laid over the map: the year, the controls of the timeline, the key and the card shown on hover.
+ * @param {HTMLElement} mapElement - The element holding the map
+ * @param {Number} firstYear - The year of the earliest event
+ * @param {Number} lastYear - The year of the latest event
+ * @return {Object} - The elements which change during playback
+ */
+reknitr.traces.createOverlay = function (mapElement, firstYear, lastYear) {
+    const overlay = document.createElement("div");
+    overlay.className = "saanich-traces-overlay";
+    overlay.innerHTML = `<div class="saanich-traces-year"></div>
+        <div class="saanich-traces-controls">
+            <button type="button" class="saanich-traces-play"></button>
+            <input type="range" class="saanich-traces-slider" min="${firstYear}" max="${lastYear}" step="1" aria-label="Year">
+        </div>
+        <div class="saanich-traces-key">${["last", "first", "found", "fresh"].map(kind =>
+        `<span data-kind="${kind}">${reknitr.traces.icon(kind)}${reknitr.traces.kinds[kind].label}</span>`).join("")}</div>`;
+    mapElement.appendChild(overlay);
+    const card = document.createElement("div");
+    card.className = "saanich-trace-card";
+    card.setAttribute("role", "tooltip");
+    document.body.appendChild(card);
+    return {year: overlay.querySelector(".saanich-traces-year"), play: overlay.querySelector(".saanich-traces-play"),
+        slider: overlay.querySelector(".saanich-traces-slider"), card};
+};
+
+/**
+ * Update whether the timeline is paused or being dragged, freezing the markers on the map while it is either.
+ * @param {Object} state - The state of the playback
+ * @param {Object} changes - New values for `paused` and/or `scrubbing`
+ */
+reknitr.traces.setPlayback = function (state, changes) {
+    Object.assign(state, changes);
+    const {play} = state.overlay, action = state.paused ? "Play" : "Pause";
+    play.innerHTML = reknitr.traces.playIcons[action.toLowerCase()];
+    play.setAttribute("aria-label", action);
+    play.title = action;
+    document.querySelector(".mxcw-leftPane").classList.toggle("saanich-traces-still", state.paused || state.scrubbing);
+};
+
+/**
+ * Bind the play button and the slider. Playback holds while the slider is dragged, and carries on from the new position
+ * when it is let go.
+ * @param {Object} state - The state of the playback
+ * @param {Object} map - The maplibre map
+ */
+reknitr.traces.bindControls = function (state, map) {
+    const {play, slider} = state.overlay;
+    const release = () => reknitr.traces.setPlayback(state, {scrubbing: false});
+    play.addEventListener("click", () => reknitr.traces.setPlayback(state, {paused: !state.paused}));
+    slider.addEventListener("pointerdown", () => reknitr.traces.setPlayback(state, {scrubbing: true}));
+    slider.addEventListener("input", () => {
+        reknitr.traces.setPlayback(state, {scrubbing: true});
+        reknitr.traces.seek(state, map, Number(slider.value));
+    });
+    slider.addEventListener("change", release);
+    // Not on the slider, since the pointer may be let go anywhere and a click which moves nothing fires no change
+    window.addEventListener("pointerup", release);
+    window.addEventListener("pointercancel", release);
+};
+
+reknitr.traces.showYear = function (state, year) {
+    const {year: label, slider} = state.overlay;
+    label.textContent = year;
+    slider.value = year;
+    slider.style.setProperty("--saanich-progress", ((year - state.firstYear) / Math.max(1, state.lastYear - state.firstYear) * 100) + "%");
+};
+
+reknitr.traces.showCard = function (state, event, element) {
+    const {card} = state.overlay;
+    card.innerHTML = reknitr.traces.renderCard(event);
+    card.classList.add("saanich-trace-card-visible");
+    const anchor = element.getBoundingClientRect(), box = card.getBoundingClientRect();
+    const fitsRight = anchor.right + 12 + box.width <= innerWidth - 8;
+    card.style.left = (fitsRight ? anchor.right + 12 : Math.max(8, anchor.left - box.width - 12)) + "px";
+    card.style.top = Math.min(Math.max(8, anchor.top - 16), innerHeight - box.height - 8) + "px";
+    reknitr.traces.loadPhoto(state, event);
+};
+
+reknitr.traces.photos = new Map();
+
+/**
+ * Look up an openly licensed photo of a taxon on iNaturalist, once only for each taxon.
+ * @param {String} taxonId - The id of the taxon
+ * @return {Promise} - Resolves to the photo record, or undefined if there is none or it cannot be fetched
+ */
+reknitr.traces.photoFor = function (taxonId) {
+    if (!reknitr.traces.photos.has(taxonId)) {
+        reknitr.traces.photos.set(taxonId, fetch(`https://api.inaturalist.org/v1/taxa/${taxonId}`)
+            .then(response => response.json())
+            .then(body => reknitr.lostPlants.licensedPhoto(body.results[0]))
+            .catch(() => undefined));
+    }
+    return reknitr.traces.photos.get(taxonId);
+};
+
+/**
+ * Fill in the photo of the card being shown, unless another card has replaced it in the meantime.
+ * @param {Object} state - The state of the playback
+ * @param {Object} event - The event shown on the card
+ */
+reknitr.traces.loadPhoto = function (state, event) {
+    state.cardEvent = event;
+    reknitr.traces.photoFor(event.taxon.id).then(photo => {
+        const holder = state.overlay.card.querySelector(".saanich-trace-photo");
+        if (state.cardEvent === event && holder) {
+            if (photo) {
+                const credit = photo.attribution.replace(/, uploaded by .*$/, "").replace(", some rights reserved", "");
+                holder.innerHTML = `<img src="${fluid.XMLEncode(photo.medium_url)}" alt=""><span>${fluid.XMLEncode(credit)}</span>`;
+            } else {
+                holder.remove();
+            }
+        }
+    });
+};
+
+reknitr.traces.hideCard = state => state.overlay.card.classList.remove("saanich-trace-card-visible");
+
+/**
+ * Place the marker for one event on the map. It fades away by itself, unless held open by the pointer resting on it.
+ * @param {Object} state - The state of the playback
+ * @param {Object} map - The maplibre map
+ * @param {Object} event - The event to show
+ * @param {Number} [age] - How many seconds into its fade the marker should begin
+ */
+reknitr.traces.addMarker = function (state, map, event, age = 0) {
+    const element = document.createElement("div");
+    element.className = "saanich-trace";
+    element.dataset.kind = event.kind;
+    element.innerHTML = `<div class="saanich-trace-mark" style="animation-duration: ${reknitr.traces.life(event.kind)}s; animation-delay: ${-age}s">${reknitr.traces.icon(event.kind)}</div>`;
+    const marker = new maplibregl.Marker({element}).setLngLat([parseFloat(event.record.decimalLongitude), parseFloat(event.record.decimalLatitude)]).addTo(map);
+    state.markers.add(marker);
+    element.addEventListener("mouseenter", () => {
+        state.holding++;
+        reknitr.traces.showCard(state, event, element);
+    });
+    element.addEventListener("mouseleave", () => {
+        state.holding = Math.max(0, state.holding - 1);
+        reknitr.traces.hideCard(state);
+    });
+    element.addEventListener("click", () => reknitr.saanichSolow.openTaxon(state.storyPage, event.taxon));
+    element.firstElementChild.addEventListener("animationend", () => {
+        marker.remove();
+        state.markers.delete(marker);
+    });
+};
+
+reknitr.traces.clearMarkers = function (state) {
+    state.markers.forEach(marker => marker.remove());
+    state.markers.clear();
+    state.holding = 0;
+    reknitr.traces.hideCard(state);
+};
+
+// The time in milliseconds before the next event: the quiet stretches of the record pass more slowly than the busy ones,
+// though never for long
+reknitr.traces.delayAfter = (event, next) => Math.min(1600, 600 + Math.max(0, next.year - event.year) * 200);
+
+reknitr.traces.step = function (state, map) {
+    state.timer = setTimeout(() => reknitr.traces.step(state, map), reknitr.traces.nextDelay);
+    if (!state.paused && !state.scrubbing && state.holding === 0 && !document.hidden) {
+        const event = state.events[state.index];
+        reknitr.traces.addMarker(state, map, event);
+        reknitr.traces.showYear(state, event.year);
+        state.index = (state.index + 1) % state.events.length;
+        clearTimeout(state.timer);
+        state.timer = setTimeout(() => reknitr.traces.step(state, map), reknitr.traces.delayAfter(event, state.events[state.index]));
+    }
+};
+
+reknitr.traces.nextDelay = 300;
+
+// As many markers as playback could have left on the map, at its quickest and with the longest fade
+reknitr.traces.trailLength = 30;
+// Far enough into its fade that a marker has finished appearing, so that it shows even while the timeline is frozen
+reknitr.traces.trailStartAge = 1.2;
+
+/**
+ * Lay out the markers playback would have left on the map by the time it reached a given event, each as far through its
+ * fade as it would then be.
+ * @param {Object} state - The state of the playback
+ * @param {Object} map - The maplibre map
+ * @param {Number} end - The index following the most recent event to show
+ */
+reknitr.traces.placeTrail = function (state, map, end) {
+    const {events} = state;
+    let age = reknitr.traces.trailStartAge;
+    for (let i = end - 1; i >= Math.max(0, end - reknitr.traces.trailLength); --i) {
+        if (age < reknitr.traces.life(events[i].kind)) {
+            reknitr.traces.addMarker(state, map, events[i], age);
+        }
+        if (i > 0) {
+            age += reknitr.traces.delayAfter(events[i - 1], events[i]) / 1000;
+        }
+    }
+};
+
+/**
+ * Move the timeline to the end of a given year, in either direction.
+ * @param {Object} state - The state of the playback
+ * @param {Object} map - The maplibre map
+ * @param {Number} year - The year to move to
+ */
+reknitr.traces.seek = function (state, map, year) {
+    const next = state.events.findIndex(event => event.year > year);
+    const end = next === -1 ? state.events.length : next;
+    state.index = end % state.events.length;
+    reknitr.traces.clearMarkers(state);
+    reknitr.traces.placeTrail(state, map, end);
+    reknitr.traces.showYear(state, year);
+};
+
+/**
+ * Start or stop the timeline as this pane is shown or left, beginning at a random year when it first starts.
+ * @param {Object} that - This pane handler
+ * @param {reknitr.storyPage} storyPage - The story page
+ * @param {Object[]} taxaRows - All taxon rows
+ * @param {Object[]} obsRows - All observation rows
+ * @param {Boolean} isVisible - Whether this pane is showing
+ */
+reknitr.traces.controlPlayback = function (that, storyPage, taxaRows, obsRows, isVisible) {
+    document.querySelector(".mxcw-leftPane").classList.toggle("saanich-traces-active", !!isVisible);
+    const map = storyPage.map.map;
+    if (!that.traces) {
+        const events = reknitr.traces.buildEvents(taxaRows, obsRows);
+        if (events.length === 0) {
+            return;
+        }
+        const firstYear = events[0].year, lastYear = fluid.peek(events).year;
+        const startYear = firstYear + Math.floor(Math.random() * (lastYear - firstYear + 1));
+        that.traces = {storyPage, events, firstYear, lastYear, markers: new Set(), holding: 0, timer: null, paused: false, scrubbing: false,
+            index: Math.max(0, events.findIndex(event => event.year >= startYear)),
+            overlay: reknitr.traces.createOverlay(document.querySelector(".mxcw-map"), firstYear, lastYear)};
+        reknitr.traces.setPlayback(that.traces, {});
+        reknitr.traces.bindControls(that.traces, map);
+    }
+    const state = that.traces;
+    clearTimeout(state.timer);
+    reknitr.traces.clearMarkers(state);
+    if (isVisible) {
+        reknitr.startAtProjectArea(storyPage.map);
+        if (state.paused) {
+            // Someone returning to a timeline they paused finds it as they left it
+            reknitr.traces.placeTrail(state, map, state.index || state.events.length);
+        }
+        reknitr.traces.step(state, map);
     }
 };

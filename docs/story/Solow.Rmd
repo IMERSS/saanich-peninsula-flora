@@ -5,6 +5,11 @@ weight: 5
 knit: (function(input, ...) { source(here::here("R/knit_render.R"), local = TRUE)$value(input, ...) })
 ---
 
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+source("scripts/record_period.R")
+period <- recordPeriod()
+```
+
 ## Finding the lost plants
 
 Every plant in this list is a search waiting to happen. This tool suggests where to begin from the pattern of past
@@ -13,7 +18,7 @@ sightings alone, applying one component of our
 
 **Extirpation probability (EP)** runs from 0 (likely still present) to 1 (likely lost locally). Using
 [Solow's (1993)](https://esajournals.onlinelibrary.wiley.com/doi/10.2307/1940821) method, it compares when a species was
-sighted with the whole period of record, from the earliest collection in our data (1859) to 2025. EP is highest for
+sighted with the whole period of record, from the earliest collection in our data (`r period$first`) to `r period$last`. EP is highest for
 plants that were recorded repeatedly and then stopped being seen. Plants recorded only once or twice tend to score
 nearer the middle, since so few records say little either way.
 
