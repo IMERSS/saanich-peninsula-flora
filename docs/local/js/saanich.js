@@ -1003,17 +1003,17 @@ reknitr.traces.kinds = {
     found: {
         label: "Seen again",
         significance: "The first record since 2000 of a plant known from earlier reports.",
-        icon: `<path d="M4 20 C4 9 11 4 20 4 C20 14 14 20 4 20 Z" fill="#5a96d2" stroke="#ffffff" stroke-width="1"/><path d="M4 20 L15 9" fill="none" stroke="#ffffff" stroke-width="1"/>`
+        icon: `<path d="M12 22V12" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/><path d="M12 12C12 7 8 5 3 5C3 10 7 13 12 12Z" fill="#5a96d2" stroke="#ffffff" stroke-width="1"/><path d="M12 12C12 7 16 5 21 5C21 10 17 13 12 12Z" fill="#5a96d2" stroke="#ffffff" stroke-width="1"/>`
     },
     last: {
         label: "Last seen",
         significance: "The last known record in this atlas. Is it still out there?",
-        icon: `<g fill="none" stroke="#decb90" stroke-width="1.3" stroke-linecap="round"><path d="M12 12 V23"/><path d="M12 12 L12 3 M12 12 L18.4 5.6 M12 12 L21 12 M12 12 L3 12 M12 12 L5.6 5.6 M12 12 L18.4 18.4 M12 12 L5.6 18.4"/></g><g fill="#decb90"><circle cx="12" cy="3" r="1.5"/><circle cx="18.4" cy="5.6" r="1.5"/><circle cx="21" cy="12" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="5.6" cy="5.6" r="1.5"/><circle cx="18.4" cy="18.4" r="1.5"/><circle cx="5.6" cy="18.4" r="1.5"/><circle cx="12" cy="12" r="2"/></g>`
+        icon: `<g fill="none" stroke="#decb90" stroke-width="1.4" stroke-linecap="round"><path d="M12 23V3"/><path d="M12 9L6 4M12 9L18 4M12 15L5 10M12 15L19 10"/></g><g fill="#decb90"><circle cx="6" cy="4" r="1.5"/><circle cx="19" cy="10" r="1.5"/></g>`
     },
     fresh: {
         label: "Newly noticed",
         significance: "The earliest record in this atlas of a plant newly added to the flora.",
-        icon: `<g fill="#7562b4" stroke="#ffffff" stroke-width="0.8"><circle cx="12" cy="6" r="4"/><circle cx="18" cy="10.5" r="4"/><circle cx="15.7" cy="17.5" r="4"/><circle cx="8.3" cy="17.5" r="4"/><circle cx="6" cy="10.5" r="4"/></g><circle cx="12" cy="12" r="2.6" fill="#FDF2CE"/>`
+        icon: `<g fill="#7562b4" stroke="#ffffff" stroke-width="0.9"><path d="M12 12C7 9 8 3 12 1.5C16 3 17 9 12 12Z"/><path d="M12 12C17 9 22 12 22 17C18 21 13 17 12 12Z"/><path d="M12 12C7 9 2 12 2 17C6 21 11 17 12 12Z"/></g><circle cx="12" cy="12" r="2.2" fill="#FDF2CE"/>`
     }
 };
 

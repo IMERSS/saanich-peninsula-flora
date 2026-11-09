@@ -1505,22 +1505,22 @@ body {
     outline-offset: 4px;
 }
 
-/* Traces: a quicker timeline, with its marks shaped as seed, leaf, seed head and flower */
+/* Traces: a quicker timeline, with its marks shaped as seed, sprout, bare twig and trillium */
 .saanich-trace {
     width: 24px;
     height: 24px;
 }
 
 .saanich-trace[data-kind="last"] {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
 }
 
 .saanich-trace[data-kind="last"] .saanich-trace-mark {
     filter: drop-shadow(0 0 6px #decb90);
 }
 
-/* A seed head left alone drifts away on the air */
+/* A bare twig left alone drifts away on the air */
 @media (prefers-reduced-motion: no-preference) {
     .saanich-trace[data-kind="last"] .saanich-trace-mark {
         animation-name: saanich-trace-drift;
