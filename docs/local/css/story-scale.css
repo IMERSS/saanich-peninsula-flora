@@ -1505,7 +1505,7 @@ body {
     outline-offset: 4px;
 }
 
-/* Traces: a quicker timeline, with its marks shaped as seed, sprout, bare twig and trillium */
+/* Traces: a quicker timeline, with its marks shaped as acorn, plant, leaf skeleton and dandelion */
 .saanich-trace {
     width: 24px;
     height: 24px;
@@ -1514,13 +1514,14 @@ body {
 .saanich-trace[data-kind="last"] {
     width: 32px;
     height: 32px;
+    z-index: 2;
 }
 
 .saanich-trace[data-kind="last"] .saanich-trace-mark {
-    filter: drop-shadow(0 0 6px #decb90);
+    filter: drop-shadow(0 0 3px rgba(255, 138, 0, 0.5));
 }
 
-/* A bare twig left alone drifts away on the air */
+/* A leaf skeleton left alone drifts away on the air */
 @media (prefers-reduced-motion: no-preference) {
     .saanich-trace[data-kind="last"] .saanich-trace-mark {
         animation-name: saanich-trace-drift;
@@ -1573,4 +1574,9 @@ body {
     font-size: 11px;
     color: #eefaff;
     background: rgba(13, 48, 64, 0.7);
+}
+
+/* The most numerous marks step back, leaving the plants last seen to stand out */
+.saanich-trace[data-kind="first"] svg {
+    opacity: 0.7;
 }

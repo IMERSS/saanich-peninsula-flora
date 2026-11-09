@@ -65,9 +65,16 @@ main .content h3, main.content h2, main h1 {
 .imerss-navbar-title {
     color: #FDF2CE;
     font-weight: 700;
-    font-size: 22px;
-    text-transform: uppercase;
-    letter-spacing: 0.2rem;
+    font-size: 24px;
+    letter-spacing: 0.01em;
+}
+
+/* The IMERSS name beside its mark at the right of the banner, set as on imerss.org */
+.imerss-navbar .imerss-navbar-wordmark {
+    margin: 0 24px 0 0;
+    color: #FDF2CE;
+    font-weight: 700;
+    font-size: 20px;
 }
 
 .imerss-bg-neutral-50 {
@@ -117,7 +124,7 @@ nav a {
 }
 
 .imerss-navbar img {
-    margin-right: 12px;
+    margin-right: 10px;
 }
 
 .imerss-navbar span {
@@ -136,8 +143,8 @@ nav a {
     color: #FDF2CE;
     font-size: 13px;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.1rem;
+    text-transform: none;
+    letter-spacing: 0.02rem;
     margin-left: 24px;
 }
 
@@ -1143,9 +1150,30 @@ body .mx-header ::-webkit-scrollbar-thumb {
 
 /* Phone widths - keep a long site title within the 100px navigation banner */
 @media (max-width: 600px) {
+    /* The title wraps within whatever the logo leaves, so that the logo always stays on the screen */
+    .imerss-navbar .imerss-navbar-titles {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+
+    .imerss-navbar > a {
+        flex: none;
+    }
+
     .imerss-navbar-title {
         font-size: 16px;
-        letter-spacing: 0.1rem;
+        letter-spacing: 0.01em;
+    }
+
+    .imerss-navbar .imerss-navbar-wordmark {
+        margin-right: 8px;
+        font-size: 15px;
+    }
+
+    .imerss-navbar img {
+        width: 26px;
+        height: auto;
+        margin-right: 6px;
     }
 
     .imerss-navbar .imerss-navbar-index span {

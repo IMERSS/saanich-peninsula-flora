@@ -14,7 +14,7 @@ period <- recordPeriod()
 
 W̱SÁNEĆ peoples have cared for these lands and waters since time immemorial.
 
-The memory preserved here is much more limited: collected specimens, names written on lists, and observations shared through iNaturalist, reaching back to `r period$first`.
+The memory preserved here is much more limited: collected specimens, names written down on lists, and observations shared through iNaturalist, reaching back to `r period$first`.
 
 Each record is a moment when someone stopped to take note of a plant.
 

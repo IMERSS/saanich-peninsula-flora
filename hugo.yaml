@@ -1,6 +1,6 @@
 # Configuration
 baseURL: "/"
-title: Flora of W̱SÁNEĆ/Saanich Peninsula
+title: Flora of the W̱SÁNEĆ/Saanich Peninsula
 
 relativeUrls: true
 publishDir: docs
@@ -75,7 +75,7 @@ params:
     title: Salish Sea Biodiversity Atlas
     url: "https://salishseabiodiversity.org/"
 
-  description: Flora of W̱SÁNEĆ/Saanich Peninsula
+  description: Flora of the W̱SÁNEĆ/Saanich Peninsula
 
   # Displays bizarrely on hextra once we change background colour
   toc: false
@@ -86,9 +86,10 @@ params:
     titleLink: story/
     displayLogo: true
     logo:
-      path: local/images/imerss.png
-      width: 200
-      # height: 60
+      path: local/images/imerss-mark.svg
+      width: 35
+      height: 30
+      wordmark: IMERSS
       # The logo links to IMERSS, while the site title links to this site's home page
       link: https://www.imerss.org/
     width: wide
