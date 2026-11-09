@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.Language.Lang }}">
+  {{- partial "head.html" . -}}
+  <body dir="{{ .Site.Language.LanguageDirection | default `ltr` }}">
+    {{- partial "navbar.html" . -}}
+    {{- /* The story page of Infusion 6's bioReportR framework - see static/bioreportr/sfc/bioreportr-storyPage.vue. In
+      place of the Infusion 4 page woven by reknit.js, this page holds only the import of the story's driver, which
+      names its data and their placeholders, and the element on which it boots, which computes the pane it shows
+      from the URL's hash before it renders. Its markup is written in by Infusion 6's hydrate.js after Hugo has built
+      the site - see package.json. Infusion and the IMERSS framework are copied into static/vendor by Infusion 6's
+      copyOut.js */ -}}
+    <!-- The one reference to the location of Infusion - every other is relative, or through a module -->
+    <script src="../vendor/infusion/src/framework/core/js/FluidBoot.js"></script>
+    <!-- The site, as the module holding the page, and its map of the modules it depends upon, written by
+         "npm run vendor" (Infusion 6's copyOut.js) as it copies them into static/vendor -->
+    <fluid-module id="{{ .Site.Params.siteModule | default "site" }}" src="../" modules="fluid-modules.json"></fluid-module>
+    <fluid-import src="../local/story/{{ .Site.Params.storyDriver | default "story" }}.vue"></fluid-import>
+    <template id="site-subnav">{{ partial "subnav.html" . }}</template>
+    <div fluid-layers="{{ .Site.Params.storyLayer | default "story" }}"></div>
+    {{- if or (eq .Site.Params.footer.enable nil) (.Site.Params.footer.enable) }}
+      {{ partial "footer.html" . }}
+    {{ end }}
+    {{ partial "scripts.html" . }}
+  </body>
+</html>

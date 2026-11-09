@@ -1,0 +1,9 @@
+/* The Infusion 6 story page - see src/client/sfc/story/bioreportr-storyPage.vue. Each pane's section is rendered within
+ a wrapper of its own, which is marked when it is the active pane, in place of reknit-client.js's mxcw-activeSection */
+.mxcw-content .mxcw-storyPane:not(.mxcw-activePane) {
+    display: none;
+}
+
+.mxcw-content .mxcw-activePane .section {
+    display: flex;
+}

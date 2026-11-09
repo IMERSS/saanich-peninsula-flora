@@ -1,0 +1,47 @@
+[
+  {
+    "title": "Community Science Contributions",
+    "shortTitle": "Community Science",
+    "weight": 3,
+    "regionField": "!statusAsRegion",
+    "statusColors": {
+      "confirmed": "#5a96d2",
+      "historical": "#decb90",
+      "new": "#7562b4"
+    },
+    "view": {
+      "type": "view",
+      "lon": -123.4015,
+      "lat": 48.51,
+      "zoom": 9
+    },
+    "selectableRegions": [],
+    "paneKey": "Status",
+    "file": "Status.html",
+    "dataFile": null,
+    "widgetIds": [],
+    "layers": [
+      "reknitr.obsMapPaneHandler"
+    ]
+  },
+  {
+    "title": "Top contributions to our knowledge of the regional plant diversity",
+    "shortTitle": "Top contributions",
+    "weight": 4,
+    "paneKey": "TopContributions",
+    "file": "TopContributions.html",
+    "dataFile": null,
+    "widgetIds": [],
+    "layers": []
+  },
+  {
+    "title": "Extirpation Risk",
+    "shortTitle": "Extirpation Risk",
+    "weight": 5,
+    "paneKey": "Solow",
+    "file": "Solow.html",
+    "dataFile": null,
+    "widgetIds": [],
+    "layers": []
+  }
+]

@@ -81,15 +81,6 @@
 }
 
 
-.imerss-download-link {
-    display: inline-block;
-    width: 1.5rem;
-    height: 1.5rem;
-    background-image: url(../img/download.svg);
-    backdrop-filter: opacity(0.7);
-    margin-left: 5px;
-}
-
 .imerss-download-link:hover {
     outline: 1px #333 solid;
     outline-offset: 2px;
