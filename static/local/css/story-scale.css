@@ -1209,3 +1209,368 @@ body {
     color: #FDF2CE;
     font-weight: 700;
 }
+
+/* ── Traces: the opening timeline ────────────────────────── */
+
+/* The map takes the whole column, dimmed so that the records stand out against it */
+.mxcw-leftPane.saanich-traces-active .mxcw-map {
+    height: 100% !important;
+}
+
+.mxcw-leftPane.saanich-traces-active > .mxcw-data,
+.mxcw-leftPane.saanich-traces-active > .resize-bar {
+    display: none !important;
+}
+
+.mxcw-leftPane.saanich-traces-active .maplibregl-canvas {
+    filter: brightness(0.45) saturate(0.6);
+}
+
+.mxcw-leftPane:not(.saanich-traces-active) .saanich-traces-overlay {
+    display: none;
+}
+
+.saanich-traces-overlay {
+    position: absolute;
+    left: 20px;
+    /* Clear of the map's attribution */
+    bottom: 44px;
+    z-index: 2;
+    pointer-events: none;
+    color: #eefaff;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
+}
+
+.saanich-traces-year {
+    font-size: 56px;
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+}
+
+.saanich-traces-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 4px 0 10px;
+    pointer-events: auto;
+}
+
+.saanich-traces-play {
+    flex: none;
+    width: 28px;
+    height: 28px;
+    margin-left: -6px;
+    padding: 3px;
+    color: #FDF2CE;
+    cursor: pointer;
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.7));
+}
+
+.saanich-traces-play:focus-visible,
+.saanich-traces-slider:focus-visible {
+    outline: 2px solid #FDF2CE;
+    outline-offset: 2px;
+}
+
+.saanich-traces-slider {
+    --saanich-progress: 0%;
+    --saanich-track: linear-gradient(to right, #FDF2CE var(--saanich-progress), rgba(238, 250, 255, 0.3) var(--saanich-progress));
+    appearance: none;
+    -webkit-appearance: none;
+    width: min(360px, calc(100vw - 96px));
+    height: 24px;
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+.saanich-traces-slider::-webkit-slider-runnable-track {
+    height: 2px;
+    background: var(--saanich-track);
+}
+
+.saanich-traces-slider::-moz-range-track {
+    height: 2px;
+    background: var(--saanich-track);
+}
+
+.saanich-traces-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    margin-top: -6px;
+    background: #FDF2CE;
+    border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+.saanich-traces-slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    background: #FDF2CE;
+    border: 0;
+    border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+/* Markers hold still while the timeline is paused or being dragged */
+.saanich-traces-still .saanich-trace-mark {
+    animation-play-state: paused;
+}
+
+.saanich-traces-key {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    max-width: 420px;
+    font-size: var(--story-small);
+}
+
+.saanich-traces-key span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.saanich-traces-key svg,
+.saanich-trace-kind svg {
+    width: 14px;
+    height: 14px;
+}
+
+.saanich-trace {
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+}
+
+.saanich-trace-mark {
+    width: 100%;
+    height: 100%;
+    animation: saanich-trace-life 16s ease-out forwards;
+}
+
+.saanich-trace[data-kind="last"] {
+    width: 34px;
+    height: 34px;
+}
+
+.saanich-trace[data-kind="last"] .saanich-trace-mark {
+    filter: drop-shadow(0 0 8px #decb90) drop-shadow(0 0 18px #decb90);
+}
+
+.saanich-trace:hover .saanich-trace-mark {
+    animation-play-state: paused;
+    opacity: 1;
+}
+
+@keyframes saanich-trace-life {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+
+    6% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    65% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    @keyframes saanich-trace-life {
+        0%, 65% {
+            opacity: 1;
+        }
+
+        100% {
+            opacity: 0;
+        }
+    }
+}
+
+.saanich-trace-card {
+    position: fixed;
+    z-index: 1000;
+    display: none;
+    width: 260px;
+    padding: 12px;
+    pointer-events: none;
+    color: #eefaff;
+    background: #0d3040;
+    border: 1px solid #4a9aaa;
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.saanich-trace-card-visible {
+    display: block;
+}
+
+.saanich-trace-kind {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #a8c8d0;
+    margin-bottom: 4px;
+}
+
+.saanich-trace-name {
+    font-size: 14px;
+    font-style: italic;
+    font-weight: 700;
+}
+
+.saanich-trace-common {
+    color: #a8c8d0;
+    margin-bottom: 4px;
+}
+
+.saanich-trace-significance {
+    margin-top: 6px;
+    color: #FDF2CE;
+}
+
+.saanich-trace-action {
+    margin-top: 6px;
+    color: #a8c8d0;
+}
+
+/* The text is spare and unhurried, and sized by the height of the screen as well as its width so that it fits without scrolling */
+@media (min-width: 768px) {
+    .mxcw-paneKey-Traces.mxcw-activeSection {
+        justify-content: safe center;
+    }
+
+    .mxcw-paneKey-Traces .mxcw-sectionInner {
+        flex: none;
+    }
+}
+
+.mxcw-paneKey-Traces h2 {
+    color: #a8c8d0;
+    font-size: var(--story-small);
+    font-weight: 400;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin: 2rem 0 clamp(14px, 3vh, 32px);
+}
+
+.mxcw-paneKey-Traces p {
+    --saanich-traces-text: clamp(16px, min(0.55vw + 11px, 2.3vh), 21px);
+    max-width: 31em;
+    margin: 0 auto clamp(10px, 2.2vh, 22px);
+    padding: 0 1.5rem;
+    color: #d6e8ee;
+    font-size: var(--saanich-traces-text);
+    line-height: 1.5;
+    text-align: center;
+    text-wrap: balance;
+}
+
+/* The acknowledgement leads, set apart from the narrower memory which follows it */
+.mxcw-paneKey-Traces p:first-of-type {
+    margin-bottom: clamp(16px, 3.6vh, 36px);
+    color: #FDF2CE;
+    font-size: calc(var(--saanich-traces-text) * 1.2);
+    line-height: 1.4;
+}
+
+.mxcw-paneKey-Traces .saanich-traces-next {
+    color: #FDF2CE;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-color: rgba(253, 242, 206, 0.45);
+    text-underline-offset: 5px;
+    transition: text-decoration-color 0.2s;
+}
+
+.saanich-traces-next:hover {
+    text-decoration-color: currentColor;
+}
+
+.saanich-traces-next:focus-visible {
+    outline: 2px solid #FDF2CE;
+    outline-offset: 4px;
+}
+
+/* Traces: a quicker timeline, with its marks shaped as seed, leaf, seed head and flower */
+.saanich-trace {
+    width: 24px;
+    height: 24px;
+}
+
+.saanich-trace[data-kind="last"] {
+    width: 40px;
+    height: 40px;
+}
+
+.saanich-trace[data-kind="last"] .saanich-trace-mark {
+    filter: drop-shadow(0 0 6px #decb90);
+}
+
+/* A seed head left alone drifts away on the air */
+@media (prefers-reduced-motion: no-preference) {
+    .saanich-trace[data-kind="last"] .saanich-trace-mark {
+        animation-name: saanich-trace-drift;
+    }
+
+    @keyframes saanich-trace-drift {
+        0% {
+            opacity: 0;
+            transform: scale(0.3);
+        }
+
+        6% {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        65% {
+            opacity: 1;
+            transform: translate(0, 0);
+        }
+
+        100% {
+            opacity: 0;
+            transform: translate(10px, -26px);
+        }
+    }
+}
+
+.saanich-trace-photo {
+    margin: -12px -12px 8px;
+    height: 150px;
+    background: #184E62;
+    border-radius: 7px 7px 0 0;
+    overflow: hidden;
+    position: relative;
+}
+
+.saanich-trace-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.saanich-trace-photo span {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 2px 6px;
+    font-size: 11px;
+    color: #eefaff;
+    background: rgba(13, 48, 64, 0.7);
+}
