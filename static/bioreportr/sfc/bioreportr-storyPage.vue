@@ -20,12 +20,11 @@
 <script src="%imerss-bioinfo/src/client/js/i6/imerss-plants.js"></script>
 <script src="%imerss-bioinfo/src/client/js/i6/blitz.js"></script>
 <script src="%imerss-bioinfo/src/client/js/i6/hashManager.js"></script>
-<script src="../js/i6/story.js"></script>
-<script src="../js/i6/solow.js"></script>
+<script src="../js/story.js"></script>
+<script src="../js/solow.js"></script>
 <style src="https://cdn.materialdesignicons.com/2.0.46/css/materialdesignicons.min.css"></style>
 <style src="%imerss-bioinfo/src/client/css/imerss-core.css"></style>
 <style src="%imerss-bioinfo/src/client/css/imerss-i6.css"></style>
-<style src="../css/imerss-story-i6.css"></style>
 <script>
 "use strict";
 
@@ -185,7 +184,7 @@ fluid.def("bioreportr.storyPage", {
     // The buttons beside the tables of records clearing the record selected in them, disabled whilst there is none
     noRecordSelected: "$compute:bioreportr.storyPage.noRecordSelected({self}.map.recordSelector.filterState)",
     resetRecord: "$method:hortis.libreMap.recordSelector.reset({self}.map.recordSelector)",
-    // Shows the title of any element of the page in a tooltip, as jQuery UI's tooltip widget did in Infusion 4
+    // Shows the title of any element of the page in a styled tooltip of its own, in place of the browser's
     titleTooltips: {
         $component: {
             $layers: "hortis.titleTooltips"

@@ -2,33 +2,42 @@
    @imerss/inat-components library into a pane's data pane - see bioreportr.iNatPanel in bioreportr-dataPane.vue. Styled
    to match the story's dark panes, as the gallery of lost plants is on the Saanich site.
 
-   The library's own styles arrive after these, hence the weight of the id. The panels are #inat-components on the
-   Infusion 4 page, and .mxcw-inat-components, each with an id of its own, on the Infusion 6 page - :is() keeps the
-   weight of the id in either case. The sizes are those of a project's story-scale.css if it has one, or else the same
-   values here */
+   The library's own styles arrive after these, so each rule is given the weight of an id to outweigh them: the panels
+   are .mxcw-inat-components, and #mxcw-inat-weight, an id which no element bears, lends the weight of an id to the
+   :is() which names them both. The sizes are those of the story's type scale, defined in imerss-story.css, or else the
+   same values here */
 
-/* On the solid ground of the column behind it - this outweighs imerss-story.css's white ground for the Infusion 4 page's
-   panel of the Community Science pane */
-.mxcw-dataPane:has(.mxcw-inat-components) {
-    flex: 1 1 auto;
-    min-width: 0;
-    background-color: #184e62;
+/* On the solid ground of the column behind it */
+/* ── The panels' margins and tab row - the rules of this sheet which follow outweigh these where they meet ── */
+/* The photos of the iNaturalist widget highlight as those of the gallery of lost plants do */
+:is(.mxcw-inat-components, #mxcw-inat-weight) article {
+    outline: 2px solid transparent;
+    transition: outline-color 150ms;
+    background: #0d3040;
+    border-radius: var(--data-table-radius, 8px);
+    overflow: hidden;
+    padding: 0 0 var(--story-gap, 8px);
+    text-align: left;
 }
-
-/* Fill the whole left hand column */
-:is(#inat-components, .mxcw-inat-components),
-:is(#inat-components, .mxcw-inat-components) > div {
-    height: 100%;
+:is(.mxcw-inat-components, #mxcw-inat-weight) article:hover {
+    outline-color: #FDF2CE;
 }
-
-:is(#inat-components, .mxcw-inat-components) > div {
+/* Community Science: the photos sit on the same margins as the gallery of lost plants, without captions, whose tab labels already say what is shown */
+:is(.mxcw-inat-components, #mxcw-inat-weight) > div {
+/* With the captions gone the year filter joins the row of tabs, so that it displaces nothing beneath it */
+    position: relative;
     display: flex;
     flex-direction: column;
     max-width: none;
     padding: 0 0 0 12px;
 }
-
-:is(#inat-components, .mxcw-inat-components) > div > div:last-child {
+:is(.mxcw-inat-components, #mxcw-inat-weight) .inat-tabs {
+    padding: 0 var(--story-gap);
+    margin-bottom: 0;
+    border-color: rgba(238, 250, 255, 0.2);
+}
+:is(.mxcw-inat-components, #mxcw-inat-weight) > div > div:last-child {
+    padding: 12px var(--story-gap) var(--story-gap) 12px;
     flex: 1 1 0;
     height: auto;
     min-height: 0;
@@ -37,13 +46,38 @@
     padding-right: 0;
     scrollbar-gutter: stable;
 }
+:is(.mxcw-inat-components, #mxcw-inat-weight) .inat-tab-desc {
+    display: none;
+    font-size: var(--story-body, clamp(14px, 0.35vw + 10px, 16px));
+    font-weight: 700;
+    margin: var(--story-gap, 8px) 0;
+}
+@media (min-width: 1024px) {
+    :is(.mxcw-inat-components, #mxcw-inat-weight) .inat-years-dropdown {
+        position: absolute;
+        top: 4px;
+        right: 16px;
+        margin: 0;
+    }
+}
+.mxcw-dataPane:has(.mxcw-inat-components) {
+    flex: 1 1 auto;
+    min-width: 0;
+    background-color: #184e62;
+}
 
-:is(#inat-components, .mxcw-inat-components) > div > div:last-child::-webkit-scrollbar {
+/* Fill the whole left hand column */
+:is(.mxcw-inat-components, #mxcw-inat-weight),
+:is(.mxcw-inat-components, #mxcw-inat-weight) > div {
+    height: 100%;
+}
+
+:is(.mxcw-inat-components, #mxcw-inat-weight) > div > div:last-child::-webkit-scrollbar {
     -webkit-appearance: none;
     width: 12px;
 }
 
-:is(#inat-components, .mxcw-inat-components) > div > div:last-child::-webkit-scrollbar-thumb {
+:is(.mxcw-inat-components, #mxcw-inat-weight) > div > div:last-child::-webkit-scrollbar-thumb {
     border: 3px solid transparent;
     border-radius: 6px;
     background-clip: padding-box;
@@ -52,56 +86,45 @@
 
 /* ── Tabs ── */
 
-:is(#inat-components, .mxcw-inat-components),
-:is(#inat-components, .mxcw-inat-components) .inat-tab-desc,
-:is(#inat-components, .mxcw-inat-components) .inat-page-headings {
+:is(.mxcw-inat-components, #mxcw-inat-weight),
+:is(.mxcw-inat-components, #mxcw-inat-weight) .inat-tab-desc,
+:is(.mxcw-inat-components, #mxcw-inat-weight) .inat-page-headings {
     color: #eefaff;
 }
 
-:is(#inat-components, .mxcw-inat-components) .inat-tabs {
-    margin-bottom: 0;
-    border-color: rgba(238, 250, 255, 0.2);
-}
-
-:is(#inat-components, .mxcw-inat-components) .inat-tabs button,
-:is(#inat-components, .mxcw-inat-components) .inat-tabs a,
-:is(#inat-components, .mxcw-inat-components) .inat-tabs li {
+:is(.mxcw-inat-components, #mxcw-inat-weight) .inat-tabs button,
+:is(.mxcw-inat-components, #mxcw-inat-weight) .inat-tabs a,
+:is(.mxcw-inat-components, #mxcw-inat-weight) .inat-tabs li {
     font-size: var(--story-body, clamp(14px, 0.35vw + 10px, 16px));
     margin: 0 4px;
     padding: 4px 12px;
 }
 
-:is(#inat-components, .mxcw-inat-components) .inat-tabs li {
+:is(.mxcw-inat-components, #mxcw-inat-weight) .inat-tabs li {
     color: #a8c8d0;
     border-bottom-color: transparent !important;
 }
 
-:is(#inat-components, .mxcw-inat-components) .inat-tabs li[class*="selected"] {
+:is(.mxcw-inat-components, #mxcw-inat-weight) .inat-tabs li[class*="selected"] {
     color: #fdf2ce;
     border-bottom-color: #fdf2ce !important;
 }
 
-:is(#inat-components, .mxcw-inat-components) .inat-tabs li a,
-:is(#inat-components, .mxcw-inat-components) .inat-tabs li button {
+:is(.mxcw-inat-components, #mxcw-inat-weight) .inat-tabs li a,
+:is(.mxcw-inat-components, #mxcw-inat-weight) .inat-tabs li button {
     color: inherit;
 }
 
 /* The widget's own title repeats its tab label, so each tab's description serves as its header */
-:is(#inat-components, .mxcw-inat-components) .inat-page-headings {
+:is(.mxcw-inat-components, #mxcw-inat-weight) .inat-page-headings {
     display: none;
 }
 
-:is(#inat-components, .mxcw-inat-components) .inat-tab-desc {
-    font-size: var(--story-body, clamp(14px, 0.35vw + 10px, 16px));
-    font-weight: 700;
-    margin: var(--story-gap, 8px) 0;
-}
-
-:is(#inat-components, .mxcw-inat-components) .inat-years-dropdown {
+:is(.mxcw-inat-components, #mxcw-inat-weight) .inat-years-dropdown {
     margin: 4px 12px 0 0;
 }
 
-:is(#inat-components, .mxcw-inat-components) select {
+:is(.mxcw-inat-components, #mxcw-inat-weight) select {
     background-color: #0d3040;
     color: #eefaff;
     border: 1px solid rgba(238, 250, 255, 0.25);
@@ -112,47 +135,39 @@
 /* ── The loading indicator, shown while the observations arrive - the library's spinner, in the panel's colours in
    place of black on a grey box. It is drawn where the grid will be, so nothing shifts when the grid replaces it ── */
 
-:is(#inat-components, .mxcw-inat-components) [class*="module_loaderBg"] {
+:is(.mxcw-inat-components, #mxcw-inat-weight) [class*="module_loaderBg"] {
     display: none;
 }
 
 /* On the General stats tab the library places the spinner over the pale blocks, against which it would vanish - it is
    drawn on a disc of the panel's own ground, unseen elsewhere. Its position is left alone, so that nothing moves */
-:is(#inat-components, .mxcw-inat-components) [class*="module_loader"] {
+:is(.mxcw-inat-components, #mxcw-inat-weight) [class*="module_loader"] {
     z-index: 1;
 }
 
-:is(#inat-components, .mxcw-inat-components) [class*="module_loader"] > span {
+:is(.mxcw-inat-components, #mxcw-inat-weight) [class*="module_loader"] > span {
     background-color: #184e62;
     border-radius: 50%;
 }
 
-:is(#inat-components, .mxcw-inat-components) [class*="module_loader"] > span > span:first-child {
+:is(.mxcw-inat-components, #mxcw-inat-weight) [class*="module_loader"] > span > span:first-child {
     background-color: #fdf2ce !important;
     opacity: 1 !important;
 }
 
-:is(#inat-components, .mxcw-inat-components) [class*="module_loader"] > span > span:last-child {
+:is(.mxcw-inat-components, #mxcw-inat-weight) [class*="module_loader"] > span > span:last-child {
     border-color: #eefaff !important;
     opacity: 0.2 !important;
 }
 
 /* ── Observations, as cards matching the gallery of lost plants ── */
 
-:is(#inat-components, .mxcw-inat-components) [class*="module_grid"] {
+:is(.mxcw-inat-components, #mxcw-inat-weight) [class*="module_grid"] {
     grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)) !important;
     gap: var(--story-gap, 8px);
 }
 
-:is(#inat-components, .mxcw-inat-components) article {
-    background: #0d3040;
-    border-radius: var(--data-table-radius, 8px);
-    overflow: hidden;
-    padding: 0 0 var(--story-gap, 8px);
-    text-align: left;
-}
-
-:is(#inat-components, .mxcw-inat-components) article > div:first-child {
+:is(.mxcw-inat-components, #mxcw-inat-weight) article > div:first-child {
     width: 100% !important;
     height: auto !important;
     aspect-ratio: 1;
@@ -160,37 +175,37 @@
     margin: 0 0 4px !important;
 }
 
-:is(#inat-components, .mxcw-inat-components) article > div:first-child img {
+:is(.mxcw-inat-components, #mxcw-inat-weight) article > div:first-child img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-:is(#inat-components, .mxcw-inat-components) article [class*="obsLabel"] {
+:is(.mxcw-inat-components, #mxcw-inat-weight) article [class*="obsLabel"] {
     padding: 0 var(--story-gap, 8px);
     text-align: left;
     color: #eefaff;
 }
 
-:is(#inat-components, .mxcw-inat-components) .inat-observation-label-title,
-:is(#inat-components, .mxcw-inat-components) .inat-observation-label-data,
-:is(#inat-components, .mxcw-inat-components) .inat-observation-label-name {
+:is(.mxcw-inat-components, #mxcw-inat-weight) .inat-observation-label-title,
+:is(.mxcw-inat-components, #mxcw-inat-weight) .inat-observation-label-data,
+:is(.mxcw-inat-components, #mxcw-inat-weight) .inat-observation-label-name {
     font-size: var(--story-data, clamp(13px, 0.15vw + 11px, 14px));
     line-height: 1.4;
 }
 
-:is(#inat-components, .mxcw-inat-components) .inat-observation-label-title {
+:is(.mxcw-inat-components, #mxcw-inat-weight) .inat-observation-label-title {
     font-weight: 700;
     color: #eefaff;
 }
 
-:is(#inat-components, .mxcw-inat-components) .inat-observation-label-data,
-:is(#inat-components, .mxcw-inat-components) .inat-observation-label-name,
-:is(#inat-components, .mxcw-inat-components) .inat-observation-label-name a {
+:is(.mxcw-inat-components, #mxcw-inat-weight) .inat-observation-label-data,
+:is(.mxcw-inat-components, #mxcw-inat-weight) .inat-observation-label-name,
+:is(.mxcw-inat-components, #mxcw-inat-weight) .inat-observation-label-name a {
     color: #a8c8d0;
 }
 
-:is(#inat-components, .mxcw-inat-components) article label[class*="count"] {
+:is(.mxcw-inat-components, #mxcw-inat-weight) article label[class*="count"] {
     display: inline-block;
     background: none;
     border: none;
@@ -203,21 +218,21 @@
 
 /* ── General stats ── */
 
-:is(#inat-components, .mxcw-inat-components) .inat-stats-count-summary {
+:is(.mxcw-inat-components, #mxcw-inat-weight) .inat-stats-count-summary {
     font-size: var(--story-body, clamp(14px, 0.35vw + 10px, 16px));
     color: #eefaff;
     margin: 0 12px var(--story-gap, 8px) 0;
 }
 
 /* The chart and the observers are drawn in dark ink, so they sit on the same pale surface as the site's data tables */
-:is(#inat-components, .mxcw-inat-components) section {
+:is(.mxcw-inat-components, #mxcw-inat-weight) section {
     display: flex;
     gap: var(--story-gap, 8px);
     margin-right: 12px;
 }
 
-:is(#inat-components, .mxcw-inat-components) [class*="seasonalityBlock"],
-:is(#inat-components, .mxcw-inat-components) [class*="observersBlock"] {
+:is(.mxcw-inat-components, #mxcw-inat-weight) [class*="seasonalityBlock"],
+:is(.mxcw-inat-components, #mxcw-inat-weight) [class*="observersBlock"] {
     background: #eefaff;
     color: #123;
     border-radius: var(--data-table-radius, 8px);
@@ -226,29 +241,29 @@
 }
 
 /* The chart's rotated month labels are drawn beyond its stated height */
-:is(#inat-components, .mxcw-inat-components) [class*="seasonalityBlock"] {
+:is(.mxcw-inat-components, #mxcw-inat-weight) [class*="seasonalityBlock"] {
     height: 500px;
 }
 
-:is(#inat-components, .mxcw-inat-components) [class*="observersBlock"] {
+:is(.mxcw-inat-components, #mxcw-inat-weight) [class*="observersBlock"] {
     min-height: 500px;
 }
 
-:is(#inat-components, .mxcw-inat-components) [class*="seasonalityBlock"] h1,
-:is(#inat-components, .mxcw-inat-components) [class*="observersBlock"] h1 {
+:is(.mxcw-inat-components, #mxcw-inat-weight) [class*="seasonalityBlock"] h1,
+:is(.mxcw-inat-components, #mxcw-inat-weight) [class*="observersBlock"] h1 {
     font-size: var(--story-body, clamp(14px, 0.35vw + 10px, 16px));
     font-weight: 700;
     color: #123;
     border-color: rgba(18, 34, 51, 0.2);
 }
 
-:is(#inat-components, .mxcw-inat-components) .inat-observers-list a,
-:is(#inat-components, .mxcw-inat-components) .inat-observers-list h3 {
+:is(.mxcw-inat-components, #mxcw-inat-weight) .inat-observers-list a,
+:is(.mxcw-inat-components, #mxcw-inat-weight) .inat-observers-list h3 {
     color: #123;
     font-size: var(--story-data, clamp(13px, 0.15vw + 11px, 14px));
 }
 
-:is(#inat-components, .mxcw-inat-components) .inat-observers-list label {
+:is(.mxcw-inat-components, #mxcw-inat-weight) .inat-observers-list label {
     font-size: var(--story-data, clamp(13px, 0.15vw + 11px, 14px));
     font-weight: 700;
     background: none;

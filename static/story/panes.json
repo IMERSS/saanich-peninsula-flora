@@ -3,8 +3,9 @@
     "title": "In Memory of Plants",
     "shortTitle": "In Memoriam",
     "weight": 1,
+    "paneComponent": "saanich.tracesPane",
     "paneKey": "Traces",
-    "file": "Traces.html",
+    "file": null,
     "dataFile": null,
     "widgetIds": [],
     "layers": []
@@ -13,8 +14,9 @@
     "title": "The lost plants of the W̱SÁNEĆ/Saanich Peninsula",
     "shortTitle": "Lost Plants",
     "weight": 2,
+    "paneComponent": "saanich.lostPlantsPane",
     "paneKey": "LostPlants",
-    "file": "LostPlants.html",
+    "file": null,
     "dataFile": null,
     "widgetIds": [],
     "layers": []
@@ -68,6 +70,7 @@
     "title": "Harvey’s footsteps",
     "shortTitle": "Harvey’s footsteps",
     "weight": 6,
+    "paneComponent": "saanich.rememberingPane",
     "view": {
       "type": "view",
       "lon": -123.1764,
@@ -81,7 +84,7 @@
       "Checklist.San_Juan_Islands"
     ],
     "paneKey": "Remembering",
-    "file": "Remembering.html",
+    "file": null,
     "dataFile": null,
     "widgetIds": [],
     "layers": []

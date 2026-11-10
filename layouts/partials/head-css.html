@@ -1,0 +1,5 @@
+{{- /* Overrides the hextra theme's head-css.html, which minifies and fingerprints the theme's compiled stylesheet
+     through Hugo's asset pipeline. Here it is a static file, copied by src/js/themeAssets.js, published at a stable
+     URL. The theme's empty custom.css is not linked - the sites' own styles are linked by
+     layouts/partials/custom/head-end.html */ -}}
+<link href="{{ "bioreportr/hextra/css/main.css" | relURL }}" rel="stylesheet" />

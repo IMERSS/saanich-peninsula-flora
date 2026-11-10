@@ -1,0 +1,5 @@
+{{- /* Overrides the hextra theme's scripts.html, which bundles, minifies and fingerprints the theme's scripts through
+     Hugo's asset pipeline, publishing them at a URL which changes with their content. Here the bundle is a static
+     file, written by src/js/themeAssets.js, published at a stable URL. The theme's search is disabled in hugo.yaml,
+     and its mermaid and KaTeX scripts are not used by these sites */ -}}
+<script defer src="{{ "bioreportr/hextra/js/main.js" | relURL }}"></script>

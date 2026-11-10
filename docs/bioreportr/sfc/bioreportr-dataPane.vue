@@ -1,9 +1,9 @@
-<script src="../js/plotly-2.1.1.js" fluid-client data-fl-scope="global"></script>
-<script src="../js/htmlwidgets.js" fluid-client data-fl-scope="global"></script>
-<script src="../js/htmlwidgets-plotly.js" fluid-client data-fl-scope="global"></script>
+<script src="../vendor/plotly-2.1.1.js" fluid-client data-fl-scope="global"></script>
+<script src="../vendor/htmlwidgets.js" fluid-client data-fl-scope="global"></script>
+<script src="../vendor/htmlwidgets-plotly.js" fluid-client data-fl-scope="global"></script>
 <script src="%imerss-bioinfo/src/client/js/i6/imerss-core.js"></script>
 <script src="%imerss-bioinfo/src/client/js/i6/filters.js"></script>
-<script src="../js/i6/story.js"></script>
+<script src="../js/story.js"></script>
 <style src="../css/imerss-inat-panels.css"></style>
 <script>
 "use strict";

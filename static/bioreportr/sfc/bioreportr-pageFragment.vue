@@ -1,5 +1,5 @@
 <script src="%imerss-bioinfo/src/client/js/i6/imerss-core.js"></script>
-<script src="../js/i6/story.js"></script>
+<script src="../js/story.js"></script>
 <script>
 "use strict";
 

@@ -8,22 +8,24 @@
         "story": "node src/js/storyBuild.js content/story viz_data static/story",
         "vendor": "fluid-copyout static/story/index-dev.html",
         "hydrate": "fluid-hydrate docs/story/index.html -o docs/story/index.html",
-        "build": "npm run story && npm run vendor && hugo && npm run hydrate"
+        "theme": "node src/js/themeAssets.js",
+        "site": "node src/js/adoptPublished.js docs static && hugo --cleanDestinationDir",
+        "build": "npm run story && npm run vendor && npm run site && npm run hydrate"
     },
     "dependencies": {
-        "infusion-6": "6.2.1",
-        "imerss-bioinfo": "1.15.0",
         "@imerss/inat-components": "2.0.1",
+        "imerss-bioinfo": "1.16.0",
+        "infusion-6": "6.2.1",
         "js-yaml": "4.1.1",
         "json5": "2.2.3",
         "linkedom": "0.14.25"
     },
     "devDependencies": {
         "antlr4": "4.13.2",
-        "fs-extra": "11.1.1",
         "eslint": "8.39.0",
         "eslint-config-fluid": "2.1.1",
-        "fluid-lint-all": "1.2.9"
+        "fluid-lint-all": "1.2.9",
+        "fs-extra": "11.1.1"
     },
     "repository": {
         "type": "git",

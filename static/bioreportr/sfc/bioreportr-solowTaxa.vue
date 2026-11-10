@@ -4,7 +4,7 @@
 <fluid-import src="%imerss-bioinfo/src/client/sfc/filters/hortis-standardFilterControls.vue"></fluid-import>
 <script src="%imerss-bioinfo/src/client/js/i6/imerss-core.js"></script>
 <script src="%imerss-bioinfo/src/client/js/i6/filters.js"></script>
-<script src="../js/i6/solow.js"></script>
+<script src="../js/solow.js"></script>
 <script>
 "use strict";
 

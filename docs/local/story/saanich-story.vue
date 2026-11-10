@@ -3,14 +3,20 @@
 <fluid-import src="saanich-timePeriodFilter.vue"></fluid-import>
 <!-- The iNaturalist panels of the Top Contributions pane -->
 <script src="%@imerss/inat-components/dist/standalone.min.js" fluid-client data-fl-scope="global"></script>
-<!-- The gallery of lost plants, the atlas's tiles, panel and tooltips and the other panes particular to this story -->
-<script src="../js/i6/saanich.js"></script>
+<!-- The three panes of this story alone, each rendering its section from its own template - see paneComponent in
+     the front matter of content/story/LostPlants.Rmd, Traces.Rmd and Remembering.Rmd -->
+<fluid-import src="saanich-tracesPane.vue"></fluid-import>
+<fluid-import src="saanich-lostPlantsPane.vue"></fluid-import>
+<fluid-import src="saanich-rememberingPane.vue"></fluid-import>
+<!-- The atlas's tiles, panel and tooltips and the rest particular to this story -->
+<script src="../js/saanich.js"></script>
 <script>
 "use strict";
 
-// The story page of the Saanich Peninsula vascular plant report, with its gallery of lost plants, atlas and the pane
-// in memory of Harvey Janszen - see static/local/js/i6/saanich.js. Its paths are relative to the story page, served at
-// /story/, whose panes are written by src/js/storyBuild.js into static/story
+// The story page of the Saanich Peninsula vascular plant report, with its atlas - see static/local/js/saanich.js - and
+// the three panes of this story alone, each defined by a Single File Component of its own beside this one: the opening
+// timeline, In Memory of Plants, the gallery of lost plants, and the pane in memory of Harvey Janszen. Its paths are
+// relative to the story page, served at /story/, whose panes are written by src/js/storyBuild.js into static/story
 
 fluid.registerNamespace("saanich");
 
@@ -91,24 +97,10 @@ fluid.def("saanich.story", {
             }
         }
     },
-    // The first pane, with a gallery of "lost" plants in place of the map. The plants are selected from the site's data
-    // whenever it loads, so that the gallery follows the data, and their photos are looked up live from iNaturalist
+    // The gallery of "lost" plants shown beside the Lost Plants pane - see saanich-lostPlantsPane.vue
     lostPlants: {
         $component: {
-            $layers: "fluid.component",
-            // A native species which is historically reported but unconfirmed is shown if it has at least this Solow EP ...
-            minEP: 0.3,
-            // ... or no more than this number of records
-            maxRecords: 2,
-            // The maximum number of ids accepted by a single request to the iNaturalist taxa endpoint
-            batchSize: 30,
-            // Observes iNaturalist's requested limit of about one request per second
-            batchDelay: 1100,
-            cards: [],
-            plants: "$compute:saanich.lostPlants.select({storyPage}.taxa.allRows, {storyPage}.obsRows, {self})",
-            load: "$effect:saanich.lostPlants.load({self}, {self}.plants, {storyPage}.loaded)",
-            markup: "$compute:saanich.lostPlants.markup({self}.cards)",
-            count: "$compute:saanich.lostPlants.count({self}.cards)"
+            $layers: "saanich.lostPlants"
         }
     },
     paneMarkup: "$compute:saanich.paneMarkup({self}.lostPlants.markup)",
@@ -151,9 +143,9 @@ fluid.def("saanich.story", {
             selectedIndex: 2
         }
     },
-    // The tiles of the atlas's three groups of species, placed in its section, and the count of the gallery's plants
+    // The tiles of the atlas's three groups of species, placed in its section
     atlasTiles: "$compute:saanich.atlas.tilesMarkup({self}.taxa.allRows, {self}.selectedStatus)",
-    sectionInserts: "$compute:saanich.atlas.sectionInserts({self}.atlasTiles, {self}.lostPlants.count)",
+    sectionInserts: "$compute:saanich.atlas.sectionInserts({self}.atlasTiles)",
     paneClick: "$method:saanich.paneClick({self}, {0}:event, Solow, {global})",
     // The atlas's panel of the plant or group chosen in the checklist
     checklistTaxon: "$compute:saanich.atlas.resolveTaxon({self}.taxa.rowById, {self}.checklist.search.filterState)",
@@ -184,25 +176,23 @@ fluid.def("saanich.story", {
     selectTopSpecies: "$effect:saanich.selectTopSpecies({self}, {self}.solowShown, {self}.loaded, {self}.solowTaxa.taxaTable.displayRows)",
     solowFitTaxon: null,
     fitToTaxon: "$effect:saanich.fitToTaxon({self}.map.readyMap, {self}.solowFitTaxon, {self}.obsRows, {self}.map.zoomDuration)",
-    // The opening pane, in memory of plants: their key moments appear across the map as a timeline plays
+    // The opening pane, in memory of plants: their key moments appear across the map as a timeline plays - see
+    // saanich-tracesPane.vue
     traces: {
         $component: {
-            $layers: "fluid.component",
-            paused: false,
-            scrubbing: false,
-            active: "$compute:bioreportr.storyPage.isActive({storyPage}.activePaneKey, Traces)",
-            events: "$compute:saanich.traces.buildEvents({storyPage}.taxa.allRows, {storyPage}.byTaxon)",
-            control: "$effect:saanich.traces.control({self}, {storyPage}, {storyPage}.map.readyMap, {self}.events, {self}.active, {storyPage}.loaded, {global})",
-            showPlayback: "$effect:saanich.traces.showPlayback({self}, {self}.paused)"
+            $layers: "saanich.traces"
         }
     },
-    // The final pane, in memory of Harvey Janszen, shows the areas of his checklists on the map, described on hover
-    rememberingActive: "$compute:bioreportr.storyPage.isActive({self}.activePaneKey, Remembering)",
-    rememberingHover: "$effect:saanich.remembering.bindHover({self}.map.readyMap, {self}.mapData, {global})",
+    // The final pane, in memory of Harvey Janszen, shows the areas of his checklists on the map, described on hover - see
+    // saanich-rememberingPane.vue
+    remembering: {
+        $component: {
+            $layers: "saanich.remembering"
+        }
+    },
     // A pane opened from one without a map is placed on its camera once the map has its size - see saanich.recentre
     recentre: "$effect:saanich.recentre({self}.map.readyMap, {self}.mapData, {self}.activePane)",
-    rememberingFrame: "$effect:saanich.remembering.frame({self}.map.readyMap, {self}.mapData, {self}.rememberingActive, {self}.map.zoomDuration)",
-    leftPaneClass: "$compute:saanich.traces.leftPaneClass({self}.traces.active, {self}.traces.paused, {self}.traces.scrubbing, {self}.rememberingActive)",
+    leftPaneClass: "$compute:saanich.traces.leftPaneClass({self}.traces.active, {self}.traces.paused, {self}.traces.scrubbing, {self}.remembering.active)",
     paneOverrides: {
         Traces: {
             visibleMap: true
@@ -245,25 +235,11 @@ fluid.def("saanich.story", {
             // The grid counts records of every type of evidence, not only observations
             legendMarkup: `$compute:saanich.obsGridLegendMarkup({self}.obsQuantiser.grid, {self}.fillStops, {self}.legendStops,
                 {self}.maxObsCountOverride, {self}.inverseCountTransform, {self}.obsQuantiser.longResolution, {self}.obsQuantiser.baseLatitude)`,
-            // Clicks and hovers look through any area being drawn - see saanich.drawAware
-            clickDispatch: {
-                $bindable: {
-                    bind: "saanich.drawAware.bindClick({self}, {self}.map)",
-                    unbind: "saanich.drawAware.unbindClick({boundValue})"
-                }
-            },
             // A summary of a map cell, leading with what matters most to the search for lost plants
             gridSelector: {
                 $component: {
                     renderTooltip: `$method:saanich.cellTooltip.render({libreMap}.obsQuantiser.grid, {vizLoader}.taxa.rowById,
-                        {vizLoader}.finalFilteredObs, {vizLoader}.earliestRecords, {0}:cellId)`,
-                    handle: "$method:saanich.drawAware.handleCell({self}, {libreMap}.map, {0}:event)",
-                    hover: {
-                        $bindable: {
-                            bind: "saanich.drawAware.bindHover({self}, {libreMap}, {libreMap}.map)",
-                            unbind: "hortis.libreMap.gridSelector.unbindHover({boundValue})"
-                        }
-                    }
+                        {vizLoader}.finalFilteredObs, {vizLoader}.earliestRecords, {0}:cellId)`
                 }
             }
         }

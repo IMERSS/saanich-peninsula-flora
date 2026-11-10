@@ -2,12 +2,14 @@
 "use strict";
 
 // Build the material of a story map from the HTML knitted from its R Markdown panes - the step between knitting and
-// rendering the story page statically with Infusion 6's hydrate.js. In place of the former reknit.js, which wove the
-// panes into a page template, this writes small files which the story page's Single File Components fetch:
+// rendering the story page statically with Infusion 6's hydrate.js. It writes small files which the story page's
+// Single File Components fetch:
 //   - <out>/panes.json - one record per pane, in order of the `weight` of its front matter, holding its front matter,
 //     its `paneKey`, the name of its file, and any members of its <viz_data>/<paneKey>-mapData.json
 //   - <out>/<paneKey>.html - the section of each pane, without the pandoc page around it, and without the data of
-//     its map widgets, which are folded into mapData.json
+//     its map widgets, which are folded into mapData.json. A pane whose front matter names a `paneComponent` instead
+//     has its section written into the <template> block of the Single File Component defining that component - see
+//     bioreportr.storyBuild.writeTemplate
 //   - <out>/<paneKey>-data.html - any widgets of a pane bearing an mx_widgetId, e.g. a chart driving a slider, which
 //     are shown in the pane's data pane beside the map
 //   - <out>/mapData.json - a single map style, holding every source and layer of every pane's map once, together
@@ -36,7 +38,8 @@ const loadInfusion6 = function (projectDir) {
     return require(override ? path.resolve(projectDir, override.baseDir) : "infusion-6");
 };
 
-const fluid = loadInfusion6(path.resolve(__dirname, "../.."));
+const projectDir = path.resolve(__dirname, "../..");
+const fluid = loadInfusion6(projectDir);
 
 const bioreportr = fluid.registerNamespace("bioreportr");
 fluid.registerNamespace("bioreportr.storyBuild");
@@ -243,6 +246,68 @@ bioreportr.storyBuild.write = function (file, text) {
     console.log("Written " + Buffer.byteLength(text) + " bytes to " + file);
 };
 
+// The directories, relative to the project, searched for the Single File Component defining a pane's `paneComponent`
+bioreportr.storyBuild.componentDirs = ["static/local/story", "static/bioreportr/sfc"];
+
+/**
+ * Find the Single File Component defining a pane's component.
+ * @param {String} projectDir - The project's directory
+ * @param {String} componentName - The name of the component, as the `paneComponent` of the pane's front matter
+ * @return {String} The path of the file
+ */
+bioreportr.storyBuild.findComponentFile = function (projectDir, componentName) {
+    const definition = "fluid.def(\"" + componentName + "\"";
+    const files = bioreportr.storyBuild.componentDirs.map(dir => path.join(projectDir, dir)).filter(dir => fs.existsSync(dir))
+        .flatMap(dir => fs.readdirSync(dir).filter(file => file.endsWith(".vue")).map(file => path.join(dir, file)))
+        .filter(file => fs.readFileSync(file, "utf8").includes(definition));
+    if (files.length !== 1) {
+        throw new Error("Expected one Single File Component in " + bioreportr.storyBuild.componentDirs.join(" or ") +
+            " defining " + componentName + ", named as a paneComponent, but found " + (files.join(", ") || "none"));
+    }
+    return files[0];
+};
+
+/**
+ * Write a pane's section into the <template> block of the Single File Component defining its component. Only what lies
+ * between the block's opening and closing tags is replaced, and the file is left alone unless it holds exactly one of
+ * each, at the start of a line, so that nothing else in it is ever disturbed.
+ * @param {String} file - The path of the Single File Component
+ * @param {String} section - The markup of the pane's section
+ */
+bioreportr.storyBuild.writeTemplate = function (file, section) {
+    const text = fs.readFileSync(file, "utf8");
+    const opens = [...text.matchAll(/^<template>[ \t]*\r?\n/gm)], closes = [...text.matchAll(/^<\/template>/gm)];
+    if (opens.length !== 1 || closes.length !== 1 || closes[0].index < opens[0].index) {
+        throw new Error("Expected " + file + " to hold one <template> block, opening and closing at the start of a line, " +
+            "into which to write its pane's section");
+    }
+    const start = opens[0].index + opens[0][0].length;
+    const written = text.substring(0, start) + section + "\n" + text.substring(closes[0].index);
+    if (written !== text) {
+        bioreportr.storyBuild.write(file, written);
+    }
+};
+
+/**
+ * Remove the files of panes written by an earlier build which the current build no longer writes, e.g. those of a pane
+ * since removed or renamed. The files of the earlier build are those listed by the panes.json it wrote.
+ * @param {String} outDir - The directory to which the material is written
+ * @param {Object[]} panes - The records of the panes of the current build
+ */
+bioreportr.storyBuild.removeStale = function (outDir, panes) {
+    const panesFile = path.join(outDir, "panes.json");
+    const filesOf = records => records.flatMap(pane => [pane.file, pane.dataFile]).filter(file => file);
+    const previous = fs.existsSync(panesFile) ? filesOf(JSON.parse(fs.readFileSync(panesFile, "utf8"))) : [];
+    const current = new Set(filesOf(panes));
+    previous.filter(file => !current.has(file) && !path.isAbsolute(file) && !file.includes("..")).forEach(file => {
+        const stale = path.join(outDir, file);
+        if (fs.existsSync(stale)) {
+            fs.unlinkSync(stale);
+            console.log("Removed " + stale + ", written by an earlier build");
+        }
+    });
+};
+
 /**
  * Build the material of a story map.
  * @param {String} contentDir - The directory holding the panes' .Rmd files and the .html knitted from them
@@ -257,7 +322,13 @@ bioreportr.storyBuild.build = function (contentDir, vizDataDir, outDir) {
         const {document} = linkedom.parseHTML(fs.readFileSync(htmlFile, "utf8"));
         const {section, data} = bioreportr.storyBuild.extractSection(document, paneKey, mapData);
         bioreportr.storyBuild.localRefs(section).forEach(ref => assets.add(ref));
-        bioreportr.storyBuild.write(path.join(outDir, paneKey + ".html"), section + "\n");
+        // A pane naming a component has its section written into the component's template, and no file of its own
+        const file = frontMatter.paneComponent ? null : paneKey + ".html";
+        if (file) {
+            bioreportr.storyBuild.write(path.join(outDir, file), section + "\n");
+        } else {
+            bioreportr.storyBuild.writeTemplate(bioreportr.storyBuild.findComponentFile(projectDir, frontMatter.paneComponent), section);
+        }
         const dataFile = data.markup ? paneKey + "-data.html" : null;
         if (dataFile) {
             bioreportr.storyBuild.write(path.join(outDir, dataFile), "<div class=\"mxcw-dataPane-widgets\">" + data.markup + "</div>\n");
@@ -265,12 +336,13 @@ bioreportr.storyBuild.build = function (contentDir, vizDataDir, outDir) {
         // The knit hook of the front matter is R's concern alone
         const rest = bioreportr.storyBuild.censorKeys(frontMatter, ["knit", "paneHandlerLayers"]);
         const paneHandlerLayers = frontMatter.paneHandlerLayers;
-        return {...rest, ...bioreportr.storyBuild.paneMapData(vizDataDir, paneKey), paneKey, file: paneKey + ".html",
+        return {...rest, ...bioreportr.storyBuild.paneMapData(vizDataDir, paneKey), paneKey, file,
             dataFile, widgetIds: data.widgetIds, layers: paneHandlerLayers || []};
     });
     Object.values(mapData.sources).filter(source => source.type === "image" && bioreportr.storyBuild.isLocalRef(source.url))
         .forEach(source => assets.add(source.url));
     bioreportr.storyBuild.copyAssets(contentDir, outDir, assets);
+    bioreportr.storyBuild.removeStale(outDir, panes);
     bioreportr.storyBuild.write(path.join(outDir, "panes.json"), JSON.stringify(panes, null, 2) + "\n");
     bioreportr.storyBuild.write(path.join(outDir, "mapData.json"), JSON.stringify(bioreportr.storyBuild.composeMapData(mapData)) + "\n");
     return panes;

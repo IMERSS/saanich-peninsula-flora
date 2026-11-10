@@ -9,7 +9,7 @@
 <script src="%imerss-bioinfo/src/client/js/i6/tooltip.js"></script>
 <script src="%imerss-bioinfo/src/client/js/i6/libreMap.js"></script>
 <script src="%imerss-bioinfo/src/client/js/i6/polygonDraw.js"></script>
-<script src="../js/i6/story.js"></script>
+<script src="../js/story.js"></script>
 <style src="%imerss-bioinfo/src/client/css/maplibre-gl.css"></style>
 <style src="%imerss-bioinfo/src/client/css/mapbox-gl-draw.css"></style>
 <script>

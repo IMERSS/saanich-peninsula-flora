@@ -1,4 +1,4 @@
-<script src="../js/i6/solow.js"></script>
+<script src="../js/solow.js"></script>
 <script>
 "use strict";
 

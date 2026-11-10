@@ -3,8 +3,8 @@
   {{- partial "head.html" . -}}
   <body dir="{{ .Site.Language.LanguageDirection | default `ltr` }}">
     {{- partial "navbar.html" . -}}
-    {{- /* The story page of Infusion 6's bioReportR framework - see static/bioreportr/sfc/bioreportr-storyPage.vue. In
-      place of the Infusion 4 page woven by reknit.js, this page holds only the import of the story's driver, which
+    {{- /* The story page of Infusion 6's bioReportR framework - see static/bioreportr/sfc/bioreportr-storyPage.vue. This
+      page holds only the import of the story's driver, which
       names its data and their placeholders, and the element on which it boots, which computes the pane it shows
       from the URL's hash before it renders. Its markup is written in by Infusion 6's hydrate.js after Hugo has built
       the site - see package.json. Infusion and the IMERSS framework are copied into static/vendor by Infusion 6's

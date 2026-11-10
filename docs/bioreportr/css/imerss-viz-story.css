@@ -1,8 +1,4 @@
 
-.mxcw-widgetPane {
-    padding: 0
-}
-
 .imerss-container {
     flex-direction: column;
     margin-top: 0;
@@ -31,17 +27,31 @@
     overflow: auto; /* Without this, massive horizontal overflow on parent */
 }
 
+/* The records' header is spaced alike above and below, open or collapsed - from the map's edge, the resize bar between
+   them being counted in the space above, and allowing for the label's glyphs riding high in its box */
 .mxcw-obs-table-controls {
     display: flex;
     margin-left: 1rem;
-    margin-top: -0.1rem;
-    margin-bottom: 0.25rem;
+    margin-top: -5.5px;
+    margin-bottom: 7.5px;
 }
 
 /* The colour of the records' label beside it - imerss-bioinfo's download icon is now stroked in currentColor */
 .mxcw-obs-table-controls .imerss-download-button {
     fill: #ddd;
     color: #eefaff;
+}
+
+/* The header's icons are kept a touch smaller than its label and level with its foot, so that the resize bar above the
+   open panel, which overlaps the header's top, leaves them whole */
+.mxcw-obs-table-controls > .imerss-download-button {
+    display: flex;
+    align-self: flex-end;
+}
+
+.mxcw-obs-table-controls > .imerss-download-button svg {
+    width: 18px;
+    height: 18px;
 }
 
 /* The button clearing the selected record, styled as the download button beside it */
@@ -67,97 +77,10 @@
     min-height: 0;
 }
 
-.imerss-pane-info {
-    padding: 1em 0.8em 0.7em 0.8em;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-}
-
 .imerss-panel-label {
     font-weight: 700;
     font-size: 1.5rem;
     padding: 0.2rem 1rem 0.2rem 0.3rem;
-}
-
-.imerss-download {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    padding-left: 1rem;
-    padding-bottom: 5px;
-}
-
-.imerss-download.active {
-    visibility: visible;
-}
-
-.imerss-region-key {
-    font-weight: bold;
-}
-
-.imerss-map-title {
-    text-align: right;
-}
-
-
-.imerss-download-link:hover {
-    outline: 1px #333 solid;
-    outline-offset: 2px;
-}
-
-
-.mxcw-widgetPane {
-    height: 100%;
-}
-.mxcw-noStretch {
-    height: 100%;
-    max-height: 100%;
-}
-
-.imerss-taxonDisplay {
-    height: auto;
-    /** This core definition needs to go **/
-    min-width: auto;
-}
-
-.imerss-taxonDisplay-close {
-    display: flex;
-    flex-direction: row;
-    cursor: pointer;
-    align-self: end;
-    align-items: center;
-    margin: 0.5rem 1rem 0.5rem;
-    position: absolute;
-    top: 0px;
-    right: 0px;
-    stroke: black;
-}
-
-.imerss-taxonDisplay-close:hover {
-    color: #475a73;
-    stroke: #475a73;
-}
-
-.imerss-taxonDisplay-x {
-    display: flex;
-    margin-left: 5px;
-}
-
-.imerss-panel {
-    display: none;
-    flex-direction: column;
-    /** Temporarily undo definition in imerss-viz.css - remove once we build again **/
-    position: unset;
-}
-
-.imerss-panel.imerss-activePanel {
-    display: flex;
-}
-
-.imerss-map-and-taxa {
-    flex-direction: row;
-    max-height: inherit;
 }
 
 /* Taken from R Leaflet's ".info" */
@@ -193,13 +116,6 @@
     cursor: pointer;
 }
 
-.imerss-map-legend > span {
-    display: inline-block;
-    font-size: 1.3rem;
-    margin-left: 2rem;
-    margin-bottom: 0.4rem;
-}
-
 .imerss-legend-label {
     display: inline-block;
     font-size: 0.9rem;
@@ -219,40 +135,13 @@
     cursor: pointer;
 }
 
-/** Magic sauce allows resizing of widget smaller than "natural width" of .imerss-checklist-outer */
-.imerss-checklist-widgets {
-    width: 0;
-}
-
-.imerss-checklist-outer {
-    display: flex;
-    flex-direction: column;
-    width: 600px;
-}
-
 /** Weird 1-pixel fight over height - see why it seems we want -2px in 3rd position in core */
 .imerss-checklist-decoration {
     margin: -2px -0.3em -3px -0.8em;
 }
 
-.imerss-map-and-taxa > * {
-    flex-grow: 1;
-}
-
-.imerss-taxa {
-    display: none;
-}
-
 .imerss-photo {
     height: 300px;
-}
-
-.taxonDisplay-row {
-    min-width: 0px;
-}
-
-.imerss-map-and-taxa {
-    margin-right: 0px;
 }
 
 @media screen and ( max-height: 1024px ){
@@ -262,28 +151,15 @@
     }
 }
 
-/* Reach deep into the "general-module-panel" inside the iNat components and adjust its height */
-#inat-components > div > div:last-child {
-    height: calc(100vh - 350px);
-    overflow-y: auto;
-    /** Half the "grid gap" of 8px */
-    padding-right: 4px;
-}
-
-#inat-components > div {
-    padding-top: 0px;
-}
-
-html[class~=dark] #inat-components select {
-    color: white;
-}
-
 /* Records panel as an accordion - !important overrides any heights set by dragging mapResizeBar, restored on opening */
 .mxcw-records-toggle {
     display: flex;
     flex-grow: 1;
     align-items: center;
     cursor: pointer;
+    min-width: 0;
+    font-size: var(--story-body);
+    font-weight: 700;
 }
 
 .mxcw-records-toggle::before {
@@ -301,7 +177,13 @@ html[class~=dark] #inat-components select {
 }
 
 .mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)):not(:has(.mxcw-atlas-has-taxon)) {
-    --mxcw-records-header-height: 2.25rem;
+    --mxcw-records-header-height: 40px;
+}
+
+/* Collapsed, the header sits in its strip directly below the map, with no resize bar to count in the space above */
+.mxcw-records-collapsed .mxcw-obs-table-controls {
+    margin-top: 5px;
+    margin-bottom: 0;
 }
 
 .mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)):not(:has(.mxcw-atlas-has-taxon)) .mxcw-map {
@@ -368,16 +250,17 @@ html[class~=dark] #inat-components select {
 
 /* While the table is open the Solow widgets compact to share the space with it, drawing a default extra height from the map */
 .mxcw-leftPane:has(> .mxcw-data > .mxcw-solow-records-holder:not(.mxcw-solow-records-collapsed):not(.fl-hidden)) .mxcw-map {
-    height: calc(100% - 440px);
+    height: calc(100% - var(--solow-widgets-open-height) - 250px);
 }
 
 .mxcw-leftPane > .mxcw-data:has(> .mxcw-solow-records-holder:not(.mxcw-solow-records-collapsed):not(.fl-hidden)) {
-    height: 426px;
+    height: calc(var(--solow-widgets-open-height) + 236px);
 }
 
 .mxcw-data:has(> .mxcw-solow-records-holder:not(.mxcw-solow-records-collapsed)) > .mxcw-solow-widgets-holder {
-    flex: 0 0 min(190px, 45%);
+    flex: 0 1 auto;
     margin-bottom: 0.5rem;
+    height: min(var(--solow-widgets-open-height), 45%);
 }
 
 .mxcw-solow-records-species {
@@ -391,10 +274,6 @@ html[class~=dark] #inat-components select {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-
-.mxcw-records-toggle {
-    min-width: 0;
 }
 
 /* Holds the species panel of the atlas, shown only while a species is selected - see .mxcw-atlas-has-taxon */
@@ -446,6 +325,7 @@ html[class~=dark] #inat-components select {
     display: flex;
     align-items: center;
     gap: 6px;
+    font-size: var(--story-data);
 }
 
 .mxcw-ep-range label span {
@@ -455,4 +335,109 @@ html[class~=dark] #inat-components select {
 .mxcw-ep-range input {
     flex: 1;
     min-width: 0;
+    accent-color: #4b778f;
+}
+
+/* ── Story page panes: type, spacing and layout shared by every bioReportR site's story page, gathered from the projects' own sheets ── */
+
+.mxcw-records-filter-label,
+.mxcw-solow-records-species {
+    font-weight: 400;
+}
+
+.mxcw-leftPane:has(> .mxcw-data > .mxcw-solow-widgets-holder:not(.fl-hidden)):has(.mxcw-solow-records-collapsed) .mxcw-map {
+    height: calc(100% - var(--solow-widgets-height) - 14px - 2.25rem);
+}
+
+.mxcw-leftPane > .mxcw-data:has(> .mxcw-solow-records-collapsed:not(.fl-hidden)) {
+    height: calc(var(--solow-widgets-height) + 2.25rem);
+}
+
+/* The Atlas's panel sits within a wrapper added by the story page, which must fill the holder for the photo, sized to the
+   panel's height as in the extirpation risk pane, to have any size at all */
+
+.mxcw-atlas-taxon-holder > div {
+    height: 100%;
+}
+
+.mxcw-data:has(> .mxcw-atlas-has-taxon) {
+    flex-direction: column;
+}
+
+.mxcw-data > .mxcw-atlas-has-taxon {
+    display: block;
+    flex: 1 1 0;
+    min-height: 0;
+    height: auto;
+    width: auto;
+}
+
+.mxcw-atlas-taxon-holder .mxcw-solow-taxon-pane,
+.mxcw-atlas-has-taxon.mxcw-solow-taxon-pane {
+    display: flex;
+    margin-right: 0;
+}
+
+.mxcw-data:has(> .mxcw-atlas-has-taxon) > .mxcw-records-collapsed {
+    flex: 0 0 2.25rem;
+    height: auto !important;
+    overflow: hidden;
+    justify-content: center;
+}
+
+.mxcw-data:has(> .mxcw-atlas-has-taxon) > .mxcw-obs-table-holder:not(.mxcw-records-collapsed) {
+    flex: 1 1 auto;
+    height: 50%;
+    min-height: 0;
+}
+
+.mxcw-data:has(> .mxcw-atlas-has-taxon):has(> .mxcw-obs-table-holder:not(.mxcw-records-collapsed)) > .mxcw-atlas-has-taxon {
+    flex: 0 1 auto;
+    height: min(var(--solow-widgets-open-height), 45%);
+}
+
+.mxcw-leftPane:has(.mxcw-atlas-has-taxon):has(.mxcw-records-collapsed) .mxcw-map {
+    height: calc(100% - var(--solow-widgets-height) - 14px - 2.25rem);
+}
+
+.mxcw-leftPane > .mxcw-data:has(> .mxcw-atlas-has-taxon):has(> .mxcw-records-collapsed) {
+    height: calc(var(--solow-widgets-height) + 2.25rem);
+}
+
+.mxcw-leftPane:has(.mxcw-atlas-has-taxon):not(:has(.mxcw-records-collapsed:not(.mxcw-solow-records-collapsed))) .mxcw-map {
+    height: calc(100% - var(--solow-widgets-open-height) - 250px);
+}
+
+.mxcw-leftPane > .mxcw-data:has(> .mxcw-atlas-has-taxon):has(> .mxcw-obs-table-holder:not(.mxcw-records-collapsed)) {
+    height: calc(var(--solow-widgets-open-height) + 236px);
+}
+
+.mxcw-data > .mxcw-solow-records-holder:not(.mxcw-solow-records-collapsed) {
+    flex: 1 1 auto;
+    height: 50%;
+}
+
+@media (min-width: 768px) {
+
+    .mxcw-leftPane,
+    .imerss-page {
+        min-height: 0;
+    }
+}
+
+.mxcw-georef-note {
+    margin-top: var(--story-gap);
+    font-size: var(--story-small);
+    line-height: 1.35;
+    color: #7a4f00;
+}
+
+.mxcw-georef-flag {
+    color: #7a4f00;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.mxcw-ep-range output {
+    font-variant-numeric: tabular-nums;
 }
