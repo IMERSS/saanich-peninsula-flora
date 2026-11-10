@@ -7,14 +7,12 @@ knit: (function(input, ...) { source(here::here("R/knit_render.R"), local = TRUE
 
 ## The lost plants of the W̱SÁNEĆ/Saanich Peninsula
 
-**Can you find these plants?** These <span class="saanich-lost-count"></span> native species were once recorded on the
-Saanich Peninsula, but no one has reported them in decades. Some may be lost *to us*—overlooked, forgotten, or waiting to be rediscovered. Others may be
-lost *because of us*, through impacts like habitat change or the introduction of invasive species.
+On the left are <span class="saanich-lost-count"></span> native species once reported for the Saanich Peninsula, which have not been seen in recent decades. Some may be lost *to us*—overlooked, forgotten, or waiting to be rediscovered. Others may be lost *because of us*, through impacts like habitat change or the introduction of invasive species.
 
 <span class="saanich-callout">Pick a plant from the gallery</span> to see where and when it was last found, then join local naturalists and community members on a search for the
-**[“Lost” Plants of the Saanich Peninsula](https://www.inaturalist.org/projects/lost-plants-of-the-saanich-peninsula)**
+[“Lost” Plants of the Saanich Peninsula](https://www.inaturalist.org/projects/lost-plants-of-the-saanich-peninsula)
 project on iNaturalist!
 
-Szczawinski and Harrison’s (1972) *Flora of the Saanich Peninsula* remains a regional classic. Harvey Janszen devoted
-much of his life to revising this flora, but passed away before completing this work. A community of naturalists has
+Szczawinski and Harrison’s (1972) *Flora of the Saanich Peninsula* provides the historical baseline for this atlas. Harvey Janszen devoted
+much of his life to revising this flora, but passed away in 2021, before completing this work. A community of naturalists has
 since carried those efforts forward; this atlas is a testament to that continuing legacy.

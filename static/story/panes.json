@@ -68,6 +68,18 @@
     "title": "Harvey’s footsteps",
     "shortTitle": "Harvey’s footsteps",
     "weight": 6,
+    "view": {
+      "type": "view",
+      "lon": -123.1764,
+      "lat": 48.6555,
+      "zoom": 8.9
+    },
+    "selectableRegions": [
+      "Checklist.Saanich",
+      "Checklist.Saltspring_Island",
+      "Checklist.Outer_Gulf_Islands",
+      "Checklist.San_Juan_Islands"
+    ],
     "paneKey": "Remembering",
     "file": "Remembering.html",
     "dataFile": null,

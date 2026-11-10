@@ -206,14 +206,15 @@ saanich.lostPlants.fetchCards = async function (that, plants) {
             const taxa = (await response.json()).results;
             const photos = Object.fromEntries(taxa.map(taxon => [String(taxon.id), saanich.lostPlants.licensedPhoto(taxon)]));
             cards = cards.concat(batch.filter(plant => photos[plant.taxon.id]).map(plant => saanich.lostPlants.renderCard(plant, photos[plant.taxon.id])));
-            if (current()) {
-                that.cards = cards;
-            }
             await new Promise(resolve => setTimeout(resolve, batchDelay));
         } catch (error) {
             console.error("Could not fetch photos from iNaturalist", error);
             start = plants.length;
         }
+    }
+    // Shown only once complete, so that the text never gives a partial count. Until then it reads "These native species"
+    if (current()) {
+        that.cards = cards;
     }
 };
 
@@ -272,89 +273,45 @@ saanich.recordPeriod = function (obsRows) {
  */
 saanich.solowParams = period => ({baselineYear: period.first, analysisYear: period.last});
 
-/**
- * Divide a span of years into bins of equal width. There are always at least two, e.g. while the records are still
- * loading and the end of the span is unknown.
- * @param {Number} start - The first year of the first bin
- * @param {Number} end - The last year to be covered
- * @param {Number} width - The width of each bin in years
- * @return {Number[]} The first year of each bin
- */
-saanich.atlas.yearBins = function (start, end, width) {
-    const count = Number.isFinite(end) ? Math.ceil((end - start + 1) / width) : 0;
-    return fluid.iota(Math.max(2, count)).map(index => start + index * width);
-};
-
-// Each tile is a link which selects its group, and carries a small chart of the question that matters for that group
+// Each tile is a link which selects its group
 saanich.atlas.tiles = [{
     status: "confirmed",
     name: "Confirmed",
-    meaning: "Reported historically and found again since 2000.",
-    caption: "First found again",
-    bins: lastYear => saanich.atlas.yearBins(2000, lastYear, 5),
-    year: records => parseInt(records.find(record => parseInt(record.eventDate, 10) >= 2000)?.eventDate, 10)
+    meaning: "Reported historically and found again since 2000."
 }, {
     status: "unconfirmed",
     name: "Historical",
-    meaning: "Reported in the past but not recorded since 2000.",
-    caption: "Last recorded",
-    bins: () => saanich.atlas.yearBins(1860, 1999, 20),
-    year: records => parseInt(fluid.peek(records).eventDate, 10)
+    meaning: "Reported in the past but not recorded since 2000."
 }, {
     status: "new",
     name: "Newly reported",
-    meaning: "Additions to the flora from recent reports.",
-    caption: "Earliest record in this atlas",
-    bins: lastYear => saanich.atlas.yearBins(2000, lastYear, 5),
-    year: records => parseInt(records[0].eventDate, 10)
+    meaning: "Additions to the flora from recent reports."
 }];
 
 /**
  * Render the tile for one group of species.
  * @param {Object} tile - One entry of `saanich.atlas.tiles`
  * @param {TaxonRow[]} taxa - The species of this group
- * @param {Map<String, Object[]>} byTaxon - Dated records indexed by taxon id
  * @param {Boolean} pressed - Whether the group is selected
- * @param {Number} lastYear - The latest year of the records
  * @return {String} The markup for the tile
  */
-saanich.atlas.renderTile = function (tile, taxa, byTaxon, pressed, lastYear) {
-    const bins = tile.bins(lastYear);
-    const counts = bins.map(() => 0);
-    const width = bins[1] - bins[0];
-    taxa.forEach(taxon => {
-        const records = byTaxon.get(taxon.id);
-        const year = records ? tile.year(records.slice().sort(saanich.obsDateComparator)) : NaN;
-        const index = Math.floor((year - bins[0]) / width);
-        if (index >= 0 && index < counts.length) {
-            counts[index]++;
-        }
-    });
-    const max = Math.max(...counts, 1);
-    const columns = counts.map(count => `<span style="height:${count / max * 100}%"></span>`).join("");
-    // Each label starts beneath the bar for the period beginning in that year, and every other bar is labelled to leave room
-    const axis = bins.filter((bin, index) => index % 2 === 0).map(bin => `<span>${bin}</span>`).join("");
+saanich.atlas.renderTile = function (tile, taxa, pressed) {
     return `<button type="button" class="saanich-status-link saanich-status-tile" data-status="${tile.status}" aria-pressed="${pressed}" style="--tip-colour:${saanich.statusColours[tile.status]}">
         <span class="saanich-tile-name">${tile.name}</span>
         <span class="saanich-tile-count">${saanich.formatCount(taxa.length)} <small>species</small></span>
         <span class="saanich-tile-meaning">${tile.meaning}</span>
-        <span class="saanich-tile-caption">${tile.caption}, species per ${width} years</span>
-        <span class="saanich-tile-chart" style="--tile-bins:${counts.length}">${columns}</span>
-        <span class="saanich-tile-axis" style="--tile-bins:${counts.length}">${axis}</span>
     </button>`;
 };
 
 /**
  * Render the tiles of the three groups of species, computed from the site's data.
  * @param {TaxonRow[]} taxaRows - All taxa
- * @param {Map<String, Object[]>} byTaxon - Dated records indexed by taxon id
  * @param {String|null} selectedStatus - The selected group, if any
- * @param {Number} lastYear - The latest year of the records
  * @return {String} The markup of the tiles
  */
-saanich.atlas.tilesMarkup = function (taxaRows, byTaxon, selectedStatus, lastYear) {
-    return saanich.atlas.tiles.map(tile => saanich.atlas.renderTile(tile, saanich.taxaOfStatus(taxaRows, tile.status), byTaxon,
-        tile.status === selectedStatus, lastYear)).join("");
+saanich.atlas.tilesMarkup = function (taxaRows, selectedStatus) {
+    return saanich.atlas.tiles.map(tile => saanich.atlas.renderTile(tile, saanich.taxaOfStatus(taxaRows, tile.status),
+        tile.status === selectedStatus)).join("");
 };
 
 saanich.atlas.sectionInserts = (tiles, lostCount) => ({"saanich-status-tiles": tiles, "saanich-lost-count": lostCount});
@@ -555,6 +512,40 @@ saanich.statusTooltip.unbind = function (record) {
     record.dokkument.removeEventListener("mouseout", record.leave);
 };
 
+/** The checklist's icons of reporting status **/
+
+/**
+ * Decorate a checklist row with an icon of its taxon's reporting status, as hortis.blitzChecklistDecoration does, but
+ * referring to the icons by the ids the story page gives them, which carry the prefix `imerss-i-`. Without it the
+ * icons refer to symbols which don't exist, and show nothing.
+ * @param {TaxonRow} row - The checklist's taxon row
+ * @return {VNode|null} The icon, or null if the taxon has no reporting status
+ */
+saanich.checklistDecoration = function (row) {
+    const node = hortis.blitzChecklistDecoration(row);
+    const use = node?.children.find(child => child.tag === "use");
+    if (use && !use.attrs.href.startsWith("#imerss-i-")) {
+        use.attrs.href = "#imerss-i-" + use.attrs.href.substring(1);
+    }
+    return node;
+};
+
+/** The markers of records on the map **/
+
+/**
+ * Determine whether markers are shown in place of the grid - whilst few enough records fall within the viewport. A
+ * selected record keeps its marker at any zoom (see hortis.libreMap.markerRows), but zooming out until more records are
+ * in view brings the grid back beneath it, rather than leaving the map empty but for that marker until it is deselected.
+ * @param {Boolean} gridVisible - Whether the grid is visible
+ * @param {Number} inView - The number of filtered records within the viewport
+ * @param {Number} threshold - The number of records within the viewport at most which markers are shown
+ * @param {Object|null} selectedRecord - The selected record, if any
+ * @return {Boolean} `true` if markers are shown in place of the grid
+ */
+saanich.showMarkers = function (gridVisible, inView, threshold, selectedRecord) {
+    return inView <= threshold && (!!selectedRecord || gridVisible && inView > 0);
+};
+
 /** Clicks and hovers on the map, which look through any area being drawn **/
 
 fluid.registerNamespace("saanich.drawAware");
@@ -751,37 +742,209 @@ saanich.obsGridLegendMarkup = function (...args) {
         .replace(/ observations"/g, " records\"");
 };
 
-/** The pane in memory of Harvey Janszen **/
+/** The camera of a pane opened from one without a map **/
 
-saanich.remembering.imagePath = "../local/images/remembering/";
+// Whether the map was shown by the previous pane, by map
+saanich.mapWasShown = new WeakMap();
 
-saanich.remembering.journals = [
-    {file: "1973-1981.png", caption: "Flora of Saturna, ca. 1973–1981"},
-    {file: "1981-1996.png", caption: "Journal, ca. 1981–1996"},
-    {file: "1996-2000.png", caption: "Journal, ca. 1996–2000"},
-    {file: "1999-2003.png", caption: "Unbound field notes, ca. 1999–2003"},
-    {file: "2003-2017.png", caption: "Field notes, ca. 2003–2017"}
-];
-
-saanich.remembering.renderFigure = function (file, caption, className, alt = caption) {
-    return `<figure class="${className}"><img src="${saanich.remembering.imagePath}${file}" alt="${alt}" loading="lazy"><figcaption>${caption}</figcaption></figure>`;
+/**
+ * Place the map on the active pane's camera again once it has its full size, when the previous pane hid it - e.g. on
+ * moving from Lost Plants to the Atlas. The story page moves the camera as the pane opens, when the map is still without
+ * size, which leaves it centred in the wrong place once the map has grown. Harvey's pane frames itself - see
+ * saanich.remembering.frame.
+ * @param {maplibregl.Map} map - The story's map, once ready
+ * @param {Object} mapData - The story's map data, with each pane's camera
+ * @param {Object} activePane - The active pane's settings, with its `paneKey` and `visibleMap`
+ */
+saanich.recentre = function (map, mapData, activePane) {
+    if (!map || !activePane) {
+        return;
+    }
+    const wasShown = saanich.mapWasShown.get(map);
+    saanich.mapWasShown.set(map, !!activePane.visibleMap);
+    const camera = mapData?.panes?.[activePane.paneKey];
+    if (wasShown === false && activePane.visibleMap && camera?.center && activePane.paneKey !== "Remembering") {
+        hortis.libreMap.afterLayout(map, () => {
+            map.resize();
+            map.jumpTo({center: camera.center, zoom: camera.zoom});
+        });
+    }
 };
 
-saanich.remembering.markup = `<div class="saanich-remembering">
-    <div class="saanich-remembering-photos">
-        ${saanich.remembering.renderFigure("harvey-and-hannah.jpg", "Harvey Janszen and Hannah Carpendale searching for <i>Platanthera unalascensis</i> on Stockade Hill, Galiano Island, July 2020",
-        "saanich-remembering-lead", "Harvey Janszen and Hannah Carpendale searching for an orchid on Stockade Hill, Galiano Island")}
-        ${saanich.remembering.renderFigure("HJ.png", "Harvey Janszen, Galiano Island, May 3, 2019", "saanich-remembering-portrait")}
-    </div>
-    <h3>Harvey’s field journals</h3>
-    <div class="saanich-remembering-journals">
-        ${saanich.remembering.journals.map(journal => saanich.remembering.renderFigure(journal.file, journal.caption, "saanich-remembering-journal")).join("")}
-    </div>
-</div>`;
+/** The pane in memory of Harvey Janszen, whose map shows the areas of his checklists **/
 
-saanich.remembering.getMarkup = () => saanich.remembering.markup;
+/**
+ * Find the bounds of the checklist areas in a story's map data.
+ * @param {Object} mapData - The story's map data, whose style holds the areas' sources
+ * @return {Array|null} The bounds as [[west, south], [east, north]], or null if there are no areas
+ */
+saanich.remembering.bounds = function (mapData) {
+    let west = Infinity, south = Infinity, east = -Infinity, north = -Infinity;
+    const visit = coords => typeof coords[0] === "number" ? (west = Math.min(west, coords[0]), east = Math.max(east, coords[0]),
+        south = Math.min(south, coords[1]), north = Math.max(north, coords[1])) : coords.forEach(visit);
+    Object.entries(mapData?.style?.sources || {}).filter(([id]) => id.startsWith("Checklist.")).forEach(([, source]) => visit(source.data.coordinates));
+    return Number.isFinite(west) ? [[west, south], [east, north]] : null;
+};
 
-saanich.paneMarkup = (galleryMarkup, rememberingMarkup) => ({LostPlants: galleryMarkup, Remembering: rememberingMarkup});
+/**
+ * Frame the checklist areas whenever Harvey's pane is shown. The pane's camera alone is a fixed centre and zoom, placed as
+ * the pane opens - when the map may still be changing size, e.g. from nothing when arriving from a pane without a map - so
+ * the areas are fitted once the map is still and laid out at its full size, whatever the size of the window. Every other
+ * pane keeps its own camera.
+ * @param {maplibregl.Map} map - The story's map, once ready
+ * @param {Object} mapData - The story's map data
+ * @param {Boolean} active - Whether Harvey's pane is shown
+ * @param {Number} duration - The duration in milliseconds of the move
+ */
+saanich.remembering.frame = function (map, mapData, active, duration) {
+    const bounds = active && map && saanich.remembering.bounds(mapData);
+    if (bounds) {
+        hortis.libreMap.whenStill(map, () => {
+            // Only if Harvey's pane is still shown: having waited for the map to be still, the fit would otherwise land on
+            // whichever pane was opened meanwhile, overriding that pane's own camera
+            if (map.getContainer().ownerDocument.querySelector(".mxcw-leftPane.saanich-remembering-active")) {
+                map.resize();
+                map.fitBounds(bounds, {padding: 40, duration, essential: true});
+            }
+        });
+    }
+};
+
+
+saanich.paneMarkup = galleryMarkup => ({LostPlants: galleryMarkup});
+
+// The maps whose checklist areas already show their cards on hover
+saanich.remembering.boundMaps = new WeakSet();
+
+/**
+ * Show a card describing each checklist area as the pointer passes over it while Harvey's pane is shown, outlining that
+ * area more strongly. The markup of each card is the label given to the area's layer by scripts/Janszen_checklists_mapbox.R
+ * @param {maplibregl.Map} map - The story's map, once ready
+ * @param {Object} mapData - The story's map data, whose style holds the layers' labels
+ * @param {Window} window - The window holding the story page
+ */
+saanich.remembering.bindHover = function (map, mapData, window) {
+    if (!map || !mapData || saanich.remembering.boundMaps.has(map)) {
+        return;
+    }
+    saanich.remembering.boundMaps.add(map);
+    const layers = mapData.style.layers.filter(layer => layer.type === "fill" && layer.id.startsWith("Checklist."));
+    const labels = Object.fromEntries(layers.map(layer => [layer.id, layer.label]));
+    // Each area's own outline width, to which it returns once the pointer leaves it
+    const widths = Object.fromEntries(mapData.style.layers.filter(layer => layer.id.endsWith("-outline")).map(layer => [layer.id, layer.paint?.["line-width"] ?? 1]));
+    const card = window.document.createElement("div");
+    card.className = "saanich-checklist-card";
+    card.hidden = true;
+    map.getContainer().appendChild(card);
+    let hovered = null;
+    const setHovered = id => {
+        if (id !== hovered) {
+            if (hovered) {
+                map.setPaintProperty(hovered + "-outline", "line-width", widths[hovered + "-outline"]);
+            }
+            if (id) {
+                map.setPaintProperty(id + "-outline", "line-width", widths[id + "-outline"] + 2);
+                card.innerHTML = labels[id] || "";
+            }
+            hovered = id;
+        }
+        card.hidden = !id;
+    };
+    map.on("mousemove", event => {
+        const active = window.document.querySelector(".mxcw-leftPane.saanich-remembering-active");
+        const feature = active && map.queryRenderedFeatures(event.point, {layers: layers.map(layer => layer.id)})[0];
+        setHovered(feature ? feature.layer.id : null);
+        if (feature) {
+            const {width, height} = map.getContainer().getBoundingClientRect();
+            card.style.left = Math.min(event.point.x + 16, width - card.offsetWidth - 8) + "px";
+            card.style.top = Math.min(event.point.y + 16, height - card.offsetHeight - 8) + "px";
+        }
+    });
+    map.getCanvas().addEventListener("mouseleave", () => setHovered(null));
+};
+
+/** The species of the Community Science pane, which open on the Atlas **/
+
+// The iNaturalist place and taxon of the Community Science pane's panels - see paneOverrides in saanich-story.vue
+saanich.inatSpecies = {placeId: 81137, taxonId: 211194, lookup: null};
+
+/**
+ * Look up the iNaturalist taxa of the species shown by the Community Science pane's panels, which name each by its
+ * common name alone, by the same query the panels make. Made once, on the first click.
+ * @param {Window} window - The window holding the story page
+ * @return {Promise<Map<String, Object>>} Map of lower-cased common name to the taxon's `id` and scientific `name`
+ */
+saanich.inatSpecies.byName = function (window) {
+    if (!saanich.inatSpecies.lookup) {
+        const {placeId, taxonId} = saanich.inatSpecies;
+        saanich.inatSpecies.lookup = window.fetch(`https://api.inaturalist.org/v1/observations/species_counts?verifiable=true&place_id=${placeId}&taxon_id=${taxonId}&per_page=500`)
+            .then(response => response.json())
+            .then(data => new Map(data.results.filter(result => result.taxon.preferred_common_name)
+                .map(result => [result.taxon.preferred_common_name.toLowerCase(), {id: String(result.taxon.id), name: result.taxon.name}])));
+    }
+    return saanich.inatSpecies.lookup;
+};
+
+/**
+ * Find the atlas's taxon for a species of iNaturalist - the same taxon, or else the atlas's taxon of that scientific name
+ * or one beneath it, e.g. Pseudotsuga menziesii var. menziesii for iNaturalist's Pseudotsuga menziesii.
+ * @param {Object<String, TaxonRow>} rowById - The atlas's taxa
+ * @param {Object} taxon - The iNaturalist taxon, with its `id` and scientific `name`
+ * @return {TaxonRow|undefined} The atlas's taxon, preferring one of its summary
+ */
+saanich.inatSpecies.atlasRow = function (rowById, taxon) {
+    if (rowById[taxon.id]) {
+        return rowById[taxon.id];
+    }
+    const named = Object.values(rowById).filter(row => {
+        const scientific = row.scientificName || "";
+        return scientific === taxon.name || scientific.startsWith(taxon.name + " ");
+    });
+    return named.find(row => row.inSummary) || named[0];
+};
+
+/**
+ * Open the Atlas on the species of a card of the Community Science pane, if it is one of the atlas's taxa.
+ * @param {bioreportr.storyPage} storyPage - The story page
+ * @param {HTMLElement} card - The card clicked
+ * @param {Window} window - The window holding the story page
+ */
+saanich.inatSpecies.open = function (storyPage, card, window) {
+    const name = card.querySelector(".inat-observation-label-title")?.textContent.trim().toLowerCase();
+    if (name) {
+        saanich.inatSpecies.byName(window).then(byName => {
+            const taxon = byName.get(name);
+            const row = taxon && saanich.inatSpecies.atlasRow(storyPage.taxa.rowById, taxon);
+            if (row) {
+                window.location.hash = "pane:Status&taxon:" + row.id;
+            }
+        }, error => console.error("Could not look up the species of the Community Science pane", error));
+    }
+};
+
+// The story pages whose Community Science cards already open their species
+saanich.inatSpecies.bound = new WeakSet();
+
+/**
+ * Listen for clicks on the cards of the Community Science pane, which the iNaturalist panels render outside the story
+ * page's own handling of clicks in its panes.
+ * @param {bioreportr.storyPage} storyPage - The story page
+ * @param {Window} window - The window holding the story page
+ */
+saanich.inatSpecies.bind = function (storyPage, window) {
+    if (!saanich.inatSpecies.bound.has(storyPage)) {
+        saanich.inatSpecies.bound.add(storyPage);
+        // Caught as it descends, before the card's own handler, which would open a broken link to iNaturalist in another tab
+        window.document.addEventListener("click", event => {
+            const card = event.target.closest?.(".mxcw-inat-components article");
+            if (card) {
+                event.preventDefault();
+                event.stopPropagation();
+                saanich.inatSpecies.open(storyPage, card, window);
+            }
+        }, true);
+    }
+};
 
 /** Clicks and the opening of the extirpation risk pane **/
 
@@ -967,10 +1130,11 @@ saanich.traces.renderCard = function (event) {
  * @param {Boolean} active - Whether the timeline's pane is showing
  * @param {Boolean} paused - Whether the timeline is paused
  * @param {Boolean} scrubbing - Whether the timeline's slider is being dragged
+ * @param {Boolean} rememberingActive - Whether the pane in memory of Harvey Janszen is shown
  * @return {String} The classes
  */
-saanich.traces.leftPaneClass = function (active, paused, scrubbing) {
-    const classes = [];
+saanich.traces.leftPaneClass = function (active, paused, scrubbing, rememberingActive) {
+    const classes = rememberingActive ? ["saanich-remembering-active"] : [];
     if (active) {
         classes.push("saanich-traces-active");
     }

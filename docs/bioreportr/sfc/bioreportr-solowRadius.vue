@@ -5,7 +5,10 @@
 // The slider choosing the radius within which observations of a taxon belong to the same population
 fluid.def("bioreportr.solowRadius", {
     $layers: "fluid.component",
+    // The index of the default radius among the snap values, which a story may override along with selectedIndex
+    defaultIndex: 4,
     selectedIndex: 4,
+    defaultRadius: "$compute:bioreportr.solowRadius.indexToRadius({self}.defaultIndex)",
     radius: "$compute:bioreportr.solowRadius.indexToRadius({self}.selectedIndex)",
     display: "$compute:bioreportr.solowRadius.display({self}.selectedIndex)",
     ticks: {
@@ -38,6 +41,6 @@ fluid.def("bioreportr.solowRadius", {
         </div>
         <div class="mxcw-solow-radius-snap-markers" @id="ticks"></div>
         <div class="mxcw-solow-radius-current-value">@{display.value}</div>
-        <div class="mxcw-solow-radius-note">*Aggregate sightings into populations: default = 5000 m</div>
+        <div class="mxcw-solow-radius-note">*Aggregate sightings into populations: default = @{defaultRadius} m</div>
     </div>
 </template>

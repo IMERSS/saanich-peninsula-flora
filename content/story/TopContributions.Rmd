@@ -14,21 +14,25 @@ plant.summary <- read.csv("tabular_data/Saanich_Tracheophyta_ultimate-summary_20
 new <- plant.summary %>% filter(str_detect(reportingStatus, "new"))
 confirmed <- plant.summary %>% filter(reportingStatus == 'confirmed')
 reported <- plant.summary %>% filter(reportingStatus == 'unconfirmed')
+# Species with at least one iNaturalist observation, whose records are identified by their occurrenceID
+inat.taxa <- unique(plants$iNaturalistTaxonId[grepl("inaturalist.org/observations", plants$occurrenceID)])
+inat.percent <- round(mean(plant.summary$id %in% inat.taxa) * 100)
 # observed <- plant.summary %>% filter(iNatObservationStatus == 'observed')
 ```
 
 ## Community contributions to our knowledge of the regional plant diversity
 
 Through the combined efforts of `r length(unique(plants$recordedBy))` individuals, the Saanich naturalist
-community has now documented a total of `r nrow(plant.summary)` vascular plant species. Based on search
-efforts over the last decade, `r round((nrow(confirmed)/(nrow(confirmed)+nrow(reported))*100), digits = 0)` percent
+community has now documented a total of `r nrow(plant.summary)` vascular plant species. Since 2000, `r round((nrow(confirmed)/(nrow(confirmed)+nrow(reported))*100), digits = 0)` percent
 of the historically reported plant diversity has been confirmed and `r nrow(new)` new species reports added to the
-list. Community members have now documented `r round((nrow(confirmed)/(nrow(plant.summary))*100), digits = 0)` percent
-of the plant diversity known to the region on iNaturalist.
+list.
 
+<span class="saanich-callout">Community members have now documented `r inat.percent` percent of the total plant diversity known to the region on iNaturalist.</span>
 
-You can contribute to this growing record of the regional plant diversity by submitting your observations
-to the ["Lost" plants of the Saanich Peninsula iNaturalist project.](https://www.inaturalist.org/projects/lost-plants-of-the-saanich-peninsula)
+Contribute to this growing record by submitting your observations to the [“Lost” plants of the Saanich Peninsula iNaturalist project](https://www.inaturalist.org/projects/lost-plants-of-the-saanich-peninsula)!
+
+:::: {.saanich-howto}
 Here, you can browse photos of some of the most commonly documented plants, as well as recent observations and
 top observers across the region, based on [iNaturalist](http://inaturalist.org/) data.
 Visualisation code courtesy of [Ben Keen](https://github.com/benkeen).
+::::

@@ -229,7 +229,6 @@
 /* ── Panes which replace the map, on the same solid ground as the column behind them ─────── */
 
 .mxcw-dataPane-LostPlants,
-.mxcw-dataPane-Remembering,
 .mxcw-dataPane-TopContributions {
     background-color: #184E62;
 }
@@ -324,72 +323,12 @@
     padding: var(--story-gap) var(--story-gap) var(--story-gap) 0;
 }
 
-/* ── Remembering Harvey ──────────────────────────────────── */
-
-.mxcw-dataPane-Remembering {
-    flex: 1 1 auto;
-    min-width: 0;
-    height: 100%;
-    overflow-y: auto;
-}
-
-.saanich-remembering {
-    padding: 12px;
-    color: #eefaff;
-}
-
-.saanich-remembering figure {
-    margin: 0;
-}
-
-.saanich-remembering img {
-    display: block;
-    width: 100%;
-    border-radius: var(--data-table-radius);
-}
-
-.saanich-remembering figcaption {
-    font-size: var(--story-small);
-    line-height: 1.3;
-    color: #a8c8d0;
-    margin-top: 4px;
-}
-
-.saanich-remembering-photos {
-    display: grid;
-    grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
-    gap: 12px;
-    align-items: start;
-}
-
-.saanich-remembering h3 {
-    font-size: var(--story-body);
-    font-weight: 700;
-    margin: 16px 0 var(--story-gap);
-}
-
-.saanich-remembering-journals {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: var(--story-gap);
-}
-
 .mxcw-content blockquote {
     font-size: var(--story-body);
     font-style: italic;
     border-left: 2px solid #FDF2CE;
     padding-left: 0.75em;
     margin: 0.6em 0 0;
-}
-
-@media (max-width: 767.98px) {
-    .saanich-remembering-photos {
-        grid-template-columns: minmax(0, 1fr);
-    }
-
-    .saanich-remembering-portrait {
-        max-width: 240px;
-    }
 }
 
 /* ── Section tabs, compact on one line where there is room ───────────────────────────────── */
@@ -432,19 +371,16 @@
 
 /* ── Scrollbars of the image panes, centred in a gutter matching the opposite margin ─────── */
 
-.mxcw-dataPane-LostPlants,
-.mxcw-dataPane-Remembering {
+.mxcw-dataPane-LostPlants {
     scrollbar-gutter: stable;
 }
 
-.mxcw-dataPane-LostPlants::-webkit-scrollbar,
-.mxcw-dataPane-Remembering::-webkit-scrollbar {
+.mxcw-dataPane-LostPlants::-webkit-scrollbar {
     -webkit-appearance: none;
     width: 12px;
 }
 
-.mxcw-dataPane-LostPlants::-webkit-scrollbar-thumb,
-.mxcw-dataPane-Remembering::-webkit-scrollbar-thumb {
+.mxcw-dataPane-LostPlants::-webkit-scrollbar-thumb {
     border: 3px solid transparent;
     border-radius: 6px;
     background-clip: padding-box;
@@ -455,11 +391,13 @@
     padding: 12px 0 12px 12px;
 }
 
-.saanich-remembering {
-    padding-right: 0;
-}
-
 /* ── Taxon panels above their records, with a guide rail while both are open ─────────────── */
+
+/* The Atlas's panel sits within a wrapper added by the story page, which must fill the holder for the photo, sized to the
+   panel's height as in the extirpation risk pane, to have any size at all */
+.mxcw-atlas-taxon-holder > div {
+    height: 100%;
+}
 
 .mxcw-data:has(> .mxcw-atlas-has-taxon) {
     flex-direction: column;
@@ -762,7 +700,6 @@ body {
 .imerss-checklist,
 .imerss-main-checklist,
 .mxcw-dataPane-LostPlants,
-.mxcw-dataPane-Remembering,
 .hortis-dataTable-scroll,
 .mxcw-taxon-info {
     overscroll-behavior: contain;
@@ -811,7 +748,6 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
     gap: var(--story-gap);
-    min-height: 150px;
     margin: 0 0 0.6em;
 }
 
@@ -862,35 +798,7 @@ body {
     font-size: var(--story-small);
     line-height: 1.3;
     color: #a8c8d0;
-    margin: 2px 0 var(--story-gap);
-}
-
-.saanich-tile-caption {
-    font-size: var(--story-small);
-    line-height: 1.3;
-    color: #a8c8d0;
-    margin-bottom: 2px;
-}
-
-.saanich-tile-chart {
-    display: flex;
-    align-items: flex-end;
-    gap: 2px;
-    height: 34px;
-}
-
-.saanich-tile-chart span {
-    flex: 1;
-    min-height: 1px;
-    border-radius: 4px 4px 0 0;
-    background: var(--tip-colour);
-}
-
-.saanich-tile-axis {
-    display: flex;
-    justify-content: space-between;
-    font-size: 10px;
-    color: #a8c8d0;
+    margin-top: 2px;
 }
 
 /* ── Extirpation probability filter ──────────────────────── */
@@ -938,37 +846,6 @@ body {
     padding: 0 6px;
     line-height: 1.5;
     border-radius: 4px;
-}
-
-/* Year labels line up with the bars above them, each spanning a pair of bars */
-.saanich-tile-chart,
-.saanich-tile-axis {
-    display: grid;
-    grid-template-columns: repeat(var(--tile-bins), minmax(0, 1fr));
-    column-gap: 2px;
-    flex-shrink: 0;
-}
-
-.saanich-tile-chart {
-    align-items: end;
-}
-
-.saanich-tile-axis {
-    justify-content: stretch;
-    margin-top: 3px;
-    font-size: 11px;
-    line-height: 1.2;
-    color: #dfeef3;
-}
-
-.saanich-tile-axis span {
-    grid-column: span 2;
-    white-space: nowrap;
-}
-
-/* An odd number of bars leaves the last label with only one bar to sit beneath */
-.saanich-tile-axis span:last-child:nth-child(4) {
-    grid-column: span 1;
 }
 
 /* ── Right hand column and species list: tighter margins ─── */
@@ -1377,4 +1254,455 @@ body {
 /* The most numerous marks step back, leaving the plants last seen to stand out */
 .saanich-trace[data-kind="first"] svg {
     opacity: 0.7;
+}
+
+.saanich-time-range label span {
+    width: 2.6em;
+}
+
+/* The photos of the iNaturalist widget highlight as those of the gallery of lost plants do */
+:is(#inat-components, .mxcw-inat-components) article {
+    border-radius: var(--data-table-radius);
+    outline: 2px solid transparent;
+    transition: outline-color 150ms;
+}
+
+:is(#inat-components, .mxcw-inat-components) article:hover {
+    outline-color: #FDF2CE;
+}
+
+/* Text beyond the opening vignette comes in three classes:
+   reading panes are narrative, centred and at the opening vignette's scale;
+   tool panes (Atlas, Find the Plants) share their column with a table, so are compact and run to the full width;
+   .saanich-howto holds guidance on working the tools, set apart from the narrative */
+:root {
+    --saanich-vignette-text: clamp(16px, min(0.55vw + 11px, 2.3vh), 21px);
+    --saanich-tool-text: clamp(15px, min(0.3vw + 11px, 2vh), 18px);
+}
+
+@media (min-width: 768px) {
+    :is(.mxcw-paneKey-LostPlants, .mxcw-paneKey-TopContributions, .mxcw-paneKey-Remembering).mxcw-activeSection {
+        justify-content: safe center;
+    }
+
+    :is(.mxcw-paneKey-LostPlants, .mxcw-paneKey-TopContributions, .mxcw-paneKey-Remembering) .mxcw-sectionInner {
+        flex: none;
+    }
+}
+
+:is(.mxcw-paneKey-LostPlants, .mxcw-paneKey-Status, .mxcw-paneKey-TopContributions, .mxcw-paneKey-Solow, .mxcw-paneKey-Remembering) h2 {
+    color: #a8c8d0;
+    font-size: var(--story-small);
+    font-weight: 400;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin: 1.25rem 0 clamp(12px, 2.4vh, 26px);
+}
+
+:is(.mxcw-paneKey-Status, .mxcw-paneKey-Solow) h2 {
+    margin: 0.5rem 0 var(--story-gap);
+}
+
+:is(.mxcw-paneKey-LostPlants, .mxcw-paneKey-Status, .mxcw-paneKey-TopContributions, .mxcw-paneKey-Solow, .mxcw-paneKey-Remembering) .mxcw-sectionColumn > p {
+    max-width: 31em;
+    margin: 0 auto clamp(10px, 2.2vh, 22px);
+    padding: 0;
+    color: #d6e8ee;
+    font-size: var(--saanich-vignette-text);
+    line-height: 1.5;
+    text-align: center;
+    text-wrap: pretty;
+}
+
+:is(.mxcw-paneKey-Status, .mxcw-paneKey-Solow) .mxcw-sectionColumn > p {
+    max-width: none;
+    margin-bottom: var(--story-gap);
+    padding: 0;
+    font-size: var(--saanich-tool-text);
+    line-height: 1.4;
+}
+
+/* The lead-in, the callout and the project link are all emphasised alike: cream, never bold */
+.mxcw-paneKey-TopContributions .mxcw-sectionColumn > p .saanich-callout,
+.mxcw-paneKey-LostPlants .mxcw-sectionColumn > p :is(strong, .saanich-callout),
+.mxcw-paneKey-LostPlants .mxcw-sectionColumn > p a {
+    color: #FDF2CE;
+    font-weight: 400;
+}
+
+.saanich-howto {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(168, 200, 208, 0.35);
+    color: #c4dbe2;
+    font-size: var(--story-body);
+    line-height: 1.45;
+}
+
+.saanich-howto p,
+.saanich-howto ol {
+    margin: 0 0 var(--story-gap);
+}
+
+.saanich-howto ol {
+    padding-left: 1.5em;
+}
+
+.saanich-howto li {
+    margin-bottom: 4px;
+}
+
+.saanich-howto em,
+.saanich-howto strong {
+    color: #FDF2CE;
+}
+
+/* Community Science: the photos sit on the same margins as the gallery of lost plants, without captions, whose tab labels already say what is shown */
+:is(#inat-components, .mxcw-inat-components) > div {
+    padding: 0;
+}
+
+:is(#inat-components, .mxcw-inat-components) .inat-tabs {
+    padding: 0 var(--story-gap);
+}
+
+:is(#inat-components, .mxcw-inat-components) > div > div:last-child {
+    padding: 12px var(--story-gap) var(--story-gap) 12px;
+}
+
+:is(#inat-components, .mxcw-inat-components) .inat-tab-desc {
+    display: none;
+}
+
+/* With the captions gone the year filter joins the row of tabs, so that it displaces nothing beneath it */
+:is(#inat-components, .mxcw-inat-components) > div {
+    position: relative;
+}
+
+@media (min-width: 1024px) {
+    :is(#inat-components, .mxcw-inat-components) .inat-years-dropdown {
+        position: absolute;
+        top: 4px;
+        right: 16px;
+        margin: 0;
+    }
+}
+
+/* One margin for every pane: 16px either side of the content, counting the scrollbar's space, which is always reserved
+   so that the text does not shift between panes */
+@media (min-width: 768px) {
+    .mxcw-content {
+        scrollbar-gutter: stable;
+    }
+
+    [class*="mxcw-paneKey-"] .mxcw-sectionColumn {
+        margin-right: 0;
+        padding: 0 4px 0 12px;
+    }
+
+    [class*="mxcw-paneKey-"] > h2 {
+        padding: 0 4px 0 12px;
+    }
+}
+
+/* Links are never bold within the content of a page, even inside bold text */
+:is(.mxcw-content, .mxcw-dataPane, main) a,
+:is(.mxcw-content, .mxcw-dataPane, main) :is(strong, b) a {
+    font-weight: 400;
+}
+
+/* Harvey's footsteps: the map fills the left of the page, and his portrait sits to the right of the text */
+.mxcw-leftPane.saanich-remembering-active .mxcw-map {
+    height: 100% !important;
+}
+
+.mxcw-leftPane.saanich-remembering-active > .mxcw-data,
+.mxcw-leftPane.saanich-remembering-active > .resize-bar {
+    display: none !important;
+}
+
+.mxcw-leftPane.saanich-remembering-active .maplibregl-canvas {
+    filter: brightness(0.85) saturate(0.8);
+}
+
+.saanich-harvey-portrait {
+    float: right;
+    width: min(38%, 200px);
+    margin: 4px 0 10px 18px;
+}
+
+.saanich-harvey-portrait img {
+    display: block;
+    width: 100%;
+    border-radius: var(--data-table-radius);
+}
+
+.saanich-harvey-portrait figcaption {
+    margin-top: 4px;
+    color: #a8c8d0;
+    font-size: var(--story-small);
+    line-height: 1.3;
+}
+
+.mxcw-paneKey-Remembering .mxcw-sectionColumn > p {
+    max-width: none;
+    text-align: left;
+}
+
+/* The card describing a checklist area on hover */
+.saanich-checklist-card {
+    position: absolute;
+    z-index: 3;
+    pointer-events: none;
+    max-width: 260px;
+    padding: 6px 10px;
+    color: #eefaff;
+    font-size: var(--story-data);
+    line-height: 1.4;
+    background: #0d3040;
+    border-top: 3px solid #FFD36B;
+    border-radius: var(--data-table-radius);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.mxcw-leftPane:not(.saanich-remembering-active) .saanich-checklist-card {
+    display: none;
+}
+
+.saanich-checklist-name {
+    color: #FDF2CE;
+    font-size: var(--story-body);
+    font-weight: 700;
+}
+
+/* Atlas filters: each a row of label and control on one grid, the controls shaped as the plant search beneath them,
+   and the status choices as chips edged in the colours of the status tiles */
+#imerss-main-filters {
+    padding: 2px 8px 6px 0;
+}
+
+#imerss-main-filters > .imerss-filter:empty {
+    display: none;
+}
+
+#imerss-main-filters > .imerss-filter {
+    display: grid;
+    grid-template-columns: 6.5em minmax(0, 1fr);
+    align-items: center;
+    column-gap: 10px;
+    margin: 0;
+    padding: 6px 0;
+    border-top: 1px solid #e5e7eb;
+}
+
+#imerss-main-filters > .imerss-status-filter {
+    border-top: 0;
+}
+
+#imerss-main-filters .imerss-filter-title {
+    width: auto;
+    margin: 0;
+    color: #4b778f;
+    font-size: var(--story-data);
+    font-weight: 700;
+}
+
+#imerss-main-filters .imerss-filter-body {
+    position: relative;
+    min-width: 0;
+    width: 100%;
+}
+
+#imerss-main-filters .autocomplete__wrapper,
+#imerss-main-filters .autocomplete__input {
+    width: 100%;
+}
+
+#imerss-main-filters .autocomplete__input {
+    height: 28px;
+    padding: 0 30px 0 12px;
+    font-size: var(--story-data);
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 100px;
+}
+
+#imerss-main-filters .autocomplete__input:focus {
+    outline: 2px solid #4b778f;
+    outline-offset: 0;
+}
+
+#imerss-main-filters .imerss-filter-clear {
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    z-index: 1;
+}
+
+#imerss-main-filters .imerss-region-filter-rows {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+#imerss-main-filters .imerss-status-filter .imerss-filter-row {
+    align-items: center;
+    margin: 0;
+    padding: 2px 10px 2px 6px;
+    font-size: var(--story-data);
+    border: 1px solid #e5e7eb;
+    border-left: 4px solid var(--saanich-chip, #a8c8d0);
+    border-radius: 100px;
+}
+
+#imerss-main-filters .imerss-status-filter .imerss-row-label {
+    text-transform: capitalize;
+}
+
+#imerss-main-filters .imerss-filter-row:has([data-row-id="confirmed"]) {
+    --saanich-chip: #5a96d2;
+}
+
+#imerss-main-filters .imerss-filter-row:has([data-row-id="unconfirmed"]) {
+    --saanich-chip: #decb90;
+}
+
+#imerss-main-filters .imerss-filter-row:has([data-row-id="new"]) {
+    --saanich-chip: #7562b4;
+}
+
+#imerss-main-filters .saanich-time-range {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    align-items: stretch;
+    gap: 2px;
+}
+
+#imerss-main-filters .saanich-time-range label {
+    display: grid;
+    grid-template-columns: 2.6em minmax(0, 1fr) 3em;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--story-data);
+}
+
+#imerss-main-filters .saanich-time-range label span {
+    width: auto;
+    color: #4b778f;
+}
+
+#imerss-main-filters .saanich-time-range output {
+    text-align: right;
+}
+
+/* The region filter lists biogeoclimatic zones, which this atlas does not present */
+#imerss-main-filters > .imerss-region-filter {
+    display: none;
+}
+
+/* The headers of the panels of records and species - Filters and Plants - are set as the labels of the filters
+   within them, so that the panels read as one scale with the reading text rather than shouting over it */
+.imerss-container .imerss-panel-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px 4px 4px;
+    color: #4b778f;
+    font-size: var(--story-data);
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.imerss-container .imerss-panel-label button,
+.imerss-container .imerss-filters-toggle {
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+}
+
+.imerss-container .imerss-panel-label .imerss-download-button svg,
+.imerss-container .imerss-panel-label .imerss-filter-controls svg {
+    width: 18px;
+    height: 18px;
+}
+
+.imerss-container .autocomplete__input {
+    height: 26px;
+    font-size: var(--story-data);
+    font-weight: 400;
+    letter-spacing: normal;
+    text-transform: none;
+}
+
+/* The time, recorder and locality filters' own elements hold their titles and controls, so each takes the label and control grid of the other filters */
+#imerss-main-filters > .imerss-time-filter > .imerss-time-filter,
+#imerss-main-filters > .imerss-filter > .imerss-collector-filter {
+    display: contents;
+}
+
+/* Each filter row runs the full width of the panel, and an autocomplete fills what its label leaves */
+#imerss-main-filters > .imerss-filter {
+    box-sizing: border-box;
+    width: 100%;
+}
+
+#imerss-main-filters .imerss-filter-autocomplete > div {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+/* The autocomplete library marks a focused search with a heavy yellow outline; the site's searches take its own blue-grey
+   focus ring instead, still clearly visible against the pale panel */
+.imerss-container .autocomplete__input--focused,
+.imerss-container .autocomplete__input:focus {
+    outline: 2px solid #4b778f;
+    outline-offset: 0;
+    box-shadow: none;
+}
+
+/* The suggestions of a search are set at the size of the list of plants beneath it, not the library's large default */
+.imerss-container .imerss-filter-autocomplete .autocomplete__option {
+    padding: 4px 10px;
+    font-size: var(--story-data);
+    font-weight: 400;
+    line-height: 1.35;
+}
+
+.imerss-container .autocomplete__menu {
+    border-radius: var(--data-table-radius);
+}
+
+/* The search of the checklist fills the rest of its header after the label and the download button, so that the names
+   chosen in it are not cut short */
+.imerss-container .imerss-panel-label .imerss-search-checklist {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin-right: 4px;
+}
+
+.imerss-container .imerss-search-checklist .imerss-filter-autocomplete,
+.imerss-container .imerss-search-checklist .imerss-filter-autocomplete > div:not(.imerss-filter-clear),
+.imerss-container .imerss-search-checklist .autocomplete__wrapper,
+.imerss-container .imerss-search-checklist .autocomplete__input {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: none;
+}
+
+/* With the search filling its header, the button clearing it sits inside the right end of the box */
+.imerss-container .imerss-search-checklist .imerss-filter-autocomplete {
+    position: relative;
+}
+
+.imerss-container .imerss-search-checklist .imerss-filter-clear {
+    top: -1px;
+    right: 0;
+}
+
+/* The species of the Community Science pane open on the Atlas */
+.mxcw-inat-components article {
+    cursor: pointer;
 }

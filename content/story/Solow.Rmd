@@ -16,6 +16,7 @@ Every plant in this list is a search waiting to happen. This tool suggests where
 sightings alone, applying one component of our
 [protocol for detecting local extinction](https://imerss.github.io/detecting-local-extinction/docs/assessing_extirpation_risk/).
 
+:::: {.saanich-howto}
 **Extirpation probability (EP)** runs from 0 (likely still present) to 1 (likely lost locally). Using
 [Solow's (1993)](https://esajournals.onlinelibrary.wiley.com/doi/10.2307/1940821) method, it compares when a species was
 sighted with the whole period of record, from the earliest collection in our data (`r period$first`) to `r period$last`. EP is highest for
@@ -38,3 +39,4 @@ nearer the middle, since so few records say little either way.
 
 **A high EP is a reason to go looking, not proof of loss.** It does not account for where or how hard people have
 searched, or for suitable habitat, which the full protocol goes on to weigh.
+::::

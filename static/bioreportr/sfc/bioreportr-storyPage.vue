@@ -420,6 +420,9 @@ bioreportr.storyPage.toggle = function (that, member) {
                                 <div class="imerss-filter"></div>
                                 <div class="imerss-status-filter imerss-filter" @id="statusFilter"></div>
                                 <div class="imerss-collector-filter imerss-filter" @id="collectorFilter"></div>
+                                <!-- Filled only by a story defining these filters, as the Saanich story does -->
+                                <div class="imerss-locality-filter imerss-filter" @id="localityFilter"></div>
+                                <div class="imerss-time-filter imerss-filter" @id="timePeriodFilter"></div>
                             </div>
                             <div @id="recordReporter"></div>
                             <div @id="checklist"></div>

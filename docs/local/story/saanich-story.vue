@@ -1,4 +1,6 @@
 <fluid-import src="../../bioreportr/sfc/bioreportr-storyPage.vue"></fluid-import>
+<!-- The Atlas's filters of records by time period - its filter by locality is a collector filter over another field -->
+<fluid-import src="saanich-timePeriodFilter.vue"></fluid-import>
 <!-- The iNaturalist panels of the Top Contributions pane -->
 <script src="%@imerss/inat-components/dist/standalone.min.js" fluid-client data-fl-scope="global"></script>
 <!-- The gallery of lost plants, the atlas's tiles, panel and tooltips and the other panes particular to this story -->
@@ -65,7 +67,6 @@ fluid.def("saanich.story", {
         {key: "coordinateUncertaintyInMetres", label: "Uncertainty (m)"},
         {key: "elevation", label: "Elevation"},
         {key: "individualCount", label: "Count"},
-        {key: "BEC", label: "BEC zone"},
         {key: "establishmentMeans", label: "Establishment"},
         {key: "identifiedBy", label: "Identified by"},
         {key: "dateIdentified", label: "Date identified"},
@@ -110,10 +111,48 @@ fluid.def("saanich.story", {
             count: "$compute:saanich.lostPlants.count({self}.cards)"
         }
     },
-    rememberingMarkup: "$compute:saanich.remembering.getMarkup()",
-    paneMarkup: "$compute:saanich.paneMarkup({self}.lostPlants.markup, {self}.rememberingMarkup)",
+    paneMarkup: "$compute:saanich.paneMarkup({self}.lostPlants.markup)",
+    // The Atlas's records may also be narrowed by the places named in them and by a span of years, filters placed by the
+    // slots of the same names in the story page's filter panel
+    // The species of the Community Science pane open on the Atlas - see saanich.inatSpecies
+    inatSpeciesClick: "$effect:saanich.inatSpecies.bind({self}, {global})",
+    // The checklist shows each species' reporting status by an icon - see saanich.checklistDecoration
+    checklist: {
+        $component: {
+            decorate: "saanich.checklistDecoration"
+        }
+    },
+    // The records come from collectors, observers and others alike, so the recorder filter does not call them volunteers
+    collectorFilter: {
+        $component: {
+            placeholder: "Search recorders ..."
+        }
+    },
+    localityFilter: {
+        $component: {
+            $layers: "hortis.collectorFilter",
+            filterName: "Locality",
+            fieldName: "locality",
+            controlId: "fli-saanich-locality",
+            placeholder: "Search localities ...",
+            isActive: "{storyPage}.activePane.visibleFilters"
+        }
+    },
+    timePeriodFilter: {
+        $component: {
+            $layers: "saanich.timePeriodFilter",
+            isActive: "{storyPage}.activePane.visibleFilters"
+        }
+    },
+    // Populations are aggregated at 1000 m by default, the third of the radius slider's snap values
+    solowRadius: {
+        $component: {
+            defaultIndex: 2,
+            selectedIndex: 2
+        }
+    },
     // The tiles of the atlas's three groups of species, placed in its section, and the count of the gallery's plants
-    atlasTiles: "$compute:saanich.atlas.tilesMarkup({self}.taxa.allRows, {self}.byTaxon, {self}.selectedStatus, {self}.recordPeriod.last)",
+    atlasTiles: "$compute:saanich.atlas.tilesMarkup({self}.taxa.allRows, {self}.selectedStatus)",
     sectionInserts: "$compute:saanich.atlas.sectionInserts({self}.atlasTiles, {self}.lostPlants.count)",
     paneClick: "$method:saanich.paneClick({self}, {0}:event, Solow, {global})",
     // The atlas's panel of the plant or group chosen in the checklist
@@ -157,9 +196,18 @@ fluid.def("saanich.story", {
             showPlayback: "$effect:saanich.traces.showPlayback({self}, {self}.paused)"
         }
     },
-    leftPaneClass: "$compute:saanich.traces.leftPaneClass({self}.traces.active, {self}.traces.paused, {self}.traces.scrubbing)",
+    // The final pane, in memory of Harvey Janszen, shows the areas of his checklists on the map, described on hover
+    rememberingActive: "$compute:bioreportr.storyPage.isActive({self}.activePaneKey, Remembering)",
+    rememberingHover: "$effect:saanich.remembering.bindHover({self}.map.readyMap, {self}.mapData, {global})",
+    // A pane opened from one without a map is placed on its camera once the map has its size - see saanich.recentre
+    recentre: "$effect:saanich.recentre({self}.map.readyMap, {self}.mapData, {self}.activePane)",
+    rememberingFrame: "$effect:saanich.remembering.frame({self}.map.readyMap, {self}.mapData, {self}.rememberingActive, {self}.map.zoomDuration)",
+    leftPaneClass: "$compute:saanich.traces.leftPaneClass({self}.traces.active, {self}.traces.paused, {self}.traces.scrubbing, {self}.rememberingActive)",
     paneOverrides: {
         Traces: {
+            visibleMap: true
+        },
+        Remembering: {
             visibleMap: true
         },
         Solow: {
@@ -191,6 +239,8 @@ fluid.def("saanich.story", {
         $component: {
             $layers: ["hortis.libreMap.withTiles", "hortis.libreMap.esriTiles"],
             countTransform: "saanich.weibullCount",
+            // A selected record hides the grid only while few enough records are in view - see saanich.showMarkers
+            showMarkers: "$compute:saanich.showMarkers({self}.gridVisible, {self}.viewportObs.inView, {self}.markerThreshold, {self}.selectedRecord)",
             inverseCountTransform: "saanich.inverseWeibullCount",
             // The grid counts records of every type of evidence, not only observations
             legendMarkup: `$compute:saanich.obsGridLegendMarkup({self}.obsQuantiser.grid, {self}.fillStops, {self}.legendStops,
