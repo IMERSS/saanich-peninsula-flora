@@ -20,7 +20,12 @@ fluid.def("hortis.dataTable", {
     minBlockSize: 20,
     sortColumn: null,
     sortDirection: 1,
+    // The selected row, if any. A table whose selection is held elsewhere, e.g. by hortis.libreMap.recordSelector,
+    // overrides this with a reference to it, and `selectRow` with a method writing it
     selectedRow: null,
+    // Whether clicking anywhere on a row selects it, besides its checkbox - clicking the selected row deselects it
+    selectOnRowClick: true,
+    selectRow: "$method:hortis.dataTable.selectRow({self}, {0}:row)",
     // Written by the listener tracking the scrolled element
     scrollTop: 0,
     viewHeight: 0,
@@ -118,7 +123,7 @@ hortis.dataTable.sortIconId = function (key, sortColumn, sortDirection) {
  * @param {Boolean} rowSelectable - Whether a row may be selected
  * @param {String|null} sortColumn - The key of the column sorted by
  * @param {Number} sortDirection - The direction of sorting
- * @return {String} The markup of the head, a `thead` element
+ * @return {String} The markup of the head's row, rendered within the table's `thead`
  */
 hortis.dataTable.headMarkup = function (columns, sortable, rowSelectable, sortColumn, sortDirection) {
     const cells = columns.map(col => {
@@ -129,7 +134,7 @@ hortis.dataTable.headMarkup = function (columns, sortable, rowSelectable, sortCo
             `<svg class="hortis-dataTable-icon"><use href="#${hortis.dataTable.sortIconId(col.key, sortColumn, sortDirection)}"/></svg></button>` : "";
         return `<th${cls}${style}><div class="hortis-dataTable-sort-wrap">${label}${icon}</div></th>`;
     }).join("");
-    return "<thead><tr>" + (rowSelectable ? "<th class=\"hortis-dataTable-select-cell\"></th>" : "") + cells + "</tr></thead>";
+    return "<tr>" + (rowSelectable ? "<th class=\"hortis-dataTable-select-cell\"></th>" : "") + cells + "</tr>";
 };
 
 /**
@@ -153,7 +158,7 @@ hortis.dataTable.renderCell = function (col, row) {
  * @param {Number} rowHeight - The height of a row, in pixels
  * @param {Boolean} rowSelectable - Whether a row may be selected
  * @param {Object|null} selectedRow - The selected row, if any
- * @return {String} The markup of the body, a `tbody` element
+ * @return {String} The markup of the body's rows, rendered within the table's `tbody`
  */
 hortis.dataTable.bodyMarkup = function (rows, columns, window, rowHeight, rowSelectable, selectedRow) {
     const columnCount = columns.length + (rowSelectable ? 1 : 0);
@@ -163,9 +168,10 @@ hortis.dataTable.bodyMarkup = function (rows, columns, window, rowHeight, rowSel
         const selected = row === selectedRow;
         const check = rowSelectable ? `<td class="hortis-dataTable-select-cell"><input type="checkbox" class="hortis-dataTable-row-check" data-row-index="${index}"${selected ? " checked" : ""}/></td>` : "";
         const cells = columns.map(col => `<td${col.numeric ? " class=\"hortis-dataTable-num\"" : ""}>${hortis.dataTable.renderCell(col, row)}</td>`).join("");
-        return `<tr${selected ? " class=\"hortis-dataTable-selected-row\"" : ""}>${check}${cells}</tr>`;
+        const rowAttrs = rowSelectable ? ` data-row-index="${index}" class="hortis-dataTable-selectable-row${selected ? " hortis-dataTable-selected-row" : ""}"` : "";
+        return `<tr${rowAttrs}>${check}${cells}</tr>`;
     }).join("");
-    return "<tbody>" + spacer(window.start * rowHeight) + body + spacer((window.total - window.end) * rowHeight) + "</tbody>";
+    return spacer(window.start * rowHeight) + body + spacer((window.total - window.end) * rowHeight);
 };
 
 hortis.dataTable.pageInfo = function (window) {
@@ -174,7 +180,8 @@ hortis.dataTable.pageInfo = function (window) {
 
 /**
  * Track the scrolled position and the height of the view of a table's scrolled element, writing them into the table
- * on each animation frame in which they change.
+ * on each animation frame in which they change, and the height of its head into the element's CSS variable
+ * --data-table-head-height.
  * @param {hortis.dataTable} that - The table
  * @param {Element} container - The table's rendered container
  * @param {Window} window - The window holding the table
@@ -188,6 +195,8 @@ hortis.dataTable.track = function (that, container, window) {
         const theadHeight = scrollEl.querySelector("thead")?.getBoundingClientRect().height || 0;
         const row = scrollEl.querySelector("tbody tr:not(.hortis-dataTable-spacer)");
         const rowHeight = row?.getBoundingClientRect().height;
+        // Confines the vertical scrollbar's track to the rows, beneath the sticky head - see data-table.css
+        scrollEl.style.setProperty("--data-table-head-height", theadHeight + "px");
         that.scrollTop = scrollEl.scrollTop;
         that.viewHeight = Math.max(scrollEl.clientHeight - theadHeight, 0);
         if (rowHeight > 0 && Math.abs(rowHeight - that.rowHeight) > 0.01) {
@@ -211,8 +220,13 @@ hortis.dataTable.untrack = function (record) {
     record.cancel();
 };
 
+hortis.dataTable.selectRow = function (that, row) {
+    that.selectedRow = row;
+};
+
 /**
- * Handle a click within a table - on a column's sort button, a row's checkbox or a navigation button.
+ * Handle a click within a table - on a column's sort button, a row's checkbox, a selectable row, or a navigation
+ * button. A click on a link or other control within a row is left to it.
  * @param {Event} event - The click event
  * @param {hortis.dataTable} that - The table
  */
@@ -220,12 +234,16 @@ hortis.dataTable.click = function (event, that) {
     const sort = event.target.closest(".hortis-dataTable-sort");
     const check = event.target.closest(".hortis-dataTable-row-check");
     const move = event.target.closest("[data-move]");
+    const rowEl = event.target.closest("tr[data-row-index]");
     if (sort) {
         const key = sort.dataset.key;
         that.sortDirection = that.sortColumn === key ? -that.sortDirection : 1;
         that.sortColumn = key;
     } else if (check) {
-        that.selectedRow = check.checked ? that.displayRows[+check.dataset.rowIndex] : null;
+        that.selectRow(check.checked ? that.displayRows[+check.dataset.rowIndex] : null);
+    } else if (rowEl && that.selectOnRowClick && !event.target.closest("a, button, input, select, label")) {
+        const row = that.displayRows[+rowEl.dataset.rowIndex];
+        that.selectRow(row === that.selectedRow ? null : row);
     } else if (move) {
         hortis.dataTable.navigate(that, event.target.closest(".hortis-dataTable-wrap").querySelector(".hortis-dataTable-scroll"), move.dataset.move);
     }

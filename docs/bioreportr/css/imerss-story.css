@@ -802,12 +802,13 @@ h2 {
 }
 
 
+/* !important in these two rules overrides any heights set by dragging mapResizeBar, which are restored on leaving the pane */
 .mxcw-hideMap ~ .mxcw-data {
-    height: 100%;
+    height: 100% !important;
 }
 
 .mxcw-hideMap {
-    height: 0;
+    height: 0 !important;
 }
 
 .mxcw-hideMap + div {
@@ -896,6 +897,11 @@ body .mx-header ::-webkit-scrollbar-thumb {
 /* Panes which hide the viz controls leave nothing for contentResizeBar to resize against */
 .mxcw-container > .resize-bar:has(+ .imerss-container.fl-hidden) {
     display: none;
+}
+
+/* These panes also leave the content the whole column - !important overrides any height set by dragging contentResizeBar */
+.mxcw-content-holder:has(~ .imerss-container.fl-hidden) {
+    height: 100% !important;
 }
 
 /* Styling for native legends */
@@ -991,7 +997,9 @@ body .mx-header ::-webkit-scrollbar-thumb {
     margin-top: 2px;
 }
 
-.resize-bar {
+/* Scoped to the page, so as to outweigh imerss-bioinfo's resize-bar.css, which loads after this sheet and whose fainter
+   colours, still fainter in a dark colour scheme, otherwise left the bars almost invisible */
+.imerss-main .resize-bar {
     --bar-color: rgba(192, 192, 192, 0.5);
     --bar-color-hover: rgba(192, 192, 192, 0.6);
     --bar-color-active: rgba(192, 192, 192, 0.8);

@@ -1,14 +1,23 @@
 # Configuration
 baseURL: "/"
-title: Flora of the Saanich Peninsula
+title: Flora of W̱SÁNEĆ/Saanich Peninsula
 
 relativeUrls: true
 publishDir: docs
 
+# The knitted panes of content/story are read from there by src/js/storyBuild.js, which writes what the story page
+# uses into static/story. Since content/story/index.md makes the directory a page bundle, Hugo would otherwise publish
+# them as its resources too, at the same paths as the files of static/story, racing them and leaving the tail of a
+# longer knitted page after a shorter one written over it - its scripts and duplicated text then reach the page
+ignoreFiles:
+  - 'content[/\\]story[/\\][^/\\]+\.(html|Rmd)$'
+  - 'content[/\\]story[/\\][^/\\]+\.knit\.md~$'
+  - 'content[/\\]story[/\\](content_lib|img|[^/\\]+_files)([/\\]|$)'
+
 theme: "hextra"
 
 enableRobotsTXT: true
-enableGitInfo: true
+enableGitInfo: false
 # enableEmoji: false
 hasCJKLanguage: false
 
@@ -83,7 +92,7 @@ params:
     title: Salish Sea Biodiversity Atlas
     url: "https://salishseabiodiversity.org/"
 
-  description: Flora of the Saanich Peninsula
+  description: Flora of W̱SÁNEĆ/Saanich Peninsula
 
   # Displays bizarrely on hextra once we change background colour
   toc: false

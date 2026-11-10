@@ -16,6 +16,46 @@
     <fluid-module id="{{ .Site.Params.siteModule | default "site" }}" src="../" modules="fluid-modules.json"></fluid-module>
     <fluid-import src="../local/story/{{ .Site.Params.storyDriver | default "story" }}.vue"></fluid-import>
     <template id="site-subnav">{{ partial "subnav.html" . }}</template>
+    {{- /* Until the page has booted, loaded its stylesheets, which arrive as it imports its modules, and replaced its
+      placeholder data with the real, its statically rendered markup holds every pane's material unstyled - only the
+      banner and the panes' tabs show until then. hydrate.js renders the root with imerss-loading, which the story
+      page removes once its data is real - see bioreportr.storyPage.loaded. The elements hidden are marked by an
+      attribute, since a class computed by the page, as theirs are, is not rendered statically */ -}}
+    <style>
+      /* Opacity rather than visibility, which a descendant such as a map's legend may restore for itself */
+      .imerss-main.imerss-loading [data-mxcw-startup-hidden]:not([data-mxcw-startup-hidden="map"]),
+      .imerss-main.imerss-loading [data-mxcw-startup-hidden="map"] > * {
+        opacity: 0;
+        pointer-events: none;
+      }
+      /* The column of the map shows a loading indicator meanwhile, drawn over it so that nothing moves */
+      .imerss-main.imerss-loading [data-mxcw-startup-hidden="map"] {
+        position: relative;
+      }
+      .imerss-main.imerss-loading [data-mxcw-startup-hidden="map"]::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 48px;
+        height: 48px;
+        margin: -30px 0 0 -30px;
+        border: 6px solid rgba(238, 250, 255, 0.2);
+        border-top-color: #fdf2ce;
+        border-radius: 50%;
+        animation: mxcw-startup-spin 0.9s linear infinite;
+      }
+      @keyframes mxcw-startup-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .imerss-main.imerss-loading [data-mxcw-startup-hidden="map"]::after {
+          animation-duration: 3s;
+        }
+      }
+    </style>
     <div fluid-layers="{{ .Site.Params.storyLayer | default "story" }}"></div>
     {{- if or (eq .Site.Params.footer.enable nil) (.Site.Params.footer.enable) }}
       {{ partial "footer.html" . }}

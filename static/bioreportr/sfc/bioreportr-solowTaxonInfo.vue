@@ -13,6 +13,12 @@ fluid.def("bioreportr.solowTaxonInfo", {
             $layers: "hortis.verbatimSlot",
             markup: "{solowTaxonInfo}.model.taxonImage"
         }
+    },
+    georefNote: {
+        $component: {
+            $layers: "hortis.verbatimSlot",
+            markup: "{solowTaxonInfo}.model.georefNote"
+        }
     }
 });
 </script>
@@ -21,13 +27,14 @@ fluid.def("bioreportr.solowTaxonInfo", {
     <div class="mxcw-solow-taxon-pane" @class="fl-hidden:@{model.none}">
         <div class="mxcw-taxon-image" @id="image"></div>
         <div class="mxcw-taxon-info">
-            <div class="mxcw-taxon-name">Taxon: @{model.taxonName}</div>
+            <div class="mxcw-taxon-name">@{model.taxonName}</div>
             <dl class="mxcw-taxon-fields">
                 <dt>Date first seen:</dt> <dd>@{model.dateFirstSeen}</dd>
                 <dt>Date last seen:</dt> <dd>@{model.dateLastSeen}</dd>
                 <dt>Total sightings:</dt> <dd>@{model.numObs}</dd>
                 <dt>Regional EP:</dt> <dd>@{model.regionalEP}</dd>
             </dl>
+            <div @id="georefNote"></div>
         </div>
     </div>
 </template>

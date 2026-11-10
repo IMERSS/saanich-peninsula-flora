@@ -1,4 +1,5 @@
 <fluid-import src="%imerss-bioinfo/src/client/sfc/filters/hortis-valueFilter.vue"></fluid-import>
+<fluid-import src="bioreportr-epFilter.vue"></fluid-import>
 <fluid-import src="%imerss-bioinfo/src/client/sfc/components/hortis-dataTable.vue"></fluid-import>
 <fluid-import src="%imerss-bioinfo/src/client/sfc/filters/hortis-standardFilterControls.vue"></fluid-import>
 <script src="%imerss-bioinfo/src/client/js/i6/imerss-core.js"></script>
@@ -38,6 +39,11 @@ fluid.def("bioreportr.solowTaxa", {
             valueOf: "{self}.record.valueOf"
         }
     },
+    epFilter: {
+        $component: {
+            $layers: "bioreportr.epFilter"
+        }
+    },
     filterControls: {
         $component: {
             $layers: "hortis.standardFilterControls",
@@ -68,7 +74,10 @@ fluid.def("bioreportr.solowTaxa", {
                 <button type="button" class="imerss-filters-toggle" aria-expanded="@{filtersCollapsed}" @onclick="{self}.toggleFilters()">Filters:</button>
                 <div @id="filterControls"></div>
             </div>
-            <div class="imerss-filters imerss-taxa-filters" @id="filters"></div>
+            <div class="imerss-filters imerss-taxa-filters">
+                <div class="imerss-ep-filter imerss-filter" @id="epFilter"></div>
+                <div @id="filters"></div>
+            </div>
         </div>
         <div @id="taxaTable"></div>
     </div>

@@ -13,10 +13,12 @@ fluid.def("bioreportr.storyPane", {
     // pane: PaneSettings - the pane's settings, as the $for iteration variable
     active: "$compute:bioreportr.storyPage.isActive({storyPage}.activePaneKey, {self}.pane.paneKey)",
     url: "$compute:bioreportr.storyPane.url({storyPage}.storyBase, {self}.pane.file)",
+    fetched: "$compute:bioreportr.fetchText({self}.url)",
+    paneClick: "$method:bioreportr.storyPane.click({storyPage}, {0}:event)",
     section: {
         $component: {
             $layers: "hortis.verbatimSlot",
-            markup: "$compute:bioreportr.fetchText({storyPane}.url)"
+            markup: "$compute:bioreportr.storyPane.insert({storyPane}.fetched, {storyPage}.sectionInserts)"
         }
     },
     widgets: {
@@ -30,6 +32,6 @@ fluid.def("bioreportr.storyPane", {
 
 <template>
     <div class="mxcw-storyPane" @class="mxcw-activePane:@{active}" data-pane="@{pane.paneKey}">
-        <div @id="section"></div>
+        <div @onclick="{self}.paneClick({0})"><div @id="section"></div></div>
     </div>
 </template>

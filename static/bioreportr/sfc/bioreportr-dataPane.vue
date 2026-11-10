@@ -4,6 +4,7 @@
 <script src="%imerss-bioinfo/src/client/js/i6/imerss-core.js"></script>
 <script src="%imerss-bioinfo/src/client/js/i6/filters.js"></script>
 <script src="../js/i6/story.js"></script>
+<style src="../css/imerss-inat-panels.css"></style>
 <script>
 "use strict";
 
@@ -19,6 +20,14 @@ fluid.def("bioreportr.dataPane", {
             markup: "$compute:bioreportr.dataPane.fetch({storyPage}.storyBase, {dataPane}.pane.dataFile)"
         }
     },
+    // Markup supplied by the project for this pane, e.g. a gallery shown in place of the map
+    paneContent: {
+        $component: {
+            $layers: "hortis.verbatimSlot",
+            markup: "$compute:bioreportr.dataPane.paneMarkup({storyPage}.paneMarkup, {dataPane}.pane.paneKey)"
+        }
+    },
+    paneClick: "$method:bioreportr.storyPane.click({storyPage}, {0}:event)",
     widgets: {
         $bindable: {
             bind: "bioreportr.storyPane.renderWidgets({self}.content.view.renderedContainer, {global}.HTMLWidgets)",
@@ -95,6 +104,7 @@ bioreportr.iNatPanel.containerId = (paneKey, index) => "inat-components-" + pane
 <template>
     <div class="mxcw-dataPane mxcw-dataPane-@{pane.paneKey}" @class="fl-hidden:!@{active}">
         <div @id="content"></div>
-        <div @id="iNatPanels"></div>
+        <div class="mxcw-iNatPanels" @id="iNatPanels"></div>
+        <div @onclick="{self}.paneClick({0})"><div @id="paneContent"></div></div>
     </div>
 </template>

@@ -132,6 +132,30 @@ bioreportr.storyPane.url = (storyBase, file) => storyBase + file;
 // Loaded once the observations are filtered, from genuine data rather than placeholders
 bioreportr.storyPage.loaded = (finalFilteredObs, ...isPlaceholders) => !fluid.withPlaceholder.any(...isPlaceholders);
 
+// The longest in milliseconds that the page waits for the browser to fall idle before revealing it regardless
+bioreportr.storyPage.revealTimeout = 4000;
+
+/**
+ * Reveal the story page once it has loaded and the browser has fallen idle - by which time it has rendered everything
+ * derived from its genuine data, which happens over several tasks after it is loaded, during which what was derived
+ * from its placeholders would otherwise show. Nothing is revealed where there is no browser, e.g. under hydrate.js.
+ * @param {bioreportr.storyPage} that - The story page, whose `revealed` is written
+ * @param {Boolean} loaded - Whether the page's data is genuine
+ * @param {Object} global - The global object, which supplies `requestIdleCallback` in a browser
+ */
+bioreportr.storyPage.reveal = function (that, loaded, global) {
+    if (loaded && global.requestIdleCallback) {
+        global.requestIdleCallback(() => {
+            that.revealed = true;
+        }, {timeout: bioreportr.storyPage.revealTimeout});
+    } else if (loaded && global.setTimeout && global.document) {
+        // e.g. Safari, which lacks requestIdleCallback
+        global.setTimeout(() => {
+            that.revealed = true;
+        }, 0);
+    }
+};
+
 bioreportr.storyPage.isActive = (activePaneKey, paneKey) => activePaneKey === paneKey;
 
 /**
@@ -198,6 +222,12 @@ bioreportr.storyMap.showPane = function (that, map, mapData, activePaneKey) {
                 duration: zoomRatio > 0.3 ? that.slowZoomDuration : that.zoomDuration});
         } else {
             map.jumpTo({center: paneMap.center, zoom: paneMap.zoom});
+            bioreportr.storyMap.placed.add(map);
+        }
+    } else if (!bioreportr.storyMap.placed.has(map)) {
+        const camera = bioreportr.storyMap.firstCamera(mapData);
+        if (camera) {
+            map.jumpTo({center: camera.center, zoom: camera.zoom});
             bioreportr.storyMap.placed.add(map);
         }
     }
@@ -532,4 +562,153 @@ bioreportr.iNatPanel.bind = function (that, container, containerId, options, ina
         togo = fluid.unavailable({message: "The inat-components library is not loaded", variety: "config"});
     }
     return togo;
+};
+
+/** Records panels **/
+
+/**
+ * Omit a column from a table's columns, e.g. the taxon's name from a table listing the records of one taxon.
+ * @param {Object[]} columns - The columns, as for hortis.dataTable
+ * @param {String} key - The key of the column to be omitted
+ * @return {Object[]} The remaining columns
+ */
+bioreportr.withoutColumn = function (columns, key) {
+    return columns.filter(column => column.key !== key);
+};
+
+/**
+ * Describe the taxon whose records a panel lists, for its header.
+ * @param {TaxonRow|null} taxon - The taxon, or null if none is chosen
+ * @return {String} The description, or the empty string if no taxon is chosen
+ */
+bioreportr.storyPage.taxonLabel = function (taxon) {
+    return taxon ? "— " + (taxon.scientificName || hortis.rowToScientific(taxon)) : "";
+};
+
+// Status belongs to a species rather than to any one of its records, whatever its date
+bioreportr.statusRecordLabels = {confirmed: "confirmed species", unconfirmed: "historical species", new: "newly reported species"};
+
+/**
+ * Describe the filters narrowing the panel of records, in the order in which they are named in its header. Long
+ * combinations are cut short by CSS, with the full text in the title.
+ * @param {Object<String, TaxonRow>} rowById - Taxon rows indexed by id
+ * @param {Object|null} search - The taxon chosen in the checklist's search, a taxon row or a record holding its `id`
+ * @param {String|null} status - The reporting status chosen
+ * @param {String|null} region - The region chosen
+ * @param {String|null} recorder - The recorder chosen
+ * @param {String|null} cell - The id of the map cell chosen
+ * @param {Object[]} polygons - The features drawn on the map
+ * @return {Object} Members `text`, the description following the word "Records", and `title`, the plain description
+ */
+bioreportr.storyPage.recordsLabel = function (rowById, search, status, region, recorder, cell, polygons) {
+    const taxon = search && rowById[search.id];
+    const parts = [
+        taxon && (taxon.scientificName || hortis.rowToScientific(taxon)),
+        status && bioreportr.statusRecordLabels[status],
+        region,
+        recorder && "recorded by " + recorder,
+        cell && "selected map cell",
+        polygons?.length > 0 && "drawn area"
+    ].filter(part => part);
+    const text = parts.join(" · ");
+    const statusAlone = parts.length === 1 && !!status;
+    return {text: text && (statusAlone ? "of " : "— ") + text, title: text};
+};
+
+/**
+ * Download the records of the taxon chosen for the extirpation risk analysis as CSV.
+ * @param {TaxonRow|null} taxon - The taxon, or null if none is chosen
+ * @param {Object[]} rows - Its records
+ */
+bioreportr.storyPage.downloadTaxonObs = function (taxon, rows) {
+    if (taxon) {
+        hortis.triggerDownload(Papa.unparse(rows), "text/csv;charset=utf-8;", "records-" + taxon.scientificName.replace(/\W+/g, "-") + ".csv");
+    }
+};
+
+/** Markup supplied by a project for its panes **/
+
+bioreportr.dataPane.paneMarkup = (paneMarkup, paneKey) => paneMarkup[paneKey] || "";
+
+/**
+ * Place markup supplied by a project within the empty element of a pane's section which bear a given class, e.g. a
+ * set of tiles computed from the project's data - the first such element of the section is filled.
+ * @param {String} section - The markup of the section
+ * @param {Object<String, String>} inserts - Map of class to the markup to be placed in an element bearing it
+ * @return {String} The section with the markup placed
+ */
+bioreportr.storyPane.insert = function (section, inserts) {
+    return Object.entries(inserts).reduce((markup, [clazz, insert]) =>
+        markup.replace(new RegExp("(<(\\w+) class=\"" + clazz + "\">)\\s*(</\\2>)"), (match, open, tag, close) => open + insert + close), section);
+};
+
+/** The map's size and first view **/
+
+/**
+ * Have the map follow any change in the size of its element, e.g. from a records panel opening or closing.
+ * @param {maplibregl.Map} map - The map
+ * @param {Element} mapElement - The element holding the map
+ * @param {Window} window - The window holding the map
+ * @return {ResizeObserver} The observer, to be disconnected on unbinding
+ */
+bioreportr.storyMap.trackSize = function (map, mapElement, window) {
+    const observer = new window.ResizeObserver(() => map.resize());
+    observer.observe(mapElement);
+    // A resize before the map has finished loading is not retained
+    map.once("load", () => map.resize());
+    return observer;
+};
+
+/**
+ * Find the camera of the first pane whose map has one, on which a map is placed if the pane first shown has none, so
+ * that the map is never seen at its default view of the whole world.
+ * @param {Object} mapData - The story's map data, as written by storyBuild.js
+ * @return {Object|undefined} The camera, with members `center` and `zoom`, if any pane has one
+ */
+bioreportr.storyMap.firstCamera = function (mapData) {
+    return Object.values(mapData.panes).find(paneMap => paneMap.center);
+};
+
+/**
+ * Find the camera to which a story's map returns once its filters are cleared.
+ * @param {Object} mapData - The story's map data, as written by storyBuild.js
+ * @param {String} activePaneKey - The key of the active pane
+ * @return {Object|undefined} The active pane's camera, with members `center` and `zoom`, or else the first pane's
+ */
+bioreportr.storyMap.homeCamera = function (mapData, activePaneKey) {
+    const paneMap = mapData.panes[activePaneKey];
+    return paneMap?.center ? paneMap : bioreportr.storyMap.firstCamera(mapData);
+};
+
+bioreportr.storyPage.noRecordSelected = filterState => !hortis.isValue(filterState);
+
+// The pane last shown by each story page, so that a record selected in it is cleared on moving to another
+bioreportr.storyPage.lastPaneKey = new WeakMap();
+
+/**
+ * Clear the selected record when the story page moves from one pane to another - but not as it first shows a pane,
+ * so that a record held in the URL survives the page's loading.
+ * @param {bioreportr.storyPage} storyPage - The story page
+ * @param {String} activePaneKey - The key of the active pane
+ */
+bioreportr.storyPage.clearRecordOnPaneChange = function (storyPage, activePaneKey) {
+    const lastPaneKey = bioreportr.storyPage.lastPaneKey.get(storyPage);
+    bioreportr.storyPage.lastPaneKey.set(storyPage, activePaneKey);
+    if (lastPaneKey !== undefined && lastPaneKey !== activePaneKey) {
+        // Deferred since an effect may not write signals
+        fluid.invokeLater(() => storyPage.map.recordSelector.reset());
+    }
+};
+
+/**
+ * Pass a click within a pane's section or data pane to the story page, which a project may handle.
+ * @param {bioreportr.storyPage} storyPage - The story page
+ * @param {Event} event - The click
+ */
+bioreportr.storyPane.click = function (storyPage, event) {
+    storyPage.paneClick(event);
+};
+
+bioreportr.storyMap.untrackSize = function (observer) {
+    observer.disconnect();
 };

@@ -43,10 +43,11 @@ FILES=(
     # Ourselves
     copyFrameworkOut.sh
     # The bioReportR story page - its build step, and its Single File Components, scripts and the
-    # htmlwidgets runtime they load. Those it uses of bagatelle and Infusion 6 are copied into each project's
+    # htmlwidgets runtime they load. Those it uses of imerss-bioinfo and Infusion 6 are copied into each project's
     # static/vendor by "npm run vendor" (Infusion 6's copyOut.js)
     src/js/storyBuild.js
     static/bioreportr/sfc/bioreportr-dataPane.vue
+    static/bioreportr/sfc/bioreportr-epFilter.vue
     static/bioreportr/sfc/bioreportr-pageFragment.vue
     static/bioreportr/sfc/bioreportr-recordAndTaxaReporter.vue
     static/bioreportr/sfc/bioreportr-sectionTab.vue
@@ -65,6 +66,7 @@ FILES=(
 
     # Story page styling
     static/bioreportr/css/imerss-story-i6.css
+    static/bioreportr/css/imerss-inat-panels.css
     static/bioreportr/css/imerss-story.css
     static/bioreportr/css/imerss-viz-story.css
     static/bioreportr/css/imerss-blitzr.css
@@ -74,6 +76,7 @@ FILES=(
     assets/js/menu.js
     layouts/_default/baseof.html
     layouts/partials/footer.html
+    layouts/partials/language-switch.html
     layouts/partials/navbar.html
     layouts/partials/search.html
     layouts/partials/sidebar.html

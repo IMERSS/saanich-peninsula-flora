@@ -58,6 +58,8 @@ fluid.def("bioreportr.storyPage", {
     selectedPaneKey: "{hashManager}.hash.pane",
     activePaneKey: "$compute:bioreportr.storyPage.activePaneKey({self}.selectedPaneKey, {self}.panes)",
     activePane: "$compute:bioreportr.storyPage.activePane({self}.panes, {self}.activePaneKey)",
+    // A record selected in one pane is cleared on moving to another
+    clearRecordOnPaneChange: "$effect:bioreportr.storyPage.clearRecordOnPaneChange({self}, {self}.activePaneKey)",
     classes: "$compute:bioreportr.storyPage.classes({self}.activePane)",
     selectPane: "$method:bioreportr.storyPage.selectPane({self}, {0}:paneKey)",
     // The reporting status chosen in the status filter, or in the legend of a map coloured by status
@@ -167,12 +169,50 @@ fluid.def("bioreportr.storyPage", {
             label: ""
         }
     },
+    // The columns of the tables of records, as for hortis.dataTable - by default, one for each field of a record
+    recordColumns: [],
     obsTable: {
         $component: {
             $layers: "hortis.dataTable",
-            rows: "{vizLoader}.finalFilteredObs"
+            rows: "{vizLoader}.finalFilteredObs",
+            columns: "{storyPage}.recordColumns",
+            // Clicking a record shows its marker alone on the map - see hortis.libreMap.recordSelector
+            rowSelectable: true,
+            selectedRow: "{storyPage}.map.recordSelector.selectedRow",
+            selectRow: "$method:hortis.libreMap.recordSelector.select({storyPage}.map.recordSelector, {0}:row)"
         }
     },
+    // The buttons beside the tables of records clearing the record selected in them, disabled whilst there is none
+    noRecordSelected: "$compute:bioreportr.storyPage.noRecordSelected({self}.map.recordSelector.filterState)",
+    resetRecord: "$method:hortis.libreMap.recordSelector.reset({self}.map.recordSelector)",
+    // Shows the title of any element of the page in a tooltip, as jQuery UI's tooltip widget did in Infusion 4
+    titleTooltips: {
+        $component: {
+            $layers: "hortis.titleTooltips"
+        }
+    },
+    // The panel of records beneath the map opens and closes as an accordion, its header naming the filters narrowing it
+    recordsCollapsed: true,
+    toggleRecords: "$method:bioreportr.storyPage.toggle({self}, recordsCollapsed)",
+    // Each filter which may narrow the records, with a function describing its state - see bioreportr.recordsFilterDescribers
+    recordsLabel: `$compute:bioreportr.storyPage.recordsLabel({self}.taxa.rowById, {self}.checklist.search.filterState, {self}.selectedStatus,
+        {self}.selectedRegion, {self}.collectorFilter.filterState, {self}.map.gridSelector.filterState, {self}.map.polygonDraw.filterState)`,
+    // A panel showing the taxon chosen in a pane, above the records - empty unless a project supplies its markup
+    taxonPanel: {
+        $component: {
+            $layers: "hortis.verbatimSlot",
+            markup: ""
+        }
+    },
+    taxonPanelVisible: false,
+    // Further classes of the left pane, holding the map and data panes, e.g. to give a pane's map the whole column
+    leftPaneClass: "",
+    // Map of pane key to markup shown in the pane's data pane in place of the map, e.g. a gallery
+    paneMarkup: {},
+    // Map of the class of an empty element of a pane's section to the markup to be placed within it
+    sectionInserts: {},
+    // Handles a click within a pane's section or data pane, e.g. on markup supplied in paneMarkup or sectionInserts
+    paneClick: "$method:fluid.identity({0}:event)",
     // The extirpation risk analysis, shown by a pane whose settings have visibleSolow - see solow.js
     solowParams: {
         baselineYear: 1859,
@@ -202,6 +242,24 @@ fluid.def("bioreportr.storyPage", {
             taxonObsRows: "{storyPage}.solowTaxonObs"
         }
     },
+    solowHasTaxon: "$compute:hortis.isValue({self}.solowTaxa.selectedTaxon)",
+    // The records of the chosen taxon, most recent first, since the last known sightings are the best guide to where to look
+    solowRecordsTable: {
+        $component: {
+            $layers: "hortis.dataTable",
+            rows: "{storyPage}.solowTaxonObs",
+            columns: "$compute:bioreportr.withoutColumn({storyPage}.recordColumns, taxon_name)",
+            sortable: true,
+            sortColumn: "eventDate",
+            sortDirection: -1,
+            rowSelectable: true,
+            selectedRow: "{storyPage}.map.recordSelector.selectedRow",
+            selectRow: "$method:hortis.libreMap.recordSelector.select({storyPage}.map.recordSelector, {0}:row)"
+        }
+    },
+    solowRecordsCollapsed: true,
+    toggleSolowRecords: "$method:bioreportr.storyPage.toggle({self}, solowRecordsCollapsed)",
+    downloadSolowRecords: "$method:bioreportr.storyPage.downloadTaxonObs({self}.solowTaxa.selectedTaxon, {self}.solowTaxonObs)",
     solowClusters: "$compute:bioreportr.solow.clusters({self}.solowTaxonObs, {self}.solowRadius.radius, {self}.solowParams)",
     solowMapLayer: {
         $component: {
@@ -209,6 +267,23 @@ fluid.def("bioreportr.storyPage", {
             clusters: "{storyPage}.solowClusters",
             solowRadius: "{storyPage}.solowRadius.radius",
             visible: "{storyPage}.activePane.visibleSolow"
+        }
+    },
+    // The bars between a taxon panel and the records beneath it, shown by CSS only while both are visible
+    solowRecordsResizeBar: {
+        $component: {
+            $layers: "hortis.resizeBar",
+            axis: "vertical",
+            minBefore: 120,
+            minAfter: 96
+        }
+    },
+    taxonPanelResizeBar: {
+        $component: {
+            $layers: "hortis.resizeBar",
+            axis: "vertical",
+            minBefore: 120,
+            minAfter: 96
         }
     },
     // The bars dividing the map from the data pane beneath it, the map and data from the story, and the panes of the
@@ -234,9 +309,16 @@ fluid.def("bioreportr.storyPage", {
     // true once the observations shown are the real ones - a rendering from placeholder data, e.g. by a static build
     // of the page, marks the page as loading until the real data has loaded
     loaded: "$compute:bioreportr.storyPage.loaded({self}.finalFilteredObs, {self}.isPlaceholder, {self}.regionIndirection.isPlaceholder)",
+    // Becomes true once the page is loaded and has rendered what it derives from its genuine data, which it does over
+    // several tasks - the page's material is hidden until then, see layouts/story/baseof.html
+    revealed: false,
+    reveal: "$effect:bioreportr.storyPage.reveal({self}, {self}.loaded, {global})",
     filtersCollapsed: true,
     toggleFilters: "$method:bioreportr.storyPage.toggleFilters({self})",
-    downloadObs: "$method:bioreportr.storyPage.downloadObs({self}.finalFilteredObs)"
+    downloadObs: "$method:bioreportr.storyPage.downloadObs({self}.finalFilteredObs)",
+    recordsExpanded: "$compute:hortis.negate({self}.recordsCollapsed)",
+    solowRecordsExpanded: "$compute:hortis.negate({self}.solowRecordsCollapsed)",
+    solowRecordsSpecies: "$compute:bioreportr.storyPage.taxonLabel({self}.solowTaxa.selectedTaxon)"
 });
 
 /**
@@ -259,26 +341,57 @@ bioreportr.storyPage.classes = function (pane) {
 bioreportr.storyPage.toggleFilters = function (that) {
     that.filtersCollapsed = !that.filtersCollapsed;
 };
+
+/**
+ * Flip a boolean member of a component, e.g. whether a panel is collapsed.
+ * @param {fluid.component} that - The component
+ * @param {String} member - The name of the member
+ */
+bioreportr.storyPage.toggle = function (that, member) {
+    that[member] = !that[member];
+};
 </script>
 
 <template>
-    <div class="imerss-main" @class="imerss-loading:!@{loaded}">
-        <div class="mxcw-leftPane">
+    <div class="imerss-main" @class="imerss-loading:!@{revealed}">
+        <div class="mxcw-leftPane @{leftPaneClass}" data-mxcw-startup-hidden="map">
             <div class="mxcw-map fld-imerss-nodismiss-map @{classes.map}" @id="map"></div>
             <div @id="mapResizeBar"></div>
             <div class="mxcw-data fld-imerss-nodismiss-map">
-                <div class="mxcw-data-pane-widget mxcw-obs-table-holder @{classes.obsTable}">
+                <div class="mxcw-data-pane-widget mxcw-atlas-taxon-holder" @class="mxcw-atlas-has-taxon:@{taxonPanelVisible}"><div @id="taxonPanel"></div></div>
+                <div @id="taxonPanelResizeBar"></div>
+                <div class="mxcw-data-pane-widget mxcw-obs-table-holder @{classes.obsTable}" @class="mxcw-records-collapsed:@{recordsCollapsed}">
                     <div class="mxcw-obs-table-controls">
-                        <span class="mxcw-data-widget-text">Observations:</span>
-                        <span class="imerss-download-button imerss-basic-tooltip" title="Download observations as CSV" @onclick="{self}.downloadObs()">
+                        <button type="button" class="mxcw-records-toggle mxcw-data-widget-text" aria-expanded="@{recordsExpanded}"
+                            aria-controls="mxcw-records-table" @onclick="{self}.toggleRecords()">Records<span class="mxcw-records-filter-label" title="@{recordsLabel.title}">@{recordsLabel.text}</span></button>
+                        <button type="button" class="imerss-download-button mxcw-record-reset" title="Clear the selected record"
+                            aria-label="Clear the selected record" disabled="@{noRecordSelected}" @onclick="{self}.resetRecord()">
+                            <svg width="24" height="24" aria-hidden="true"><use href="#imerss-i-reset"/></svg>
+                        </button>
+                        <span class="imerss-download-button imerss-basic-tooltip" title="Download records as CSV" @onclick="{self}.downloadObs()">
                             <svg width="24" height="24"><use href="#imerss-i-download"/></svg>
                         </span>
                     </div>
-                    <div class="mxcw-obs-table hortis-datatable" @id="obsTable"></div>
+                    <div id="mxcw-records-table" class="mxcw-obs-table hortis-datatable" @id="obsTable"></div>
                 </div>
-                <div class="mxcw-data-pane-widget mxcw-solow-widgets-holder @{classes.solow}">
+                <div class="mxcw-data-pane-widget mxcw-solow-widgets-holder @{classes.solow}" @class="mxcw-solow-has-taxon:@{solowHasTaxon}">
                     <div class="mxcw-solow-taxon-holder"><div @id="solowTaxonInfo"></div></div>
                     <div class="mxcw-solow-radius-holder"><div @id="solowRadius"></div></div>
+                </div>
+                <div @id="solowRecordsResizeBar"></div>
+                <div class="mxcw-data-pane-widget mxcw-solow-records-holder @{classes.solow}" @class="mxcw-solow-records-collapsed:@{solowRecordsCollapsed}">
+                    <div class="mxcw-obs-table-controls">
+                        <button type="button" class="mxcw-records-toggle mxcw-data-widget-text" aria-expanded="@{solowRecordsExpanded}"
+                            aria-controls="mxcw-solow-records-table" @onclick="{self}.toggleSolowRecords()">Records<span class="mxcw-solow-records-species">@{solowRecordsSpecies}</span></button>
+                        <button type="button" class="imerss-download-button mxcw-record-reset" title="Clear the selected record"
+                            aria-label="Clear the selected record" disabled="@{noRecordSelected}" @onclick="{self}.resetRecord()">
+                            <svg width="24" height="24" aria-hidden="true"><use href="#imerss-i-reset"/></svg>
+                        </button>
+                        <span class="imerss-download-button imerss-basic-tooltip" title="Download this species' records as CSV" @onclick="{self}.downloadSolowRecords()">
+                            <svg width="24" height="24"><use href="#imerss-i-download"/></svg>
+                        </span>
+                    </div>
+                    <div id="mxcw-solow-records-table" class="mxcw-solow-records-table hortis-datatable" @id="solowRecordsTable"></div>
                 </div>
                 <div class="mxcw-dataPanes" @id="dataPanes"></div>
             </div>
@@ -293,10 +406,10 @@ bioreportr.storyPage.toggleFilters = function (that) {
                         <div class="mxcw-section-nav">
                             <nav class="chevron-nav" role="tablist" aria-label="Section navigation" @id="sectionTabs"></nav>
                         </div>
-                        <div class="mxcw-content imerss-nodismiss-map" @id="storyPanes"></div>
+                        <div class="mxcw-content imerss-nodismiss-map" data-mxcw-startup-hidden @id="storyPanes"></div>
                     </div>
                     <div @id="contentResizeBar"></div>
-                    <div class="imerss-container @{classes.vizControls}">
+                    <div class="imerss-container @{classes.vizControls}" data-mxcw-startup-hidden>
                         <div class="imerss-filter-panel @{classes.obsFilters}" @class="imerss-filters-collapsed:@{filtersCollapsed}">
                             <div class="imerss-panel-label imerss-filters-header">
                                 <button type="button" class="imerss-filters-toggle" aria-expanded="@{filtersCollapsed}"

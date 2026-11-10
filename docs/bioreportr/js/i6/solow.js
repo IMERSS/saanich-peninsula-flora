@@ -74,12 +74,13 @@ bioreportr.solowTaxonInfo.model = function (taxon, taxonObsRows) {
     return taxon && taxonObsRows.length > 0 ? {
         none: false,
         taxonName: taxon.scientificName,
-        dateFirstSeen: taxonObsRows[0].eventDate,
-        dateLastSeen: taxonObsRows[taxonObsRows.length - 1].eventDate,
+        dateFirstSeen: bioreportr.eventDay(taxonObsRows[0].eventDate),
+        dateLastSeen: bioreportr.eventDay(taxonObsRows[taxonObsRows.length - 1].eventDate),
         numObs: taxonObsRows.length,
         regionalEP: taxon.solow_EP,
+        georefNote: bioreportr.georefNote(taxonObsRows),
         taxonImage: hortis.renderTaxonImage(taxon.iNaturalistTaxonImage, taxon.id)
-    } : {none: true, taxonName: "", dateFirstSeen: "", dateLastSeen: "", numObs: "", regionalEP: "", taxonImage: ""};
+    } : {none: true, taxonName: "", dateFirstSeen: "", dateLastSeen: "", numObs: "", regionalEP: "", georefNote: "", taxonImage: ""};
 };
 
 /** Clustering and the Solow estimate **/
@@ -100,8 +101,32 @@ bioreportr.haversineDistance = function (lat1, lon1, lat2, lon2) {
  */
 bioreportr.obsPoint = function (row) {
     const long = parseFloat(row.decimalLongitude), lat = parseFloat(row.decimalLatitude);
-    return isNaN(long) || isNaN(lat) || long === 0 && lat === 0 ? null : [long, lat];
+    return bioreportr.hasCoordinates(row) ? [long, lat] : null;
 };
+
+/**
+ * Determine whether a record has coordinates and so can be mapped.
+ * @param {Object} row - The record
+ * @return {Boolean} `true` if the record is georeferenced
+ */
+bioreportr.hasCoordinates = function (row) {
+    const lat = parseFloat(row.decimalLatitude), long = parseFloat(row.decimalLongitude);
+    return Number.isFinite(lat) && Number.isFinite(long) && lat !== 0 && long !== 0;
+};
+
+/**
+ * Explain any records of a taxon which lack coordinates, so that what is shown on the map can be read accurately.
+ * @param {Object[]} rows - The records of the taxon
+ * @return {String} Markup for a note, empty if every record is georeferenced
+ */
+bioreportr.georefNote = function (rows) {
+    const missing = rows.filter(row => !bioreportr.hasCoordinates(row)).length;
+    const message = missing === 0 ? "" : missing === rows.length ? "No mapped records: coordinates missing" :
+        `${missing} of ${rows.length} records not mapped: coordinates missing`;
+    return message && `<div class="mxcw-georef-note">\u26A0 ${message}</div>`;
+};
+
+bioreportr.eventDay = eventDate => String(eventDate ?? "").substring(0, 10);
 
 /**
  * Cluster observations into populations - each observation lies within the radius of another of its population.
@@ -281,8 +306,8 @@ bioreportr.solowMapLayer.renderTooltip = function (clusters, clusterId) {
     const cluster = clusters[clusterId];
     return cluster ? hortis.stringTemplate(bioreportr.solowTooltipTemplate, {
         clusterId,
-        dateFirstSeen: cluster.obsRows[0].eventDate,
-        dateLastSeen: cluster.obsRows[cluster.obsRows.length - 1].eventDate,
+        dateFirstSeen: bioreportr.eventDay(cluster.obsRows[0].eventDate),
+        dateLastSeen: bioreportr.eventDay(cluster.obsRows[cluster.obsRows.length - 1].eventDate),
         numObs: cluster.obsRows.length,
         clusterEP: (1 - cluster.pp).toFixed(3)
     }) : null;
@@ -308,6 +333,50 @@ bioreportr.solowMapLayer.bindHover = function (that, map) {
 };
 
 bioreportr.summaryTaxaRows = rows => rows.filter(row => row.inSummary);
+
+/** Filter of taxa by their range of extirpation probability **/
+
+fluid.registerNamespace("bioreportr.epFilter");
+
+/**
+ * Filter taxa to those whose extirpation probability lies within a range.
+ * @param {TaxonRow[]} rows - The taxa
+ * @param {Object} state - The range, with members `min` and `max` between 0 and 1
+ * @return {TaxonRow[]} The taxa surviving the filter
+ */
+bioreportr.epFilter.doFilter = function (rows, state) {
+    return state.min <= 0 && state.max >= 1 ? rows : rows.filter(row => +row.solow_EP >= state.min && +row.solow_EP <= state.max);
+};
+
+/**
+ * Respond to the movement of one of the filter's sliders, whose positions are percentages. The slider being moved
+ * pushes the other along rather than crossing it.
+ * @param {Event} event - The input event
+ * @param {bioreportr.epFilter} that - The filter
+ */
+bioreportr.epFilter.input = function (event, that) {
+    const value = +event.target.value / 100;
+    const isMin = event.target.classList.contains("mxcw-ep-min");
+    const {min, max} = that.filterState;
+    if (isMin) {
+        that.filterState = {min: value, max: Math.max(max, value)};
+    } else {
+        that.filterState = {min: Math.min(min, value), max: value};
+    }
+};
+
+bioreportr.epFilter.summarise = function (state) {
+    const active = state.min > 0 || state.max < 1;
+    return {count: active ? 1 : 0, title: active ? `EP between ${state.min.toFixed(2)} and ${state.max.toFixed(2)}` : ""};
+};
+
+bioreportr.epFilter.display = function (state) {
+    return {min: Math.round(state.min * 100), max: Math.round(state.max * 100), minText: state.min.toFixed(2), maxText: state.max.toFixed(2)};
+};
+
+bioreportr.epFilter.reset = function (that) {
+    that.filterState = {min: 0, max: 1};
+};
 
 // The layer of the story's map showing the populations of the taxon chosen for the extirpation risk analysis, with a
 // legend and a tooltip for each population. It is shown only whilst the active pane shows the analysis

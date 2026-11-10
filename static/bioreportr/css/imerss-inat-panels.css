@@ -1,0 +1,258 @@
+/* The panels of iNaturalist's observations, e.g. a project's Community Science pane, rendered by the
+   @imerss/inat-components library into a pane's data pane - see bioreportr.iNatPanel in bioreportr-dataPane.vue. Styled
+   to match the story's dark panes, as the gallery of lost plants is on the Saanich site.
+
+   The library's own styles arrive after these, hence the weight of the id. The panels are #inat-components on the
+   Infusion 4 page, and .mxcw-inat-components, each with an id of its own, on the Infusion 6 page - :is() keeps the
+   weight of the id in either case. The sizes are those of a project's story-scale.css if it has one, or else the same
+   values here */
+
+/* On the solid ground of the column behind it - this outweighs imerss-story.css's white ground for the Infusion 4 page's
+   panel of the Community Science pane */
+.mxcw-dataPane:has(.mxcw-inat-components) {
+    flex: 1 1 auto;
+    min-width: 0;
+    background-color: #184e62;
+}
+
+/* Fill the whole left hand column */
+:is(#inat-components, .mxcw-inat-components),
+:is(#inat-components, .mxcw-inat-components) > div {
+    height: 100%;
+}
+
+:is(#inat-components, .mxcw-inat-components) > div {
+    display: flex;
+    flex-direction: column;
+    max-width: none;
+    padding: 0 0 0 12px;
+}
+
+:is(#inat-components, .mxcw-inat-components) > div > div:last-child {
+    flex: 1 1 0;
+    height: auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 0;
+    scrollbar-gutter: stable;
+}
+
+:is(#inat-components, .mxcw-inat-components) > div > div:last-child::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 12px;
+}
+
+:is(#inat-components, .mxcw-inat-components) > div > div:last-child::-webkit-scrollbar-thumb {
+    border: 3px solid transparent;
+    border-radius: 6px;
+    background-clip: padding-box;
+    background-color: #c1c1c1;
+}
+
+/* ── Tabs ── */
+
+:is(#inat-components, .mxcw-inat-components),
+:is(#inat-components, .mxcw-inat-components) .inat-tab-desc,
+:is(#inat-components, .mxcw-inat-components) .inat-page-headings {
+    color: #eefaff;
+}
+
+:is(#inat-components, .mxcw-inat-components) .inat-tabs {
+    margin-bottom: 0;
+    border-color: rgba(238, 250, 255, 0.2);
+}
+
+:is(#inat-components, .mxcw-inat-components) .inat-tabs button,
+:is(#inat-components, .mxcw-inat-components) .inat-tabs a,
+:is(#inat-components, .mxcw-inat-components) .inat-tabs li {
+    font-size: var(--story-body, clamp(14px, 0.35vw + 10px, 16px));
+    margin: 0 4px;
+    padding: 4px 12px;
+}
+
+:is(#inat-components, .mxcw-inat-components) .inat-tabs li {
+    color: #a8c8d0;
+    border-bottom-color: transparent !important;
+}
+
+:is(#inat-components, .mxcw-inat-components) .inat-tabs li[class*="selected"] {
+    color: #fdf2ce;
+    border-bottom-color: #fdf2ce !important;
+}
+
+:is(#inat-components, .mxcw-inat-components) .inat-tabs li a,
+:is(#inat-components, .mxcw-inat-components) .inat-tabs li button {
+    color: inherit;
+}
+
+/* The widget's own title repeats its tab label, so each tab's description serves as its header */
+:is(#inat-components, .mxcw-inat-components) .inat-page-headings {
+    display: none;
+}
+
+:is(#inat-components, .mxcw-inat-components) .inat-tab-desc {
+    font-size: var(--story-body, clamp(14px, 0.35vw + 10px, 16px));
+    font-weight: 700;
+    margin: var(--story-gap, 8px) 0;
+}
+
+:is(#inat-components, .mxcw-inat-components) .inat-years-dropdown {
+    margin: 4px 12px 0 0;
+}
+
+:is(#inat-components, .mxcw-inat-components) select {
+    background-color: #0d3040;
+    color: #eefaff;
+    border: 1px solid rgba(238, 250, 255, 0.25);
+    border-radius: 4px;
+    font-size: var(--story-data, clamp(13px, 0.15vw + 11px, 14px));
+}
+
+/* ── The loading indicator, shown while the observations arrive - the library's spinner, in the panel's colours in
+   place of black on a grey box. It is drawn where the grid will be, so nothing shifts when the grid replaces it ── */
+
+:is(#inat-components, .mxcw-inat-components) [class*="module_loaderBg"] {
+    display: none;
+}
+
+/* On the General stats tab the library places the spinner over the pale blocks, against which it would vanish - it is
+   drawn on a disc of the panel's own ground, unseen elsewhere. Its position is left alone, so that nothing moves */
+:is(#inat-components, .mxcw-inat-components) [class*="module_loader"] {
+    z-index: 1;
+}
+
+:is(#inat-components, .mxcw-inat-components) [class*="module_loader"] > span {
+    background-color: #184e62;
+    border-radius: 50%;
+}
+
+:is(#inat-components, .mxcw-inat-components) [class*="module_loader"] > span > span:first-child {
+    background-color: #fdf2ce !important;
+    opacity: 1 !important;
+}
+
+:is(#inat-components, .mxcw-inat-components) [class*="module_loader"] > span > span:last-child {
+    border-color: #eefaff !important;
+    opacity: 0.2 !important;
+}
+
+/* ── Observations, as cards matching the gallery of lost plants ── */
+
+:is(#inat-components, .mxcw-inat-components) [class*="module_grid"] {
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)) !important;
+    gap: var(--story-gap, 8px);
+}
+
+:is(#inat-components, .mxcw-inat-components) article {
+    background: #0d3040;
+    border-radius: var(--data-table-radius, 8px);
+    overflow: hidden;
+    padding: 0 0 var(--story-gap, 8px);
+    text-align: left;
+}
+
+:is(#inat-components, .mxcw-inat-components) article > div:first-child {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 1;
+    border-radius: 0 !important;
+    margin: 0 0 4px !important;
+}
+
+:is(#inat-components, .mxcw-inat-components) article > div:first-child img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+:is(#inat-components, .mxcw-inat-components) article [class*="obsLabel"] {
+    padding: 0 var(--story-gap, 8px);
+    text-align: left;
+    color: #eefaff;
+}
+
+:is(#inat-components, .mxcw-inat-components) .inat-observation-label-title,
+:is(#inat-components, .mxcw-inat-components) .inat-observation-label-data,
+:is(#inat-components, .mxcw-inat-components) .inat-observation-label-name {
+    font-size: var(--story-data, clamp(13px, 0.15vw + 11px, 14px));
+    line-height: 1.4;
+}
+
+:is(#inat-components, .mxcw-inat-components) .inat-observation-label-title {
+    font-weight: 700;
+    color: #eefaff;
+}
+
+:is(#inat-components, .mxcw-inat-components) .inat-observation-label-data,
+:is(#inat-components, .mxcw-inat-components) .inat-observation-label-name,
+:is(#inat-components, .mxcw-inat-components) .inat-observation-label-name a {
+    color: #a8c8d0;
+}
+
+:is(#inat-components, .mxcw-inat-components) article label[class*="count"] {
+    display: inline-block;
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    color: #fdf2ce;
+    font-size: var(--story-data, clamp(13px, 0.15vw + 11px, 14px));
+    font-weight: 700;
+}
+
+/* ── General stats ── */
+
+:is(#inat-components, .mxcw-inat-components) .inat-stats-count-summary {
+    font-size: var(--story-body, clamp(14px, 0.35vw + 10px, 16px));
+    color: #eefaff;
+    margin: 0 12px var(--story-gap, 8px) 0;
+}
+
+/* The chart and the observers are drawn in dark ink, so they sit on the same pale surface as the site's data tables */
+:is(#inat-components, .mxcw-inat-components) section {
+    display: flex;
+    gap: var(--story-gap, 8px);
+    margin-right: 12px;
+}
+
+:is(#inat-components, .mxcw-inat-components) [class*="seasonalityBlock"],
+:is(#inat-components, .mxcw-inat-components) [class*="observersBlock"] {
+    background: #eefaff;
+    color: #123;
+    border-radius: var(--data-table-radius, 8px);
+    padding: 12px;
+    box-sizing: border-box;
+}
+
+/* The chart's rotated month labels are drawn beyond its stated height */
+:is(#inat-components, .mxcw-inat-components) [class*="seasonalityBlock"] {
+    height: 500px;
+}
+
+:is(#inat-components, .mxcw-inat-components) [class*="observersBlock"] {
+    min-height: 500px;
+}
+
+:is(#inat-components, .mxcw-inat-components) [class*="seasonalityBlock"] h1,
+:is(#inat-components, .mxcw-inat-components) [class*="observersBlock"] h1 {
+    font-size: var(--story-body, clamp(14px, 0.35vw + 10px, 16px));
+    font-weight: 700;
+    color: #123;
+    border-color: rgba(18, 34, 51, 0.2);
+}
+
+:is(#inat-components, .mxcw-inat-components) .inat-observers-list a,
+:is(#inat-components, .mxcw-inat-components) .inat-observers-list h3 {
+    color: #123;
+    font-size: var(--story-data, clamp(13px, 0.15vw + 11px, 14px));
+}
+
+:is(#inat-components, .mxcw-inat-components) .inat-observers-list label {
+    font-size: var(--story-data, clamp(13px, 0.15vw + 11px, 14px));
+    font-weight: 700;
+    background: none;
+    border: none;
+    box-shadow: none;
+    color: #123;
+}

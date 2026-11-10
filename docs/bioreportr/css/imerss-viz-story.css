@@ -38,8 +38,28 @@
     margin-bottom: 0.25rem;
 }
 
+/* The colour of the records' label beside it - imerss-bioinfo's download icon is now stroked in currentColor */
 .mxcw-obs-table-controls .imerss-download-button {
-    fill: #ddd
+    fill: #ddd;
+    color: #eefaff;
+}
+
+/* The button clearing the selected record, styled as the download button beside it */
+.mxcw-obs-table-controls .mxcw-record-reset {
+    align-items: center;
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+}
+
+.mxcw-obs-table-controls .mxcw-record-reset:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.mxcw-obs-table-controls .mxcw-record-reset:disabled:hover {
+    background: none;
 }
 
 .mxcw-obs-table {
@@ -256,4 +276,183 @@
 
 html[class~=dark] #inat-components select {
     color: white;
+}
+
+/* Records panel as an accordion - !important overrides any heights set by dragging mapResizeBar, restored on opening */
+.mxcw-records-toggle {
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+    cursor: pointer;
+}
+
+.mxcw-records-toggle::before {
+    content: "\25B8";
+    margin-right: 0.3rem;
+    transform: rotate(90deg);
+}
+
+.mxcw-records-collapsed .mxcw-records-toggle::before {
+    transform: none;
+}
+
+.mxcw-records-collapsed .mxcw-obs-table {
+    display: none;
+}
+
+.mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)):not(:has(.mxcw-atlas-has-taxon)) {
+    --mxcw-records-header-height: 2.25rem;
+}
+
+.mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)):not(:has(.mxcw-atlas-has-taxon)) .mxcw-map {
+    height: calc(100% - var(--mxcw-records-header-height)) !important;
+}
+
+.mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)):not(:has(.mxcw-atlas-has-taxon)) > .resize-bar {
+    display: none;
+}
+
+.mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)):not(:has(.mxcw-atlas-has-taxon)) > .mxcw-data {
+    height: var(--mxcw-records-header-height) !important;
+    min-height: 0;
+    align-items: center;
+}
+
+/* Records panel of the Extirpation Risk vignette, listing the records of the selected species below the Solow widgets.
+   Non-!important heights leave any drag of mapResizeBar in force. */
+.mxcw-leftPane:has(> .mxcw-data > .mxcw-solow-widgets-holder:not(.fl-hidden)) .mxcw-map {
+    height: calc(100% - 280px - 2.25rem);
+}
+
+.mxcw-leftPane > .mxcw-data:has(> .mxcw-solow-widgets-holder:not(.fl-hidden)) {
+    flex-direction: column;
+    height: calc(266px + 2.25rem);
+}
+
+.mxcw-data > .mxcw-solow-widgets-holder {
+    flex: 1 1 0;
+    min-height: 0;
+    width: auto;
+}
+
+.mxcw-data > .mxcw-solow-records-holder {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: auto;
+}
+
+.mxcw-data > .mxcw-solow-records-holder.fl-hidden {
+    display: none;
+}
+
+.mxcw-solow-records-table {
+    height: 100%;
+    min-height: 0;
+}
+
+.mxcw-data > .mxcw-solow-records-collapsed {
+    flex: 0 0 2.25rem;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.mxcw-solow-records-collapsed .mxcw-records-toggle::before {
+    transform: none;
+}
+
+.mxcw-solow-records-collapsed .mxcw-solow-records-table {
+    display: none;
+}
+
+/* While the table is open the Solow widgets compact to share the space with it, drawing a default extra height from the map */
+.mxcw-leftPane:has(> .mxcw-data > .mxcw-solow-records-holder:not(.mxcw-solow-records-collapsed):not(.fl-hidden)) .mxcw-map {
+    height: calc(100% - 440px);
+}
+
+.mxcw-leftPane > .mxcw-data:has(> .mxcw-solow-records-holder:not(.mxcw-solow-records-collapsed):not(.fl-hidden)) {
+    height: 426px;
+}
+
+.mxcw-data:has(> .mxcw-solow-records-holder:not(.mxcw-solow-records-collapsed)) > .mxcw-solow-widgets-holder {
+    flex: 0 0 min(190px, 45%);
+    margin-bottom: 0.5rem;
+}
+
+.mxcw-solow-records-species {
+    margin-left: 0.4rem;
+}
+
+/* Clarifies what a records panel is listing - long combinations of filters are cut short, with the full text in a tooltip */
+.mxcw-records-filter-label {
+    margin-left: 0.4rem;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mxcw-records-toggle {
+    min-width: 0;
+}
+
+/* Holds the species panel of the atlas, shown only while a species is selected - see .mxcw-atlas-has-taxon */
+.mxcw-atlas-taxon-holder {
+    display: none;
+}
+
+/* The bars between a taxon panel and its records are only shown while the records are open beneath it */
+.mxcw-data > .resize-bar {
+    display: none;
+}
+
+.mxcw-solow-widgets-holder:not(.fl-hidden) + .resize-bar:has(+ .mxcw-solow-records-holder:not(.mxcw-solow-records-collapsed)),
+.mxcw-atlas-has-taxon + .resize-bar:has(+ .mxcw-obs-table-holder:not(.mxcw-records-collapsed):not(.fl-hidden)) {
+    display: block;
+    flex-shrink: 0;
+    margin: 2px 8px;
+}
+
+/* With no species selected on the extirpation pane the map takes the whole column until one is chosen */
+.mxcw-leftPane:has(> .mxcw-data > .mxcw-solow-widgets-holder:not(.fl-hidden):not(.mxcw-solow-has-taxon)) .mxcw-map {
+    height: 100% !important;
+}
+
+.mxcw-leftPane:has(> .mxcw-data > .mxcw-solow-widgets-holder:not(.fl-hidden):not(.mxcw-solow-has-taxon)) > .mxcw-data {
+    height: 0 !important;
+    min-height: 0 !important;
+}
+
+.mxcw-leftPane:has(> .mxcw-data > .mxcw-solow-widgets-holder:not(.fl-hidden):not(.mxcw-solow-has-taxon)) > .resize-bar {
+    display: none;
+}
+
+/* ... and its panels must not spill out of the empty space left for them */
+.mxcw-data > .mxcw-solow-widgets-holder:not(.mxcw-solow-has-taxon),
+.mxcw-data:has(> .mxcw-solow-widgets-holder:not(.mxcw-solow-has-taxon)) > .mxcw-solow-records-holder {
+    display: none;
+}
+
+/* The filter of the extirpation risk analysis's taxa by their range of extirpation probability */
+.mxcw-ep-range {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 170px;
+}
+
+.mxcw-ep-range label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mxcw-ep-range label span {
+    width: 2em;
+}
+
+.mxcw-ep-range input {
+    flex: 1;
+    min-width: 0;
 }

@@ -1,7 +1,27 @@
 [
   {
-    "title": "Community Science Contributions",
-    "shortTitle": "Community Science",
+    "title": "In Memory of Plants",
+    "shortTitle": "In Memoriam",
+    "weight": 1,
+    "paneKey": "Traces",
+    "file": "Traces.html",
+    "dataFile": null,
+    "widgetIds": [],
+    "layers": []
+  },
+  {
+    "title": "The lost plants of W̱SÁNEĆ/Saanich Peninsula",
+    "shortTitle": "Lost Plants",
+    "weight": 2,
+    "paneKey": "LostPlants",
+    "file": "LostPlants.html",
+    "dataFile": null,
+    "widgetIds": [],
+    "layers": []
+  },
+  {
+    "title": "Flora of W̱SÁNEĆ/Saanich Peninsula",
+    "shortTitle": "Atlas",
     "weight": 3,
     "regionField": "!statusAsRegion",
     "statusColors": {
@@ -25,8 +45,8 @@
     ]
   },
   {
-    "title": "Top contributions to our knowledge of the regional plant diversity",
-    "shortTitle": "Top contributions",
+    "title": "Community contributions to our knowledge of the regional plant diversity",
+    "shortTitle": "Community Science",
     "weight": 4,
     "paneKey": "TopContributions",
     "file": "TopContributions.html",
@@ -35,11 +55,21 @@
     "layers": []
   },
   {
-    "title": "Extirpation Risk",
-    "shortTitle": "Extirpation Risk",
+    "title": "Finding the lost plants",
+    "shortTitle": "Find the Plants",
     "weight": 5,
     "paneKey": "Solow",
     "file": "Solow.html",
+    "dataFile": null,
+    "widgetIds": [],
+    "layers": []
+  },
+  {
+    "title": "Harvey’s footsteps",
+    "shortTitle": "Harvey’s footsteps",
+    "weight": 6,
+    "paneKey": "Remembering",
+    "file": "Remembering.html",
     "dataFile": null,
     "widgetIds": [],
     "layers": []

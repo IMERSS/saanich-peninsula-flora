@@ -22,8 +22,10 @@
 fluid.def("bioreportr.storyMap", {
     $layers: ["hortis.libreMap.withPolygonDraw", "hortis.libreMap.withObsGridLegend", "hortis.libreObsMap"],
     legendPosition: "bottom-left",
-    zoomDuration: 1000,
+    // Flights between panes whose zoom differs greatly take slowZoomDuration, others the map's zoomDuration
     slowZoomDuration: 3000,
+    // Clearing the filters returns the map to the active pane's camera, or else the first pane's which has one
+    homeCamera: "$compute:bioreportr.storyMap.homeCamera({storyPage}.mapData, {storyPage}.activePaneKey)",
     cartoKeys: {
         localhost: "cb1_4hrx_2_3dcc491b6c32aa8e72a242f0",
         imerss: "cb1_4hrx_1_114bebb1982ec5829bdf5497"
@@ -56,6 +58,13 @@ fluid.def("bioreportr.storyMap", {
             onceOnly: true
         }
     },
-    renderRegionLegend: "$effect:bioreportr.storyMap.renderRegionLegend({self}.regionLegend, {self}.legendRowsMarkup)"
+    renderRegionLegend: "$effect:bioreportr.storyMap.renderRegionLegend({self}.regionLegend, {self}.legendRowsMarkup)",
+    sizeTracker: {
+        $bindable: {
+            bind: "bioreportr.storyMap.trackSize({self}.map, {self}.mapContainer, {global})",
+            unbind: "bioreportr.storyMap.untrackSize({boundValue})",
+            onceOnly: true
+        }
+    }
 });
 </script>
