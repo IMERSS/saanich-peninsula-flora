@@ -1,3 +1,4 @@
+<script src="../../bioreportr/js/story.js"></script>
 <script src="../js/saanich.js"></script>
 <script>
 "use strict";

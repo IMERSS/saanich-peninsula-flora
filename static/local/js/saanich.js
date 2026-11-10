@@ -26,7 +26,6 @@ var bioreportr = fluid.registerNamespace("bioreportr");
 
 fluid.registerNamespace("saanich.atlas");
 fluid.registerNamespace("saanich.statusTooltip");
-fluid.registerNamespace("saanich.cellTooltip");
 
 // Show checklist entries under the project's accepted names, including annotations such as ssp. and var.
 saanich.inatRowToScientific = hortis.rowToScientific;
@@ -35,11 +34,12 @@ hortis.rowToScientific = row => row.scientificName || saanich.inatRowToScientifi
 saanich.locale = "en-CA";
 
 // Counts are shown plainly, without separators of thousands
-saanich.formatCount = count => String(count);
+// Shared with the story page's own summaries - see bioreportr.tip in static/bioreportr/js/story.js
+saanich.formatCount = bioreportr.formatCount;
 
-saanich.year = eventDate => String(eventDate ?? "").substring(0, 4);
+saanich.year = bioreportr.year;
 
-saanich.obsDateComparator = (a, b) => a.eventDate < b.eventDate ? -1 : a.eventDate > b.eventDate ? 1 : 0;
+saanich.obsDateComparator = bioreportr.obsDateComparator;
 
 /** Formatters of the cells of the tables **/
 
@@ -112,7 +112,7 @@ saanich.taxaOfStatus = function (taxaRows, status) {
 
 /** The atlas's tiles of the three groups of species **/
 
-saanich.statusColours = {confirmed: "#5a96d2", unconfirmed: "#decb90", new: "#7562b4"};
+saanich.statusColours = bioreportr.statusColours;
 
 /**
  * Find the period covered by the dated records.
@@ -242,19 +242,8 @@ saanich.atlas.panelVisible = (markup, activePaneKey, atlasPane) => !!markup && a
 
 /** Summaries of the groups of species, shown on hovering over a tile or a row of the map's legend **/
 
-/**
- * Render a set of horizontal bars.
- * @param {Array[]} entries - The bars to render, as [label, value, text] triples, `text` optionally replacing the value shown
- * @return {String} The markup for the bars
- */
-saanich.statusTooltip.bars = function (entries) {
-    const encode = hortis.dataTable.encode;
-    const max = Math.max(...entries.map(([, value]) => value), 1);
-    return `<div class="saanich-tip-bars">${entries.map(([label, value, text]) => `
-        <span class="saanich-tip-label" title="${encode(label)}">${encode(label)}</span>
-        <span class="saanich-tip-track"><span class="saanich-tip-bar" style="width:${value / max * 100}%"></span></span>
-        <span class="saanich-tip-value">${text || saanich.formatCount(value)}</span>`).join("")}</div>`;
-};
+// The bars and headings of the summaries are those of the summary of a map cell - see bioreportr.cellTooltip
+saanich.statusTooltip.bars = bioreportr.tip.bars;
 
 /**
  * Render a row of twelve columns, one for each month of the year.
@@ -268,9 +257,9 @@ saanich.statusTooltip.months = function (counts) {
 };
 
 saanich.statusTooltip.frame = (name, count, body) =>
-    `<div class="saanich-tip-title">${name} <span>${saanich.formatCount(count)} species</span></div>${body}`;
+    `<div class="mxcw-tip-title">${name} <span>${saanich.formatCount(count)} species</span></div>${body}`;
 
-saanich.statusTooltip.heading = text => `<div class="saanich-tip-heading">${text}</div>`;
+saanich.statusTooltip.heading = bioreportr.tip.heading;
 
 saanich.firstRecorder = record => (record.recordedBy || "Unknown").split(";")[0].trim() || "Unknown";
 
@@ -294,7 +283,7 @@ saanich.statusTooltip.renderers = {
         return saanich.statusTooltip.frame("Newly reported", taxa.length,
             saanich.statusTooltip.heading("Observers with the earliest atlas record of the most species") + saanich.statusTooltip.bars(top) +
             saanich.statusTooltip.heading("Most recent additions, by earliest record in this atlas") +
-            `<ul class="saanich-tip-list">${latest.map(report => `<li><i>${hortis.dataTable.encode(report.taxon.scientificName)}</i> ${saanich.year(report.first.eventDate)}, ${hortis.dataTable.encode(saanich.firstRecorder(report.first))}</li>`).join("")}</ul>`);
+            `<ul class="mxcw-tip-list">${latest.map(report => `<li><i>${hortis.dataTable.encode(report.taxon.scientificName)}</i> ${saanich.year(report.first.eventDate)}, ${hortis.dataTable.encode(saanich.firstRecorder(report.first))}</li>`).join("")}</ul>`);
     },
     unconfirmed: function (taxa, byTaxon) {
         const eras = [["Before 1900", 0, 1899], ["1900–1949", 1900, 1949], ["1950–1979", 1950, 1979], ["1980–1999", 1980, 1999]];
@@ -313,7 +302,7 @@ saanich.statusTooltip.renderers = {
             saanich.statusTooltip.heading("Species by when last recorded") +
             saanich.statusTooltip.bars(eras.map(([label, min, max]) => [label, records.filter(list => lastYear(list) >= min && lastYear(list) <= max).length])) +
             saanich.statusTooltip.heading("Past records by month, a guide to when to look") + saanich.statusTooltip.months(months) +
-            `<div class="saanich-tip-note">${withLocality} species have a recorded locality to search, and ${withSpecimen} have a specimen to consult.</div>`);
+            `<div class="mxcw-tip-note">${withLocality} species have a recorded locality to search, and ${withSpecimen} have a specimen to consult.</div>`);
     }
 };
 
@@ -404,86 +393,6 @@ saanich.checklistDecoration = function (row) {
  */
 saanich.showMarkers = function (gridVisible, inView, threshold, selectedRecord) {
     return inView <= threshold && (!!selectedRecord || gridVisible && inView > 0);
-};
-
-/** The summary of a map cell **/
-
-saanich.cellTooltip.statuses = [["unconfirmed", "Historical"], ["new", "Newly reported"], ["confirmed", "Confirmed"]];
-
-saanich.cellTooltip.plural = (count, noun) => `${saanich.formatCount(count)} ${noun}${count === 1 ? "" : "s"}`;
-
-saanich.cellTooltip.section = (heading, status, body) =>
-    `<div class="saanich-cell-section" style="--tip-colour:${saanich.statusColours[status]}">${saanich.statusTooltip.heading(heading)}${body}</div>`;
-
-/**
- * Find the earliest record of each taxon across the whole atlas, whatever filters are applied.
- * @param {Object[]} obsRows - All records
- * @return {Map<String, Object>} The earliest record of each taxon id
- */
-saanich.cellTooltip.earliestRecords = function (obsRows) {
-    const earliest = new Map();
-    obsRows.forEach(record => {
-        const current = earliest.get(record.iNaturalistTaxonId);
-        if (record.eventDate && (!current || record.eventDate < current.eventDate)) {
-            earliest.set(record.iNaturalistTaxonId, record);
-        }
-    });
-    return earliest;
-};
-
-/**
- * Render the summary of a grid cell, leading with what matters most to the search for lost plants: the historical
- * species recorded there, followed by what has newly been found there and what is well documented. This replaces
- * hortis.renderVizGridTooltip, which listed taxa alone.
- * @param {Object} grid - The grid of records, whose buckets index the records gridded
- * @param {Object<String, TaxonRow>} rowById - Taxon rows indexed by id
- * @param {Object[]} gridRows - The records gridded, which the grid's buckets index
- * @param {Map<String, Object>} earliest - The earliest record of each taxon across the atlas
- * @param {String} cellId - The id of the cell
- * @return {String|null} The markup for the summary, or null if the cell holds no records
- */
-saanich.cellTooltip.render = function (grid, rowById, gridRows, earliest, cellId) {
-    const bucket = grid.buckets[cellId];
-    let togo = null;
-    if (bucket) {
-        const encode = hortis.dataTable.encode;
-        const plants = Object.entries(bucket.byTaxonId).filter(([taxonId]) => rowById[taxonId]).map(([taxonId, obsIndices]) => {
-            const records = obsIndices.map(index => gridRows[index]).filter(record => record?.eventDate).sort(saanich.obsDateComparator);
-            return {taxon: rowById[taxonId], count: obsIndices.length, first: records[0], last: fluid.peek(records)};
-        });
-        const inStatus = status => plants.filter(plant => plant.taxon.reportingStatus === status);
-        const name = plant => plant.taxon.scientificName || plant.taxon.iNaturalistTaxonName;
-        const more = (list, shown) => list.length > shown ? `<div class="saanich-tip-note">and ${list.length - shown} more</div>` : "";
-        const recorder = plant => (plant.last?.recordedBy || "").split(";")[0].trim();
-
-        const segments = saanich.cellTooltip.statuses.map(([status, label]) => ({status, label, count: inStatus(status).length})).filter(segment => segment.count > 0);
-        const colour = segment => saanich.statusColours[segment.status];
-        const bars = segments.map(segment => `<span style="flex:${segment.count};background:${colour(segment)}"></span>`).join("");
-        const keys = segments.map(segment => `<span><i style="background:${colour(segment)}"></i>${segment.label} ${segment.count}</span>`).join("");
-        const stack = `<div class="saanich-cell-stack">${bars}</div><div class="saanich-cell-key">${keys}</div>`;
-
-        const historical = inStatus("unconfirmed").sort((a, b) => +b.taxon.solow_EP - +a.taxon.solow_EP);
-        // A newly reported species is identified by its earliest record anywhere, not by whatever was last seen in this cell
-        const fresh = inStatus("new").map(plant => ({...plant, earliest: earliest.get(plant.taxon.id)})).filter(plant => plant.earliest)
-            .sort((a, b) => b.earliest.eventDate.localeCompare(a.earliest.eventDate));
-        const confirmed = inStatus("confirmed").sort((a, b) => b.count - a.count);
-
-        const sections = [
-            historical.length && saanich.cellTooltip.section("Lost plants recorded here: records, and year last seen", "unconfirmed",
-                saanich.statusTooltip.bars(historical.slice(0, 4).map(plant => [name(plant), plant.count,
-                    `${plant.count} · ${plant.last ? saanich.year(plant.last.eventDate) : "?"}`])) + more(historical, 4)),
-            fresh.length && saanich.cellTooltip.section("Newly reported species here: earliest record in this atlas", "new",
-                `<ul class="saanich-tip-list">${fresh.slice(0, 3).map(plant => `<li><i>${encode(name(plant))}</i> ${saanich.year(plant.earliest.eventDate)}${recorder(plant) ? ", " + encode(recorder(plant)) : ""}${plant.first?.eventDate === plant.earliest.eventDate ? " (here)" : ""}</li>`).join("")}</ul>` + more(fresh, 3)),
-            confirmed.length && saanich.cellTooltip.section("Most recorded confirmed species", "confirmed",
-                saanich.statusTooltip.bars(confirmed.slice(0, 3).map(plant => [name(plant), plant.count])) + more(confirmed, 3))
-        ].filter(Boolean).join("");
-
-        togo = `<div class="saanich-cell-tip">
-            <div class="saanich-tip-title">${saanich.formatCount(plants.length)} species <span>${saanich.cellTooltip.plural(bucket.obsCount, "record")}</span></div>
-            ${stack}${sections}
-        </div>`;
-    }
-    return togo;
 };
 
 /**

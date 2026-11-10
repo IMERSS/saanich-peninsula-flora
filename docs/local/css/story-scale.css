@@ -48,57 +48,6 @@
     display: block;
 }
 
-.saanich-tip-title {
-    font-size: 14px;
-    font-weight: 700;
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-}
-
-.saanich-tip-title span {
-    font-size: 12px;
-    font-weight: 400;
-    color: #a8c8d0;
-}
-
-.saanich-tip-heading {
-    color: #a8c8d0;
-    margin: 8px 0 4px;
-}
-
-.saanich-tip-bars {
-    display: grid;
-    grid-template-columns: minmax(0, auto) 1fr auto;
-    gap: 3px 8px;
-    align-items: center;
-}
-
-.saanich-tip-label {
-    max-width: 120px;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-
-.saanich-tip-track {
-    display: block;
-    min-width: 60px;
-}
-
-.saanich-tip-bar {
-    display: block;
-    height: 8px;
-    min-width: 2px;
-    border-radius: 0 4px 4px 0;
-    background: var(--tip-colour);
-}
-
-.saanich-tip-value {
-    font-weight: 700;
-    text-align: right;
-}
-
 .saanich-tip-months {
     display: flex;
     gap: 2px;
@@ -123,20 +72,7 @@
     background: var(--tip-colour);
 }
 
-.saanich-tip-list {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
-
-.saanich-tip-note {
-    margin-top: 8px;
-    color: #a8c8d0;
-}
-
-/* ── Summaries of map cells ──────────────────────────────── */
-
-.imerss-tooltip-holder:has(.saanich-cell-tip),
+/* The group summaries are framed as the summaries of map cells are - see imerss-story.css */
 .imerss-tooltip-holder:has(.saanich-tip) {
     max-width: none;
     padding: 0;
@@ -151,62 +87,6 @@
     position: static;
     border: 0;
     box-shadow: none;
-}
-
-.saanich-cell-tip {
-    width: 300px;
-    padding: 12px;
-    color: #eefaff;
-    font-size: 12px;
-    line-height: 1.35;
-}
-
-.saanich-cell-stack {
-    display: flex;
-    gap: 2px;
-    margin-top: 8px;
-}
-
-.saanich-cell-stack span {
-    height: 8px;
-    min-width: 4px;
-}
-
-.saanich-cell-stack span:first-child {
-    border-radius: 4px 0 0 4px;
-}
-
-.saanich-cell-stack span:last-child {
-    border-radius: 0 4px 4px 0;
-}
-
-.saanich-cell-key {
-    display: flex;
-    gap: 12px;
-    margin-top: 4px;
-    color: #a8c8d0;
-    flex-wrap: wrap;
-}
-
-.saanich-cell-key i {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    margin-right: 4px;
-    border-radius: 2px;
-}
-
-.saanich-cell-tip .saanich-tip-label {
-    max-width: 150px;
-    font-style: italic;
-}
-
-.saanich-cell-tip .saanich-tip-track {
-    min-width: 30px;
-}
-
-.saanich-cell-tip .saanich-tip-note {
-    margin-top: 2px;
 }
 
 /* ── Atlas tiles for the three groups of species ─────────── */

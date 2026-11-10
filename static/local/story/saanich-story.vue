@@ -8,7 +8,9 @@
 <fluid-import src="saanich-tracesPane.vue"></fluid-import>
 <fluid-import src="saanich-lostPlantsPane.vue"></fluid-import>
 <fluid-import src="saanich-rememberingPane.vue"></fluid-import>
-<!-- The atlas's tiles, panel and tooltips and the rest particular to this story -->
+<!-- The atlas's tiles, panel and tooltips and the rest particular to this story, which build on the story page's own
+     summaries in story.js -->
+<script src="../../bioreportr/js/story.js"></script>
 <script src="../js/saanich.js"></script>
 <script>
 "use strict";
@@ -143,6 +145,10 @@ fluid.def("saanich.story", {
             selectedIndex: 2
         }
     },
+    // The summary of a map cell calls the historical species lost plants, as the gallery does
+    cellTooltipHeadings: {
+        unconfirmed: "Lost plants recorded here: records, and year last seen"
+    },
     // The tiles of the atlas's three groups of species, placed in its section
     atlasTiles: "$compute:saanich.atlas.tilesMarkup({self}.taxa.allRows, {self}.selectedStatus)",
     sectionInserts: "$compute:saanich.atlas.sectionInserts({self}.atlasTiles)",
@@ -170,7 +176,6 @@ fluid.def("saanich.story", {
             }
         }
     },
-    earliestRecords: "$compute:saanich.cellTooltip.earliestRecords({self}.obsRows)",
     // The extirpation risk pane opens on whichever species is at the top of its list, with the map fitted to its records
     solowShown: "$compute:bioreportr.storyPage.isActive({self}.activePaneKey, Solow)",
     selectTopSpecies: "$effect:saanich.selectTopSpecies({self}, {self}.solowShown, {self}.loaded, {self}.solowTaxa.taxaTable.displayRows)",
@@ -234,14 +239,7 @@ fluid.def("saanich.story", {
             inverseCountTransform: "saanich.inverseWeibullCount",
             // The grid counts records of every type of evidence, not only observations
             legendMarkup: `$compute:saanich.obsGridLegendMarkup({self}.obsQuantiser.grid, {self}.fillStops, {self}.legendStops,
-                {self}.maxObsCountOverride, {self}.inverseCountTransform, {self}.obsQuantiser.longResolution, {self}.obsQuantiser.baseLatitude)`,
-            // A summary of a map cell, leading with what matters most to the search for lost plants
-            gridSelector: {
-                $component: {
-                    renderTooltip: `$method:saanich.cellTooltip.render({libreMap}.obsQuantiser.grid, {vizLoader}.taxa.rowById,
-                        {vizLoader}.finalFilteredObs, {vizLoader}.earliestRecords, {0}:cellId)`
-                }
-            }
+                {self}.maxObsCountOverride, {self}.inverseCountTransform, {self}.obsQuantiser.longResolution, {self}.obsQuantiser.baseLatitude)`
         }
     }
 });

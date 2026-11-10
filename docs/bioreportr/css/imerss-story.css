@@ -1416,6 +1416,136 @@ body {
     line-height: 1.4;
 }
 
+/* ── Summaries shown in tooltips - of a cell of the map's grid, and the parts shared by any other summary, e.g. a
+   story's own summaries of its groups of species. See bioreportr.cellTooltip and bioreportr.tip in story.js ── */
+
+.imerss-tooltip-holder:has(.mxcw-cell-tip) {
+    max-width: none;
+    padding: 0;
+    border: 1px solid #4a9aaa;
+    border-radius: 8px;
+    background: #0d3040;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+.mxcw-tip-title {
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.mxcw-tip-title span {
+    font-size: 12px;
+    font-weight: 400;
+    color: #a8c8d0;
+}
+
+.mxcw-tip-heading {
+    color: #a8c8d0;
+    margin: 8px 0 4px;
+}
+
+.mxcw-tip-bars {
+    display: grid;
+    grid-template-columns: minmax(0, auto) 1fr auto;
+    gap: 3px 8px;
+    align-items: center;
+}
+
+.mxcw-tip-label {
+    max-width: 120px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.mxcw-tip-track {
+    display: block;
+    min-width: 60px;
+}
+
+.mxcw-tip-bar {
+    display: block;
+    height: 8px;
+    min-width: 2px;
+    border-radius: 0 4px 4px 0;
+    background: var(--tip-colour);
+}
+
+.mxcw-tip-value {
+    font-weight: 700;
+    text-align: right;
+}
+
+.mxcw-tip-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mxcw-tip-note {
+    margin-top: 8px;
+    color: #a8c8d0;
+}
+
+.mxcw-cell-tip {
+    width: 300px;
+    padding: 12px;
+    color: #eefaff;
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.mxcw-cell-stack {
+    display: flex;
+    gap: 2px;
+    margin-top: 8px;
+}
+
+.mxcw-cell-stack span {
+    height: 8px;
+    min-width: 4px;
+}
+
+.mxcw-cell-stack span:first-child {
+    border-radius: 4px 0 0 4px;
+}
+
+.mxcw-cell-stack span:last-child {
+    border-radius: 0 4px 4px 0;
+}
+
+.mxcw-cell-key {
+    display: flex;
+    gap: 12px;
+    margin-top: 4px;
+    color: #a8c8d0;
+    flex-wrap: wrap;
+}
+
+.mxcw-cell-key i {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 4px;
+    border-radius: 2px;
+}
+
+.mxcw-cell-tip .mxcw-tip-label {
+    max-width: 150px;
+    font-style: italic;
+}
+
+.mxcw-cell-tip .mxcw-tip-track {
+    min-width: 30px;
+}
+
+.mxcw-cell-tip .mxcw-tip-note {
+    margin-top: 2px;
+}
+
 /* ── The story page's own structure - see static/bioreportr/sfc/bioreportr-storyPage.vue ── */
 
 /* Each pane's section is rendered within a wrapper of its own, which is marked when it is the active pane */

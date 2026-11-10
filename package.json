@@ -1,7 +1,7 @@
 {
     "name": "saanich-peninsula-flora",
     "description": "Saanich Peninsula Flora Storymapping in R",
-    "version": "0.0.1",
+    "version": "1.0.0",
     "author": "IMERSS, Transition Salt Spring",
     "scripts": {
         "lint": "fluid-lint-all",
@@ -14,7 +14,7 @@
     },
     "dependencies": {
         "@imerss/inat-components": "2.0.1",
-        "imerss-bioinfo": "1.16.0",
+        "imerss-bioinfo": "1.18.0",
         "infusion-6": "6.2.1",
         "js-yaml": "4.1.1",
         "json5": "2.2.3",

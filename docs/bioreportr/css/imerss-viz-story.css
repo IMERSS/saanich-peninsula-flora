@@ -27,6 +27,13 @@
     overflow: auto; /* Without this, massive horizontal overflow on parent */
 }
 
+/* The records' panel takes the whole width of the data pane, open or collapsed, so that the controls at the right of its
+   header stay put as it opens and closes - collapsed, it would otherwise shrink to its header */
+.mxcw-data > .mxcw-obs-table-holder {
+    flex-grow: 1;
+    min-width: 0;
+}
+
 /* The records' header is spaced alike above and below, open or collapsed - from the map's edge, the resize bar between
    them being counted in the space above, and allowing for the label's glyphs riding high in its box */
 .mxcw-obs-table-controls {
