@@ -72,7 +72,7 @@ bioreportr.solowObsForTaxon = function (obsRows, taxonRow) {
 bioreportr.solowTaxonInfo.model = function (taxon, taxonObsRows) {
     return taxon && taxonObsRows.length > 0 ? {
         none: false,
-        taxonName: taxon.scientificName,
+        taxonName: taxon.scientificName + (taxon.commonName ? ` (${taxon.commonName})` : ""),
         dateFirstSeen: bioreportr.eventDay(taxonObsRows[0].eventDate),
         dateLastSeen: bioreportr.eventDay(taxonObsRows[taxonObsRows.length - 1].eventDate),
         numObs: taxonObsRows.length,
@@ -213,11 +213,16 @@ bioreportr.solowMapLayer.LAYER_ID = "solow-layer";
 bioreportr.solowMapLayer.geoJSON = function (clusters) {
     return {
         type: "FeatureCollection",
-        features: clusters.flatMap(cluster => cluster.points.map(point => ({
-            type: "Feature",
-            geometry: {type: "Point", coordinates: point.point},
-            properties: {solowEP: 1 - cluster.pp, clusterId: cluster.id}
-        })))
+        // One circle for each distinct place in a population, within about 10m - many records share a place, and their
+        // circles, drawn one over another, would add up to a solid fill hiding the land beneath
+        features: clusters.flatMap(cluster => {
+            const places = new Map(cluster.points.map(point => [point.point.map(coord => (+coord).toFixed(4)).join(","), point.point]));
+            return [...places.values()].map(coordinates => ({
+                type: "Feature",
+                geometry: {type: "Point", coordinates},
+                properties: {solowEP: 1 - cluster.pp, clusterId: cluster.id}
+            }));
+        })
     };
 };
 
@@ -298,26 +303,10 @@ bioreportr.solowMapLayer.addLegend = function (map, legendPosition, dokkument) {
     return control;
 };
 
-bioreportr.solowTooltipTemplate =
-`<div class="imerss-tooltip imerss-bbea-grid-tooltip">
-    <dl class="mxcw-taxon-fields">
-        <dt>Cluster ID: </dt>     <dd>%clusterId</dd>
-        <dt>Date first seen:</dt> <dd>%dateFirstSeen</dd>
-        <dt>Date last seen:</dt>  <dd>%dateLastSeen</dd>
-        <dt>Total sightings:</dt> <dd>%numObs</dd>
-        <dt>Cluster EP:</dt>      <dd>%clusterEP</dd>
-    </dl>
-</div>`;
-
+// The tooltip of a population states its probability of extirpation alone
 bioreportr.solowMapLayer.renderTooltip = function (clusters, clusterId) {
     const cluster = clusters[clusterId];
-    return cluster ? hortis.stringTemplate(bioreportr.solowTooltipTemplate, {
-        clusterId,
-        dateFirstSeen: bioreportr.eventDay(cluster.obsRows[0].eventDate),
-        dateLastSeen: bioreportr.eventDay(cluster.obsRows[cluster.obsRows.length - 1].eventDate),
-        numObs: cluster.obsRows.length,
-        clusterEP: (1 - cluster.pp).toFixed(3)
-    }) : null;
+    return cluster ? `<div class="imerss-tooltip mxcw-population-tooltip">Population EP: <b>${(1 - cluster.pp).toFixed(2)}</b></div>` : null;
 };
 
 /**
@@ -330,7 +319,8 @@ bioreportr.solowMapLayer.bindHover = function (that, map) {
     const listener = e => {
         if (that.visible) {
             const clusterId = hortis.libreMap.eventToProp(map, e, "clusterId");
-            that.hoverAt(clusterId, e.originalEvent);
+            // As text, since the first population's id, 0, would otherwise read as no population at all
+            that.hoverAt(hortis.isValue(clusterId) ? String(clusterId) : null, e.originalEvent);
         }
     };
     const leave = () => that.hoverAt(null);

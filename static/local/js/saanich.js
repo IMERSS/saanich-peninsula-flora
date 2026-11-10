@@ -145,7 +145,7 @@ saanich.atlas.tiles = [{
 }, {
     status: "new",
     name: "Newly reported",
-    meaning: "Additions to the flora from recent reports."
+    meaning: "Added new to the flora from recent reports."
 }];
 
 /**
@@ -222,9 +222,8 @@ saanich.atlas.panelMarkup = function (taxon, records) {
         togo = `<div class="mxcw-solow-taxon-pane">
   <div class="mxcw-taxon-image">${hortis.renderTaxonImage(taxon.iNaturalistTaxonImage, taxon.id)}</div>
   <div class="mxcw-taxon-info">
-    <div class="mxcw-taxon-name">${hortis.dataTable.encode(taxon.scientificName || taxon.iNaturalistTaxonName)}</div>
+    <div class="mxcw-taxon-name">${hortis.dataTable.encode((taxon.scientificName || taxon.iNaturalistTaxonName) + (taxon.commonName ? ` (${taxon.commonName})` : ""))}</div>
     <dl class="mxcw-taxon-fields">
-      ${saanich.atlas.field("Common name", taxon.commonName)}
       <dt>Date first seen:</dt> <dd>${bioreportr.eventDay(records[0].eventDate)}</dd>
       <dt>Date last seen:</dt> <dd>${bioreportr.eventDay(fluid.peek(records).eventDate)}</dd>
       <dt>Total records:</dt> <dd>${saanich.formatCount(records.length)}</dd>
@@ -264,26 +263,37 @@ saanich.statusTooltip.heading = bioreportr.tip.heading;
 saanich.firstRecorder = record => (record.recordedBy || "Unknown").split(";")[0].trim() || "Unknown";
 
 saanich.statusTooltip.renderers = {
+    // When each historically reported species was first found again since 2000, and who found the most of them again
     confirmed: function (taxa, byTaxon) {
-        const bins = [["1–9", 1, 9], ["10–99", 10, 99], ["100–999", 100, 999], ["1000+", 1000, Infinity]];
-        const sizes = taxa.map(taxon => (byTaxon.get(taxon.id) || []).length);
+        const periods = [["2000–2004", 2000, 2004], ["2005–2009", 2005, 2009], ["2010–2014", 2010, 2014], ["2015–2019", 2015, 2019], ["2020 on", 2020, Infinity]];
+        const refound = taxa.map(taxon => (byTaxon.get(taxon.id) || []).slice().sort(saanich.obsDateComparator)
+            .find(record => parseInt(record.eventDate, 10) >= 2000)).filter(record => record);
+        const counts = {};
+        refound.forEach(record => {
+            const recorder = saanich.firstRecorder(record);
+            counts[recorder] = (counts[recorder] || 0) + 1;
+        });
+        const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
         return saanich.statusTooltip.frame("Confirmed", taxa.length,
-            saanich.statusTooltip.heading("Species by number of records") +
-            saanich.statusTooltip.bars(bins.map(([label, min, max]) => [label, sizes.filter(size => size >= min && size <= max).length])));
+            saanich.statusTooltip.heading("Species by when first found again") +
+            saanich.statusTooltip.bars(periods.map(([label, min, max]) => [label, refound.filter(record => {
+                const year = parseInt(record.eventDate, 10);
+                return year >= min && year <= max;
+            }).length])) +
+            saanich.statusTooltip.heading("Observers who found the most species again") + saanich.statusTooltip.bars(top));
     },
     new: function (taxa, byTaxon) {
-        const reports = taxa.map(taxon => ({taxon, first: (byTaxon.get(taxon.id) || []).slice().sort(saanich.obsDateComparator)[0]})).filter(report => report.first);
+        // Each species' first record in the atlas, among those made since 2000
+        const reports = taxa.map(taxon => ({taxon, first: (byTaxon.get(taxon.id) || []).slice().sort(saanich.obsDateComparator)[0]}))
+            .filter(report => report.first && parseInt(report.first.eventDate, 10) >= 2000);
         const counts = {};
         reports.forEach(report => {
             const recorder = saanich.firstRecorder(report.first);
             counts[recorder] = (counts[recorder] || 0) + 1;
         });
         const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
-        const latest = reports.sort((a, b) => b.first.eventDate.localeCompare(a.first.eventDate)).slice(0, 3);
         return saanich.statusTooltip.frame("Newly reported", taxa.length,
-            saanich.statusTooltip.heading("Observers with the earliest atlas record of the most species") + saanich.statusTooltip.bars(top) +
-            saanich.statusTooltip.heading("Most recent additions, by earliest record in this atlas") +
-            `<ul class="mxcw-tip-list">${latest.map(report => `<li><i>${hortis.dataTable.encode(report.taxon.scientificName)}</i> ${saanich.year(report.first.eventDate)}, ${hortis.dataTable.encode(saanich.firstRecorder(report.first))}</li>`).join("")}</ul>`);
+            saanich.statusTooltip.heading("Observers with most added records since 2000") + saanich.statusTooltip.bars(top));
     },
     unconfirmed: function (taxa, byTaxon) {
         const eras = [["Before 1900", 0, 1899], ["1900–1949", 1900, 1949], ["1950–1979", 1950, 1979], ["1980–1999", 1980, 1999]];
@@ -299,7 +309,7 @@ saanich.statusTooltip.renderers = {
         const withLocality = records.filter(list => list.some(record => record.locality)).length;
         const withSpecimen = records.filter(list => list.some(record => /specimen/i.test(record.basisOfRecord))).length;
         return saanich.statusTooltip.frame("Historical", taxa.length,
-            saanich.statusTooltip.heading("Species by when last recorded") +
+            saanich.statusTooltip.heading("Species by date last recorded") +
             saanich.statusTooltip.bars(eras.map(([label, min, max]) => [label, records.filter(list => lastYear(list) >= min && lastYear(list) <= max).length])) +
             saanich.statusTooltip.heading("Past records by month, a guide to when to look") + saanich.statusTooltip.months(months) +
             `<div class="mxcw-tip-note">${withLocality} species have a recorded locality to search, and ${withSpecimen} have a specimen to consult.</div>`);
