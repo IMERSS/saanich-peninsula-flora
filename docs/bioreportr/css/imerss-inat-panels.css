@@ -271,3 +271,10 @@
     box-shadow: none;
     color: #123;
 }
+
+/* Phones: two photos across, rather than one filling the screen */
+@media (max-width: 767.98px) {
+    :is(.mxcw-inat-components, #mxcw-inat-weight) [class*="module_grid"] {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+    }
+}

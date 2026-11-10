@@ -1043,6 +1043,44 @@ h2 {
     .mxcw-story-holder {
         width: 100%;
     }
+
+    /* Infusion 6 renders the subnav within a wrapper, which is the item of this column to be ordered and stuck */
+    .imerss-page > :has(> .imerss-subnav) {
+        order: -2;
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        /* Opaque, since the banner's background scrolls away beneath it */
+        background: #184e62;
+    }
+
+    /* On a phone the reader meets the section tabs and the story first, and the map or gallery after them, rather
+       than having to scroll past a screenful of map to reach either */
+    .mxcw-story-holder {
+        order: -1;
+    }
+
+    /* The story runs to its full length within the page's own scrolling, rather than in a box of its own nested within
+       it. Only the panel of filters, records and species keeps a height of its own, within which its lists scroll */
+    .mxcw-container,
+    .mxcw-content-holder {
+        height: auto;
+    }
+
+    .mxcw-content {
+        height: auto;
+        overflow: visible;
+    }
+
+    .mxcw-container > .resize-bar {
+        display: none;
+    }
+
+    /* Qualified to outweigh the later rules giving this panel a share of the column's fixed height */
+    .mxcw-story-holder .mxcw-container > .imerss-container {
+        flex: none;
+        height: 70vh;
+    }
 }
 
 /* Phone widths - keep a long site title within the 100px navigation banner */

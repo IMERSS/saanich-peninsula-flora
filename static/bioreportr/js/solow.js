@@ -236,6 +236,10 @@ bioreportr.solowMapLayer.metresToPixels = function (radiusMetres, zoom, lat) {
  * @param {Number} zoom - The map's zoom level
  * @param {Function} sortLayers - The map component's method sorting its layers
  */
+// The fill of the populations lets the land beneath show through, while a solid outline of the same colour keeps each legible
+bioreportr.solowMapLayer.fillOpacity = 0.55;
+bioreportr.solowMapLayer.outlineWidth = 1.5;
+
 bioreportr.solowMapLayer.update = function (map, clusters, solowRadius, visible, zoom, sortLayers) {
     const geoJSON = bioreportr.solowMapLayer.geoJSON(clusters);
     const source = map.getSource(bioreportr.solowMapLayer.SOURCE_ID);
@@ -246,10 +250,12 @@ bioreportr.solowMapLayer.update = function (map, clusters, solowRadius, visible,
     }
     const lat = geoJSON.features[0]?.geometry.coordinates[1] ?? 49;
     const radius = bioreportr.solowMapLayer.metresToPixels(solowRadius, zoom, lat);
-    const opacity = visible ? 1 : 0;
+    const opacity = visible ? bioreportr.solowMapLayer.fillOpacity : 0;
+    const outlineOpacity = visible ? 1 : 0;
     if (map.getLayer(bioreportr.solowMapLayer.LAYER_ID)) {
         map.setPaintProperty(bioreportr.solowMapLayer.LAYER_ID, "circle-radius", radius);
         map.setPaintProperty(bioreportr.solowMapLayer.LAYER_ID, "circle-opacity", opacity);
+        map.setPaintProperty(bioreportr.solowMapLayer.LAYER_ID, "circle-stroke-opacity", outlineOpacity);
     } else {
         map.addLayer({
             id: bioreportr.solowMapLayer.LAYER_ID,
@@ -259,7 +265,9 @@ bioreportr.solowMapLayer.update = function (map, clusters, solowRadius, visible,
                 "circle-radius": radius,
                 "circle-color": {property: "solowEP", stops: hortis.libreMap.viridisStops},
                 "circle-opacity": opacity,
-                "circle-stroke-width": 0
+                "circle-stroke-width": bioreportr.solowMapLayer.outlineWidth,
+                "circle-stroke-color": {property: "solowEP", stops: hortis.libreMap.viridisStops},
+                "circle-stroke-opacity": outlineOpacity
             },
             metadata: {sortKey: 110}
         });

@@ -216,6 +216,13 @@ saanich.remembering.bindHover = function (map, mapData, window) {
     font-size: var(--story-body);
     font-weight: 700;
 }
+
+/* Phones: the map of the checklist areas leaves room for the text beneath it */
+@media (max-width: 767.98px) {
+    .mxcw-leftPane.saanich-remembering-active {
+        height: max(360px, 62vh);
+    }
+}
 </style>
 
 <!-- The <template> block below is written by src/js/storyBuild.js and must not be edited here: it holds the section
