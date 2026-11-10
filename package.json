@@ -5,16 +5,20 @@
     "author": "IMERSS, Transition Salt Spring",
     "scripts": {
         "lint": "fluid-lint-all",
-        "build": "node src/js/reknit.js"
+        "story": "node src/js/storyBuild.js content/story viz_data static/story",
+        "vendor": "fluid-copyout static/story/index-dev.html",
+        "hydrate": "fluid-hydrate docs/story/index.html -o docs/story/index.html",
+        "build": "npm run story && npm run vendor && hugo && npm run hydrate"
     },
-    "dependencies": {},
-    "devDependencies": {
-        "infusion": "4.6.0",
-        "imerss-bioinfo": "1.14.0",
+    "dependencies": {
+        "infusion-6": "6.2.1",
+        "imerss-bioinfo": "1.15.0",
         "@imerss/inat-components": "2.0.1",
-        "json5": "2.2.3",
-        "linkedom": "0.14.25",
         "js-yaml": "4.1.1",
+        "json5": "2.2.3",
+        "linkedom": "0.14.25"
+    },
+    "devDependencies": {
         "antlr4": "4.13.2",
         "fs-extra": "11.1.1",
         "eslint": "8.39.0",
@@ -26,7 +30,7 @@
         "url": "https://github.com/IMERSS/saanich-peninsula-flora"
     },
     "engines": {
-        "node": ">=16.0.0"
+        "node": ">=18"
     },
     "license": "BSD-3-Clause"
 }

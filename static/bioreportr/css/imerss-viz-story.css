@@ -38,8 +38,28 @@
     margin-bottom: 0.25rem;
 }
 
+/* The colour of the records' label beside it - imerss-bioinfo's download icon is now stroked in currentColor */
 .mxcw-obs-table-controls .imerss-download-button {
-    fill: #ddd
+    fill: #ddd;
+    color: #eefaff;
+}
+
+/* The button clearing the selected record, styled as the download button beside it */
+.mxcw-obs-table-controls .mxcw-record-reset {
+    align-items: center;
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+}
+
+.mxcw-obs-table-controls .mxcw-record-reset:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.mxcw-obs-table-controls .mxcw-record-reset:disabled:hover {
+    background: none;
 }
 
 .mxcw-obs-table {
@@ -80,15 +100,6 @@
     text-align: right;
 }
 
-
-.imerss-download-link {
-    display: inline-block;
-    width: 1.5rem;
-    height: 1.5rem;
-    background-image: url(../img/download.svg);
-    backdrop-filter: opacity(0.7);
-    margin-left: 5px;
-}
 
 .imerss-download-link:hover {
     outline: 1px #333 solid;
@@ -421,4 +432,27 @@ html[class~=dark] #inat-components select {
 .mxcw-data > .mxcw-solow-widgets-holder:not(.mxcw-solow-has-taxon),
 .mxcw-data:has(> .mxcw-solow-widgets-holder:not(.mxcw-solow-has-taxon)) > .mxcw-solow-records-holder {
     display: none;
+}
+
+/* The filter of the extirpation risk analysis's taxa by their range of extirpation probability */
+.mxcw-ep-range {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 170px;
+}
+
+.mxcw-ep-range label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mxcw-ep-range label span {
+    width: 2em;
+}
+
+.mxcw-ep-range input {
+    flex: 1;
+    min-width: 0;
 }

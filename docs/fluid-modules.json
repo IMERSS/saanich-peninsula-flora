@@ -1,0 +1,11 @@
+{
+    "@imerss/inat-components": "vendor/@imerss/inat-components",
+    "@mapbox/mapbox-gl-draw": "vendor/@mapbox/mapbox-gl-draw",
+    "@popperjs/core": "vendor/@popperjs/core",
+    "accessible-autocomplete": "vendor/accessible-autocomplete",
+    "imerss-bioinfo": "vendor/imerss-bioinfo",
+    "maplibre-gl": "vendor/maplibre-gl",
+    "pako": "vendor/pako",
+    "papaparse": "vendor/papaparse",
+    "pretty-checkbox": "vendor/pretty-checkbox"
+}

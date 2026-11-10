@@ -34,7 +34,7 @@ If you haven't worked with this kind of project before, you will need the follow
 
 * R and R studio, installed from [posit's website](https://posit.co/download/rstudio-desktop/)
 
-In order to reknit the markup rendered by R and R markdown, you will also need the following optional tools:
+In order to build the story page from the markup rendered by R and R markdown, you will also need the following tools:
 
 * node and npm for your platform, installed according to [node's instructions](https://nodejs.org/en/download/).
 
@@ -61,54 +61,61 @@ version of the repository URL available from the "Code" dropdown as shown in the
 
 Another useful guide is at [Connect RStudio to Git and GitHub](https://happygitwithr.com/rstudio-git-github.html).
 
-If you are going to do your own reknitting, you will now need to download node dependencies for this project by opening
+Before building and publishing the site, you will now need to download JavaScript dependencies for this project by opening
 a terminal in its root folder and typing
 
     npm install
 
-## Knitting and reknitting markup from your markdown
+## Knitting your markdown and building the story
 
 The first part of the publishing chain is to use the builtin "knitting" functionality in R studio described in the
-[authoring guide](https://rmarkdown.rstudio.com/authoring_quick_tour.html) - open up the .Rmd file at the roof of the project
-and click on the small "Knit" button above it. This will produce markup in the "docs" directory. You can commit this
-to GitHub pages and hence publish it by following the steps in
-[section 12.4](https://happygitwithr.com/rstudio-git-github.html#make-local-changes-save-commit) of the guide to using
-GitHub in R studio.
+[authoring guide](https://rmarkdown.rstudio.com/authoring_quick_tour.html) - open up one of the .Rmd files
+in the [story](content/story) directory and press the "Knit" button above it. This will produce an HTML file in the
+same directory which can be previewed to see if your maps, content and any widgets look as expected in a standalone
+mode.
 
-If this all works fine, you can proceed with editing the document in [R-Markdown-Background.Rmd](R-Markdown-Background.Rmd),
-and building out scripts for further maps in [scripts](scripts), vector data as SHP flies in
-[spatial_data/vectors](spatial_data/vectors) and raster data in [spatial_data/rasters](spatial_data/rasters).
-Please consult the [using Leaflet with R](https://rstudio.github.io/leaflet/) guide for how to add your own map data
-to your maps.
+As you edit your documents in [content/story](content/story), you can build out scripts for further maps in
+[scripts](scripts). Please consult the [using Mapbox Layers in R](https://plotly.com/r/mapbox-layers/) guide for how to
+add your own map data to your maps.
 
-The sample map contains one simple vector and one simple raster dataset. Each second-level heading in the document -
-rendered using ## in markdown, and an `<h2>` tag in the output markup, will correspond to a separate section in the
-scrollytelling interface. Each leaflet map that you render in such a section will be compiled by the reknitting process
-into a separate map layer on the shared map. Note that not many R leaflet constructs are currently supported by the
-reknitting process - [contact us](https://github.com/IMERSS/r-scrollytelling-template/issues) with details of what you
-would like to see.
+The type of vignette is customised by a mixture of YAML front matter in the .Rmd files, such as its `title` and its
+`weight`, which orders the panes, and entries in the `paneOverrides` member of the story's driver,
+[static/local/story/saanich-story.vue](static/local/story/saanich-story.vue), keyed by the basename of the .Rmd file.
 
-Once your customised map knits properly using the R Studio "Knit" process, you can reknit it by running
+Once your vignettes knit properly using the R Studio "Knit" process, build the story and the site as a whole by running
 
     npm run build
 
-from the terminal in the project folder. Commit and push the output from this stage using R Studio or git as you prefer.
+This runs four steps, which can also be run singly:
 
-If you want to reknit to different input or output filenames, edit the reknitJobs block in the configuration file
-at [config.json5](config.json5). To customise the markup which frames the reknitted output, you can edit the HTML
-template at [src/html/template.html](src/html/template.html).
+* `npm run story` runs [src/js/storyBuild.js](src/js/storyBuild.js), which writes the panes knitted from
+  [content/story](content/story), and the data of their maps, into `static/story`
+* `npm run vendor` runs Infusion 6's `copyOut.js`, which copies Infusion and the IMERSS visualisation framework into
+  `static/vendor`
+* `hugo` builds the site into `docs`
+* `npm run hydrate` runs Infusion 6's `hydrate.js`, which renders the story page into `docs/story/index.html`, so that
+  it shows its markup before its data has loaded
+
+Commit and push the output from this stage using R Studio or command-line git as you prefer. For using R Studio
+to commit your file, you can follow the steps in
+[section 12.4](https://happygitwithr.com/rstudio-git-github.html#make-local-changes-save-commit) of the guide to using
+GitHub in R studio.
+
+The markup framing the story is the Hugo layout [layouts/story/baseof.html](layouts/story/baseof.html), which imports
+the story's driver and holds the element on which it boots. During development, the story can be viewed without Hugo
+from [static/story/index-dev.html](static/story/index-dev.html).
 
 ## Setting up GitHub Pages to publish your markup
 
-To publish the markup resulting from both the knitting and the reknitting process, set up the configuration on your
+To publish the markup resulting from both the knitting and the build, set up the configuration on your
 repository to publish GitHub Pages from the `docs` folder of the `main` branch. This is available from the `Pages`
 tab on your repository's settings, as shown in the image below:
 
 ![GitHub Pages configuration](img/gh-pages.png)
 
-You can find our what URL your markup will be published at by looking in the [docs](docs) directory of your own
-repository. For example, the [docs/R-Markdown-Background-Reknitted.html](docs/R-Markdown-Background-Reknitted.html)
-file is published at [https://imerss.github.io/r-scrollytelling-template/R-Markdown-Background-Reknitted.html](https://imerss.github.io/r-scrollytelling-template/R-Markdown-Background-Reknitted.html).
+You can find our what URL your markup will be published at by looking in the GitHub Pages settings for your
+repository. For example, the story at [docs/story/index.html](docs/story/index.html) is published at
+[https://imerss.github.io/saanich-peninsula-flora/story/](https://imerss.github.io/saanich-peninsula-flora/story/).
 
 The overall URL of your documents published in GitHub pages will start with `https://<your-account>.github.io/<your-repository>`.
 

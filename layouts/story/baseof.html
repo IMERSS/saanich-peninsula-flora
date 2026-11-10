@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.Language.Lang }}">
+  {{- partial "head.html" . -}}
+  <body dir="{{ .Site.Language.LanguageDirection | default `ltr` }}">
+    {{- partial "navbar.html" . -}}
+    {{- /* The story page of Infusion 6's bioReportR framework - see static/bioreportr/sfc/bioreportr-storyPage.vue. In
+      place of the Infusion 4 page woven by reknit.js, this page holds only the import of the story's driver, which
+      names its data and their placeholders, and the element on which it boots, which computes the pane it shows
+      from the URL's hash before it renders. Its markup is written in by Infusion 6's hydrate.js after Hugo has built
+      the site - see package.json. Infusion and the IMERSS framework are copied into static/vendor by Infusion 6's
+      copyOut.js */ -}}
+    <!-- The one reference to the location of Infusion - every other is relative, or through a module -->
+    <script src="../vendor/infusion/src/framework/core/js/FluidBoot.js"></script>
+    <!-- The site, as the module holding the page, and its map of the modules it depends upon, written by
+         "npm run vendor" (Infusion 6's copyOut.js) as it copies them into static/vendor -->
+    <fluid-module id="{{ .Site.Params.siteModule | default "site" }}" src="../" modules="fluid-modules.json"></fluid-module>
+    <fluid-import src="../local/story/{{ .Site.Params.storyDriver | default "story" }}.vue"></fluid-import>
+    <template id="site-subnav">{{ partial "subnav.html" . }}</template>
+    {{- /* Until the page has booted, loaded its stylesheets, which arrive as it imports its modules, and replaced its
+      placeholder data with the real, its statically rendered markup holds every pane's material unstyled - only the
+      banner and the panes' tabs show until then. hydrate.js renders the root with imerss-loading, which the story
+      page removes once its data is real - see bioreportr.storyPage.loaded. The elements hidden are marked by an
+      attribute, since a class computed by the page, as theirs are, is not rendered statically */ -}}
+    <style>
+      /* Opacity rather than visibility, which a descendant such as a map's legend may restore for itself */
+      .imerss-main.imerss-loading [data-mxcw-startup-hidden]:not([data-mxcw-startup-hidden="map"]),
+      .imerss-main.imerss-loading [data-mxcw-startup-hidden="map"] > * {
+        opacity: 0;
+        pointer-events: none;
+      }
+      /* The column of the map shows a loading indicator meanwhile, drawn over it so that nothing moves */
+      .imerss-main.imerss-loading [data-mxcw-startup-hidden="map"] {
+        position: relative;
+      }
+      .imerss-main.imerss-loading [data-mxcw-startup-hidden="map"]::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 48px;
+        height: 48px;
+        margin: -30px 0 0 -30px;
+        border: 6px solid rgba(238, 250, 255, 0.2);
+        border-top-color: #fdf2ce;
+        border-radius: 50%;
+        animation: mxcw-startup-spin 0.9s linear infinite;
+      }
+      @keyframes mxcw-startup-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .imerss-main.imerss-loading [data-mxcw-startup-hidden="map"]::after {
+          animation-duration: 3s;
+        }
+      }
+    </style>
+    <div fluid-layers="{{ .Site.Params.storyLayer | default "story" }}"></div>
+    {{- if or (eq .Site.Params.footer.enable nil) (.Site.Params.footer.enable) }}
+      {{ partial "footer.html" . }}
+    {{ end }}
+    {{ partial "scripts.html" . }}
+  </body>
+</html>

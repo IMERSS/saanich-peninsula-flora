@@ -16,4 +16,4 @@ reducedList$phylum = "Tracheophyta"
 
 timedWrite(reducedList, "tabular_data/Saanich_Tracheophyta_ultimate-summary_2026-08-20-orig.csv")
 
-# Next: node ../bagatelle/src/assignBNames.js tabular_data/Saanich_Tracheophyta_ultimate-summary_2026-08-20-orig.csv --DwCA --swaps tabular_data/taxon-swaps.csv
+# Next: node node_modules/imerss-bioinfo/src/assignBNames.js tabular_data/Saanich_Tracheophyta_ultimate-summary_2026-08-20-orig.csv --DwCA --swaps tabular_data/taxon-swaps.csv

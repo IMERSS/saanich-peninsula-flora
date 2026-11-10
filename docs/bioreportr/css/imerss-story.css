@@ -1004,7 +1004,9 @@ body .mx-header ::-webkit-scrollbar-thumb {
     margin-top: 2px;
 }
 
-.resize-bar {
+/* Scoped to the page, so as to outweigh imerss-bioinfo's resize-bar.css, which loads after this sheet and whose fainter
+   colours, still fainter in a dark colour scheme, otherwise left the bars almost invisible */
+.imerss-main .resize-bar {
     --bar-color: rgba(192, 192, 192, 0.5);
     --bar-color-hover: rgba(192, 192, 192, 0.6);
     --bar-color-active: rgba(192, 192, 192, 0.8);

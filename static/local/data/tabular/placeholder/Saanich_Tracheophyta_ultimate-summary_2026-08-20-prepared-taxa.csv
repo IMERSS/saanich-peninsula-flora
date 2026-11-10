@@ -1,0 +1,10 @@
+id,parentId,iNaturalistTaxonName,commonName,rank,iNaturalistTaxonImage,scientificName,taxon_rank,infrataxon_status,provenance_status,provincial_concern,introduction_status,reportingStatus,solow_EP,species,subspecies,variety,nameStatus,inSummary
+48460,,Life,life,stateofmatter,https://inaturalist-open-data.s3.amazonaws.com/photos/347064198/medium.jpeg,,,,unknown,,,,,,,,,
+47126,48460,Plantae,Plants,kingdom,https://static.inaturalist.org/photos/221143410/medium.jpeg,,,,unknown,,,,,,,,,
+211194,47126,Tracheophyta,Vascular Plants,phylum,https://inaturalist-open-data.s3.amazonaws.com/photos/301768574/medium.jpg,,,,unknown,,,,,,,,,
+136329,211194,Pinopsida,conifers,class,https://inaturalist-open-data.s3.amazonaws.com/photos/8663621/medium.jpg,,,,unknown,,,,,,,,,
+47375,136329,Pinales,conifers,order,https://inaturalist-open-data.s3.amazonaws.com/photos/170033792/medium.jpg,,,,unknown,,,,,,,,,
+47562,47375,Pinaceae,pine family,family,https://inaturalist-open-data.s3.amazonaws.com/photos/275129245/medium.jpg,,,,unknown,,,,,,,,,
+54262,47562,Abies,firs,genus,https://inaturalist-open-data.s3.amazonaws.com/photos/108627343/medium.jpeg,,,,unknown,,,,,,,,,
+63690,54262,Abies grandis,grand fir,species,https://inaturalist-open-data.s3.amazonaws.com/photos/83838154/medium.jpeg,Abies grandis,species,non-infrataxon,voucher,secure,native,confirmed,0,grandis,,,accepted,1
+75240,54262,Abies amabilis,Pacific silver fir,species,https://inaturalist-open-data.s3.amazonaws.com/photos/18000782/medium.jpeg,Abies amabilis,species,non-infrataxon,voucher,secure,native,unconfirmed,0.467,amabilis,,,accepted,1

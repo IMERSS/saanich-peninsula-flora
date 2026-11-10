@@ -149,59 +149,6 @@
     white-space: nowrap;
 }
 
-/* ── iNaturalist widget, whose own styles arrive after these, hence the id ─────────── */
-
-/* Fill the whole left hand column */
-.mxcw-dataPane-TopContributions {
-    flex: 1 1 auto;
-    min-width: 0;
-}
-
-#inat-components,
-#inat-components > div {
-    height: 100%;
-}
-
-#inat-components > div {
-    display: flex;
-    flex-direction: column;
-    max-width: none;
-    padding-bottom: 0;
-}
-
-#inat-components > div > div:last-child {
-    flex: 1 1 0;
-    height: auto;
-    min-height: 0;
-    overflow-y: auto;
-}
-
-#inat-components .inat-tabs button,
-#inat-components .inat-tabs a,
-#inat-components .inat-tabs li {
-    font-size: var(--story-body);
-    margin: 0 4px;
-    padding: 4px 12px;
-}
-
-/* The widget's own title repeats its tab label, so each tab's description serves as its header */
-#inat-components .inat-page-headings {
-    display: none;
-}
-
-#inat-components .inat-tab-desc {
-    font-size: var(--story-body);
-    font-weight: 700;
-    margin: var(--story-gap) 0;
-}
-
-#inat-components .inat-observation-label-title,
-#inat-components .inat-observation-label-data,
-#inat-components .inat-observation-label-name {
-    font-size: var(--story-data);
-    line-height: 1.4;
-}
-
 .mxcw-content ol {
     list-style: decimal;
     padding-left: 1.25rem;
@@ -308,66 +255,6 @@
     color: #0d3040;
     background: #FDF2CE;
     text-decoration: none;
-}
-
-/* ── Community Science widget, matching the gallery of lost plants ───────────────────────── */
-
-#inat-components,
-#inat-components .inat-tab-desc,
-#inat-components .inat-page-headings {
-    color: #eefaff;
-}
-
-#inat-components .inat-tabs li {
-    color: #a8c8d0;
-}
-
-#inat-components .inat-tabs li[class*="selected"] {
-    color: #FDF2CE;
-}
-
-#inat-components [class*="module_grid"] {
-    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)) !important;
-    gap: var(--story-gap);
-}
-
-#inat-components article {
-    background: #0d3040;
-    border-radius: var(--data-table-radius);
-    overflow: hidden;
-    padding: 0 0 var(--story-gap);
-    text-align: left;
-}
-
-#inat-components article > div:first-child {
-    width: 100% !important;
-    height: auto !important;
-    aspect-ratio: 1;
-    border-radius: 0 !important;
-    margin: 0 0 4px !important;
-}
-
-#inat-components article > div:first-child img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-#inat-components article [class*="obsLabel"] {
-    padding: 0 var(--story-gap);
-    text-align: left;
-    color: #eefaff;
-}
-
-#inat-components .inat-observation-label-title {
-    font-weight: 700;
-    color: #eefaff;
-}
-
-#inat-components .inat-observation-label-data,
-#inat-components .inat-observation-label-name,
-#inat-components .inat-observation-label-name a {
-    color: #a8c8d0;
 }
 
 /* ── Extirpation tools: a prominent species photo which grows with the window ─────────────── */
@@ -546,21 +433,18 @@
 /* ── Scrollbars of the image panes, centred in a gutter matching the opposite margin ─────── */
 
 .mxcw-dataPane-LostPlants,
-.mxcw-dataPane-Remembering,
-#inat-components > div > div:last-child {
+.mxcw-dataPane-Remembering {
     scrollbar-gutter: stable;
 }
 
 .mxcw-dataPane-LostPlants::-webkit-scrollbar,
-.mxcw-dataPane-Remembering::-webkit-scrollbar,
-#inat-components > div > div:last-child::-webkit-scrollbar {
+.mxcw-dataPane-Remembering::-webkit-scrollbar {
     -webkit-appearance: none;
     width: 12px;
 }
 
 .mxcw-dataPane-LostPlants::-webkit-scrollbar-thumb,
-.mxcw-dataPane-Remembering::-webkit-scrollbar-thumb,
-#inat-components > div > div:last-child::-webkit-scrollbar-thumb {
+.mxcw-dataPane-Remembering::-webkit-scrollbar-thumb {
     border: 3px solid transparent;
     border-radius: 6px;
     background-clip: padding-box;
@@ -573,102 +457,6 @@
 
 .saanich-remembering {
     padding-right: 0;
-}
-
-/* ── Community Science widget, further harmonized ────────── */
-
-#inat-components > div {
-    padding: 0 0 0 12px;
-}
-
-#inat-components > div > div:last-child {
-    padding-right: 0;
-}
-
-#inat-components .inat-tabs {
-    margin-bottom: 0;
-    border-color: rgba(238, 250, 255, 0.2);
-}
-
-#inat-components .inat-tabs li {
-    border-bottom-color: transparent !important;
-}
-
-#inat-components .inat-tabs li[class*="selected"] {
-    border-bottom-color: #FDF2CE !important;
-}
-
-#inat-components .inat-tabs li a,
-#inat-components .inat-tabs li button {
-    color: inherit;
-}
-
-#inat-components .inat-years-dropdown {
-    margin: 4px 12px 0 0;
-}
-
-#inat-components select {
-    background-color: #0d3040;
-    color: #eefaff;
-    border: 1px solid rgba(238, 250, 255, 0.25);
-    border-radius: 4px;
-    font-size: var(--story-data);
-}
-
-#inat-components article label[class*="count"] {
-    display: inline-block;
-    background: none;
-    border: none;
-    box-shadow: none;
-    padding: 0;
-    color: #FDF2CE;
-    font-size: var(--story-data);
-    font-weight: 700;
-}
-
-#inat-components .inat-stats-count-summary {
-    font-size: var(--story-body);
-    color: #eefaff;
-    margin: 0 12px var(--story-gap) 0;
-}
-
-/* The chart and the observers are drawn in dark ink, so they sit on the same pale surface as the site's data tables */
-#inat-components section {
-    display: flex;
-    gap: var(--story-gap);
-    margin-right: 12px;
-}
-
-#inat-components [class*="seasonalityBlock"],
-#inat-components [class*="observersBlock"] {
-    background: #eefaff;
-    color: #123;
-    border-radius: var(--data-table-radius);
-    padding: 12px;
-    box-sizing: border-box;
-}
-
-#inat-components [class*="seasonalityBlock"] h1,
-#inat-components [class*="observersBlock"] h1 {
-    font-size: var(--story-body);
-    font-weight: 700;
-    color: #123;
-    border-color: rgba(18, 34, 51, 0.2);
-}
-
-#inat-components .inat-observers-list a,
-#inat-components .inat-observers-list h3 {
-    color: #123;
-    font-size: var(--story-data);
-}
-
-#inat-components .inat-observers-list label {
-    font-size: var(--story-data);
-    font-weight: 700;
-    background: none;
-    border: none;
-    box-shadow: none;
-    color: #123;
 }
 
 /* ── Taxon panels above their records, with a guide rail while both are open ─────────────── */
@@ -843,15 +631,6 @@
     color: #a8c8d0;
 }
 
-/* The chart's rotated month labels are drawn beyond its stated height */
-#inat-components [class*="seasonalityBlock"] {
-    height: 500px;
-}
-
-#inat-components [class*="observersBlock"] {
-    min-height: 500px;
-}
-
 /* ── Meeting of the menu with the panels: the column resize bar starts beneath the menu ──── */
 
 .imerss-navbar-background {
@@ -863,6 +642,23 @@
 }
 
 /* ── Summaries of map cells ──────────────────────────────── */
+
+.imerss-tooltip-holder:has(.saanich-cell-tip),
+.imerss-tooltip-holder:has(.saanich-tip) {
+    max-width: none;
+    padding: 0;
+    border: 1px solid #4a9aaa;
+    border-radius: 8px;
+    background: #0d3040;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+/* The group summaries are placed by the IMERSS framework's tooltip holder, which supplies the frame */
+.imerss-tooltip-holder .saanich-tip {
+    position: static;
+    border: 0;
+    box-shadow: none;
+}
 
 .ui-tooltip:has(.saanich-cell-tip) {
     padding: 0;
@@ -968,8 +764,7 @@ body {
 .mxcw-dataPane-LostPlants,
 .mxcw-dataPane-Remembering,
 .hortis-dataTable-scroll,
-.mxcw-taxon-info,
-#inat-components > div > div:last-child {
+.mxcw-taxon-info {
     overscroll-behavior: contain;
 }
 
@@ -1100,31 +895,31 @@ body {
 
 /* ── Extirpation probability filter ──────────────────────── */
 
-.saanich-ep-range {
+.mxcw-ep-range {
     display: flex;
     flex-direction: column;
     gap: 2px;
     min-width: 170px;
 }
 
-.saanich-ep-range label {
+.mxcw-ep-range label {
     display: flex;
     align-items: center;
     gap: 6px;
     font-size: var(--story-data);
 }
 
-.saanich-ep-range label span {
+.mxcw-ep-range label span {
     width: 2em;
 }
 
-.saanich-ep-range input {
+.mxcw-ep-range input {
     flex: 1;
     min-width: 0;
     accent-color: #4b778f;
 }
 
-.saanich-ep-range output {
+.mxcw-ep-range output {
     font-variant-numeric: tabular-nums;
 }
 
@@ -1361,7 +1156,8 @@ body {
     filter: drop-shadow(0 0 8px #decb90) drop-shadow(0 0 18px #decb90);
 }
 
-.saanich-trace:hover .saanich-trace-mark {
+.saanich-trace:hover .saanich-trace-mark,
+.saanich-trace-held .saanich-trace-mark {
     animation-play-state: paused;
     opacity: 1;
 }
@@ -1404,7 +1200,8 @@ body {
     display: none;
     width: 260px;
     padding: 12px;
-    pointer-events: none;
+    /* The pointer may cross to the card, which opens its species when clicked */
+    cursor: pointer;
     color: #eefaff;
     background: #0d3040;
     border: 1px solid #4a9aaa;
@@ -1449,7 +1246,8 @@ body {
 
 /* The text is spare and unhurried, and sized by the height of the screen as well as its width so that it fits without scrolling */
 @media (min-width: 768px) {
-    .mxcw-paneKey-Traces.mxcw-activeSection {
+    /* The Infusion 6 story page marks the wrapper of the active pane's section, rather than the section itself */
+    .mxcw-activePane .mxcw-paneKey-Traces {
         justify-content: safe center;
     }
 

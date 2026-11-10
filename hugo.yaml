@@ -5,10 +5,19 @@ title: Flora of the W̱SÁNEĆ/Saanich Peninsula
 relativeUrls: true
 publishDir: docs
 
+# The knitted panes of content/story are read from there by src/js/storyBuild.js, which writes what the story page
+# uses into static/story. Since content/story/index.md makes the directory a page bundle, Hugo would otherwise publish
+# them as its resources too, at the same paths as the files of static/story, racing them and leaving the tail of a
+# longer knitted page after a shorter one written over it - its scripts and duplicated text then reach the page
+ignoreFiles:
+  - 'content[/\\]story[/\\][^/\\]+\.(html|Rmd)$'
+  - 'content[/\\]story[/\\][^/\\]+\.knit\.md~$'
+  - 'content[/\\]story[/\\](content_lib|img|[^/\\]+_files)([/\\]|$)'
+
 theme: "hextra"
 
 enableRobotsTXT: true
-enableGitInfo: true
+enableGitInfo: false
 # enableEmoji: false
 hasCJKLanguage: false
 
@@ -70,6 +79,14 @@ menu:
         icon: github
 
 params:
+  # The id of the site's module, holding its pages, whose module map static/fluid-modules.json is written by
+  # "npm run vendor"
+  siteModule: saanich-peninsula-flora
+  # The story page - its driver static/local/story/<storyDriver>.vue defines the layer <storyLayer> configuring it,
+  # which names its data files, each beside its placeholder, a short file of the same shape which a static build
+  # renders from - see layouts/story/baseof.html
+  storyDriver: saanich-story
+  storyLayer: saanich.story
   # The IMERSS index site, linked from the top left of the navigation banner
   indexSite:
     title: Salish Sea Biodiversity Atlas

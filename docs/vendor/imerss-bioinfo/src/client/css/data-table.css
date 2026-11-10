@@ -1,0 +1,193 @@
+
+:root {
+    --data-table-bg: #0e1117;
+    --data-table-surface: #161b22;
+    --data-table-border: #2a2f3a;
+    --data-table-text: #e2e6ed;
+    --data-table-text-dim: #7d8590;
+    --data-table-accent: #58a6ff;
+    --data-table-accent-dim: rgba(88, 166, 255, 0.12);
+    --data-table-radius: 8px;
+    --data-table-font: "DM Sans", sans-serif;
+}
+
+.hortis-dataTable {
+    height: 100%;
+    display: flex;
+}
+
+.hortis-dataTable-icon {
+    width: 24px;
+    height: 24px;
+}
+
+.hortis-dataTable-sort {
+    line-height: 0;
+}
+
+.hortis-dataTable-sort-wrap {
+    display: flex;
+    align-items: center;
+}
+
+.hortis-dataTable-selectable-row {
+    cursor: pointer;
+}
+
+.hortis-dataTable-selected-row {
+    background-color: #a5d6ff;
+}
+
+.hortis-dataTable-row-check {
+    display: block;
+}
+
+
+.hortis-dataTable-wrap {
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+    border: 1px solid var(--data-table-border);
+    border-radius: var(--data-table-radius);
+    background: var(--data-table-surface);
+    display: flex;
+    flex-direction: column;
+}
+
+.hortis-dataTable-scroll {
+    /* Zero basis so that the height of all the rows does not inflate any parent whose height depends on its content */
+    flex: 1 1 0px;
+    min-height: 0;
+    overflow-x: scroll;
+    overflow-y: auto;
+}
+
+.hortis-dataTable-scroll table {
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.hortis-dataTable-scroll thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--data-table-surface);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--data-table-text-dim);
+    text-align: left;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--data-table-border);
+    white-space: nowrap;
+}
+
+.hortis-dataTable-scroll thead th.hortis-dataTable-num {
+    text-align: right;
+}
+
+.hortis-dataTable-scroll tbody td {
+    padding: 3px 10px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--data-table-border);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hortis-dataTable-scroll tbody tr {
+    /* All rows must share a height for hortis.dataTable.viewExtent - a few would otherwise come out half a pixel short */
+    height: 26.5px;
+    transition: background 0.15s ease;
+}
+
+.hortis-dataTable-scroll tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Stands in for the rows which are not currently rendered */
+.hortis-dataTable-scroll tbody tr.hortis-dataTable-spacer td {
+    padding: 0;
+    border: none;
+}
+
+:root {
+    --datatable-scrollbar-width: 12px;
+}
+
+.hortis-dataTable-wrap ::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: var(--datatable-scrollbar-width);
+    background-color: #eee
+}
+
+/* Confine the vertical scrollbar to the table body - the sticky header is really inside the scrolling area */
+.hortis-dataTable-scroll::-webkit-scrollbar:vertical {
+    background-color: transparent;
+}
+
+.hortis-dataTable-scroll::-webkit-scrollbar-track:vertical {
+    margin-top: var(--data-table-head-height, 0);
+    background-color: #eee;
+}
+
+.hortis-dataTable-wrap ::-webkit-scrollbar-thumb {
+    border-radius: 6px;
+    background-color: #C1C1C1;
+    -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+}
+
+.hortis-dataTable-wrap ::-webkit-scrollbar-thumb:hover {
+    background-color: #A8A8A8;
+}
+
+
+td.hortis-dataTable-num, th.hortis-dataTable-num {
+    text-align: right;
+    font-size: 12px;
+}
+
+/* ── Pagination bar ── */
+.hortis-dataTable-pagination {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-top: 1px solid var(--data-table-border);
+    font-size: 12px;
+    color: var(--data-table-text-dim);
+    user-select: none;
+}
+
+.hortis-dataTable-pageInfo {
+}
+
+.hortis-dataTable-pageControls {
+    display: flex;
+    gap: 4px;
+}
+
+.hortis-dataTable-pagination button {
+    font-family: var(--data-table-font);
+    font-size: 12px;
+    font-weight: 500;
+    background: transparent;
+    border: 1px solid var(--data-table-border);
+    border-radius: 6px;
+    color: var(--data-table-text-dim);
+    padding: 4px 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.hortis-dataTable-pagination button:hover:not(:disabled) {
+    border-color: var(--data-table-accent);
+    color: var(--data-table-accent);
+    background: var(--data-table-accent-dim);
+}
+
+.hortis-dataTable-pagination button:disabled {
+    opacity: 0.3;
+    cursor: default;
+}

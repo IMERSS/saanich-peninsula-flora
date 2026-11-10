@@ -1,0 +1,9 @@
+taxon_name,eventDate,occurrenceID,gbifID,basisOfRecord,recordedBy,decimalLatitude,decimalLongitude,coordinateUncertaintyInMetres,elevation,locality,individualCount,institutionCode,collectionCode,catalogNumber,recordNumber,identifiedBy,dateIdentified,license,rightsHolder,typeStatus,establishmentMeans,iNaturalistTaxonId,BEC
+Abies amabilis,1967-06-14,QFA0212927,1248731719,PRESERVED_SPECIMEN,"Harrison, A. S.",48.566667,-123.45,,68,"V.I. , Brentwood, end of Greig Rd.",,Université Laval,QFA,QFA0212927,32.4,"Chuang, Ching-chang",,CC0_1_0,Université Laval,,,75240,1
+Abies amabilis,1967-06-14,QFA021927,,,A.S. Harrison,,,,,,,QFA,,,,,,,,,,75240,
+Abies amabilis,1967-07-18,F75FA487-E806-ED46-B254-237F071C5F8C,1988068725,PRESERVED_SPECIMEN,A. S. Harrison,48.541667,-123.466667,,,"Vancouver Island, creek outflow at east end of Durrance Lake",,BBM,UBC,V216898,37.2A,C.C. Chuang 1973,,CC0_1_0,The University of British Columbia,,,75240,1
+Abies amabilis,1967-07-18,F75FA487-E806-ED46-B254-237F071C5F8C,,,A. S. Harrison,,,,,,,BBM,,,,,,,,,,75240,
+Abies grandis,1887-02-25,16eadc9f-cc91-461b-8931-d9ccff7107a4,5028932721,PRESERVED_SPECIMEN,John Macoun,48.428421,-123.365644,,,Vicinity of Victoria,,NHMUK,BOT,BM015754290,s.n.,,,CC0_1_0,,,,63690,1
+Abies grandis,1921-08-05,55a03525-8e24-4832-99df-8b92e6c4ecb8,1928978551,PRESERVED_SPECIMEN,F. W. Hunnewell,48.435825,-123.411258,,,Vancouver Island. Esquimalt,,NY,NY,29332,7626,,,CC0_1_0,The New York Botanical Garden,,,63690,1
+Abies grandis,1921-08-05,NY00029332,,,F.W. Hunnewell,,,,,,,NY,,,,,,,,,,63690,
+Abies grandis,1966-05-12,545C1ABF-3D29-544D-B989-2B549F26D7CE,1988184875,PRESERVED_SPECIMEN,A. S. Harrison,48.541667,-123.441667,,,"Vancouver Island, 1 mile north of Prospect Lake, off West Saanich road",,BBM,UBC,V216893,44.1,C.C. Chuang 1973,,CC0_1_0,The University of British Columbia,,,63690,1

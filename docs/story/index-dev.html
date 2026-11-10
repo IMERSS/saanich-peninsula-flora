@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <title>Saanich Peninsula story - Infusion 6 development page</title>
+
+        <!-- The one reference to the location of Infusion - every other is relative, or through a module -->
+        <script src="../vendor/infusion/src/framework/core/js/FluidBoot.js"></script>
+        <!-- The site, as the module holding the page, and its map of the modules it depends upon, written by
+             "npm run vendor" (Infusion 6's copyOut.js) as it copies them into static/vendor -->
+        <fluid-module id="saanich-peninsula-flora" src="../" modules="fluid-modules.json"></fluid-module>
+        <!-- A development page for the story, standing in for the page Hugo renders from layouts/story/baseof.html - see
+             static/local/story/saanich-story.vue -->
+        <fluid-import src="../local/story/saanich-story.vue"></fluid-import>
+        <link rel="stylesheet" href="../bioreportr/css/imerss-story.css"/>
+        <link rel="stylesheet" href="../bioreportr/css/imerss-viz-story.css"/>
+        <link rel="stylesheet" href="../bioreportr/css/imerss-blitzr.css"/>
+        <link rel="stylesheet" href="../local/css/story-scale.css"/>
+    </head>
+    <body>
+        <template id="site-subnav"><div class="imerss-subnav"><nav>Site navigation</nav></div></template>
+        <div fluid-layers="saanich.story"></div>
+    </body>
+</html>
