@@ -3595,6 +3595,23 @@ bioreportr.curation.tallyMarkup = function (notes) {
         ${bioreportr.curation.votes.map(vote => `<span class="mxcw-curation-tally-count" title="${vote}">${vote} ${tally[question][vote]}</span>`).join("")}`).join("")}</div>`;
 };
 
+/**
+ * Render the votes on a taxon in brief, for a tooltip - for each question, only the answers given, e.g.
+ * "Present: yes", or "Present: yes 2, no 1" once several people have answered. Answers of "no opinion" are left out,
+ * as is a question with no other answer.
+ * @param {CurationNote[]} notes - The notes
+ * @return {String} The markup of the votes, or the empty string if none has been given
+ */
+bioreportr.curation.briefTallyMarkup = function (notes) {
+    const tally = bioreportr.curation.tally(notes);
+    const rows = bioreportr.curation.questions.map(([question, label]) => {
+        const given = bioreportr.curation.votes.filter(vote => vote !== "no opinion" && tally[question][vote] > 0);
+        const answers = given.map(vote => notes.length > 1 ? `${vote} ${tally[question][vote]}` : vote).join(", ");
+        return given.length > 0 ? `<div><span class="mxcw-curation-tally-question">${label}:</span> ${answers}</div>` : "";
+    }).join("");
+    return rows ? `<div class="mxcw-curation-brief">${rows}</div>` : "";
+};
+
 /** The speech bubbles of the checklist **/
 
 /**
@@ -3622,7 +3639,7 @@ bioreportr.curation.renderChecklistTree = function (that, rootEntry, idToState, 
     }
     const hover = "bioreportr.curation.checklistHover({0}, {checklist})";
     const root = {tag: "div", attrs: {
-        "@onclick": "bioreportr.curation.checklistClick({0}, {checklist}, {storyPage})",
+        "@onclick": "bioreportr.curation.checklistClick({0}, {checklist})",
         "@onmouseover": hover,
         "@onmousemove": hover,
         "@onmouseleave": hover
@@ -3657,34 +3674,76 @@ bioreportr.curation.addBubbles = function (list, byTaxon) {
 };
 
 /**
- * Handle a click within a checklist - on a speech bubble, which opens the curation of its taxon, or else as the
- * checklist itself does.
+ * Handle a click within a checklist - on a speech bubble, which pins the summary of its taxon's notes where it is, so
+ * that the pointer can move into it, to follow its link to the curation pane or to copy its text, or else as the
+ * checklist itself does. A pinned summary is dismissed by a press outside it - see `bioreportr.curation.pinDismiss`.
  * @param {Event} event - The click
  * @param {hortis.checklist} checklist - The checklist
- * @param {bioreportr.storyPage} storyPage - The story page
  */
-bioreportr.curation.checklistClick = function (event, checklist, storyPage) {
+bioreportr.curation.checklistClick = function (event, checklist) {
     const bubble = event.target.closest(".mxcw-curation-bubble");
     if (bubble) {
-        bioreportr.curation.open(storyPage, bubble.dataset.curationId);
-        checklist.hoverAt(null);
+        const id = bioreportr.curation.hoverPrefix + bubble.dataset.curationId;
+        checklist.curationPin = id;
+        checklist.hoverAt(id, event);
     } else {
         hortis.checklist.click(event, checklist);
     }
 };
 
 /**
+ * Mark the checklist's tooltip as pinned, or not, so that it takes the pointer, and route a click on its link to the
+ * curation pane.
+ * @param {hortis.checklist} checklist - The checklist
+ * @param {bioreportr.storyPage} storyPage - The story page
+ * @param {TooltipRecord} tooltip - The checklist's tooltip
+ * @param {String|null} pin - The hover id of the pinned summary, or null if none is pinned
+ */
+bioreportr.curation.pinTooltip = function (checklist, storyPage, tooltip, pin) {
+    tooltip.node.classList.toggle("mxcw-tip-pinned", !!pin);
+    tooltip.node.onclick = event => {
+        const link = event.target.closest?.("[data-curation-open]");
+        if (link) {
+            event.preventDefault();
+            checklist.curationPin = null;
+            checklist.hoverAt(null);
+            bioreportr.curation.open(storyPage, link.dataset.curationOpen);
+        }
+    };
+};
+
+/**
+ * Dismiss a pinned summary when the pointer is pressed outside it. A press on a speech bubble is left to its click,
+ * which pins that bubble's summary instead.
+ * @param {hortis.checklist} checklist - The checklist
+ * @param {PointerPressRecord|null} press - The most recent press of the pointer, as held in `fluid.globalDismissalSignal`
+ * @param {TooltipRecord} tooltip - The checklist's tooltip
+ */
+bioreportr.curation.pinDismiss = function (checklist, press, tooltip) {
+    // Whether a summary is pinned is consulted rather than depended upon - pinning one is no reason to look again at the
+    // press which pinned it
+    if (press && fluid.cell.untracked(() => checklist.curationPin) && !tooltip.node.contains(press.target) &&
+        !press.target.closest?.(".mxcw-curation-bubble")) {
+        checklist.curationPin = null;
+        checklist.hoverAt(null);
+    }
+};
+
+/**
  * Show a tooltip summarising the notes of a taxon whose speech bubble is under the pointer, or else that of the taxon
- * whose name is under it, as the checklist itself does.
+ * whose name is under it, as the checklist itself does - unless a summary is pinned.
  * @param {Event} event - A mouse event within the checklist
  * @param {hortis.checklist} checklist - The checklist
  */
 bioreportr.curation.checklistHover = function (event, checklist) {
-    const bubble = event.type === "mouseleave" ? null : event.target.closest?.(".mxcw-curation-bubble");
-    if (bubble) {
-        checklist.hoverAt(bioreportr.curation.hoverPrefix + bubble.dataset.curationId, event);
-    } else {
-        hortis.checklist.hover(event, checklist);
+    // A pinned summary stays as it is, whatever the pointer passes over, until it is dismissed
+    if (!fluid.cell.untracked(() => checklist.curationPin)) {
+        const bubble = event.type === "mouseleave" ? null : event.target.closest?.(".mxcw-curation-bubble");
+        if (bubble) {
+            checklist.hoverAt(bioreportr.curation.hoverPrefix + bubble.dataset.curationId, event);
+        } else {
+            hortis.checklist.hover(event, checklist);
+        }
     }
 };
 
@@ -3706,7 +3765,8 @@ bioreportr.curation.renderChecklistTooltip = function (rowById, byTaxon, hoverId
 };
 
 /**
- * Render a condensed summary of the notes on a taxon - their number, the tally of their votes and the latest comments.
+ * Render a condensed summary of the notes on a taxon - their number, the votes given and the latest comments - ending
+ * with a link to the curation pane, which may be followed once the summary is pinned.
  * @param {TaxonRow} taxon - The taxon
  * @param {CurationNote[]} notes - Its notes, most recent first
  * @return {String} The markup of the summary
@@ -3716,12 +3776,12 @@ bioreportr.curation.summaryMarkup = function (taxon, notes) {
     const name = taxon ? encode(hortis.rowToScientific(taxon)) : "";
     const comments = notes.filter(note => note.comment).slice(0, 3).map(note =>
         `<li><b>${encode(note.author)}</b>: ${encode(note.comment.length > 140 ? note.comment.substring(0, 140) + "…" : note.comment)}</li>`).join("");
-    const body = notes.length > 0 ? `${bioreportr.curation.tallyMarkup(notes)}${comments ? `<ul class="mxcw-tip-list mxcw-curation-comments">${comments}</ul>` : ""}` :
+    const body = notes.length > 0 ? `${bioreportr.curation.briefTallyMarkup(notes)}${comments ? `<ul class="mxcw-tip-list mxcw-curation-comments">${comments}</ul>` : ""}` :
         "<div class=\"mxcw-tip-note\">No community notes yet</div>";
     return `<div class="mxcw-cell-tip mxcw-curation-tip">
         <div class="mxcw-tip-title"><i>${name}</i> <span>${bioreportr.cellTooltip.plural(notes.length, "note")}</span></div>
         ${body}
-        <div class="mxcw-curation-tip-action">Click to add your own curation note</div>
+        <a class="mxcw-curation-tip-action" href="#" data-curation-open="${taxon ? encode(taxon.id) : ""}">Click here to add your own curation note</a>
     </div>`;
 };
 
@@ -4201,6 +4261,15 @@ fluid.def("bioreportr.storyPage", {
             decorate: "hortis.blitzChecklistDecoration",
             // Each taxon bears a speech bubble leading to its curation, which summarises its notes on hover - see curation.js
             renderTooltip: "$method:bioreportr.curation.renderChecklistTooltip({self}.rowById, {storyPage}.curation.byTaxon, {0}:hoverId)",
+            // The hover id of a summary pinned by clicking its bubble, until a press outside it dismisses it
+            curationPin: null,
+            pinTooltip: "$effect:bioreportr.curation.pinTooltip({self}, {storyPage}, {self}.tooltip, {self}.curationPin)",
+            pinDismiss: {
+                $effect: {
+                    func: "bioreportr.curation.pinDismiss",
+                    args: ["{self}", fluid.globalDismissalSignal, "{self}.tooltip"]
+                }
+            },
             tree: {
                 $component: {
                     view: {

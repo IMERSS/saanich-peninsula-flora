@@ -155,6 +155,15 @@ fluid.def("bioreportr.storyPage", {
             decorate: "hortis.blitzChecklistDecoration",
             // Each taxon bears a speech bubble leading to its curation, which summarises its notes on hover - see curation.js
             renderTooltip: "$method:bioreportr.curation.renderChecklistTooltip({self}.rowById, {storyPage}.curation.byTaxon, {0}:hoverId)",
+            // The hover id of a summary pinned by clicking its bubble, until a press outside it dismisses it
+            curationPin: null,
+            pinTooltip: "$effect:bioreportr.curation.pinTooltip({self}, {storyPage}, {self}.tooltip, {self}.curationPin)",
+            pinDismiss: {
+                $effect: {
+                    func: "bioreportr.curation.pinDismiss",
+                    args: ["{self}", fluid.globalDismissalSignal, "{self}.tooltip"]
+                }
+            },
             tree: {
                 $component: {
                     view: {

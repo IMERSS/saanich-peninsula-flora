@@ -28,7 +28,11 @@ jobs:
   consolidate:
     runs-on: ubuntu-latest
     steps:
+      # The branch's latest commit, rather than the commit of the triggering event, which for a page_build, or for a run
+      # queued behind another, may already be behind a commit of consolidated notes pushed in the meantime
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -48,5 +52,11 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git commit -m "Consolidate community curation notes"
-            git push
+            # Should anything else have been pushed since the checkout, replay the commit onto it - the files committed
+            # here are written only by this job, and runs never overlap, so this can't conflict
+            for attempt in 1 2 3; do
+              git push && exit 0
+              git pull --rebase
+            done
+            exit 1
           fi

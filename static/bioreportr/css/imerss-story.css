@@ -1618,8 +1618,21 @@ body {
 
 /* The tooltip of a bubble ends by inviting a note */
 .mxcw-curation-tip .mxcw-curation-tip-action {
+    display: block;
     margin-top: 8px;
     color: #fdf2ce;
+    text-decoration: underline;
+}
+
+/* The votes given on a taxon, one line to each question answered */
+.mxcw-curation-brief {
+    margin-top: 6px;
+}
+
+/* A summary pinned by clicking its bubble takes the pointer, so that its link may be followed and its text selected */
+.imerss-tooltip-holder.mxcw-tip-pinned {
+    pointer-events: auto;
+    user-select: text;
 }
 
 .mxcw-curation-tip .mxcw-curation-comments li {
