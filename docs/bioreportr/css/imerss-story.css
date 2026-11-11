@@ -1601,7 +1601,7 @@ body {
 }
 
 .mxcw-cell-tip {
-    width: 300px;
+    width: 240px;
     padding: 12px;
     color: #eefaff;
     font-size: 12px;
@@ -1627,19 +1627,31 @@ body {
     border-radius: 0 4px 4px 0;
 }
 
-.mxcw-cell-key {
-    display: flex;
-    gap: 12px;
-    margin-top: 4px;
-    color: #a8c8d0;
-    flex-wrap: wrap;
+/* The species and records of a cell of each reporting status, beneath the bar of its species - see
+   bioreportr.cellTooltip.render */
+.mxcw-cell-counts {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 3px 14px;
+    margin-top: 8px;
+    font-variant-numeric: tabular-nums;
 }
 
-.mxcw-cell-key i {
+.mxcw-cell-counts > span:nth-child(-n + 3) {
+    color: #a8c8d0;
+    font-size: 11px;
+}
+
+.mxcw-cell-counts > span:nth-child(3n + 2),
+.mxcw-cell-counts > span:nth-child(3n + 3) {
+    text-align: right;
+}
+
+.mxcw-cell-status i {
     display: inline-block;
     width: 8px;
     height: 8px;
-    margin-right: 4px;
+    margin-right: 6px;
     border-radius: 2px;
 }
 
@@ -1829,11 +1841,26 @@ body {
     gap: 8px;
 }
 
+/* The photo fills its holder, whose width is capped instead of the photo's height, so that the link to iNaturalist,
+   placed in the holder's corner, always sits on the photo's corner */
+.mxcw-curation-photo .taxonDisplay-image-holder {
+    display: block;
+    max-width: calc(42vh * 4 / 3);
+    margin: 0 auto;
+    padding: 0;
+}
+
+.mxcw-curation-photo .taxonDisplay-iNat-extern {
+    right: 6px;
+    bottom: 6px;
+}
+
 .mxcw-curation-photo .imerss-photo {
     width: 100%;
+    /* Not the 300px to which imerss-core.css confines a photo, which would leave the link beyond its edge */
+    max-width: none;
     height: auto;
     aspect-ratio: 4 / 3;
-    max-height: 42vh;
     border-radius: var(--data-table-radius, 8px);
     background-size: cover;
     background-position: center;

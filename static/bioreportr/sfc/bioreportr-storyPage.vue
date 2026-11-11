@@ -221,14 +221,6 @@ fluid.def("bioreportr.storyPage", {
             $layers: "hortis.titleTooltips"
         }
     },
-    // The earliest record of each taxon, and the headings of the sections of the summary of a map cell, by reporting
-    // status - see bioreportr.cellTooltip
-    earliestRecords: "$compute:bioreportr.cellTooltip.earliestRecords({self}.obsRows)",
-    cellTooltipHeadings: {
-        unconfirmed: "Historical species recorded here: records, and year last seen",
-        new: "Newly reported species here: earliest record in this atlas",
-        confirmed: "Most recorded confirmed species"
-    },
     // The panel of records beneath the map opens and closes as an accordion, its header naming the filters narrowing it
     recordsCollapsed: true,
     toggleRecords: "$method:bioreportr.storyPage.toggle({self}, recordsCollapsed)",

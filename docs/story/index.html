@@ -695,76 +695,33 @@ bioreportr.cellTooltip.statuses = [["unconfirmed", "Historical"], ["new", "Newly
 
 bioreportr.cellTooltip.plural = (count, noun) => `${bioreportr.formatCount(count)} ${noun}${count === 1 ? "" : "s"}`;
 
-bioreportr.cellTooltip.section = (heading, status, body) =>
-    `<div class="mxcw-cell-section" style="--tip-colour:${bioreportr.statusColours[status]}">${bioreportr.tip.heading(heading)}${body}</div>`;
-
 /**
- * Find the earliest record of each taxon across the whole atlas, whatever filters are applied.
- * @param {Object[]} obsRows - All records
- * @return {Map<String, Object>} The earliest record of each taxon id
- */
-bioreportr.cellTooltip.earliestRecords = function (obsRows) {
-    const earliest = new Map();
-    obsRows.forEach(record => {
-        const current = earliest.get(record.iNaturalistTaxonId);
-        if (record.eventDate && (!current || record.eventDate < current.eventDate)) {
-            earliest.set(record.iNaturalistTaxonId, record);
-        }
-    });
-    return earliest;
-};
-
-/**
- * Render the summary of a cell of the map's grid, leading with what matters most to the search for lost plants: the
- * historical species recorded there, highest extirpation probability first, followed by what has newly been found
- * there and what is well documented, together with a bar of the cell's species by reporting status.
+ * Render the summary of a cell of the map's grid: how many of its species, and of its records, are of each reporting
+ * status - historical, newly reported and confirmed - with a bar of its species by status. What is known of any one
+ * species is left to the panes, where it is chosen.
  * @param {Object} grid - The grid of records, whose buckets index the records gridded
  * @param {Object<String, TaxonRow>} rowById - Taxon rows indexed by id
- * @param {Object[]} gridRows - The records gridded, which the grid's buckets index
- * @param {Map<String, Object>} earliest - The earliest record of each taxon across the atlas
- * @param {Object<String, String>} headings - The headings of the sections, by reporting status
  * @param {String} cellId - The id of the cell
  * @return {String|null} The markup for the summary, or null if the cell holds no records
  */
-bioreportr.cellTooltip.render = function (grid, rowById, gridRows, earliest, headings, cellId) {
+bioreportr.cellTooltip.render = function (grid, rowById, cellId) {
     const bucket = grid.buckets[cellId];
     let togo = null;
     if (bucket) {
-        const encode = hortis.dataTable.encode;
-        const plants = Object.entries(bucket.byTaxonId).filter(([taxonId]) => rowById[taxonId]).map(([taxonId, obsIndices]) => {
-            const records = obsIndices.map(index => gridRows[index]).filter(record => record?.eventDate).sort(bioreportr.obsDateComparator);
-            return {taxon: rowById[taxonId], count: obsIndices.length, first: records[0], last: fluid.peek(records)};
-        });
-        const inStatus = status => plants.filter(plant => plant.taxon.reportingStatus === status);
-        const name = plant => plant.taxon.scientificName || plant.taxon.iNaturalistTaxonName;
-        const more = (list, shown) => list.length > shown ? `<div class="mxcw-tip-note">and ${list.length - shown} more</div>` : "";
-        const recorder = plant => (plant.last?.recordedBy || "").split(";")[0].trim();
-
-        const segments = bioreportr.cellTooltip.statuses.map(([status, label]) => ({status, label, count: inStatus(status).length})).filter(segment => segment.count > 0);
+        const taxa = Object.entries(bucket.byTaxonId).filter(([taxonId]) => rowById[taxonId])
+            .map(([taxonId, obsIndices]) => ({status: rowById[taxonId].reportingStatus, records: obsIndices.length}));
+        const segments = bioreportr.cellTooltip.statuses.map(([status, label]) => {
+            const inStatus = taxa.filter(taxon => taxon.status === status);
+            return {status, label, species: inStatus.length, records: inStatus.reduce((sum, taxon) => sum + taxon.records, 0)};
+        }).filter(segment => segment.species > 0);
         const colour = segment => bioreportr.statusColours[segment.status];
-        const bars = segments.map(segment => `<span style="flex:${segment.count};background:${colour(segment)}"></span>`).join("");
-        const keys = segments.map(segment => `<span><i style="background:${colour(segment)}"></i>${segment.label} ${segment.count}</span>`).join("");
-        const stack = `<div class="mxcw-cell-stack">${bars}</div><div class="mxcw-cell-key">${keys}</div>`;
-
-        const historical = inStatus("unconfirmed").sort((a, b) => (+b.taxon.solow_EP || 0) - (+a.taxon.solow_EP || 0));
-        // A newly reported species is identified by its earliest record anywhere, not by whatever was last seen in this cell
-        const fresh = inStatus("new").map(plant => ({...plant, earliest: earliest.get(plant.taxon.id)})).filter(plant => plant.earliest)
-            .sort((a, b) => b.earliest.eventDate.localeCompare(a.earliest.eventDate));
-        const confirmed = inStatus("confirmed").sort((a, b) => b.count - a.count);
-
-        const sections = [
-            historical.length && bioreportr.cellTooltip.section(headings.unconfirmed, "unconfirmed",
-                bioreportr.tip.bars(historical.slice(0, 4).map(plant => [name(plant), plant.count,
-                    `${plant.count} · ${plant.last ? bioreportr.year(plant.last.eventDate) : "?"}`])) + more(historical, 4)),
-            fresh.length && bioreportr.cellTooltip.section(headings.new, "new",
-                `<ul class="mxcw-tip-list">${fresh.slice(0, 3).map(plant => `<li><i>${encode(name(plant))}</i> ${bioreportr.year(plant.earliest.eventDate)}${recorder(plant) ? ", " + encode(recorder(plant)) : ""}${plant.first?.eventDate === plant.earliest.eventDate ? " (here)" : ""}</li>`).join("")}</ul>` + more(fresh, 3)),
-            confirmed.length && bioreportr.cellTooltip.section(headings.confirmed, "confirmed",
-                bioreportr.tip.bars(confirmed.slice(0, 3).map(plant => [name(plant), plant.count])) + more(confirmed, 3))
-        ].filter(Boolean).join("");
-
+        const bars = segments.map(segment => `<span style="flex:${segment.species};background:${colour(segment)}"></span>`).join("");
+        const rows = segments.map(segment => `<span class="mxcw-cell-status"><i style="background:${colour(segment)}"></i>${segment.label}</span>` +
+            `<span>${bioreportr.formatCount(segment.species)}</span><span>${bioreportr.formatCount(segment.records)}</span>`).join("");
         togo = `<div class="mxcw-cell-tip">
-            <div class="mxcw-tip-title">${bioreportr.formatCount(plants.length)} species <span>${bioreportr.cellTooltip.plural(bucket.obsCount, "record")}</span></div>
-            ${stack}${sections}
+            <div class="mxcw-tip-title">${bioreportr.formatCount(taxa.length)} species <span>${bioreportr.cellTooltip.plural(bucket.obsCount, "record")}</span></div>
+            <div class="mxcw-cell-stack">${bars}</div>
+            <div class="mxcw-cell-counts"><span></span><span>Species</span><span>Records</span>${rows}</div>
         </div>`;
     }
     return togo;
@@ -1237,8 +1194,8 @@ saanich.atlas.panelMarkup = function (taxon, records) {
         togo = `<div class="mxcw-solow-taxon-pane saanich-atlas-taxon-pane">
   <div class="mxcw-taxon-image">${hortis.renderTaxonImage(taxon.iNaturalistTaxonImage, taxon.id)}</div>
   <div class="mxcw-taxon-info">
+    <div class="mxcw-taxon-name">${hortis.dataTable.encode((taxon.scientificName || taxon.iNaturalistTaxonName) + (taxon.commonName ? ` (${taxon.commonName})` : ""))}</div>
     <div class="saanich-atlas-facts">
-      <div class="mxcw-taxon-name">${hortis.dataTable.encode((taxon.scientificName || taxon.iNaturalistTaxonName) + (taxon.commonName ? ` (${taxon.commonName})` : ""))}</div>
       <dl class="mxcw-taxon-fields">
         <dt>Date first seen:</dt> <dd>${bioreportr.eventDay(records[0].eventDate)}</dd>
         <dt>Date last seen:</dt> <dd>${bioreportr.eventDay(fluid.peek(records).eventDate)}</dd>
@@ -1373,14 +1330,18 @@ saanich.statusTooltip.renderers = {
             saanich.statusTooltip.heading("Observers with most added records since 2000") + saanich.statusTooltip.bars(top));
     },
     unconfirmed: function (taxa, byTaxon) {
-        const eras = [["Before 1900", 0, 1899], ["1900–1949", 1900, 1949], ["1950–1979", 1950, 1979], ["1980–1999", 1980, 1999]];
         const records = taxa.map(taxon => (byTaxon.get(taxon.id) || []).slice().sort(saanich.obsDateComparator)).filter(list => list.length > 0);
-        const lastYear = list => parseInt(fluid.peek(list).eventDate, 10);
         const withLocality = records.filter(list => list.some(record => record.locality)).length;
         const withSpecimen = records.filter(list => list.some(record => /specimen/i.test(record.basisOfRecord))).length;
+        // As for the other groups, the observers to whom we owe the most of them - here, who last recorded each species
+        const counts = {};
+        records.forEach(list => {
+            const recorder = saanich.firstRecorder(fluid.peek(list));
+            counts[recorder] = (counts[recorder] || 0) + 1;
+        });
+        const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
         return saanich.statusTooltip.frame("Historical", taxa.length,
-            saanich.statusTooltip.heading("Species by date last recorded") +
-            saanich.statusTooltip.bars(eras.map(([label, min, max]) => [label, records.filter(list => lastYear(list) >= min && lastYear(list) <= max).length])) +
+            saanich.statusTooltip.heading("Last recorded by") + saanich.statusTooltip.bars(top) +
             `<div class="mxcw-tip-note">${withLocality} species have a recorded locality to search, and ${withSpecimen} have a specimen to consult.</div>`);
     }
 };
@@ -1817,10 +1778,6 @@ fluid.def("saanich.story", {
             selectedIndex: 2
         }
     },
-    // The summary of a map cell calls the historical species lost plants, as the gallery does
-    cellTooltipHeadings: {
-        unconfirmed: "Lost plants recorded here: records, and year last seen"
-    },
     // The tiles of the atlas's three groups of species, placed in its section
     atlasTiles: "$compute:saanich.atlas.tilesMarkup({self}.taxa.allRows, {self}.selectedStatus)",
     sectionInserts: "$compute:saanich.atlas.sectionInserts({self}.atlasTiles)",
@@ -1939,11 +1896,26 @@ saanich.phoneGestures = function (map, window) {
 /* The atlas's panel of the chosen plant: its facts, and beside them a chart of the history of its observations, by
    decade or by month as chosen by the chart's tabs - see saanich.atlas.historyMarkup. The extirpation risk pane's panel,
    which shares its other styles, has no chart. On a narrow panel the chart falls beneath the facts */
+/* The plant's name runs across the top of the panel's column, and beneath it its facts and the chart sit side by side,
+   the chart filling the height left to it. Where the column is too narrow for both, the chart falls beneath the facts */
 .saanich-atlas-taxon-pane .mxcw-taxon-info {
-    display: flex;
-    flex-wrap: wrap;
-    align-content: flex-start;
-    gap: 10px 18px;
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 4px 20px;
+    padding-right: var(--story-gap);
+}
+
+.saanich-atlas-taxon-pane .mxcw-taxon-name {
+    grid-column: 1 / -1;
+    padding-bottom: 4px;
+}
+
+@container (max-width: 380px) {
+    .saanich-atlas-taxon-pane .mxcw-taxon-info {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto;
+    }
 }
 
 /* The photo yields room to the chart, which it does not share in the extirpation risk pane's panel */
@@ -1952,18 +1924,26 @@ saanich.phoneGestures = function (map, window) {
 }
 
 .saanich-atlas-facts {
-    flex: 1 1 165px;
     min-width: 0;
+}
+
+/* The column is as wide as the facts - a note beneath them wraps within it rather than widening it */
+.saanich-atlas-facts > :not(dl) {
+    contain: inline-size;
+}
+
+/* Dates and counts are kept whole */
+.saanich-atlas-facts dd {
+    white-space: nowrap;
 }
 
 .saanich-history {
-    flex: 1.3 1 180px;
+    display: flex;
+    flex-direction: column;
     min-width: 0;
-    align-self: flex-start;
-    padding-top: 6px;
+    min-height: 0;
 }
 
-/* The heading has a line of its own, so that the tabs beneath it are never cut off however narrow the chart */
 .saanich-history-tabs {
     display: flex;
     flex-wrap: wrap;
@@ -2016,7 +1996,10 @@ saanich.phoneGestures = function (map, window) {
 .saanich-history-chart {
     display: flex;
     gap: 2px;
-    height: 90px;
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 70px;
+    max-height: 150px;
     margin-bottom: 16px;
     border-bottom: 1px solid rgba(90, 118, 128, 0.35);
 }
@@ -4637,14 +4620,6 @@ fluid.def("bioreportr.storyPage", {
             $layers: "hortis.titleTooltips"
         }
     },
-    // The earliest record of each taxon, and the headings of the sections of the summary of a map cell, by reporting
-    // status - see bioreportr.cellTooltip
-    earliestRecords: "$compute:bioreportr.cellTooltip.earliestRecords({self}.obsRows)",
-    cellTooltipHeadings: {
-        unconfirmed: "Historical species recorded here: records, and year last seen",
-        new: "Newly reported species here: earliest record in this atlas",
-        confirmed: "Most recorded confirmed species"
-    },
     // The panel of records beneath the map opens and closes as an accordion, its header naming the filters narrowing it
     recordsCollapsed: true,
     toggleRecords: "$method:bioreportr.storyPage.toggle({self}, recordsCollapsed)",
@@ -5670,62 +5645,6 @@ bioreportr.recordAndTaxaReporter.taxaCount = function (taxa, rowById) {
 
 }).call(globalThis);
 //# sourceURL=../bioreportr/sfc/bioreportr-recordAndTaxaReporter.vue</script>
-    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.filterControls-0">(function () {
-"use strict";
-
-// The button resetting every filter and checklist beneath the visualisation loader
-fluid.def("hortis.filterControls", {
-    $layers: ["fluid.sfcLayer","hortis.icons","fluid.component"],
-    filters: "{vizLoader hortis.filter}",
-    checklists: "{vizLoader hortis.checklist}",
-    resetAll: "$method:hortis.filterControls.resetAll({self}.filters, {self}.checklists)",
-    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
-"template":{"sfcLayer":"hortis.filterControls"}}}
-});
-
-hortis.filterControls.resetAll = function (filters, checklists) {
-    filters.forEach(filter => filter.reset());
-    checklists.forEach(checklist => checklist.reset());
-};
-
-}).call(globalThis);
-//# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/filters/hortis-filterControls.vue</script>
-    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.epFilter-2">(function () {
-"use strict";
-
-// Filters the taxa of the extirpation risk analysis by their range of extirpation probability, chosen by a pair of
-// sliders
-fluid.def("bioreportr.epFilter", {
-    $layers: ["fluid.sfcLayer","hortis.taxaFilter"],
-    filterName: "Extirpation probability (EP)",
-    // The range, between 0 and 1
-    filterState: {min: 0, max: 1},
-    display: "$compute:bioreportr.epFilter.display({self}.filterState)",
-    // The handles are placed from code: the renderer writes the value of a bound input back into what it is bound to,
-    // which left the readings stuck and the other handle out of place
-    placeHandles: "$effect:bioreportr.epFilter.placeHandles({self}.display, {global}.document)",
-    filterSummary: "$compute:bioreportr.epFilter.summarise({self}.filterState)",
-    doFilter: "$method:bioreportr.epFilter.doFilter({0}:rows, {1}:filterState)",
-    reset: "$method:bioreportr.epFilter.reset({self})",
-    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
-"template":{"sfcLayer":"bioreportr.epFilter"}}}
-});
-
-/**
- * Place the handles of the sliders at the range of the filter's state.
- * @param {Object} display - The range as percentages, with members `min` and `max`
- * @param {Document} dokkument - The document holding the filter
- */
-bioreportr.epFilter.placeHandles = function (display, dokkument) {
-    const min = dokkument.querySelector(".mxcw-ep-min"), max = dokkument.querySelector(".mxcw-ep-max");
-    if (min && max) {
-        min.value = display.min;
-        max.value = display.max;
-    }
-};
-
-}).call(globalThis);
-//# sourceURL=../bioreportr/sfc/bioreportr-epFilter.vue</script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.autocomplete-0" fluid-client="" fluid-src="../vendor/accessible-autocomplete/dist/accessible-autocomplete.min.js" src="../vendor/accessible-autocomplete/dist/accessible-autocomplete.min.js"></script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.autocomplete-1">(function () {
 "use strict";
@@ -5774,28 +5693,26 @@ hortis.autocomplete.bind = function (that, host, container, accessibleAutocomple
 }).call(globalThis);
 //# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/components/hortis-autocomplete.vue</script>
     <link data-fluid-indent="4" data-fluid-hydrated="" id="fl-style-hortis.autocomplete-0" href="../vendor/accessible-autocomplete/dist/accessible-autocomplete.min.css" rel="stylesheet">
-    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.recordReporter-1">(function () {
+    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.filterControls-0">(function () {
 "use strict";
 
-// Reports how many observations survive the filters and selections
-fluid.def("hortis.recordReporter", {
-    $layers: ["fluid.sfcLayer","fluid.component"],
-    // filteredRows: Object[]
-    // allRows: Object[]
-    counts: "$compute:hortis.recordReporter.renderModel({self}.filteredRows, {self}.allRows)",
+// The button resetting every filter and checklist beneath the visualisation loader
+fluid.def("hortis.filterControls", {
+    $layers: ["fluid.sfcLayer","hortis.icons","fluid.component"],
+    filters: "{vizLoader hortis.filter}",
+    checklists: "{vizLoader hortis.checklist}",
+    resetAll: "$method:hortis.filterControls.resetAll({self}.filters, {self}.checklists)",
     view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
-"template":{"sfcLayer":"hortis.recordReporter"}}}
+"template":{"sfcLayer":"hortis.filterControls"}}}
 });
 
-hortis.recordReporter.renderModel = function (filteredRows, allRows) {
-    return {
-        filteredRows: hortis.formatInt(filteredRows.length),
-        allRows: hortis.formatInt(allRows.length)
-    };
+hortis.filterControls.resetAll = function (filters, checklists) {
+    filters.forEach(filter => filter.reset());
+    checklists.forEach(checklist => checklist.reset());
 };
 
 }).call(globalThis);
-//# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/core/hortis-recordReporter.vue</script>
+//# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/filters/hortis-filterControls.vue</script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.valueFilter-2">(function () {
 "use strict";
 
@@ -5834,6 +5751,64 @@ fluid.def("hortis.valueFilter", {
 }).call(globalThis);
 //# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/filters/hortis-valueFilter.vue</script>
     <link data-fluid-indent="4" data-fluid-hydrated="" id="fl-style-hortis.valueFilter-0" href="../vendor/pretty-checkbox/dist/pretty-checkbox.min.css" rel="stylesheet">
+    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.epFilter-2">(function () {
+"use strict";
+
+// Filters the taxa of the extirpation risk analysis by their range of extirpation probability, chosen by a pair of
+// sliders
+fluid.def("bioreportr.epFilter", {
+    $layers: ["fluid.sfcLayer","hortis.taxaFilter"],
+    filterName: "Extirpation probability (EP)",
+    // The range, between 0 and 1
+    filterState: {min: 0, max: 1},
+    display: "$compute:bioreportr.epFilter.display({self}.filterState)",
+    // The handles are placed from code: the renderer writes the value of a bound input back into what it is bound to,
+    // which left the readings stuck and the other handle out of place
+    placeHandles: "$effect:bioreportr.epFilter.placeHandles({self}.display, {global}.document)",
+    filterSummary: "$compute:bioreportr.epFilter.summarise({self}.filterState)",
+    doFilter: "$method:bioreportr.epFilter.doFilter({0}:rows, {1}:filterState)",
+    reset: "$method:bioreportr.epFilter.reset({self})",
+    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
+"template":{"sfcLayer":"bioreportr.epFilter"}}}
+});
+
+/**
+ * Place the handles of the sliders at the range of the filter's state.
+ * @param {Object} display - The range as percentages, with members `min` and `max`
+ * @param {Document} dokkument - The document holding the filter
+ */
+bioreportr.epFilter.placeHandles = function (display, dokkument) {
+    const min = dokkument.querySelector(".mxcw-ep-min"), max = dokkument.querySelector(".mxcw-ep-max");
+    if (min && max) {
+        min.value = display.min;
+        max.value = display.max;
+    }
+};
+
+}).call(globalThis);
+//# sourceURL=../bioreportr/sfc/bioreportr-epFilter.vue</script>
+    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.recordReporter-1">(function () {
+"use strict";
+
+// Reports how many observations survive the filters and selections
+fluid.def("hortis.recordReporter", {
+    $layers: ["fluid.sfcLayer","fluid.component"],
+    // filteredRows: Object[]
+    // allRows: Object[]
+    counts: "$compute:hortis.recordReporter.renderModel({self}.filteredRows, {self}.allRows)",
+    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
+"template":{"sfcLayer":"hortis.recordReporter"}}}
+});
+
+hortis.recordReporter.renderModel = function (filteredRows, allRows) {
+    return {
+        filteredRows: hortis.formatInt(filteredRows.length),
+        allRows: hortis.formatInt(allRows.length)
+    };
+};
+
+}).call(globalThis);
+//# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/core/hortis-recordReporter.vue</script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.sectionTab-1">(function () {
 "use strict";
 
@@ -10717,8 +10692,7 @@ fluid.def("bioreportr.storyMap", {
     // A summary of a map cell, by the reporting status of its species - see bioreportr.cellTooltip
     gridSelector: {
         $component: {
-            renderTooltip: `$method:bioreportr.cellTooltip.render({libreMap}.obsQuantiser.grid, {vizLoader}.taxa.rowById,
-                {vizLoader}.finalFilteredObs, {storyPage}.earliestRecords, {storyPage}.cellTooltipHeadings, {0}:cellId)`
+            renderTooltip: "$method:bioreportr.cellTooltip.render({libreMap}.obsQuantiser.grid, {vizLoader}.taxa.rowById, {0}:cellId)"
         }
     },
     showPane: "$effect:bioreportr.storyMap.showPane({self}, {self}.readyMap, {storyPage}.mapData, {storyPage}.activePaneKey)",

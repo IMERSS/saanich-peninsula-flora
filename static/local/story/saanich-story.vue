@@ -151,10 +151,6 @@ fluid.def("saanich.story", {
             selectedIndex: 2
         }
     },
-    // The summary of a map cell calls the historical species lost plants, as the gallery does
-    cellTooltipHeadings: {
-        unconfirmed: "Lost plants recorded here: records, and year last seen"
-    },
     // The tiles of the atlas's three groups of species, placed in its section
     atlasTiles: "$compute:saanich.atlas.tilesMarkup({self}.taxa.allRows, {self}.selectedStatus)",
     sectionInserts: "$compute:saanich.atlas.sectionInserts({self}.atlasTiles)",
@@ -272,11 +268,26 @@ saanich.phoneGestures = function (map, window) {
 /* The atlas's panel of the chosen plant: its facts, and beside them a chart of the history of its observations, by
    decade or by month as chosen by the chart's tabs - see saanich.atlas.historyMarkup. The extirpation risk pane's panel,
    which shares its other styles, has no chart. On a narrow panel the chart falls beneath the facts */
+/* The plant's name runs across the top of the panel's column, and beneath it its facts and the chart sit side by side,
+   the chart filling the height left to it. Where the column is too narrow for both, the chart falls beneath the facts */
 .saanich-atlas-taxon-pane .mxcw-taxon-info {
-    display: flex;
-    flex-wrap: wrap;
-    align-content: flex-start;
-    gap: 10px 18px;
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 4px 20px;
+    padding-right: var(--story-gap);
+}
+
+.saanich-atlas-taxon-pane .mxcw-taxon-name {
+    grid-column: 1 / -1;
+    padding-bottom: 4px;
+}
+
+@container (max-width: 380px) {
+    .saanich-atlas-taxon-pane .mxcw-taxon-info {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto;
+    }
 }
 
 /* The photo yields room to the chart, which it does not share in the extirpation risk pane's panel */
@@ -285,18 +296,26 @@ saanich.phoneGestures = function (map, window) {
 }
 
 .saanich-atlas-facts {
-    flex: 1 1 165px;
     min-width: 0;
+}
+
+/* The column is as wide as the facts - a note beneath them wraps within it rather than widening it */
+.saanich-atlas-facts > :not(dl) {
+    contain: inline-size;
+}
+
+/* Dates and counts are kept whole */
+.saanich-atlas-facts dd {
+    white-space: nowrap;
 }
 
 .saanich-history {
-    flex: 1.3 1 180px;
+    display: flex;
+    flex-direction: column;
     min-width: 0;
-    align-self: flex-start;
-    padding-top: 6px;
+    min-height: 0;
 }
 
-/* The heading has a line of its own, so that the tabs beneath it are never cut off however narrow the chart */
 .saanich-history-tabs {
     display: flex;
     flex-wrap: wrap;
@@ -349,7 +368,10 @@ saanich.phoneGestures = function (map, window) {
 .saanich-history-chart {
     display: flex;
     gap: 2px;
-    height: 90px;
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 70px;
+    max-height: 150px;
     margin-bottom: 16px;
     border-bottom: 1px solid rgba(90, 118, 128, 0.35);
 }

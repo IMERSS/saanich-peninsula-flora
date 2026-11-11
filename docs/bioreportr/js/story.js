@@ -552,76 +552,33 @@ bioreportr.cellTooltip.statuses = [["unconfirmed", "Historical"], ["new", "Newly
 
 bioreportr.cellTooltip.plural = (count, noun) => `${bioreportr.formatCount(count)} ${noun}${count === 1 ? "" : "s"}`;
 
-bioreportr.cellTooltip.section = (heading, status, body) =>
-    `<div class="mxcw-cell-section" style="--tip-colour:${bioreportr.statusColours[status]}">${bioreportr.tip.heading(heading)}${body}</div>`;
-
 /**
- * Find the earliest record of each taxon across the whole atlas, whatever filters are applied.
- * @param {Object[]} obsRows - All records
- * @return {Map<String, Object>} The earliest record of each taxon id
- */
-bioreportr.cellTooltip.earliestRecords = function (obsRows) {
-    const earliest = new Map();
-    obsRows.forEach(record => {
-        const current = earliest.get(record.iNaturalistTaxonId);
-        if (record.eventDate && (!current || record.eventDate < current.eventDate)) {
-            earliest.set(record.iNaturalistTaxonId, record);
-        }
-    });
-    return earliest;
-};
-
-/**
- * Render the summary of a cell of the map's grid, leading with what matters most to the search for lost plants: the
- * historical species recorded there, highest extirpation probability first, followed by what has newly been found
- * there and what is well documented, together with a bar of the cell's species by reporting status.
+ * Render the summary of a cell of the map's grid: how many of its species, and of its records, are of each reporting
+ * status - historical, newly reported and confirmed - with a bar of its species by status. What is known of any one
+ * species is left to the panes, where it is chosen.
  * @param {Object} grid - The grid of records, whose buckets index the records gridded
  * @param {Object<String, TaxonRow>} rowById - Taxon rows indexed by id
- * @param {Object[]} gridRows - The records gridded, which the grid's buckets index
- * @param {Map<String, Object>} earliest - The earliest record of each taxon across the atlas
- * @param {Object<String, String>} headings - The headings of the sections, by reporting status
  * @param {String} cellId - The id of the cell
  * @return {String|null} The markup for the summary, or null if the cell holds no records
  */
-bioreportr.cellTooltip.render = function (grid, rowById, gridRows, earliest, headings, cellId) {
+bioreportr.cellTooltip.render = function (grid, rowById, cellId) {
     const bucket = grid.buckets[cellId];
     let togo = null;
     if (bucket) {
-        const encode = hortis.dataTable.encode;
-        const plants = Object.entries(bucket.byTaxonId).filter(([taxonId]) => rowById[taxonId]).map(([taxonId, obsIndices]) => {
-            const records = obsIndices.map(index => gridRows[index]).filter(record => record?.eventDate).sort(bioreportr.obsDateComparator);
-            return {taxon: rowById[taxonId], count: obsIndices.length, first: records[0], last: fluid.peek(records)};
-        });
-        const inStatus = status => plants.filter(plant => plant.taxon.reportingStatus === status);
-        const name = plant => plant.taxon.scientificName || plant.taxon.iNaturalistTaxonName;
-        const more = (list, shown) => list.length > shown ? `<div class="mxcw-tip-note">and ${list.length - shown} more</div>` : "";
-        const recorder = plant => (plant.last?.recordedBy || "").split(";")[0].trim();
-
-        const segments = bioreportr.cellTooltip.statuses.map(([status, label]) => ({status, label, count: inStatus(status).length})).filter(segment => segment.count > 0);
+        const taxa = Object.entries(bucket.byTaxonId).filter(([taxonId]) => rowById[taxonId])
+            .map(([taxonId, obsIndices]) => ({status: rowById[taxonId].reportingStatus, records: obsIndices.length}));
+        const segments = bioreportr.cellTooltip.statuses.map(([status, label]) => {
+            const inStatus = taxa.filter(taxon => taxon.status === status);
+            return {status, label, species: inStatus.length, records: inStatus.reduce((sum, taxon) => sum + taxon.records, 0)};
+        }).filter(segment => segment.species > 0);
         const colour = segment => bioreportr.statusColours[segment.status];
-        const bars = segments.map(segment => `<span style="flex:${segment.count};background:${colour(segment)}"></span>`).join("");
-        const keys = segments.map(segment => `<span><i style="background:${colour(segment)}"></i>${segment.label} ${segment.count}</span>`).join("");
-        const stack = `<div class="mxcw-cell-stack">${bars}</div><div class="mxcw-cell-key">${keys}</div>`;
-
-        const historical = inStatus("unconfirmed").sort((a, b) => (+b.taxon.solow_EP || 0) - (+a.taxon.solow_EP || 0));
-        // A newly reported species is identified by its earliest record anywhere, not by whatever was last seen in this cell
-        const fresh = inStatus("new").map(plant => ({...plant, earliest: earliest.get(plant.taxon.id)})).filter(plant => plant.earliest)
-            .sort((a, b) => b.earliest.eventDate.localeCompare(a.earliest.eventDate));
-        const confirmed = inStatus("confirmed").sort((a, b) => b.count - a.count);
-
-        const sections = [
-            historical.length && bioreportr.cellTooltip.section(headings.unconfirmed, "unconfirmed",
-                bioreportr.tip.bars(historical.slice(0, 4).map(plant => [name(plant), plant.count,
-                    `${plant.count} · ${plant.last ? bioreportr.year(plant.last.eventDate) : "?"}`])) + more(historical, 4)),
-            fresh.length && bioreportr.cellTooltip.section(headings.new, "new",
-                `<ul class="mxcw-tip-list">${fresh.slice(0, 3).map(plant => `<li><i>${encode(name(plant))}</i> ${bioreportr.year(plant.earliest.eventDate)}${recorder(plant) ? ", " + encode(recorder(plant)) : ""}${plant.first?.eventDate === plant.earliest.eventDate ? " (here)" : ""}</li>`).join("")}</ul>` + more(fresh, 3)),
-            confirmed.length && bioreportr.cellTooltip.section(headings.confirmed, "confirmed",
-                bioreportr.tip.bars(confirmed.slice(0, 3).map(plant => [name(plant), plant.count])) + more(confirmed, 3))
-        ].filter(Boolean).join("");
-
+        const bars = segments.map(segment => `<span style="flex:${segment.species};background:${colour(segment)}"></span>`).join("");
+        const rows = segments.map(segment => `<span class="mxcw-cell-status"><i style="background:${colour(segment)}"></i>${segment.label}</span>` +
+            `<span>${bioreportr.formatCount(segment.species)}</span><span>${bioreportr.formatCount(segment.records)}</span>`).join("");
         togo = `<div class="mxcw-cell-tip">
-            <div class="mxcw-tip-title">${bioreportr.formatCount(plants.length)} species <span>${bioreportr.cellTooltip.plural(bucket.obsCount, "record")}</span></div>
-            ${stack}${sections}
+            <div class="mxcw-tip-title">${bioreportr.formatCount(taxa.length)} species <span>${bioreportr.cellTooltip.plural(bucket.obsCount, "record")}</span></div>
+            <div class="mxcw-cell-stack">${bars}</div>
+            <div class="mxcw-cell-counts"><span></span><span>Species</span><span>Records</span>${rows}</div>
         </div>`;
     }
     return togo;
