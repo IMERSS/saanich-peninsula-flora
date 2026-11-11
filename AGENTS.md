@@ -70,7 +70,10 @@ rewrites it.
 
 ### Building the site
 
-`npm run build` runs every step. `npm run site` builds the published site, `docs`, with `hugo --cleanDestinationDir`,
+`npm run build` runs every step. RStudio's *Build Website*, through blogdown, builds the same site: blogdown runs
+`R/build.R` before Hugo, which runs `npm run story` and `npm run vendor` and adopts published files, and
+`R/build2.R` after it, which runs `npm run hydrate`, both through `R/npm.R`. Keep the two routes doing the same steps.
+blogdown's Hugo doesn't clean `docs`, so a file the build no longer produces is only removed by `npm run build`. `npm run site` builds the published site, `docs`, with `hugo --cleanDestinationDir`,
 which deletes everything in `docs` that the build does not produce. Never place anything by hand in `docs`: every file
 published must have a source from which the build produces it, usually in `static`. The one exception is a file which
 GitHub Pages itself writes into `docs`, such as `CNAME`. `src/js/adoptPublished.js` adopts any such file into `static`

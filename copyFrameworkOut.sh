@@ -105,6 +105,7 @@ FILES=(
 
     # Shared R: blogdown hooks and map/geometry utilities
     R/build2.R
+    R/npm.R
     R/knit_render.R
     scripts/utils.R
     scripts/geomUtils.R

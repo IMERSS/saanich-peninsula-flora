@@ -1,4 +1,5 @@
-# Content preparation in R and JS before executing Hugo
+# Content preparation in R and JS before executing Hugo. blogdown runs this before Hugo builds the site, and
+# R/build2.R after - together they do what `npm run build` does, see R/npm.R
 
 # Copy files from tabular_data to static/local/data/tabular
 
@@ -25,3 +26,12 @@ for (f in files) {
     warning("Failed to copy: ", src)
   }
 }
+
+# The JavaScript steps before Hugo - extracting the story's panes from their knitted .html, copying the libraries the
+# story page uses into static/vendor, and adopting into static any file GitHub Pages has written into docs, such as
+# CNAME, so that Hugo publishes it again
+source("R/npm.R")
+ensure_node_modules()
+run_npm("run", "story")
+run_npm("run", "vendor")
+run_npm("exec", "--", "node", "src/js/adoptPublished.js", "docs", "static")
