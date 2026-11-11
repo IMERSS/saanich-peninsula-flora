@@ -662,7 +662,8 @@ bioreportr.curationForm.model = function (taxon, byTaxon, viewer, connected, sta
     return {
         hasTaxon: !!taxon,
         taxonName: taxon ? hortis.rowToScientific(taxon) : "",
-        linkName: taxon?.iNaturalistTaxonName || "",
+        // As the taxon is named elsewhere - its scientific name, then its common name in brackets
+        displayName: taxon ? hortis.rowToScientific(taxon) + (taxon.commonName ? ` (${taxon.commonName})` : "") : "",
         commonName: taxon?.commonName || "",
         image: taxon ? hortis.renderTaxonImage(taxon.iNaturalistTaxonImage, taxon.id) : "",
         pending: !!own?.pending,

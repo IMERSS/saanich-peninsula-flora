@@ -1,5 +1,6 @@
 <fluid-import src="%imerss-bioinfo/src/client/sfc/filters/hortis-valueFilter.vue"></fluid-import>
 <fluid-import src="bioreportr-epFilter.vue"></fluid-import>
+<fluid-import src="bioreportr-solowSearch.vue"></fluid-import>
 <fluid-import src="%imerss-bioinfo/src/client/sfc/components/hortis-dataTable.vue"></fluid-import>
 <fluid-import src="%imerss-bioinfo/src/client/sfc/filters/hortis-standardFilterControls.vue"></fluid-import>
 <script src="%imerss-bioinfo/src/client/js/i6/imerss-core.js"></script>
@@ -68,6 +69,12 @@ fluid.def("bioreportr.solowTaxa", {
             label: ""
         }
     },
+    // The search of the list, the same as the atlas checklist's - a species picked from it is selected in the list
+    search: {
+        $component: {
+            $layers: "bioreportr.solowSearch"
+        }
+    },
     taxaTable: {
         $component: {
             $layers: "hortis.dataTable",
@@ -81,6 +88,7 @@ fluid.def("bioreportr.solowTaxa", {
     },
     selectedTaxon: "{self}.taxaTable.selectedRow"
 });
+
 </script>
 
 <template>
@@ -95,6 +103,7 @@ fluid.def("bioreportr.solowTaxa", {
                 <div @id="filters"></div>
             </div>
         </div>
+        <div @id="search"></div>
         <div @id="taxaTable"></div>
     </div>
 </template>

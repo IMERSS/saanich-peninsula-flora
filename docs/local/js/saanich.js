@@ -219,7 +219,7 @@ saanich.atlas.taxonRecords = function (obsRows, rowById, taxon) {
 saanich.atlas.panelMarkup = function (taxon, records) {
     let togo = "";
     if (taxon && records.length > 0) {
-        togo = `<div class="mxcw-solow-taxon-pane">
+        togo = `<div class="mxcw-solow-taxon-pane saanich-atlas-taxon-pane">
   <div class="mxcw-taxon-image">${hortis.renderTaxonImage(taxon.iNaturalistTaxonImage, taxon.id)}</div>
   <div class="mxcw-taxon-info">
     <div class="mxcw-taxon-name">${hortis.dataTable.encode((taxon.scientificName || taxon.iNaturalistTaxonName) + (taxon.commonName ? ` (${taxon.commonName})` : ""))}</div>
@@ -230,10 +230,79 @@ saanich.atlas.panelMarkup = function (taxon, records) {
       ${saanich.atlas.field("Status", saanich.atlas.statusLabels[taxon.reportingStatus])}
     </dl>
     ${bioreportr.georefNote(records)}
+    ${saanich.atlas.historyMarkup(records)}
   </div>
 </div>`;
     }
     return togo;
+};
+
+/** The history of a plant's records, charted in the atlas's panel - only there, since the extirpation risk pane's panel
+    has no room for it beside its slider **/
+
+// The first decade charted, that of the earliest records of the flora, so that every plant is charted on the same span
+saanich.atlas.firstDecade = 1850;
+
+saanich.atlas.monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September",
+    "October", "November", "December"];
+
+/**
+ * Count the records of a plant in each decade from `saanich.atlas.firstDecade` to the present, and in each month.
+ * @param {Object[]} records - The plant's dated records
+ * @param {Number} [thisYear] - The present year
+ * @return {Object} Members `decades`, {decade, count}[], and `months`, Number[12]
+ */
+saanich.atlas.history = function (records, thisYear = new Date().getFullYear()) {
+    const first = saanich.atlas.firstDecade;
+    const decades = [];
+    for (let decade = first; decade <= thisYear; decade += 10) {
+        decades.push({decade, count: 0});
+    }
+    const months = new Array(12).fill(0);
+    records.forEach(record => {
+        const [year, month] = String(record.eventDate).split("-").map(Number);
+        const index = Math.floor((year - first) / 10);
+        if (index >= 0 && index < decades.length) {
+            ++decades[index].count;
+        }
+        if (month >= 1 && month <= 12) {
+            ++months[month - 1];
+        }
+    });
+    return {decades, months};
+};
+
+/**
+ * Render a row of columns, each showing its value on hovering.
+ * @param {Object[]} columns - The columns, each with `value`, `title`, and `label`, shown beneath it if not empty
+ * @param {String} kind - The kind of chart, which names its class
+ * @return {String} The markup of the chart
+ */
+saanich.atlas.columns = function (columns, kind) {
+    // On a square root scale, so that the few records of earlier decades still show beside the many of recent ones
+    const max = Math.sqrt(Math.max(...columns.map(column => column.value), 1));
+    const slots = columns.map(column => `<span class="saanich-history-slot" title="${column.title}">` +
+        `<span class="saanich-history-bar${column.value ? "" : " saanich-history-empty"}" style="height:${Math.sqrt(column.value) / max * 100}%"></span>` +
+        `<span class="saanich-history-label">${column.label}</span></span>`).join("");
+    return `<div class="saanich-history-chart saanich-history-${kind}">${slots}</div>`;
+};
+
+/**
+ * Render the history of a plant's records - how many were made in each decade, and in each month of the year.
+ * @param {Object[]} records - The plant's dated records
+ * @return {String} The markup of the charts
+ */
+saanich.atlas.historyMarkup = function (records) {
+    const {decades, months} = saanich.atlas.history(records);
+    const count = n => saanich.formatCount(n) + (n === 1 ? " record" : " records");
+    const decadeColumns = decades.map(({decade, count: n}) => ({value: n, title: `${decade}s: ${count(n)}`,
+        label: decade % 50 === 0 ? String(decade) : ""}));
+    const monthColumns = months.map((n, month) => ({value: n, title: `${saanich.atlas.monthNames[month]}: ${count(n)}`,
+        label: saanich.atlas.monthNames[month][0]}));
+    return `<div class="saanich-history">
+      <div class="saanich-history-block"><div class="saanich-history-heading">Records by decade</div>${saanich.atlas.columns(decadeColumns, "decades")}</div>
+      <div class="saanich-history-block"><div class="saanich-history-heading">By month</div>${saanich.atlas.columns(monthColumns, "months")}</div>
+    </div>`;
 };
 
 // The panel is shown only on the atlas pane and only while a plant with records is selected
@@ -504,6 +573,17 @@ saanich.inatSpecies.open = function (storyPage, card, window) {
     }
 };
 
+/**
+ * Whether a card of the Community Science pane stands for a species, as do those of its "Most common" tab, rather than
+ * an observation.
+ * @param {Element} card - The card
+ * @return {Boolean} `true` if the card is shown under the "Most common" tab
+ */
+saanich.inatSpecies.isSpeciesCard = function (card) {
+    const tab = [...card.closest(".mxcw-inat-components").querySelectorAll("li")].find(item => /selected/.test(item.className));
+    return !!tab && tab.textContent.trim() === "Most common";
+};
+
 // The story pages whose Community Science cards already open their species
 saanich.inatSpecies.bound = new WeakSet();
 
@@ -516,10 +596,12 @@ saanich.inatSpecies.bound = new WeakSet();
 saanich.inatSpecies.bind = function (storyPage, window) {
     if (!saanich.inatSpecies.bound.has(storyPage)) {
         saanich.inatSpecies.bound.add(storyPage);
-        // Caught as it descends, before the card's own handler, which would open a broken link to iNaturalist in another tab
+        // Caught as it descends, before the card's own handler. Only the cards of "Most common" are species, whose own link
+        // to iNaturalist is broken, and open the atlas instead - those of "Recent" and "Most favourited" are observations,
+        // whose own handler opens them on iNaturalist in another window
         window.document.addEventListener("click", event => {
             const card = event.target.closest?.(".mxcw-inat-components article");
-            if (card) {
+            if (card && saanich.inatSpecies.isSpeciesCard(card)) {
                 event.preventDefault();
                 event.stopPropagation();
                 saanich.inatSpecies.open(storyPage, card, window);

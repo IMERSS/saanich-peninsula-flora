@@ -1226,6 +1226,12 @@ body {
 .mxcw-taxon-info {
     overscroll-behavior: contain;
 }
+
+/* A table renders only the rows near those in view, between spacers. The browser's scroll anchoring would otherwise
+   move the scrollbar each time a new block of rows replaces the old, so that scrolling runs away from the pointer */
+.hortis-dataTable-scroll {
+    overflow-anchor: none;
+}
 .imerss-main .hortis-dataTable-pagination {
     padding: 2px 8px;
     font-size: var(--story-small);
@@ -1422,7 +1428,7 @@ body {
     }
 }
 
-:is(.mxcw-paneKey-Status, .mxcw-paneKey-TopContributions, .mxcw-paneKey-Solow) h2 {
+:is(.mxcw-paneKey-Status, .mxcw-paneKey-TopContributions, .mxcw-paneKey-Solow, .mxcw-paneKey-Curation) h2 {
     color: #a8c8d0;
     font-size: var(--story-small);
     font-weight: 400;
@@ -1435,7 +1441,8 @@ body {
     margin: 0.5rem 0 var(--story-gap);
 }
 
-:is(.mxcw-paneKey-Status, .mxcw-paneKey-TopContributions, .mxcw-paneKey-Solow) .mxcw-sectionColumn > p {
+:is(.mxcw-paneKey-Status, .mxcw-paneKey-TopContributions, .mxcw-paneKey-Solow) .mxcw-sectionColumn > p,
+.mxcw-curation-invitation p {
     max-width: 31em;
     margin: 0 auto clamp(10px, 2.2vh, 22px);
     padding: 0;
@@ -1678,38 +1685,25 @@ body {
     font-weight: 700;
 }
 
+/* The chosen taxon: its photo spans the column, keeping its proportions, and its name runs beneath as elsewhere */
 .mxcw-curation-taxon {
     display: flex;
-    gap: 12px;
-    align-items: flex-start;
-}
-
-.mxcw-curation-photo {
-    flex: 0 0 auto;
-    width: 110px;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .mxcw-curation-photo .imerss-photo {
-    width: 110px;
-    height: 110px;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    max-height: 42vh;
     border-radius: var(--data-table-radius, 8px);
     background-size: cover;
     background-position: center;
 }
 
-.mxcw-curation-names {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 4px 10px;
-    margin: 0;
-}
-
-.mxcw-curation-names dt {
-    color: #a8c8d0;
-}
-
-.mxcw-curation-names dd {
-    margin: 0;
+.mxcw-curation-taxon .mxcw-taxon-name {
+    text-align: left;
 }
 
 .mxcw-curation-note-form fieldset {

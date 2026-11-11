@@ -267,3 +267,91 @@ saanich.phoneGestures = function (map, window) {
     }
 };
 </script>
+
+<style>
+/* The atlas's panel of the chosen plant, which charts the history of its records beneath its facts - see
+   saanich.atlas.historyMarkup. The extirpation risk pane's panel, which shares its other styles, has no charts */
+.saanich-atlas-taxon-pane .mxcw-taxon-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.saanich-history {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 10px;
+}
+
+/* Side by side once the panel's column has room, the decades given the wider share */
+@container (min-width: 250px) {
+    .saanich-history {
+        grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+        gap: 16px;
+    }
+}
+
+.saanich-history-heading {
+    margin-bottom: 4px;
+    color: #5a7680;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.saanich-history-chart {
+    display: flex;
+    gap: 2px;
+    height: 58px;
+    border-bottom: 1px solid rgba(90, 118, 128, 0.35);
+}
+
+.saanich-history-slot {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    height: 100%;
+}
+
+.saanich-history-bar {
+    display: block;
+    width: 100%;
+    min-height: 2px;
+    border-radius: 3px 3px 0 0;
+    background: #2f7f8f;
+}
+
+.saanich-history-bar.saanich-history-empty {
+    min-height: 0;
+}
+
+.saanich-history-slot:hover .saanich-history-bar {
+    background: #184e62;
+}
+
+/* The labels hang beneath the axis, outside the chart's height, so that the bars of every chart share their scale */
+.saanich-history-label {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 50%;
+    transform: translateX(-50%);
+    color: #5a7680;
+    font-size: 10px;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+/* The first label is aligned with the chart's edge, which would otherwise cut it off */
+.saanich-history-slot:first-child .saanich-history-label {
+    left: 0;
+    transform: none;
+}
+
+.saanich-history-block {
+    padding-bottom: 14px;
+}
+</style>

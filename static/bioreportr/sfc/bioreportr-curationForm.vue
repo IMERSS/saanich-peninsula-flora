@@ -47,11 +47,7 @@ bioreportr.curationForm.chooseAnother = function (storyPage) {
         <div class="mxcw-curation-pending" @class="fl-hidden:!@{model.pending}">Your comment has been submitted and is being processed</div>
         <div class="mxcw-curation-taxon">
             <div class="mxcw-curation-photo" @id="image"></div>
-            <dl class="mxcw-curation-names">
-                <dt>Taxon name:</dt> <dd><i>@{model.taxonName}</i></dd>
-                <dt>Link name:</dt> <dd>@{model.linkName}</dd>
-                <dt>Common name:</dt> <dd>@{model.commonName}</dd>
-            </dl>
+            <div class="mxcw-taxon-name">@{model.displayName}</div>
         </div>
         <form class="mxcw-curation-note-form" onsubmit="return false">
             <!-- The controls are rendered as markup, not bound to the model, since a binding of a control is two-way and the
