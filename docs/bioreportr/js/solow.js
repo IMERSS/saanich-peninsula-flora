@@ -303,10 +303,61 @@ bioreportr.solowMapLayer.addLegend = function (map, legendPosition, dokkument) {
     return control;
 };
 
-// The tooltip of a population states its probability of extirpation alone
-bioreportr.solowMapLayer.renderTooltip = function (clusters, clusterId) {
+/**
+ * The colour of a probability of extirpation on the map's scale, that of the stop at or beneath it.
+ * @param {Number} ep - The probability
+ * @return {String} The colour
+ */
+bioreportr.solowMapLayer.epColour = function (ep) {
+    const stops = hortis.libreMap.viridisStops;
+    return (stops.filter(([value]) => value <= ep).pop() || stops[0])[1];
+};
+
+/**
+ * Render the tooltip of a population - its probability of extirpation, and the figures from which Solow's (1993)
+ * method computes it: how many sightings the population holds, the year of the last, and the period of observation.
+ * @param {Object[]} clusters - The populations of the chosen taxon
+ * @param {String} clusterId - The id of the population hovered over
+ * @param {Object} solowParams - The period of observation, with members `baselineYear` and `analysisYear`
+ * @return {String|null} The tooltip's markup, or null if there is no such population
+ */
+bioreportr.solowMapLayer.renderTooltip = function (clusters, clusterId, solowParams) {
     const cluster = clusters[clusterId];
-    return cluster ? `<div class="imerss-tooltip mxcw-population-tooltip">Population EP: <b>${(1 - cluster.pp).toFixed(2)}</b></div>` : null;
+    let togo = null;
+    if (cluster) {
+        const ep = 1 - cluster.pp;
+        const last = bioreportr.eventDateToYear(fluid.peek(cluster.obsRows).eventDate);
+        const since = solowParams.analysisYear - last;
+        togo = `<div class="mxcw-cell-tip mxcw-population-tip">
+            <div class="mxcw-tip-title">Population ${+clusterId + 1} <span>of ${clusters.length}</span></div>
+            <div class="mxcw-population-ep"><span class="mxcw-population-swatch" style="background:${bioreportr.solowMapLayer.epColour(ep)}"></span>
+                Extirpation probability <b>${ep.toFixed(2)}</b></div>
+            <dl class="mxcw-population-stats">
+                <dt>Sightings</dt> <dd>${cluster.obsRows.length.toLocaleString()}</dd>
+                <dt>Last sighting</dt> <dd>${last} <span>(${since === 0 ? "this year" : since + (since === 1 ? " year ago" : " years ago")})</span></dd>
+                <dt>Observation period</dt> <dd>${solowParams.baselineYear}–${solowParams.analysisYear}</dd>
+            </dl>
+        </div>`;
+    }
+    return togo;
+};
+
+// How far in pixels around the pointer a population is looked for, so that its tooltip shows without the pointer having
+// to land exactly within a small circle
+bioreportr.solowMapLayer.hoverTolerance = 6;
+
+/**
+ * Find the population under or near the pointer.
+ * @param {maplibregl.Map} map - The map
+ * @param {Object} point - The pointer's position on the map, as {x, y}
+ * @return {Number|null} The id of the population, or null if there is none near
+ */
+bioreportr.solowMapLayer.clusterAt = function (map, point) {
+    const tolerance = bioreportr.solowMapLayer.hoverTolerance;
+    const features = map.getLayer(bioreportr.solowMapLayer.LAYER_ID) ? map.queryRenderedFeatures(
+        [[point.x - tolerance, point.y - tolerance], [point.x + tolerance, point.y + tolerance]],
+        {layers: [bioreportr.solowMapLayer.LAYER_ID]}) : [];
+    return features[0]?.properties.clusterId ?? null;
 };
 
 /**
@@ -316,17 +367,48 @@ bioreportr.solowMapLayer.renderTooltip = function (clusters, clusterId) {
  * @return {Object} A record of the listeners, to be supplied to `hortis.libreMap.gridSelector.unbindHover`
  */
 bioreportr.solowMapLayer.bindHover = function (that, map) {
+    // Shown as the map's own popup, beside the population, rather than through the page's tooltips, so that it follows
+    // the map wherever it is laid out
+    const popup = new maplibregl.Popup({closeButton: false, closeOnClick: false, maxWidth: "none", offset: 14,
+        className: "mxcw-population-popup"});
+    let shown = null;
+    const leave = () => {
+        shown = null;
+        popup.remove();
+        map.getCanvas().style.cursor = "";
+    };
     const listener = e => {
-        if (that.visible) {
-            const clusterId = hortis.libreMap.eventToProp(map, e, "clusterId");
+        const clusterId = that.visible ? bioreportr.solowMapLayer.clusterAt(map, e.point) : null;
+        if (hortis.isValue(clusterId)) {
             // As text, since the first population's id, 0, would otherwise read as no population at all
-            that.hoverAt(hortis.isValue(clusterId) ? String(clusterId) : null, e.originalEvent);
+            const id = String(clusterId);
+            if (id !== shown) {
+                shown = id;
+                popup.setHTML(that.renderTooltip(id) || "");
+            }
+            popup.setLngLat(e.lngLat).addTo(map);
+            map.getCanvas().style.cursor = "pointer";
+        } else if (shown !== null) {
+            leave();
         }
     };
-    const leave = () => that.hoverAt(null);
     map.on("mousemove", listener);
     map.on("mouseout", leave);
     return {map, listener, leave};
+};
+
+// The listeners of the populations' tooltips, by map, so that each map is given them once only
+bioreportr.solowMapLayer.hoverBound = new WeakMap();
+
+/**
+ * Give the map the listeners showing the tooltips of the populations, if it does not have them already.
+ * @param {bioreportr.solowMapLayer} that - The layer
+ * @param {maplibregl.Map} map - The map, once it is ready
+ */
+bioreportr.solowMapLayer.ensureHover = function (that, map) {
+    if (!bioreportr.solowMapLayer.hoverBound.has(map)) {
+        bioreportr.solowMapLayer.hoverBound.set(map, bioreportr.solowMapLayer.bindHover(that, map));
+    }
 };
 
 bioreportr.summaryTaxaRows = rows => rows.filter(row => row.inSummary);
@@ -394,11 +476,7 @@ fluid.def("bioreportr.solowMapLayer", {
         }
     },
     renderLegend: "$effect:hortis.libreMap.renderLegend({self}.legend, {self}.legendMarkup, {self}.visible)",
-    renderTooltip: "$method:bioreportr.solowMapLayer.renderTooltip({self}.clusters, {0}:clusterId)",
-    hover: {
-        $bindable: {
-            bind: "bioreportr.solowMapLayer.bindHover({self}, {storyPage}.map.readyMap)",
-            unbind: "hortis.libreMap.gridSelector.unbindHover({boundValue})"
-        }
-    }
+    renderTooltip: "$method:bioreportr.solowMapLayer.renderTooltip({self}.clusters, {0}:clusterId, {storyPage}.solowParams)",
+    // Attached by an effect, as the circles are drawn, once the map is ready - see bioreportr.solowMapLayer.ensureHover
+    hover: "$effect:bioreportr.solowMapLayer.ensureHover({self}, {storyPage}.map.readyMap)"
 });
