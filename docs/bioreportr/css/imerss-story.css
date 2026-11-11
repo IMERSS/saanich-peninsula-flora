@@ -4,6 +4,9 @@ body {
     display: flex;
     flex-direction: column;
     height: 100vh;
+    /* The height actually visible - on a phone, 100vh is that with the browser's toolbars put away, so that while they
+       show, the foot of the page, which scrolls within the body, would lie behind them where it can't be scrolled to */
+    height: 100dvh;
     background-color: #184E62;
     color: #FDF2CE;
 }

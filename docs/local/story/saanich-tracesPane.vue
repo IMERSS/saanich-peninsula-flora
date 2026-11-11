@@ -472,9 +472,13 @@ saanich.traces.bindCard = function (state) {
             saanich.traces.openTaxon(state.storyPage, taxon, state.window);
         }
     });
-    // Whether presses are touches, noted before any of the events they lead to
+    // Whether presses are touches, noted before any of the events they lead to. A press anywhere but on the card or a
+    // marker puts away a card shown by a tap, as for every other tooltip on the page
     state.window.addEventListener("pointerdown", pointerEvent => {
         state.pointerType = pointerEvent.pointerType;
+        if (state.touchHold && !pointerEvent.target.closest?.(".saanich-trace, .saanich-trace-card")) {
+            saanich.traces.releaseTouch(state);
+        }
     }, true);
     // A tap on the map away from the markers puts away a card shown by a tap
     state.map.on("click", mapEvent => {

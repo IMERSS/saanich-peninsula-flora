@@ -5690,28 +5690,6 @@ hortis.filterControls.resetAll = function (filters, checklists) {
 
 }).call(globalThis);
 //# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/filters/hortis-filterControls.vue</script>
-    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.recordReporter-1">(function () {
-"use strict";
-
-// Reports how many observations survive the filters and selections
-fluid.def("hortis.recordReporter", {
-    $layers: ["fluid.sfcLayer","fluid.component"],
-    // filteredRows: Object[]
-    // allRows: Object[]
-    counts: "$compute:hortis.recordReporter.renderModel({self}.filteredRows, {self}.allRows)",
-    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
-"template":{"sfcLayer":"hortis.recordReporter"}}}
-});
-
-hortis.recordReporter.renderModel = function (filteredRows, allRows) {
-    return {
-        filteredRows: hortis.formatInt(filteredRows.length),
-        allRows: hortis.formatInt(allRows.length)
-    };
-};
-
-}).call(globalThis);
-//# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/core/hortis-recordReporter.vue</script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.epFilter-2">(function () {
 "use strict";
 
@@ -5796,6 +5774,28 @@ hortis.autocomplete.bind = function (that, host, container, accessibleAutocomple
 }).call(globalThis);
 //# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/components/hortis-autocomplete.vue</script>
     <link data-fluid-indent="4" data-fluid-hydrated="" id="fl-style-hortis.autocomplete-0" href="../vendor/accessible-autocomplete/dist/accessible-autocomplete.min.css" rel="stylesheet">
+    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.recordReporter-1">(function () {
+"use strict";
+
+// Reports how many observations survive the filters and selections
+fluid.def("hortis.recordReporter", {
+    $layers: ["fluid.sfcLayer","fluid.component"],
+    // filteredRows: Object[]
+    // allRows: Object[]
+    counts: "$compute:hortis.recordReporter.renderModel({self}.filteredRows, {self}.allRows)",
+    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
+"template":{"sfcLayer":"hortis.recordReporter"}}}
+});
+
+hortis.recordReporter.renderModel = function (filteredRows, allRows) {
+    return {
+        filteredRows: hortis.formatInt(filteredRows.length),
+        allRows: hortis.formatInt(allRows.length)
+    };
+};
+
+}).call(globalThis);
+//# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/core/hortis-recordReporter.vue</script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.valueFilter-2">(function () {
 "use strict";
 
@@ -6467,9 +6467,13 @@ saanich.traces.bindCard = function (state) {
             saanich.traces.openTaxon(state.storyPage, taxon, state.window);
         }
     });
-    // Whether presses are touches, noted before any of the events they lead to
+    // Whether presses are touches, noted before any of the events they lead to. A press anywhere but on the card or a
+    // marker puts away a card shown by a tap, as for every other tooltip on the page
     state.window.addEventListener("pointerdown", pointerEvent => {
         state.pointerType = pointerEvent.pointerType;
+        if (state.touchHold && !pointerEvent.target.closest?.(".saanich-trace, .saanich-trace-card")) {
+            saanich.traces.releaseTouch(state);
+        }
     }, true);
     // A tap on the map away from the markers puts away a card shown by a tap
     state.map.on("click", mapEvent => {
