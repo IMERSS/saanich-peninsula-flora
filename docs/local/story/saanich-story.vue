@@ -54,12 +54,18 @@ fluid.def("saanich.story", {
         {key: "id", label: "ID"},
         {key: "iNaturalistTaxonName", label: "Link name"}
     ],
+    // In the order in which a search is most often narrowed, each value with the label shown for it
     taxaFilterRecords: [
-        {filterName: "Infrataxon", fieldName: "infrataxon_status", fieldValues: ["infrataxon", "non-infrataxon"]},
-        {filterName: "Introduction", fieldName: "introduction_status", fieldValues: ["native", "exotic", "unknown"]},
-        {filterName: "Provenance", fieldName: "provenance_status", fieldValues: ["voucher", "no_voucher", "unknown"]},
-        {filterName: "Conservation", fieldName: "provincial_concern", fieldValues: ["concern", "secure"]},
-        {filterName: "Graminoid", fieldName: "graminoid", fieldValues: ["graminoid", "non-graminoid"], valueOf: "hortis.graminoidValue"}
+        {filterName: "Introduction", fieldName: "introduction_status", fieldValues: ["native", "exotic", "unknown"],
+            fieldLabels: ["Native", "Exotic", "Unknown"]},
+        {filterName: "Conservation", fieldName: "provincial_concern", fieldValues: ["concern", "secure"],
+            fieldLabels: ["Of concern", "Secure"]},
+        {filterName: "Provenance", fieldName: "provenance_status", fieldValues: ["voucher", "no_voucher", "unknown"],
+            fieldLabels: ["Vouchered", "Not vouchered", "Unknown"]},
+        {filterName: "Rank", fieldName: "infrataxon_status", fieldValues: ["non-infrataxon", "infrataxon"],
+            fieldLabels: ["Species", "Subspecies or variety"]},
+        {filterName: "Graminoid", fieldName: "graminoid", fieldValues: ["graminoid", "non-graminoid"], valueOf: "hortis.graminoidValue",
+            fieldLabels: ["Graminoid", "Other"]}
     ],
     // Ordered to bring forward what helps in assessing a record and in targeting the plant
     recordColumns: [
@@ -196,6 +202,8 @@ fluid.def("saanich.story", {
         }
     },
     // A pane opened from one without a map is placed on its camera once the map has its size - see saanich.recentre
+    // On a phone one finger scrolls the page past the map, and two move the map - see saanich.phoneGestures
+    phoneGestures: "$effect:saanich.phoneGestures({self}.map.readyMap, {global})",
     recentre: "$effect:saanich.recentre({self}.map.readyMap, {self}.mapData, {self}.activePane)",
     leftPaneClass: "$compute:saanich.traces.leftPaneClass({self}.traces.active, {self}.traces.paused, {self}.traces.scrubbing, {self}.remembering.active)",
     paneOverrides: {
@@ -243,4 +251,19 @@ fluid.def("saanich.story", {
         }
     }
 });
+
+/**
+ * On a phone, where the map spans the screen and the page scrolls past it, let one finger scroll the page and two move
+ * the map, as MapLibre's cooperative gestures do, so that the map can't trap the reader. Larger screens are unchanged.
+ * @param {maplibregl.Map} map - The story's map, once ready
+ * @param {Window} window - The window holding the story page
+ */
+saanich.phoneGestures = function (map, window) {
+    if (map && map.cooperativeGestures) {
+        const phone = window.matchMedia("(max-width: 767.98px)");
+        const apply = () => phone.matches ? map.cooperativeGestures.enable() : map.cooperativeGestures.disable();
+        apply();
+        phone.addEventListener("change", apply);
+    }
+};
 </script>

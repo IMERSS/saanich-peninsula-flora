@@ -142,7 +142,7 @@ saanich.traces.renderCard = function (event) {
         <div class="saanich-trace-name">${encode(taxon.scientificName)}</div>${common}
         <div>${saanich.traces.formatDate(record.eventDate)}${recorder ? ", " + encode(recorder) : ""}</div>${place}
         <div class="saanich-trace-significance">${saanich.traces.kinds[kind].significance}</div>
-        <div class="saanich-trace-action">Click to find this plant &rarr;</div>`;
+        <div class="saanich-trace-action">Find this plant &rarr;</div>`;
 };
 
 /**
@@ -284,7 +284,9 @@ saanich.traces.showCard = function (state, event, element) {
     // Close beside the marker, so that the pointer can cross to the card before it hides
     const gap = saanich.traces.cardGap;
     const fitsRight = anchor.right + gap + box.width <= innerWidth - 8;
-    card.style.left = (fitsRight ? anchor.right + gap : Math.max(8, anchor.left - box.width - gap)) + "px";
+    const left = fitsRight ? anchor.right + gap : anchor.left - box.width - gap;
+    // Within the screen however narrow - on a phone the card may sit over its marker
+    card.style.left = Math.max(8, Math.min(left, innerWidth - box.width - 8)) + "px";
     card.style.top = Math.min(Math.max(8, anchor.top - 16), innerHeight - box.height - 8) + "px";
     saanich.traces.loadPhoto(state, event);
 };
@@ -371,6 +373,46 @@ saanich.traces.holdMarker = function (state, element) {
 };
 
 /**
+ * Whether the last press was a touch, or the screen can't hover at all - when a marker's card is shown by a first tap,
+ * and its species opened by a second, as there is no hover to show it.
+ * @param {TraceState} state - The state of the playback
+ * @return {Boolean} `true` if presses are touches
+ */
+saanich.traces.isTouch = state => state.pointerType === "touch" || state.window.matchMedia("(hover: none)").matches;
+
+/**
+ * Hide a card shown by a tap, releasing the hold it put on the timeline.
+ * @param {TraceState} state - The state of the playback
+ */
+saanich.traces.releaseTouch = function (state) {
+    if (state.touchHold) {
+        state.touchHold = false;
+        state.holding = Math.max(0, state.holding - 1);
+    }
+    saanich.traces.hideCard(state);
+};
+
+/**
+ * Respond to a click or tap on a marker. A pointer which hovers has already shown the marker's card, so a click opens its
+ * species; a tap shows the card first, holding the timeline, and a second tap on the marker or its card opens it.
+ * @param {TraceState} state - The state of the playback
+ * @param {TraceEvent} event - The event of the marker
+ * @param {HTMLElement} element - The element of the marker
+ */
+saanich.traces.markerClick = function (state, event, element) {
+    if (saanich.traces.isTouch(state) && !(state.touchHold && state.heldMarker === element)) {
+        if (!state.touchHold) {
+            state.touchHold = true;
+            state.holding++;
+        }
+        saanich.traces.showCard(state, event, element);
+    } else {
+        saanich.traces.releaseTouch(state);
+        saanich.traces.openTaxon(state.storyPage, event.taxon, state.window);
+    }
+};
+
+/**
  * Bind the card, which holds the timeline while the pointer rests on it, and opens its species when clicked.
  * @param {TraceState} state - The state of the playback
  */
@@ -387,8 +429,18 @@ saanich.traces.bindCard = function (state) {
     card.addEventListener("click", () => {
         if (state.cardEvent) {
             const taxon = state.cardEvent.taxon;
-            saanich.traces.hideCard(state);
+            saanich.traces.releaseTouch(state);
             saanich.traces.openTaxon(state.storyPage, taxon, state.window);
+        }
+    });
+    // Whether presses are touches, noted before any of the events they lead to
+    state.window.addEventListener("pointerdown", pointerEvent => {
+        state.pointerType = pointerEvent.pointerType;
+    }, true);
+    // A tap on the map away from the markers puts away a card shown by a tap
+    state.map.on("click", mapEvent => {
+        if (state.touchHold && !mapEvent.originalEvent?.target?.closest?.(".saanich-trace")) {
+            saanich.traces.releaseTouch(state);
         }
     });
 };
@@ -423,15 +475,25 @@ saanich.traces.addMarker = function (state, event, age = 0) {
     element.innerHTML = `<div class="saanich-trace-mark" style="animation-duration: ${saanich.traces.life(event.kind)}s; animation-delay: ${-age}s">${saanich.traces.icon(event.kind)}</div>`;
     const marker = new maplibregl.Marker({element}).setLngLat(bioreportr.obsPoint(event.record)).addTo(state.map);
     state.markers.add(marker);
+    // A touch also sends these, which would show and then schedule the hiding of the card a tap is about to show
     element.addEventListener("mouseenter", () => {
-        state.holding++;
-        saanich.traces.showCard(state, event, element);
+        if (state.pointerType !== "touch") {
+            state.holding++;
+            saanich.traces.showCard(state, event, element);
+        }
     });
     element.addEventListener("mouseleave", () => {
-        state.holding = Math.max(0, state.holding - 1);
-        saanich.traces.scheduleHide(state);
+        if (state.pointerType !== "touch") {
+            state.holding = Math.max(0, state.holding - 1);
+            if (!state.touchHold) {
+                saanich.traces.scheduleHide(state);
+            }
+        }
     });
-    element.addEventListener("click", () => saanich.traces.openTaxon(state.storyPage, event.taxon, state.window));
+    element.addEventListener("click", clickEvent => {
+        clickEvent.stopPropagation();
+        saanich.traces.markerClick(state, event, element);
+    });
     element.firstElementChild.addEventListener("animationend", () => {
         marker.remove();
         state.markers.delete(marker);
@@ -882,6 +944,48 @@ saanich.traces.control = function (that, storyPage, map, events, active, loaded,
         100% {
             opacity: 0;
         }
+    }
+}
+
+/* Phones: the map leaves room for the text beneath it, the timeline's controls and key sit clear of the map's credits,
+   and the markers, which are small and brief, take a larger area for a fingertip */
+@media (max-width: 767.98px) {
+    .mxcw-leftPane.saanich-traces-active {
+        height: max(360px, 62vh);
+    }
+
+    .saanich-traces-overlay {
+        left: 12px;
+        right: 12px;
+        bottom: 56px;
+    }
+
+    .saanich-traces-year {
+        font-size: 40px;
+    }
+
+    .saanich-traces-key {
+        gap: 2px 10px;
+    }
+
+    .saanich-trace-card {
+        width: min(260px, calc(100vw - 16px));
+    }
+
+    .mxcw-paneKey-Traces h2 {
+        margin-top: 1.25rem;
+    }
+
+    .mxcw-paneKey-Traces p {
+        padding: 0 1rem;
+    }
+}
+
+@media (pointer: coarse) {
+    .saanich-trace::after {
+        content: "";
+        position: absolute;
+        inset: -12px;
     }
 }
 </style>

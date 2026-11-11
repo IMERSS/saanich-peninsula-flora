@@ -216,6 +216,80 @@ saanich.remembering.bindHover = function (map, mapData, window) {
     font-size: var(--story-body);
     font-weight: 700;
 }
+
+/* Phones: the map of the checklist areas leaves room for the text beneath it */
+@media (max-width: 767.98px) {
+    .mxcw-leftPane.saanich-remembering-active {
+        height: max(360px, 62vh);
+    }
+}
+
+/* The thanks to the project's supporters close the pane quietly, set apart by a rule, their names run together in one line */
+.saanich-supporters {
+    clear: both;
+    margin: clamp(18px, 3vh, 30px) 0 0;
+    padding-top: 14px;
+    border-top: 1px solid rgba(168, 200, 208, 0.3);
+    text-align: center;
+}
+
+.mxcw-paneKey-Remembering .saanich-supporters-title {
+    margin: 0 0 8px;
+    color: #a8c8d0;
+    font-size: var(--story-small);
+    letter-spacing: 0.2em;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.saanich-supporters-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 14px 26px;
+    margin: 0 auto;
+    padding: 14px 20px;
+    max-width: 760px;
+    list-style: none;
+    background: #f4f1e8;
+    border-radius: 6px;
+}
+
+/* The logos sit on a soft paper card, their white grounds dissolved into it, greyed until hovered */
+.saanich-supporters-list li {
+    margin: 0;
+    line-height: 0;
+}
+
+.saanich-supporters-list img {
+    display: block;
+    height: 34px;
+    width: auto;
+    max-width: 210px;
+    object-fit: contain;
+    mix-blend-mode: multiply;
+    filter: grayscale(1) contrast(1.1);
+    opacity: 0.75;
+    transition: filter 0.3s, opacity 0.3s;
+}
+
+.saanich-supporters-list li:hover img {
+    filter: none;
+    opacity: 1;
+}
+
+.saanich-supporters-list .saanich-supporter-sitka-foundation img,
+.saanich-supporters-list .saanich-supporter-keefer-ecological-services img {
+    height: 46px;
+}
+
+@media (max-width: 767.98px) {
+    .saanich-supporters-list { gap: 12px 18px; padding: 12px; }
+    .saanich-supporters-list img { height: 26px; max-width: 150px; }
+    .saanich-supporters-list .saanich-supporter-sitka-foundation img,
+    .saanich-supporters-list .saanich-supporter-keefer-ecological-services img { height: 36px; }
+}
 </style>
 
 <!-- The <template> block below is written by src/js/storyBuild.js and must not be edited here: it holds the section
@@ -239,6 +313,28 @@ and the San Juan Islands. Through this initiative we invite you to help
 carry this work forward, by sharing your local plant knowledge and
 contributing to the co-creation of a living <em>Flora of the
 W̱SÁNEĆ/Saanich Peninsula.</em></p>
+<div class="saanich-supporters">
+<p class="saanich-supporters-title">
+With thanks to our supporters
+</p>
+<ul class="saanich-supporters-list">
+<li class="saanich-supporter-ciee">
+<img src="/local/images/supporters/ciee.png" alt="Canadian Institute for Ecology and Evolution" title="Canadian Institute for Ecology and Evolution">
+</li>
+<li class="saanich-supporter-sitka-foundation">
+<img src="/local/images/supporters/sitka-foundation.png" alt="Sitka Foundation" title="Sitka Foundation">
+</li>
+<li class="saanich-supporter-capital-regional-district">
+<img src="/local/images/supporters/capital-regional-district.png" alt="Capital Regional District" title="Capital Regional District">
+</li>
+<li class="saanich-supporter-nature-victoria">
+<img src="/local/images/supporters/nature-victoria.png" alt="Nature Victoria" title="Nature Victoria">
+</li>
+<li class="saanich-supporter-keefer-ecological-services">
+<img src="/local/images/supporters/keefer-ecological-services.png" alt="Keefer Ecological Services Ltd." title="Keefer Ecological Services Ltd.">
+</li>
+</ul>
+</div>
 
 
 </div></div></div>

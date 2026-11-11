@@ -152,7 +152,8 @@ saanich.lostPlants.runs = new WeakMap();
 
 saanich.lostPlants.markup = cards => "<div class=\"saanich-lost-gallery\">" + cards.join("") + "</div>";
 
-saanich.lostPlants.count = cards => String(cards.length);
+// Blank until the gallery has loaded, so that the text reads "The gallery shows native species" rather than a count of none
+saanich.lostPlants.count = cards => cards.length > 0 ? String(cards.length) : "";
 
 /**
  * Open the extirpation risk pane with a plant chosen in the gallery selected, bringing its row into view.
@@ -313,6 +314,19 @@ saanich.paneMarkup = galleryMarkup => ({LostPlants: galleryMarkup});
     color: #FDF2CE;
     font-weight: 400;
 }
+
+/* Phones: the gallery runs on down the page beneath the story, rather than scrolling within a box of its own */
+@media (max-width: 767.98px) {
+    .mxcw-leftPane:has(.mxcw-dataPane-LostPlants:not(.fl-hidden)),
+    .mxcw-leftPane:has(.mxcw-dataPane-LostPlants:not(.fl-hidden)) > .mxcw-data {
+        height: auto;
+    }
+
+    .mxcw-dataPane-LostPlants {
+        height: auto;
+        overflow: visible;
+    }
+}
 </style>
 
 <!-- The <template> block below is written by src/js/storyBuild.js and must not be edited here: it holds the section
@@ -323,7 +337,7 @@ saanich.paneMarkup = galleryMarkup => ({LostPlants: galleryMarkup});
 <template>
 <div id="the-lost-plants-of-the-wsánećsaanich-peninsula" class="section level2 mxcw-paneKey-LostPlants"><h2>The lost plants of the W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw-sectionColumn">
 
-<p>On the left are <span class="saanich-lost-count">@{count}</span>
+<p>The gallery shows <span class="saanich-lost-count">@{count}</span>
 native species once reported for the Saanich Peninsula, which have not
 been seen in recent decades. Some may be lost <em>to us</em>—overlooked,
 forgotten, or waiting to be rediscovered. Others may be lost <em>because
