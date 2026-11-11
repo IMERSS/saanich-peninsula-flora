@@ -392,6 +392,45 @@ saanich.traces.releaseTouch = function (state) {
     saanich.traces.hideCard(state);
 };
 
+// How far in pixels a finger may move between touching and lifting for its touch to count as a tap
+saanich.traces.tapSlop = 10;
+
+/**
+ * Respond to taps and clicks on an element of the playback - a marker or the card. Touches on it are kept from the map,
+ * which would otherwise read two quick taps as a double tap, zooming in and cancelling the click of the second, and
+ * a tap is acted on as the finger lifts rather than by the click the browser may or may not send after it.
+ * @param {HTMLElement} element - The element
+ * @param {Function} handler - Called on each tap or click
+ */
+saanich.traces.onTap = function (element, handler) {
+    let start = null;
+    let tappedAt = 0;
+    element.addEventListener("touchstart", touchEvent => {
+        touchEvent.stopPropagation();
+        const touch = touchEvent.changedTouches[0];
+        start = touchEvent.touches.length === 1 ? {x: touch.clientX, y: touch.clientY} : null;
+    }, {passive: true});
+    element.addEventListener("touchmove", touchEvent => touchEvent.stopPropagation(), {passive: true});
+    element.addEventListener("touchend", touchEvent => {
+        touchEvent.stopPropagation();
+        const touch = touchEvent.changedTouches[0];
+        if (start && Math.hypot(touch.clientX - start.x, touch.clientY - start.y) <= saanich.traces.tapSlop) {
+            // Stops the click, and any zoom, which would follow
+            touchEvent.preventDefault();
+            tappedAt = Date.now();
+            handler();
+        }
+        start = null;
+    });
+    element.addEventListener("click", clickEvent => {
+        clickEvent.stopPropagation();
+        // A click following a tap already acted on is the browser's echo of it
+        if (Date.now() - tappedAt > 600) {
+            handler();
+        }
+    });
+};
+
 /**
  * Respond to a click or tap on a marker. A pointer which hovers has already shown the marker's card, so a click opens its
  * species; a tap shows the card first, holding the timeline, and a second tap on the marker or its card opens it.
@@ -426,7 +465,7 @@ saanich.traces.bindCard = function (state) {
         state.holding = Math.max(0, state.holding - 1);
         saanich.traces.scheduleHide(state);
     });
-    card.addEventListener("click", () => {
+    saanich.traces.onTap(card, () => {
         if (state.cardEvent) {
             const taxon = state.cardEvent.taxon;
             saanich.traces.releaseTouch(state);
@@ -490,10 +529,7 @@ saanich.traces.addMarker = function (state, event, age = 0) {
             }
         }
     });
-    element.addEventListener("click", clickEvent => {
-        clickEvent.stopPropagation();
-        saanich.traces.markerClick(state, event, element);
-    });
+    saanich.traces.onTap(element, () => saanich.traces.markerClick(state, event, element));
     element.firstElementChild.addEventListener("animationend", () => {
         marker.remove();
         state.markers.delete(marker);

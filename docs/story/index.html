@@ -978,6 +978,39 @@ bioreportr.storyMap.untrackSize = function (observer) {
     observer.disconnect();
 };
 
+/** Tooltips on touch screens **/
+
+fluid.registerNamespace("bioreportr.touchTooltips");
+
+/**
+ * Put away every tooltip when the screen is touched. A tooltip is shown by hovering, which a touch screen imitates by
+ * moving its pointer to whatever is tapped - but a tap on anything which does nothing when tapped sends no movement at
+ * all, so a tooltip once shown would never be hidden. Every component showing tooltips, i.e. holding `hoverAt` as
+ * hortis.withTooltip does, is cleared as the touch begins; a tap on something with a tooltip shows it again at once,
+ * by the movement the browser then sends to it.
+ * @param {Window} window - The window holding the story page
+ */
+bioreportr.touchTooltips.install = function (window) {
+    if (!window.bioreportrTouchTooltips) {
+        window.bioreportrTouchTooltips = true;
+        window.addEventListener("pointerdown", event => {
+            if (event.pointerType === "touch" && !event.target.closest?.(".imerss-tooltip-holder")) {
+                Object.values(fluid.globalInstantiator.pathToComponent).forEach(shadow => {
+                    const that = shadow?.that;
+                    if (that && !shadow.inert && typeof that.hoverAt === "function") {
+                        that.hoverAt(null);
+                    }
+                });
+            }
+        }, true);
+    }
+};
+
+// Only in a browser - the page is also rendered ahead of time by the build, see `npm run hydrate`
+if (typeof window !== "undefined" && window.addEventListener) {
+    bioreportr.touchTooltips.install(window);
+}
+
 }).call(globalThis);
 //# sourceURL=../bioreportr/js/story.js</script>
     <script data-fluid-indent="4" data-fluid-hydrated="" fluid-src="../local/js/saanich.js" id="fl-script-saanich.story-2">(function () {/*
@@ -5637,6 +5670,26 @@ bioreportr.recordAndTaxaReporter.taxaCount = function (taxa, rowById) {
 
 }).call(globalThis);
 //# sourceURL=../bioreportr/sfc/bioreportr-recordAndTaxaReporter.vue</script>
+    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.filterControls-0">(function () {
+"use strict";
+
+// The button resetting every filter and checklist beneath the visualisation loader
+fluid.def("hortis.filterControls", {
+    $layers: ["fluid.sfcLayer","hortis.icons","fluid.component"],
+    filters: "{vizLoader hortis.filter}",
+    checklists: "{vizLoader hortis.checklist}",
+    resetAll: "$method:hortis.filterControls.resetAll({self}.filters, {self}.checklists)",
+    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
+"template":{"sfcLayer":"hortis.filterControls"}}}
+});
+
+hortis.filterControls.resetAll = function (filters, checklists) {
+    filters.forEach(filter => filter.reset());
+    checklists.forEach(checklist => checklist.reset());
+};
+
+}).call(globalThis);
+//# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/filters/hortis-filterControls.vue</script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.recordReporter-1">(function () {
 "use strict";
 
@@ -5659,6 +5712,42 @@ hortis.recordReporter.renderModel = function (filteredRows, allRows) {
 
 }).call(globalThis);
 //# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/core/hortis-recordReporter.vue</script>
+    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.epFilter-2">(function () {
+"use strict";
+
+// Filters the taxa of the extirpation risk analysis by their range of extirpation probability, chosen by a pair of
+// sliders
+fluid.def("bioreportr.epFilter", {
+    $layers: ["fluid.sfcLayer","hortis.taxaFilter"],
+    filterName: "Extirpation probability (EP)",
+    // The range, between 0 and 1
+    filterState: {min: 0, max: 1},
+    display: "$compute:bioreportr.epFilter.display({self}.filterState)",
+    // The handles are placed from code: the renderer writes the value of a bound input back into what it is bound to,
+    // which left the readings stuck and the other handle out of place
+    placeHandles: "$effect:bioreportr.epFilter.placeHandles({self}.display, {global}.document)",
+    filterSummary: "$compute:bioreportr.epFilter.summarise({self}.filterState)",
+    doFilter: "$method:bioreportr.epFilter.doFilter({0}:rows, {1}:filterState)",
+    reset: "$method:bioreportr.epFilter.reset({self})",
+    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
+"template":{"sfcLayer":"bioreportr.epFilter"}}}
+});
+
+/**
+ * Place the handles of the sliders at the range of the filter's state.
+ * @param {Object} display - The range as percentages, with members `min` and `max`
+ * @param {Document} dokkument - The document holding the filter
+ */
+bioreportr.epFilter.placeHandles = function (display, dokkument) {
+    const min = dokkument.querySelector(".mxcw-ep-min"), max = dokkument.querySelector(".mxcw-ep-max");
+    if (min && max) {
+        min.value = display.min;
+        max.value = display.max;
+    }
+};
+
+}).call(globalThis);
+//# sourceURL=../bioreportr/sfc/bioreportr-epFilter.vue</script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.autocomplete-0" fluid-client="" fluid-src="../vendor/accessible-autocomplete/dist/accessible-autocomplete.min.js" src="../vendor/accessible-autocomplete/dist/accessible-autocomplete.min.js"></script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.autocomplete-1">(function () {
 "use strict";
@@ -5707,26 +5796,6 @@ hortis.autocomplete.bind = function (that, host, container, accessibleAutocomple
 }).call(globalThis);
 //# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/components/hortis-autocomplete.vue</script>
     <link data-fluid-indent="4" data-fluid-hydrated="" id="fl-style-hortis.autocomplete-0" href="../vendor/accessible-autocomplete/dist/accessible-autocomplete.min.css" rel="stylesheet">
-    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.filterControls-0">(function () {
-"use strict";
-
-// The button resetting every filter and checklist beneath the visualisation loader
-fluid.def("hortis.filterControls", {
-    $layers: ["fluid.sfcLayer","hortis.icons","fluid.component"],
-    filters: "{vizLoader hortis.filter}",
-    checklists: "{vizLoader hortis.checklist}",
-    resetAll: "$method:hortis.filterControls.resetAll({self}.filters, {self}.checklists)",
-    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
-"template":{"sfcLayer":"hortis.filterControls"}}}
-});
-
-hortis.filterControls.resetAll = function (filters, checklists) {
-    filters.forEach(filter => filter.reset());
-    checklists.forEach(checklist => checklist.reset());
-};
-
-}).call(globalThis);
-//# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/filters/hortis-filterControls.vue</script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.valueFilter-2">(function () {
 "use strict";
 
@@ -5765,42 +5834,6 @@ fluid.def("hortis.valueFilter", {
 }).call(globalThis);
 //# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/filters/hortis-valueFilter.vue</script>
     <link data-fluid-indent="4" data-fluid-hydrated="" id="fl-style-hortis.valueFilter-0" href="../vendor/pretty-checkbox/dist/pretty-checkbox.min.css" rel="stylesheet">
-    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.epFilter-2">(function () {
-"use strict";
-
-// Filters the taxa of the extirpation risk analysis by their range of extirpation probability, chosen by a pair of
-// sliders
-fluid.def("bioreportr.epFilter", {
-    $layers: ["fluid.sfcLayer","hortis.taxaFilter"],
-    filterName: "Extirpation probability (EP)",
-    // The range, between 0 and 1
-    filterState: {min: 0, max: 1},
-    display: "$compute:bioreportr.epFilter.display({self}.filterState)",
-    // The handles are placed from code: the renderer writes the value of a bound input back into what it is bound to,
-    // which left the readings stuck and the other handle out of place
-    placeHandles: "$effect:bioreportr.epFilter.placeHandles({self}.display, {global}.document)",
-    filterSummary: "$compute:bioreportr.epFilter.summarise({self}.filterState)",
-    doFilter: "$method:bioreportr.epFilter.doFilter({0}:rows, {1}:filterState)",
-    reset: "$method:bioreportr.epFilter.reset({self})",
-    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
-"template":{"sfcLayer":"bioreportr.epFilter"}}}
-});
-
-/**
- * Place the handles of the sliders at the range of the filter's state.
- * @param {Object} display - The range as percentages, with members `min` and `max`
- * @param {Document} dokkument - The document holding the filter
- */
-bioreportr.epFilter.placeHandles = function (display, dokkument) {
-    const min = dokkument.querySelector(".mxcw-ep-min"), max = dokkument.querySelector(".mxcw-ep-max");
-    if (min && max) {
-        min.value = display.min;
-        max.value = display.max;
-    }
-};
-
-}).call(globalThis);
-//# sourceURL=../bioreportr/sfc/bioreportr-epFilter.vue</script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.sectionTab-1">(function () {
 "use strict";
 
@@ -6354,6 +6387,45 @@ saanich.traces.releaseTouch = function (state) {
     saanich.traces.hideCard(state);
 };
 
+// How far in pixels a finger may move between touching and lifting for its touch to count as a tap
+saanich.traces.tapSlop = 10;
+
+/**
+ * Respond to taps and clicks on an element of the playback - a marker or the card. Touches on it are kept from the map,
+ * which would otherwise read two quick taps as a double tap, zooming in and cancelling the click of the second, and
+ * a tap is acted on as the finger lifts rather than by the click the browser may or may not send after it.
+ * @param {HTMLElement} element - The element
+ * @param {Function} handler - Called on each tap or click
+ */
+saanich.traces.onTap = function (element, handler) {
+    let start = null;
+    let tappedAt = 0;
+    element.addEventListener("touchstart", touchEvent => {
+        touchEvent.stopPropagation();
+        const touch = touchEvent.changedTouches[0];
+        start = touchEvent.touches.length === 1 ? {x: touch.clientX, y: touch.clientY} : null;
+    }, {passive: true});
+    element.addEventListener("touchmove", touchEvent => touchEvent.stopPropagation(), {passive: true});
+    element.addEventListener("touchend", touchEvent => {
+        touchEvent.stopPropagation();
+        const touch = touchEvent.changedTouches[0];
+        if (start && Math.hypot(touch.clientX - start.x, touch.clientY - start.y) <= saanich.traces.tapSlop) {
+            // Stops the click, and any zoom, which would follow
+            touchEvent.preventDefault();
+            tappedAt = Date.now();
+            handler();
+        }
+        start = null;
+    });
+    element.addEventListener("click", clickEvent => {
+        clickEvent.stopPropagation();
+        // A click following a tap already acted on is the browser's echo of it
+        if (Date.now() - tappedAt > 600) {
+            handler();
+        }
+    });
+};
+
 /**
  * Respond to a click or tap on a marker. A pointer which hovers has already shown the marker's card, so a click opens its
  * species; a tap shows the card first, holding the timeline, and a second tap on the marker or its card opens it.
@@ -6388,7 +6460,7 @@ saanich.traces.bindCard = function (state) {
         state.holding = Math.max(0, state.holding - 1);
         saanich.traces.scheduleHide(state);
     });
-    card.addEventListener("click", () => {
+    saanich.traces.onTap(card, () => {
         if (state.cardEvent) {
             const taxon = state.cardEvent.taxon;
             saanich.traces.releaseTouch(state);
@@ -6452,10 +6524,7 @@ saanich.traces.addMarker = function (state, event, age = 0) {
             }
         }
     });
-    element.addEventListener("click", clickEvent => {
-        clickEvent.stopPropagation();
-        saanich.traces.markerClick(state, event, element);
-    });
+    saanich.traces.onTap(element, () => saanich.traces.markerClick(state, event, element));
     element.firstElementChild.addEventListener("animationend", () => {
         marker.remove();
         state.markers.delete(marker);

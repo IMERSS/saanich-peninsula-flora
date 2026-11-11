@@ -997,6 +997,58 @@ h2 {
     .mobile-menu-overlay {
         background-color: transparent !important;
     }
+
+    /* A page without a sidebar, e.g. the story page, has the hamburger open instead a dropdown of the subnav's links,
+       copied beneath it by src/hextra/js/menu.js, styled as the sidebar's dropdown above */
+    .imerss-subnav {
+        position: relative;
+    }
+
+    .imerss-subnav-dropdown {
+        position: absolute;
+        top: 100%;
+        right: 1rem;
+        z-index: 300;
+        display: flex;
+        flex-direction: column;
+        min-width: 12rem;
+        padding: 6px 0;
+        background-color: #184E62;
+        border: 1px solid rgba(253, 242, 206, 0.35);
+        border-top: none;
+        border-radius: 0 0 6px 6px;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+        opacity: 0;
+        visibility: hidden;
+        transform: translate3d(0, -0.5rem, 0);
+        transition: opacity 0.2s, transform 0.2s, visibility 0.2s;
+    }
+
+    .imerss-subnav-open .imerss-subnav-dropdown {
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+    }
+
+    /* While open, the subnav and whatever holds it rise above the section tabs beneath, which would cover the dropdown */
+    .imerss-subnav.imerss-subnav-open,
+    :has(> .imerss-subnav.imerss-subnav-open) {
+        z-index: 400 !important;
+    }
+
+    .imerss-subnav .imerss-subnav-dropdown a {
+        display: block;
+        margin: 0;
+        padding: 10px 18px;
+        color: #FDF2CE;
+    }
+}
+
+/* Wide enough for the subnav's own links, the dropdown is never shown */
+@media (min-width: 920px) {
+    .imerss-subnav-dropdown {
+        display: none;
+    }
 }
 
 /* Stacked layout - the subnav, then the map and its data pane, then the story are stacked in .imerss-main, which
@@ -1076,10 +1128,20 @@ h2 {
         display: none;
     }
 
-    /* Qualified to outweigh the later rules giving this panel a share of the column's fixed height */
+    /* Qualified to outweigh the later rules giving this panel a share of the column's fixed height. Kept to about half
+       the screen, so that above or below it there is always page for a finger to scroll by - a list filling the screen
+       would take every swipe, and the page beneath it could not be reached */
     .mxcw-story-holder .mxcw-container > .imerss-container {
         flex: none;
-        height: 70vh;
+        height: 55vh;
+    }
+
+    /* A swipe which reaches the end of a list or panel goes on to scroll the page, rather than springing back */
+    .imerss-main .hortis-dataTable-scroll,
+    .imerss-main .mxcw-taxon-info,
+    .imerss-main .imerss-checklist,
+    .imerss-main .imerss-main-checklist {
+        overscroll-behavior-y: auto;
     }
 }
 

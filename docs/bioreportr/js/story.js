@@ -834,3 +834,36 @@ bioreportr.storyPane.click = function (storyPage, event) {
 bioreportr.storyMap.untrackSize = function (observer) {
     observer.disconnect();
 };
+
+/** Tooltips on touch screens **/
+
+fluid.registerNamespace("bioreportr.touchTooltips");
+
+/**
+ * Put away every tooltip when the screen is touched. A tooltip is shown by hovering, which a touch screen imitates by
+ * moving its pointer to whatever is tapped - but a tap on anything which does nothing when tapped sends no movement at
+ * all, so a tooltip once shown would never be hidden. Every component showing tooltips, i.e. holding `hoverAt` as
+ * hortis.withTooltip does, is cleared as the touch begins; a tap on something with a tooltip shows it again at once,
+ * by the movement the browser then sends to it.
+ * @param {Window} window - The window holding the story page
+ */
+bioreportr.touchTooltips.install = function (window) {
+    if (!window.bioreportrTouchTooltips) {
+        window.bioreportrTouchTooltips = true;
+        window.addEventListener("pointerdown", event => {
+            if (event.pointerType === "touch" && !event.target.closest?.(".imerss-tooltip-holder")) {
+                Object.values(fluid.globalInstantiator.pathToComponent).forEach(shadow => {
+                    const that = shadow?.that;
+                    if (that && !shadow.inert && typeof that.hoverAt === "function") {
+                        that.hoverAt(null);
+                    }
+                });
+            }
+        }, true);
+    }
+};
+
+// Only in a browser - the page is also rendered ahead of time by the build, see `npm run hydrate`
+if (typeof window !== "undefined" && window.addEventListener) {
+    bioreportr.touchTooltips.install(window);
+}
