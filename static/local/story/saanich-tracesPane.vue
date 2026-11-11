@@ -1038,9 +1038,7 @@ saanich.traces.control = function (that, storyPage, map, events, active, loaded,
 <template>
 <div id="in-memory-of-plants" class="section level2 mxcw-paneKey-Traces"><h2>In Memory of Plants</h2><div class="mxcw-sectionInner"><div class="mxcw-sectionColumn">
 
-<p>We respectfully acknowledge that this work takes place within the
-territories of the W̱SÁNEĆ Peoples and the Lək̓ʷəŋən (Songhees and
-Xʷsepsəm/Esquimalt) Peoples, who have cared for these lands and waters
+<p>W̱SÁNEĆ and Lək̓ʷəŋən Peoples have cared for these lands and waters
 since time immemorial.</p>
 <p>The memory preserved here is much more limited: collected specimens,
 names written down on lists, and observations shared through

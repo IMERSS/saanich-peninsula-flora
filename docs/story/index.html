@@ -5645,26 +5645,28 @@ bioreportr.recordAndTaxaReporter.taxaCount = function (taxa, rowById) {
 
 }).call(globalThis);
 //# sourceURL=../bioreportr/sfc/bioreportr-recordAndTaxaReporter.vue</script>
-    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.filterControls-0">(function () {
+    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.recordReporter-1">(function () {
 "use strict";
 
-// The button resetting every filter and checklist beneath the visualisation loader
-fluid.def("hortis.filterControls", {
-    $layers: ["fluid.sfcLayer","hortis.icons","fluid.component"],
-    filters: "{vizLoader hortis.filter}",
-    checklists: "{vizLoader hortis.checklist}",
-    resetAll: "$method:hortis.filterControls.resetAll({self}.filters, {self}.checklists)",
+// Reports how many observations survive the filters and selections
+fluid.def("hortis.recordReporter", {
+    $layers: ["fluid.sfcLayer","fluid.component"],
+    // filteredRows: Object[]
+    // allRows: Object[]
+    counts: "$compute:hortis.recordReporter.renderModel({self}.filteredRows, {self}.allRows)",
     view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
-"template":{"sfcLayer":"hortis.filterControls"}}}
+"template":{"sfcLayer":"hortis.recordReporter"}}}
 });
 
-hortis.filterControls.resetAll = function (filters, checklists) {
-    filters.forEach(filter => filter.reset());
-    checklists.forEach(checklist => checklist.reset());
+hortis.recordReporter.renderModel = function (filteredRows, allRows) {
+    return {
+        filteredRows: hortis.formatInt(filteredRows.length),
+        allRows: hortis.formatInt(allRows.length)
+    };
 };
 
 }).call(globalThis);
-//# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/filters/hortis-filterControls.vue</script>
+//# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/core/hortis-recordReporter.vue</script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.autocomplete-0" fluid-client="" fluid-src="../vendor/accessible-autocomplete/dist/accessible-autocomplete.min.js" src="../vendor/accessible-autocomplete/dist/accessible-autocomplete.min.js"></script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.autocomplete-1">(function () {
 "use strict";
@@ -5713,28 +5715,26 @@ hortis.autocomplete.bind = function (that, host, container, accessibleAutocomple
 }).call(globalThis);
 //# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/components/hortis-autocomplete.vue</script>
     <link data-fluid-indent="4" data-fluid-hydrated="" id="fl-style-hortis.autocomplete-0" href="../vendor/accessible-autocomplete/dist/accessible-autocomplete.min.css" rel="stylesheet">
-    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.recordReporter-1">(function () {
+    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.filterControls-0">(function () {
 "use strict";
 
-// Reports how many observations survive the filters and selections
-fluid.def("hortis.recordReporter", {
-    $layers: ["fluid.sfcLayer","fluid.component"],
-    // filteredRows: Object[]
-    // allRows: Object[]
-    counts: "$compute:hortis.recordReporter.renderModel({self}.filteredRows, {self}.allRows)",
+// The button resetting every filter and checklist beneath the visualisation loader
+fluid.def("hortis.filterControls", {
+    $layers: ["fluid.sfcLayer","hortis.icons","fluid.component"],
+    filters: "{vizLoader hortis.filter}",
+    checklists: "{vizLoader hortis.checklist}",
+    resetAll: "$method:hortis.filterControls.resetAll({self}.filters, {self}.checklists)",
     view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
-"template":{"sfcLayer":"hortis.recordReporter"}}}
+"template":{"sfcLayer":"hortis.filterControls"}}}
 });
 
-hortis.recordReporter.renderModel = function (filteredRows, allRows) {
-    return {
-        filteredRows: hortis.formatInt(filteredRows.length),
-        allRows: hortis.formatInt(allRows.length)
-    };
+hortis.filterControls.resetAll = function (filters, checklists) {
+    filters.forEach(filter => filter.reset());
+    checklists.forEach(checklist => checklist.reset());
 };
 
 }).call(globalThis);
-//# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/core/hortis-recordReporter.vue</script>
+//# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/filters/hortis-filterControls.vue</script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.valueFilter-2">(function () {
 "use strict";
 
@@ -5773,42 +5773,6 @@ fluid.def("hortis.valueFilter", {
 }).call(globalThis);
 //# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/filters/hortis-valueFilter.vue</script>
     <link data-fluid-indent="4" data-fluid-hydrated="" id="fl-style-hortis.valueFilter-0" href="../vendor/pretty-checkbox/dist/pretty-checkbox.min.css" rel="stylesheet">
-    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.epFilter-2">(function () {
-"use strict";
-
-// Filters the taxa of the extirpation risk analysis by their range of extirpation probability, chosen by a pair of
-// sliders
-fluid.def("bioreportr.epFilter", {
-    $layers: ["fluid.sfcLayer","hortis.taxaFilter"],
-    filterName: "Extirpation probability (EP)",
-    // The range, between 0 and 1
-    filterState: {min: 0, max: 1},
-    display: "$compute:bioreportr.epFilter.display({self}.filterState)",
-    // The handles are placed from code: the renderer writes the value of a bound input back into what it is bound to,
-    // which left the readings stuck and the other handle out of place
-    placeHandles: "$effect:bioreportr.epFilter.placeHandles({self}.display, {global}.document)",
-    filterSummary: "$compute:bioreportr.epFilter.summarise({self}.filterState)",
-    doFilter: "$method:bioreportr.epFilter.doFilter({0}:rows, {1}:filterState)",
-    reset: "$method:bioreportr.epFilter.reset({self})",
-    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
-"template":{"sfcLayer":"bioreportr.epFilter"}}}
-});
-
-/**
- * Place the handles of the sliders at the range of the filter's state.
- * @param {Object} display - The range as percentages, with members `min` and `max`
- * @param {Document} dokkument - The document holding the filter
- */
-bioreportr.epFilter.placeHandles = function (display, dokkument) {
-    const min = dokkument.querySelector(".mxcw-ep-min"), max = dokkument.querySelector(".mxcw-ep-max");
-    if (min && max) {
-        min.value = display.min;
-        max.value = display.max;
-    }
-};
-
-}).call(globalThis);
-//# sourceURL=../bioreportr/sfc/bioreportr-epFilter.vue</script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.sectionTab-1">(function () {
 "use strict";
 
@@ -7685,49 +7649,42 @@ saanich.remembering.bindHover = function (map, mapData, window) {
 }
 
 /*# sourceURL=file:///Users/andrewsimon/GitHub/saanich-peninsula-flora/docs/local/story/saanich-rememberingPane.vue*/</style>
-    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.curationForm-3">(function () {
+    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.epFilter-2">(function () {
 "use strict";
 
-// The form of the curation pane, on which a member of the community records what they know of the taxon chosen - see
-// notes/community-curation-design.md. It is placed by the pane's R Markdown, in an element <div @id="curationForm">
-fluid.def("bioreportr.curationForm", {
-    $layers: ["fluid.sfcLayer","fluid.component"],
-    taxon: "{storyPage}.curationTaxon",
-    model: `$compute:bioreportr.curationForm.model({self}.taxon, {storyPage}.curation.byTaxon, {storyPage}.curation.viewer,
-        {storyPage}.curation.connected, {storyPage}.curation.status)`,
-    image: {
-        $component: {
-            $layers: "hortis.verbatimSlot",
-            markup: "{curationForm}.model.image"
-        }
-    },
-    consensus: {
-        $component: {
-            $layers: "hortis.verbatimSlot",
-            markup: "{curationForm}.model.consensus"
-        }
-    },
-    controls: {
-        $component: {
-            $layers: "hortis.verbatimSlot",
-            markup: "{curationForm}.model.controls"
-        }
-    },
-    submit: "$method:bioreportr.curationForm.submit({storyPage}.curation, {self}.taxon, {0}:event, {global})",
-    signIn: "$method:bioreportr.curation.signIn({storyPage}.curation.backend, {global})",
-    signOut: "$method:bioreportr.curation.signOut({storyPage}.curation, {global})",
-    // Brings back the checklist, from which another taxon may be chosen
-    chooseAnother: "$method:bioreportr.curationForm.chooseAnother({storyPage})",
+// Filters the taxa of the extirpation risk analysis by their range of extirpation probability, chosen by a pair of
+// sliders
+fluid.def("bioreportr.epFilter", {
+    $layers: ["fluid.sfcLayer","hortis.taxaFilter"],
+    filterName: "Extirpation probability (EP)",
+    // The range, between 0 and 1
+    filterState: {min: 0, max: 1},
+    display: "$compute:bioreportr.epFilter.display({self}.filterState)",
+    // The handles are placed from code: the renderer writes the value of a bound input back into what it is bound to,
+    // which left the readings stuck and the other handle out of place
+    placeHandles: "$effect:bioreportr.epFilter.placeHandles({self}.display, {global}.document)",
+    filterSummary: "$compute:bioreportr.epFilter.summarise({self}.filterState)",
+    doFilter: "$method:bioreportr.epFilter.doFilter({0}:rows, {1}:filterState)",
+    reset: "$method:bioreportr.epFilter.reset({self})",
     view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
-"template":{"sfcLayer":"bioreportr.curationForm"}}}
+"template":{"sfcLayer":"bioreportr.epFilter"}}}
 });
 
-bioreportr.curationForm.chooseAnother = function (storyPage) {
-    storyPage.checklist.search.reset();
+/**
+ * Place the handles of the sliders at the range of the filter's state.
+ * @param {Object} display - The range as percentages, with members `min` and `max`
+ * @param {Document} dokkument - The document holding the filter
+ */
+bioreportr.epFilter.placeHandles = function (display, dokkument) {
+    const min = dokkument.querySelector(".mxcw-ep-min"), max = dokkument.querySelector(".mxcw-ep-max");
+    if (min && max) {
+        min.value = display.min;
+        max.value = display.max;
+    }
 };
 
 }).call(globalThis);
-//# sourceURL=../bioreportr/sfc/bioreportr-curationForm.vue</script>
+//# sourceURL=../bioreportr/sfc/bioreportr-epFilter.vue</script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.standardChecklist-0" fluid-client="" fluid-src="../vendor/@popperjs/core/dist/umd/popper-lite.min.js" src="../vendor/@popperjs/core/dist/umd/popper-lite.min.js"></script>
     <script data-fluid-indent="4" data-fluid-hydrated="" fluid-src="../vendor/imerss-bioinfo/src/client/js/i6/tooltip.js" id="fl-script-hortis.standardChecklist-3">(function () {/*
 Copyright 2017-2026 Antranig Basman
@@ -8731,6 +8688,185 @@ hortis.standardChecklist.selectName = function (that, id) {
 
 }).call(globalThis);
 //# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/core/hortis-standardChecklist.vue</script>
+    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.solowSearch-3">(function () {
+"use strict";
+
+// The search of the species list, in the same box and with the same suggestions as the search of the atlas checklist -
+// see hortis.taxonSearchFilter. Rather than filtering, the species picked is selected in the list, which is scrolled to it
+fluid.def("bioreportr.solowSearch", {
+    $layers: ["fluid.sfcLayer","hortis.autocompleteHost"],
+    controlId: "mxcw-solow-search",
+    placeholder: "Search taxa ...",
+    minLength: 2,
+    renderSuggestion: "hortis.autocompleteSuggestionForTaxonRow",
+    renderInputValue: "hortis.autocompleteInputForTaxonRow",
+    // The species picked shows the button clearing the search, as the checklist's does
+    filterState: "{solowTaxa}.selectedTaxon",
+    queryAutocomplete: "$method:hortis.checklist.querySearch({solowTaxa}.taxaFilters.allOutput, {0}:query, {1}:callback, {self}.maxSuggestions)",
+    confirmAutocomplete: "$method:bioreportr.solowSearch.confirm({solowTaxa}.taxaTable, {0}:selection, {global}.document, {global})",
+    reset: "$method:bioreportr.solowSearch.reset({solowTaxa}.taxaTable, {self}.controlId, {global}.document)",
+    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
+"template":{"sfcLayer":"bioreportr.solowSearch"}}}
+});
+
+/**
+ * Select the species picked from the search in the list, and scroll the list to it.
+ * @param {hortis.dataTable} table - The list of species
+ * @param {TaxonRow|undefined} selection - The species picked - undefined if the search was left without a choice
+ * @param {Document} dokkument - The document holding the list
+ * @param {Window} window - The window holding it
+ */
+bioreportr.solowSearch.confirm = function (table, selection, dokkument, window) {
+    if (selection) {
+        table.selectedRow = selection;
+        window.requestAnimationFrame(() => {
+            const index = table.displayRows.indexOf(selection);
+            const scrollEl = dokkument.querySelector(".mxcw-solow-taxa .hortis-dataTable-scroll");
+            if (index >= 0 && scrollEl) {
+                scrollEl.scrollTop = index * table.rowHeight;
+            }
+        });
+    }
+};
+
+/**
+ * Clear the search, and the species selected in the list.
+ * @param {hortis.dataTable} table - The list of species
+ * @param {String} controlId - The id of the search box
+ * @param {Document} dokkument - The document holding it
+ */
+bioreportr.solowSearch.reset = function (table, controlId, dokkument) {
+    table.selectedRow = null;
+    hortis.autocomplete.clear(dokkument, controlId);
+};
+
+}).call(globalThis);
+//# sourceURL=../bioreportr/sfc/bioreportr-solowSearch.vue</script>
+    <style data-fluid-indent="4" data-fluid-hydrated="" id="fl-style-bioreportr.solowSearch-0">
+/* The search above the species list, set as the atlas checklist's search is in its header */
+.mxcw-solow-search {
+    display: flex;
+    align-items: center;
+    flex: none;
+}
+
+/*# sourceURL=file:///Users/andrewsimon/GitHub/saanich-peninsula-flora/docs/bioreportr/sfc/bioreportr-solowSearch.vue*/</style>
+    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.taxonSearchFilter-3">(function () {
+"use strict";
+
+// A search box over a checklist's displayed taxa, whose chosen taxon becomes a filter of all observations to those of
+// that taxon and the taxa beneath it - as used by the standard visualisation, whose checklist selects nothing itself.
+// Clicking a name in the checklist chooses its taxon, as if it had been picked from the search
+fluid.def("hortis.taxonSearchFilter", {
+    $layers: ["fluid.sfcLayer","hortis.autocompleteHost","hortis.obsFilter","hortis.urlMappedFilter"],
+    urlKey: "taxon",
+    urlCodec: "hortis.urlCodecs.taxonRow",
+    controlId: "{checklist}.searchControlId",
+    placeholder: "Search taxa ...",
+    minLength: 2,
+    renderSuggestion: "hortis.autocompleteSuggestionForTaxonRow",
+    renderInputValue: "hortis.autocompleteInputForTaxonRow",
+    rowById: "{vizLoader}.taxa.rowById",
+    // The chosen taxon row, or null if none is chosen
+    filterState: null,
+    rows: "$compute:hortis.checklist.entryRows({checklist}.idToEntry)",
+    filterName: "Taxon",
+    filterSummary: "$compute:hortis.collectorFilter.summarise({self}.filterState, {self}.filterName)",
+    queryAutocomplete: "$method:hortis.checklist.querySearch({self}.rows, {0}:query, {1}:callback, {self}.maxSuggestions)",
+    confirmAutocomplete: "$method:hortis.collectorFilter.confirm({self}, {0}:selection)",
+    select: "$method:hortis.taxonSearchFilter.select({self}, {0}:id, {global}.document)",
+    doFilter: "$method:hortis.taxonSearchFilter.doFilter({0}:obsRows, {1}:filterState, {self}.rowById)",
+    reset: "$method:hortis.collectorFilter.reset({self}, {global}.document)",
+    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
+"template":{"sfcLayer":"hortis.taxonSearchFilter"}}}
+});
+
+/**
+ * Choose a taxon as if it had been picked from the search, writing its name into the search box
+ * @param {hortis.taxonSearchFilter} that - The filter
+ * @param {String} id - The taxon's id
+ * @param {Document} dokkument - The document holding the search box
+ */
+hortis.taxonSearchFilter.select = function (that, id, dokkument) {
+    const row = that.rowById[id];
+    if (row) {
+        that.filterState = row;
+        const input = dokkument.getElementById(that.controlId);
+        if (input) {
+            input.value = hortis.autocompleteInputForTaxonRow(row);
+        }
+    }
+};
+
+/**
+ * Filter observations to those of a taxon, or of any taxon beneath it.
+ * @param {Object[]} obsRows - The observations
+ * @param {TaxonRow|null} filterState - The chosen taxon, or null if none is chosen
+ * The taxa arrive as component material, read through a proxy which tracks each access - since the filter visits
+ * every observation and climbs the taxonomy for each, the bare values are read instead, which is many times faster.
+ * @param {Object[]} obsRows - The observations
+ * @param {TaxonRow|null} filterState - The chosen taxon, or null if none is chosen
+ * @param {Object<String, TaxonRow>} rowById - Map of taxon id to indexed taxon row, possibly as a proxy
+ * @return {Object[]} The observations surviving the filter
+ */
+hortis.taxonSearchFilter.doFilter = function (obsRows, filterState, rowById) {
+    const bareRowById = fluid.unwrapProxy(rowById);
+    const filterId = filterState?.id;
+    const includeRow = function (obsRow) {
+        let taxonRow = bareRowById[obsRow.iNaturalistTaxonId];
+        while (taxonRow && taxonRow.id !== filterId) {
+            taxonRow = taxonRow.parent;
+        }
+        return !!taxonRow;
+    };
+    return filterState ? obsRows.filter(includeRow) : obsRows;
+};
+
+}).call(globalThis);
+//# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/filters/hortis-taxonSearchFilter.vue</script>
+    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.curationForm-3">(function () {
+"use strict";
+
+// The form of the curation pane, on which a member of the community records what they know of the taxon chosen - see
+// notes/community-curation-design.md. It is placed by the pane's R Markdown, in an element <div @id="curationForm">
+fluid.def("bioreportr.curationForm", {
+    $layers: ["fluid.sfcLayer","fluid.component"],
+    taxon: "{storyPage}.curationTaxon",
+    model: `$compute:bioreportr.curationForm.model({self}.taxon, {storyPage}.curation.byTaxon, {storyPage}.curation.viewer,
+        {storyPage}.curation.connected, {storyPage}.curation.status)`,
+    image: {
+        $component: {
+            $layers: "hortis.verbatimSlot",
+            markup: "{curationForm}.model.image"
+        }
+    },
+    consensus: {
+        $component: {
+            $layers: "hortis.verbatimSlot",
+            markup: "{curationForm}.model.consensus"
+        }
+    },
+    controls: {
+        $component: {
+            $layers: "hortis.verbatimSlot",
+            markup: "{curationForm}.model.controls"
+        }
+    },
+    submit: "$method:bioreportr.curationForm.submit({storyPage}.curation, {self}.taxon, {0}:event, {global})",
+    signIn: "$method:bioreportr.curation.signIn({storyPage}.curation.backend, {global})",
+    signOut: "$method:bioreportr.curation.signOut({storyPage}.curation, {global})",
+    // Brings back the checklist, from which another taxon may be chosen
+    chooseAnother: "$method:bioreportr.curationForm.chooseAnother({storyPage})",
+    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
+"template":{"sfcLayer":"bioreportr.curationForm"}}}
+});
+
+bioreportr.curationForm.chooseAnother = function (storyPage) {
+    storyPage.checklist.search.reset();
+};
+
+}).call(globalThis);
+//# sourceURL=../bioreportr/sfc/bioreportr-curationForm.vue</script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.storyMap-0" fluid-client="" fluid-src="../vendor/maplibre-gl/dist/maplibre-gl-dev.js" src="../vendor/maplibre-gl/dist/maplibre-gl-dev.js"></script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.storyMap-1" fluid-client="" fluid-src="../vendor/@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw-unminified.js" src="../vendor/@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw-unminified.js"></script>
     <script data-fluid-indent="4" data-fluid-hydrated="" fluid-src="../vendor/imerss-bioinfo/src/lib/point-in-polygon.js" id="fl-script-bioreportr.storyMap-3">/* eslint-env node */
@@ -10591,142 +10727,6 @@ fluid.def("bioreportr.storyMap", {
 //# sourceURL=../bioreportr/sfc/bioreportr-storyMap.vue</script>
     <link data-fluid-indent="4" data-fluid-hydrated="" id="fl-style-bioreportr.storyMap-0" href="../vendor/imerss-bioinfo/src/client/css/maplibre-gl.css" rel="stylesheet">
     <link data-fluid-indent="4" data-fluid-hydrated="" id="fl-style-bioreportr.storyMap-1" href="../vendor/imerss-bioinfo/src/client/css/mapbox-gl-draw.css" rel="stylesheet">
-    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.solowSearch-3">(function () {
-"use strict";
-
-// The search of the species list, in the same box and with the same suggestions as the search of the atlas checklist -
-// see hortis.taxonSearchFilter. Rather than filtering, the species picked is selected in the list, which is scrolled to it
-fluid.def("bioreportr.solowSearch", {
-    $layers: ["fluid.sfcLayer","hortis.autocompleteHost"],
-    controlId: "mxcw-solow-search",
-    placeholder: "Search taxa ...",
-    minLength: 2,
-    renderSuggestion: "hortis.autocompleteSuggestionForTaxonRow",
-    renderInputValue: "hortis.autocompleteInputForTaxonRow",
-    // The species picked shows the button clearing the search, as the checklist's does
-    filterState: "{solowTaxa}.selectedTaxon",
-    queryAutocomplete: "$method:hortis.checklist.querySearch({solowTaxa}.taxaFilters.allOutput, {0}:query, {1}:callback, {self}.maxSuggestions)",
-    confirmAutocomplete: "$method:bioreportr.solowSearch.confirm({solowTaxa}.taxaTable, {0}:selection, {global}.document, {global})",
-    reset: "$method:bioreportr.solowSearch.reset({solowTaxa}.taxaTable, {self}.controlId, {global}.document)",
-    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
-"template":{"sfcLayer":"bioreportr.solowSearch"}}}
-});
-
-/**
- * Select the species picked from the search in the list, and scroll the list to it.
- * @param {hortis.dataTable} table - The list of species
- * @param {TaxonRow|undefined} selection - The species picked - undefined if the search was left without a choice
- * @param {Document} dokkument - The document holding the list
- * @param {Window} window - The window holding it
- */
-bioreportr.solowSearch.confirm = function (table, selection, dokkument, window) {
-    if (selection) {
-        table.selectedRow = selection;
-        window.requestAnimationFrame(() => {
-            const index = table.displayRows.indexOf(selection);
-            const scrollEl = dokkument.querySelector(".mxcw-solow-taxa .hortis-dataTable-scroll");
-            if (index >= 0 && scrollEl) {
-                scrollEl.scrollTop = index * table.rowHeight;
-            }
-        });
-    }
-};
-
-/**
- * Clear the search, and the species selected in the list.
- * @param {hortis.dataTable} table - The list of species
- * @param {String} controlId - The id of the search box
- * @param {Document} dokkument - The document holding it
- */
-bioreportr.solowSearch.reset = function (table, controlId, dokkument) {
-    table.selectedRow = null;
-    hortis.autocomplete.clear(dokkument, controlId);
-};
-
-}).call(globalThis);
-//# sourceURL=../bioreportr/sfc/bioreportr-solowSearch.vue</script>
-    <style data-fluid-indent="4" data-fluid-hydrated="" id="fl-style-bioreportr.solowSearch-0">
-/* The search above the species list, set as the atlas checklist's search is in its header */
-.mxcw-solow-search {
-    display: flex;
-    align-items: center;
-    flex: none;
-}
-
-/*# sourceURL=file:///Users/andrewsimon/GitHub/saanich-peninsula-flora/docs/bioreportr/sfc/bioreportr-solowSearch.vue*/</style>
-    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.taxonSearchFilter-3">(function () {
-"use strict";
-
-// A search box over a checklist's displayed taxa, whose chosen taxon becomes a filter of all observations to those of
-// that taxon and the taxa beneath it - as used by the standard visualisation, whose checklist selects nothing itself.
-// Clicking a name in the checklist chooses its taxon, as if it had been picked from the search
-fluid.def("hortis.taxonSearchFilter", {
-    $layers: ["fluid.sfcLayer","hortis.autocompleteHost","hortis.obsFilter","hortis.urlMappedFilter"],
-    urlKey: "taxon",
-    urlCodec: "hortis.urlCodecs.taxonRow",
-    controlId: "{checklist}.searchControlId",
-    placeholder: "Search taxa ...",
-    minLength: 2,
-    renderSuggestion: "hortis.autocompleteSuggestionForTaxonRow",
-    renderInputValue: "hortis.autocompleteInputForTaxonRow",
-    rowById: "{vizLoader}.taxa.rowById",
-    // The chosen taxon row, or null if none is chosen
-    filterState: null,
-    rows: "$compute:hortis.checklist.entryRows({checklist}.idToEntry)",
-    filterName: "Taxon",
-    filterSummary: "$compute:hortis.collectorFilter.summarise({self}.filterState, {self}.filterName)",
-    queryAutocomplete: "$method:hortis.checklist.querySearch({self}.rows, {0}:query, {1}:callback, {self}.maxSuggestions)",
-    confirmAutocomplete: "$method:hortis.collectorFilter.confirm({self}, {0}:selection)",
-    select: "$method:hortis.taxonSearchFilter.select({self}, {0}:id, {global}.document)",
-    doFilter: "$method:hortis.taxonSearchFilter.doFilter({0}:obsRows, {1}:filterState, {self}.rowById)",
-    reset: "$method:hortis.collectorFilter.reset({self}, {global}.document)",
-    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
-"template":{"sfcLayer":"hortis.taxonSearchFilter"}}}
-});
-
-/**
- * Choose a taxon as if it had been picked from the search, writing its name into the search box
- * @param {hortis.taxonSearchFilter} that - The filter
- * @param {String} id - The taxon's id
- * @param {Document} dokkument - The document holding the search box
- */
-hortis.taxonSearchFilter.select = function (that, id, dokkument) {
-    const row = that.rowById[id];
-    if (row) {
-        that.filterState = row;
-        const input = dokkument.getElementById(that.controlId);
-        if (input) {
-            input.value = hortis.autocompleteInputForTaxonRow(row);
-        }
-    }
-};
-
-/**
- * Filter observations to those of a taxon, or of any taxon beneath it.
- * @param {Object[]} obsRows - The observations
- * @param {TaxonRow|null} filterState - The chosen taxon, or null if none is chosen
- * The taxa arrive as component material, read through a proxy which tracks each access - since the filter visits
- * every observation and climbs the taxonomy for each, the bare values are read instead, which is many times faster.
- * @param {Object[]} obsRows - The observations
- * @param {TaxonRow|null} filterState - The chosen taxon, or null if none is chosen
- * @param {Object<String, TaxonRow>} rowById - Map of taxon id to indexed taxon row, possibly as a proxy
- * @return {Object[]} The observations surviving the filter
- */
-hortis.taxonSearchFilter.doFilter = function (obsRows, filterState, rowById) {
-    const bareRowById = fluid.unwrapProxy(rowById);
-    const filterId = filterState?.id;
-    const includeRow = function (obsRow) {
-        let taxonRow = bareRowById[obsRow.iNaturalistTaxonId];
-        while (taxonRow && taxonRow.id !== filterId) {
-            taxonRow = taxonRow.parent;
-        }
-        return !!taxonRow;
-    };
-    return filterState ? obsRows.filter(includeRow) : obsRows;
-};
-
-}).call(globalThis);
-//# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/filters/hortis-taxonSearchFilter.vue</script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.icons-0">(function () {
 "use strict";
 
@@ -10821,9 +10821,7 @@ fluid.def("hortis.valueFilter.row", {
         </a><button aria-label="Menu" type="button" class="hamburger-menu -hx-mr-2 hx-rounded hx-p-2 active:hx-bg-gray-400/20 md:hx-hidden"><svg stroke="currentColor" viewBox="0 0 24 24" fill="none" height="24"><g><path d="M4 8H20" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" /></g><g><path d="M4 16H20" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" /></g></svg></button>
     </nav>
 </div>
-</div><div class="mxcw-story-holder"><div class="max-xl:hx-hidden hx-h-0 hx-w-64 hx-shrink-0"></div><div class="mxcw-container"><div class="mxcw-content-holder"><div class="mxcw-section-nav"><nav aria-label="Section navigation" role="tablist" class="chevron-nav"><button class="chevron-tab" role="tab" type="button">In Memoriam</button><button class="chevron-tab" role="tab" type="button">Lost Plants</button><button class="chevron-tab" role="tab" type="button">Atlas</button><button class="chevron-tab" role="tab" type="button">Community Science</button><button class="chevron-tab" role="tab" type="button">Find the Plants</button><button class="chevron-tab" role="tab" type="button">Living Data</button><button class="chevron-tab" role="tab" type="button">Harvey’s footsteps</button></nav></div><div data-mxcw-startup-hidden="" class="mxcw-content imerss-nodismiss-map"><div class="mxcw-storyPane" data-pane="Traces"><div><div id="in-memory-of-plants" class="section level2 mxcw-paneKey-Traces"><h2>In Memory of Plants</h2><div class="mxcw-sectionInner"><div class="mxcw-sectionColumn"><p>We respectfully acknowledge that this work takes place within the
-territories of the W̱SÁNEĆ Peoples and the Lək̓ʷəŋən (Songhees and
-Xʷsepsəm/Esquimalt) Peoples, who have cared for these lands and waters
+</div><div class="mxcw-story-holder"><div class="max-xl:hx-hidden hx-h-0 hx-w-64 hx-shrink-0"></div><div class="mxcw-container"><div class="mxcw-content-holder"><div class="mxcw-section-nav"><nav aria-label="Section navigation" role="tablist" class="chevron-nav"><button class="chevron-tab" role="tab" type="button">In Memoriam</button><button class="chevron-tab" role="tab" type="button">Lost Plants</button><button class="chevron-tab" role="tab" type="button">Atlas</button><button class="chevron-tab" role="tab" type="button">Community Science</button><button class="chevron-tab" role="tab" type="button">Find the Plants</button><button class="chevron-tab" role="tab" type="button">Living Data</button><button class="chevron-tab" role="tab" type="button">Harvey’s footsteps</button></nav></div><div data-mxcw-startup-hidden="" class="mxcw-content imerss-nodismiss-map"><div class="mxcw-storyPane" data-pane="Traces"><div><div id="in-memory-of-plants" class="section level2 mxcw-paneKey-Traces"><h2>In Memory of Plants</h2><div class="mxcw-sectionInner"><div class="mxcw-sectionColumn"><p>W̱SÁNEĆ and Lək̓ʷəŋən Peoples have cared for these lands and waters
 since time immemorial.</p><p>The memory preserved here is much more limited: collected specimens,
 names written down on lists, and observations shared through
 iNaturalist, reaching back to 1859.</p><p>Each record is a moment when someone stopped to take note of a
