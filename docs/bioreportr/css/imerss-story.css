@@ -1546,6 +1546,257 @@ body {
     margin-top: 2px;
 }
 
+/* ── Community curation - see notes/community-curation-design.md and static/bioreportr/js/curation.js ── */
+
+/* The speech bubble beside each taxon of the checklist, shown on hovering over the taxon, and always, filled, once it
+   has notes. The bubble is drawn as a mask, so that it takes the colour of the checklist's labels */
+.imerss-checklist .mxcw-curation-bubble {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    margin-left: 6px;
+    vertical-align: -2px;
+    cursor: pointer;
+    visibility: hidden;
+    background-color: #4b778f;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='black' stroke-width='2.2' stroke-linejoin='round' d='M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-9l-5 4v-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='black' stroke-width='2.2' stroke-linejoin='round' d='M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-9l-5 4v-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.imerss-checklist .mxcw-curation-bubble.mxcw-curation-noted {
+    visibility: visible;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-9l-5 4v-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-9l-5 4v-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z'/%3E%3C/svg%3E");
+}
+
+/* Only the taxon under the pointer shows its bubble, not every taxon above it in the tree */
+.imerss-checklist .checklist-row:hover:not(:has(.checklist-row:hover)) > .mxcw-curation-bubble {
+    visibility: visible;
+}
+
+.imerss-checklist .mxcw-curation-bubble:hover {
+    background-color: #184e62;
+}
+
+/* The tooltip of a bubble ends by inviting a note */
+.mxcw-curation-tip .mxcw-curation-tip-action {
+    margin-top: 8px;
+    color: #fdf2ce;
+}
+
+.mxcw-curation-tip .mxcw-curation-comments li {
+    margin-top: 4px;
+}
+
+.mxcw-curation-tally {
+    display: grid;
+    grid-template-columns: auto repeat(3, auto);
+    gap: 2px 10px;
+    margin-top: 8px;
+}
+
+.mxcw-curation-tally-question {
+    color: #a8c8d0;
+}
+
+.mxcw-curation-tally-count {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+/* The curation pane's invitation gives way to the form once a taxon is chosen */
+.mxcw-content .section:has(.mxcw-curation-form:not(.fl-hidden)) .mxcw-curation-invitation {
+    display: none;
+}
+
+/* The form, after the design in notes/emma-curation-design.png */
+.mxcw-curation-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--story-gap);
+    font-size: var(--story-data);
+    color: #eefaff;
+}
+
+.mxcw-curation-pending {
+    padding: 6px 10px;
+    border-left: 4px solid #fdf2ce;
+    border-radius: 4px;
+    background: rgba(253, 242, 206, 0.15);
+    color: #fdf2ce;
+    font-weight: 700;
+}
+
+.mxcw-curation-taxon {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.mxcw-curation-photo {
+    flex: 0 0 auto;
+    width: 110px;
+}
+
+.mxcw-curation-photo .imerss-photo {
+    width: 110px;
+    height: 110px;
+    border-radius: var(--data-table-radius, 8px);
+    background-size: cover;
+    background-position: center;
+}
+
+.mxcw-curation-names {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 4px 10px;
+    margin: 0;
+}
+
+.mxcw-curation-names dt {
+    color: #a8c8d0;
+}
+
+.mxcw-curation-names dd {
+    margin: 0;
+}
+
+.mxcw-curation-note-form fieldset {
+    margin: 0 0 var(--story-gap);
+    padding: 8px 12px 10px;
+    border: 1px solid rgba(168, 200, 208, 0.45);
+    border-radius: var(--data-table-radius, 8px);
+}
+
+.mxcw-curation-note-form legend {
+    padding: 0 6px;
+    color: #a8c8d0;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.mxcw-curation-vote-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) repeat(3, 5.5em);
+    align-items: center;
+    justify-items: center;
+    gap: 6px 0;
+}
+
+.mxcw-curation-vote-grid .mxcw-curation-vote-label {
+    justify-self: start;
+}
+
+.mxcw-curation-vote-head {
+    color: #a8c8d0;
+}
+
+.mxcw-curation-vote-grid input {
+    accent-color: #fdf2ce;
+    width: 16px;
+    height: 16px;
+}
+
+.mxcw-curation-comment textarea {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: 4px;
+    background: #eefaff;
+    color: #123;
+    font: inherit;
+    resize: vertical;
+}
+
+.mxcw-curation-account {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+}
+
+.mxcw-curation-account a {
+    color: #fdf2ce;
+}
+
+.mxcw-curation-button {
+    padding: 4px 14px;
+    border: 1px solid #fdf2ce;
+    border-radius: 4px;
+    background: #fdf2ce;
+    color: #0d3040;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.mxcw-curation-submit {
+    margin-left: auto;
+}
+
+.mxcw-curation-link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: #fdf2ce;
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.mxcw-curation-choose {
+    align-self: flex-start;
+}
+
+.mxcw-curation-status:empty {
+    display: none;
+}
+
+.mxcw-curation-consensus h3 {
+    margin: 0 0 4px;
+    color: #a8c8d0;
+    font-size: var(--story-data);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.mxcw-curation-consensus .mxcw-curation-tally {
+    margin: 0 0 var(--story-gap);
+}
+
+/* Outweighs the reading text's markers of the lists of a pane */
+.mxcw-curation-consensus .mxcw-curation-notes {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mxcw-curation-account .mxcw-curation-link {
+    margin-left: 4px;
+}
+
+.mxcw-curation-note {
+    padding: 6px 0;
+    border-top: 1px solid rgba(168, 200, 208, 0.25);
+}
+
+.mxcw-curation-note-head a {
+    margin-left: 6px;
+    color: #fdf2ce;
+}
+
+.mxcw-curation-note-answers {
+    color: #a8c8d0;
+}
+
+.mxcw-curation-note-comment {
+    margin-top: 2px;
+    white-space: pre-wrap;
+}
+
 /* ── The story page's own structure - see static/bioreportr/sfc/bioreportr-storyPage.vue ── */
 
 /* Each pane's section is rendered within a wrapper of its own, which is marked when it is the active pane */

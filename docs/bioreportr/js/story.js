@@ -76,6 +76,8 @@ bioreportr.paneBaseSettings = {
     visibleObsTable: false,
     visibleVizControls: false,
     visibleSolow: false,
+    // Whether the filters and checklist fold away once a taxon is chosen, as on the curation pane
+    foldVizControlsOnTaxon: false,
     regionField: null,
     selectableRegions: [],
     maxObsCountOverride: null,

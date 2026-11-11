@@ -88,5 +88,19 @@
     "dataFile": null,
     "widgetIds": [],
     "layers": []
+  },
+  {
+    "title": "Community Consensus",
+    "shortTitle": "Community Consensus",
+    "weight": 7,
+    "paneComponent": "bioreportr.curationPane",
+    "foldVizControlsOnTaxon": true,
+    "paneKey": "Curation",
+    "file": null,
+    "dataFile": null,
+    "widgetIds": [],
+    "layers": [
+      "reknitr.obsMapPaneHandler"
+    ]
   }
 ]

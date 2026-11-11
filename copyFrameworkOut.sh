@@ -61,6 +61,16 @@ FILES=(
     static/bioreportr/sfc/bioreportr-storyMap.vue
     static/bioreportr/sfc/bioreportr-storyPage.vue
     static/bioreportr/sfc/bioreportr-storyPane.vue
+    # Community curation - see notes/community-curation-design.md. Each project has its own static/curation/config.json
+    # and its own content/story/Curation.Rmd, whose section each build writes into bioreportr-curationPane.vue
+    static/bioreportr/sfc/bioreportr-curationPane.vue
+    static/bioreportr/sfc/bioreportr-curationForm.vue
+    static/bioreportr/js/curation.js
+    src/js/consolidateCuration.js
+    src/curation/oauthWorker.mjs
+    src/curation/wrangler.toml
+    src/curation/enrol.mjs
+    .github/workflows/curation.yml
     static/bioreportr/js/story.js
     static/bioreportr/js/solow.js
     static/bioreportr/vendor/htmlwidgets.js

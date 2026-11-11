@@ -13,6 +13,7 @@
 <fluid-import src="bioreportr-solowRadius.vue"></fluid-import>
 <fluid-import src="bioreportr-solowTaxonInfo.vue"></fluid-import>
 <fluid-import src="bioreportr-solowTaxa.vue"></fluid-import>
+<fluid-import src="bioreportr-curationPane.vue"></fluid-import>
 <script src="%papaparse/papaparse.min.js" data-fl-scope="global"></script>
 <script src="%pako/dist/pako_inflate.min.js" data-fl-scope="global"></script>
 <script src="%imerss-bioinfo/src/client/js/i6/imerss-core.js"></script>
@@ -22,6 +23,7 @@
 <script src="%imerss-bioinfo/src/client/js/i6/hashManager.js"></script>
 <script src="../js/story.js"></script>
 <script src="../js/solow.js"></script>
+<script src="../js/curation.js"></script>
 <style src="https://cdn.materialdesignicons.com/2.0.46/css/materialdesignicons.min.css"></style>
 <style src="%imerss-bioinfo/src/client/css/imerss-core.css"></style>
 <style src="%imerss-bioinfo/src/client/css/imerss-i6.css"></style>
@@ -59,7 +61,7 @@ fluid.def("bioreportr.storyPage", {
     activePane: "$compute:bioreportr.storyPage.activePane({self}.panes, {self}.activePaneKey)",
     // A record selected in one pane is cleared on moving to another
     clearRecordOnPaneChange: "$effect:bioreportr.storyPage.clearRecordOnPaneChange({self}, {self}.activePaneKey)",
-    classes: "$compute:bioreportr.storyPage.classes({self}.activePane)",
+    classes: "$compute:bioreportr.storyPage.classes({self}.activePane, {self}.checklist.search.filterState)",
     selectPane: "$method:bioreportr.storyPage.selectPane({self}, {0}:paneKey)",
     // The reporting status chosen in the status filter, or in the legend of a map coloured by status
     selectedStatus: null,
@@ -150,9 +152,29 @@ fluid.def("bioreportr.storyPage", {
             $layers: "hortis.standardChecklist",
             label: "Plants",
             rootId: "47126", // Plantae
-            decorate: "hortis.blitzChecklistDecoration"
+            decorate: "hortis.blitzChecklistDecoration",
+            // Each taxon bears a speech bubble leading to its curation, which summarises its notes on hover - see curation.js
+            renderTooltip: "$method:bioreportr.curation.renderChecklistTooltip({self}.rowById, {storyPage}.curation.byTaxon, {0}:hoverId)",
+            tree: {
+                $component: {
+                    view: {
+                        $component: {
+                            templateTree: `$compute:bioreportr.curation.renderChecklistTree({checklist}, {checklist}.rootEntry,
+                                {checklist}.idToState, {checklist}.selectedId, {storyPage}.curation.byTaxon)`
+                        }
+                    }
+                }
+            }
         }
     },
+    // Community curation of the taxa - see notes/community-curation-design.md and the pane rendered by bioreportr.curationPane
+    curation: {
+        $component: {
+            $layers: "bioreportr.curation"
+        }
+    },
+    // The taxon chosen for curation, whilst the curation pane is shown - that chosen in the checklist's search
+    curationTaxon: "$compute:bioreportr.curation.chosenTaxon({self}.activePane, {self}.checklist.search.filterState, {self}.taxa.rowById)",
     recordReporter: {
         $component: {
             $layers: "bioreportr.recordAndTaxaReporter",
@@ -329,15 +351,17 @@ fluid.def("bioreportr.storyPage", {
 });
 
 /**
- * Compute the classes of the parts of the story page which are shown or hidden according to the active pane.
+ * Compute the classes of the parts of the story page which are shown or hidden according to the active pane. A pane
+ * whose settings have foldVizControlsOnTaxon, e.g. the curation pane, folds away the checklist once a taxon is chosen.
  * @param {PaneSettings} pane - The active pane
+ * @param {TaxonRow|null} chosenTaxon - The taxon chosen in the checklist's search, if any
  * @return {Object<String, String>} The classes of each part
  */
-bioreportr.storyPage.classes = function (pane) {
+bioreportr.storyPage.classes = function (pane, chosenTaxon) {
     const hidden = visible => visible ? "" : "fl-hidden";
     return {
         map: pane.visibleMap ? "" : "mxcw-hideMap",
-        vizControls: hidden(pane.visibleVizControls),
+        vizControls: hidden(pane.visibleVizControls && !(pane.foldVizControlsOnTaxon && chosenTaxon)),
         obsFilters: hidden(pane.visibleObsFilters),
         filters: hidden(pane.visibleFilters),
         obsTable: hidden(pane.visibleObsTable),

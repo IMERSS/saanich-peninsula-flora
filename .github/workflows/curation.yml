@@ -1,0 +1,52 @@
+# Consolidates the community's curation notes, each a comment on a thread of this repository's GitHub Discussions,
+# into static/curation/curations.csv and claimStatus.json, and their published copies in docs/curation - see
+# notes/community-curation-design.md and src/js/consolidateCuration.js. It runs when the site is published, whenever
+# a curation comment changes, hourly, and on demand. A run which finds nothing changed commits nothing, so its own
+# publication does not set it off again.
+name: Consolidate curation notes
+
+on:
+  page_build:
+  discussion_comment:
+    types: [created, edited, deleted]
+  discussion:
+    types: [created, edited, deleted, category_changed]
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  discussions: read
+
+# One run at a time, so that two never commit at once
+concurrency:
+  group: curation
+  cancel-in-progress: false
+
+jobs:
+  consolidate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Only js-yaml is needed, at the version the project names
+      - name: Install js-yaml
+        run: npm install --no-save --no-package-lock "js-yaml@$(node -p "require('./package.json').dependencies['js-yaml']")"
+      - name: Consolidate
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node src/js/consolidateCuration.js
+      - name: Commit any change
+        run: |
+          git add static/curation docs/curation
+          if git diff --cached --quiet; then
+            echo "The consolidated notes are unchanged"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Consolidate community curation notes"
+            git push
+          fi

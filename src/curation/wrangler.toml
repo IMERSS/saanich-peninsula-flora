@@ -1,0 +1,11 @@
+# The token exchange of bioReportR's community curation, as a Cloudflare Worker - see notes/curation-token-exchange.md.
+# CLIENT_SECRET and SESSION_KEY are secrets, set with "npx wrangler secret put", never written here
+name = "bioreportr-curation"
+main = "oauthWorker.mjs"
+compatibility_date = "2026-11-01"
+
+[vars]
+# The Client ID of the GitHub App
+CLIENT_ID = "Iv23lit2cc6V6IGqh6L7"
+# The origins of the sites using the service, separated by commas
+ALLOWED_ORIGINS = "https://imerss.github.io,http://localhost:1313"

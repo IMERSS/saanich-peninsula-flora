@@ -219,6 +219,8 @@ bioreportr.paneBaseSettings = {
     visibleObsTable: false,
     visibleVizControls: false,
     visibleSolow: false,
+    // Whether the filters and checklist fold away once a taxon is chosen, as on the curation pane
+    foldVizControlsOnTaxon: false,
     regionField: null,
     selectableRegions: [],
     maxObsCountOverride: null,
@@ -3373,7 +3375,674 @@ fluid.def("bioreportr.solowMapLayer", {
 
 }).call(globalThis);
 //# sourceURL=../bioreportr/js/solow.js</script>
-    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.storyPage-9">(function () {
+    <script data-fluid-indent="4" data-fluid-hydrated="" fluid-src="../bioreportr/js/curation.js" id="fl-script-bioreportr.storyPage-9">(function () {/*
+Copyright 2026 IMERSS
+Licensed under the Educational Community License (ECL), Version 2.0 or the New
+BSD license. You may not use this file except in compliance with one these
+Licenses.
+You may obtain a copy of the ECL 2.0 License and BSD License at
+https://github.com/fluid-project/infusion/raw/master/Infusion-LICENSE.txt
+*/
+
+"use strict";
+
+// Community curation of the taxa of a story - see notes/community-curation-design.md. Each note on a taxon is a
+// comment on a thread of the project's GitHub Discussions, consolidated by a GitHub Actions job into curations.csv,
+// with claimStatus.json listing the claims consolidated. A note submitted from this page is held in local storage
+// until its claim appears there, and is shown meanwhile as if it were consolidated
+
+// noinspection ES6ConvertVarToLetConst // otherwise this is a duplicate on minifying
+var bioreportr = fluid.registerNamespace("bioreportr");
+// noinspection ES6ConvertVarToLetConst // otherwise this is a duplicate on minifying
+var hortis = fluid.registerNamespace("hortis");
+
+fluid.registerNamespace("bioreportr.curation");
+fluid.registerNamespace("bioreportr.curation.backends");
+fluid.registerNamespace("bioreportr.curationForm");
+
+/**
+ * A note on a taxon, as consolidated into curations.csv or held locally until it is.
+ * @typedef {Object} CurationNote
+ * @property {String} taxonId - The id of the taxon
+ * @property {String} taxonName - The taxon's scientific name
+ * @property {String} claimId - The 21 character Nano ID allocated to the note's submission
+ * @property {String} author - The GitHub login of the note's author
+ * @property {String} submitted - The time of submission, as an ISO 8601 string
+ * @property {String} present - The vote on whether the taxon is present, one of the `bioreportr.curation.votes`
+ * @property {String} planted - The vote on whether it is planted
+ * @property {String} waif - The vote on whether it is a waif, or unestablished
+ * @property {String} comment - Free text
+ * @property {String} url - The URL of the note's comment on GitHub, if known
+ * @property {Boolean} [pending] - `true` for a note held locally whose claim is not yet consolidated
+ */
+
+// The questions of the vote, with their labels
+bioreportr.curation.questions = [["present", "Present"], ["planted", "Planted"], ["waif", "Waif / unestablished"]];
+
+// The answers to each question
+bioreportr.curation.votes = ["yes", "no", "no opinion"];
+
+// The line marking the YAML block of a comment as a curation note
+bioreportr.curation.marker = "# bioreportr-curation";
+
+// The fields of a note written into its comment, in order
+bioreportr.curation.commentFields = ["claimId", "taxonId", "taxonName", "present", "planted", "waif", "comment"];
+
+// The alphabet of Nano ID
+bioreportr.curation.nanoidAlphabet = "useandom-26T198340PX75pxJACKVERYMINDBUSHWOLF_GQZbfghjklqvwyzrict";
+
+/**
+ * Allocate a claim id - a 21 character Nano ID, from the browser's cryptographic random numbers.
+ * @param {Crypto} crypto - The window's crypto
+ * @return {String} The claim id
+ */
+bioreportr.curation.nanoid = function (crypto) {
+    const bytes = crypto.getRandomValues(new Uint8Array(21));
+    return Array.from(bytes, byte => bioreportr.curation.nanoidAlphabet[byte & 63]).join("");
+};
+
+/**
+ * Render a note as the body of its comment - a sentence for readers of the thread, then the note as a flat YAML block,
+ * each value quoted as JSON, which YAML reads as a double-quoted string.
+ * @param {CurationNote} note - The note
+ * @param {String} pageUrl - The URL of the page from which it was submitted
+ * @return {String} The body of the comment
+ */
+bioreportr.curation.commentBody = function (note, pageUrl) {
+    const lines = bioreportr.curation.commentFields.map(field => field + ": " + JSON.stringify(String(note[field] ?? "")));
+    return `Curation note on *${note.taxonName}*, submitted from ${pageUrl}\n\n\`\`\`yaml\n${bioreportr.curation.marker}\n${lines.join("\n")}\n\`\`\`\n`;
+};
+
+/** Notes, consolidated and pending **/
+
+/**
+ * The key in local storage of a project's pending notes - each project's notes are kept apart, should two share an origin.
+ * @param {Object} config - The contents of the project's curation config.json
+ * @return {String} The key
+ */
+bioreportr.curation.storageKey = config => "bioreportr-curation-claims:" + (config.repository || "local");
+
+/**
+ * Read the pending notes held in local storage.
+ * @param {Window} window - The window
+ * @param {String} storageKey - The key of the notes in local storage
+ * @param {Number} [pendingVersion] - Advanced whenever the notes are written, so that they are read again
+ * @return {Object<String, CurationNote>} The notes, by claim id
+ */
+bioreportr.curation.readPending = function (window, storageKey, pendingVersion) { // eslint-disable-line no-unused-vars
+    let togo = {};
+    try {
+        togo = JSON.parse(window.localStorage.getItem(storageKey) || "{}");
+    } catch (error) {
+        togo = {};
+    }
+    return togo;
+};
+
+/**
+ * Write the pending notes into local storage.
+ * @param {Window} window - The window
+ * @param {String} storageKey - The key of the notes in local storage
+ * @param {Object<String, CurationNote>} pending - The notes, by claim id
+ */
+bioreportr.curation.writePending = function (window, storageKey, pending) {
+    try {
+        window.localStorage.setItem(storageKey, JSON.stringify(pending));
+    } catch (error) {
+        console.error("Could not keep the curation note in local storage", error);
+    }
+};
+
+/**
+ * Determine the claims which have been consolidated - those of claimStatus.json, together with any in curations.csv.
+ * @param {Object<String, Number>} claimStatus - The contents of claimStatus.json
+ * @param {CurationNote[]} rows - The rows of curations.csv
+ * @return {Set<String>} The ids of the claims consolidated
+ */
+bioreportr.curation.consolidatedClaims = function (claimStatus, rows) {
+    return new Set([...Object.keys(claimStatus || {}).filter(claimId => claimStatus[claimId]), ...rows.map(row => row.claimId)]);
+};
+
+/**
+ * Index the notes of every taxon - those consolidated, and those pending locally whose claims are not yet consolidated.
+ * A pending note displaces its author's consolidated note on the same taxon, since it will replace it.
+ * @param {CurationNote[]} rows - The rows of curations.csv
+ * @param {Object<String, CurationNote>} pending - The pending notes, by claim id
+ * @param {Object<String, Number>} claimStatus - The contents of claimStatus.json
+ * @return {Object<String, CurationNote[]>} The notes of each taxon, by taxon id, most recent first
+ */
+bioreportr.curation.byTaxon = function (rows, pending, claimStatus) {
+    const consolidated = bioreportr.curation.consolidatedClaims(claimStatus, rows);
+    const pendingNotes = Object.values(pending).filter(note => !consolidated.has(note.claimId)).map(note => ({...note, pending: true}));
+    const displaced = new Set(pendingNotes.map(note => note.taxonId + "|" + note.author));
+    const togo = {};
+    [...rows.filter(row => !displaced.has(row.taxonId + "|" + row.author)), ...pendingNotes].forEach(note => {
+        (togo[note.taxonId] ||= []).push(note);
+    });
+    Object.values(togo).forEach(notes => notes.sort((a, b) => String(b.submitted).localeCompare(String(a.submitted))));
+    return togo;
+};
+
+/**
+ * Drop from local storage the pending notes whose claims have been consolidated. Deferred, since an effect may not
+ * write signals.
+ * @param {bioreportr.curation} that - The curation component, whose `pendingVersion` is advanced if any is dropped
+ * @param {Object<String, CurationNote>} pending - The pending notes, by claim id
+ * @param {Object<String, Number>} claimStatus - The contents of claimStatus.json
+ * @param {CurationNote[]} rows - The rows of curations.csv
+ * @param {Window} window - The window
+ */
+bioreportr.curation.prune = function (that, pending, claimStatus, rows, window) {
+    const consolidated = bioreportr.curation.consolidatedClaims(claimStatus, rows);
+    const dropped = Object.keys(pending).filter(claimId => consolidated.has(claimId));
+    if (dropped.length > 0) {
+        const kept = Object.fromEntries(Object.entries(pending).filter(([claimId]) => !consolidated.has(claimId)));
+        bioreportr.curation.writePending(window, that.storageKey, kept);
+        fluid.invokeLater(() => that.pendingVersion++);
+    }
+};
+
+/**
+ * Summarise the notes of a taxon - the number of each answer to each question.
+ * @param {CurationNote[]} notes - The notes
+ * @return {Object<String, Object<String, Number>>} For each question, the count of each answer
+ */
+bioreportr.curation.tally = function (notes) {
+    return Object.fromEntries(bioreportr.curation.questions.map(([question]) => [question,
+        Object.fromEntries(bioreportr.curation.votes.map(vote => [vote, notes.filter(note => note[question] === vote).length]))]));
+};
+
+/**
+ * Render the tally of the votes on a taxon, as a row of each question with the counts of its answers.
+ * @param {CurationNote[]} notes - The notes
+ * @return {String} The markup of the tally
+ */
+bioreportr.curation.tallyMarkup = function (notes) {
+    const tally = bioreportr.curation.tally(notes);
+    return `<div class="mxcw-curation-tally">${bioreportr.curation.questions.map(([question, label]) => `
+        <span class="mxcw-curation-tally-question">${label}</span>
+        ${bioreportr.curation.votes.map(vote => `<span class="mxcw-curation-tally-count" title="${vote}">${vote} ${tally[question][vote]}</span>`).join("")}`).join("")}</div>`;
+};
+
+/** The speech bubbles of the checklist **/
+
+/**
+ * Render a checklist's tree, as `hortis.checklist.renderTree` does, with a speech bubble beside each taxon's name
+ * leading to the curation of that taxon - shown on hovering over the taxon, and always if it has notes. Clicks and
+ * hovers on the bubbles are handled here, and others passed to the checklist's own handlers.
+ * @param {hortis.checklist} that - The checklist
+ * @param {ChecklistEntry} rootEntry - The root entry
+ * @param {Object<String, RowState>} idToState - Map of taxon id to row state
+ * @param {String|null} selectedId - The id of the currently selected taxon, if any
+ * @param {Object<String, CurationNote[]>} byTaxon - The notes of each taxon, by taxon id
+ * @return {VNode} The tree to be rendered
+ */
+bioreportr.curation.renderChecklistTree = function (that, rootEntry, idToState, selectedId, byTaxon) {
+    const options = {
+        simple: !!that.filterRanks,
+        selectable: that.selectable,
+        unfoldable: that.unfoldable,
+        decorate: that.decorate ? fluid.getGlobalValue(that.decorate) : null,
+        selectedId
+    };
+    const list = hortis.checklist.listNode(rootEntry.children, options, idToState);
+    if (list) {
+        bioreportr.curation.addBubbles(list, byTaxon);
+    }
+    const hover = "bioreportr.curation.checklistHover({0}, {checklist})";
+    const root = {tag: "div", attrs: {
+        "@onclick": "bioreportr.curation.checklistClick({0}, {checklist}, {storyPage})",
+        "@onmouseover": hover,
+        "@onmousemove": hover,
+        "@onmouseleave": hover
+    }, children: list ? [fluid.markVerbatim(list)] : []};
+    return {tag: "fragment", children: [root]};
+};
+
+/**
+ * Place a speech bubble after the name of each taxon of a rendered list, and of the lists beneath it.
+ * @param {VNode} list - A `ul` rendered by `hortis.checklist.listNode`, modified in place
+ * @param {Object<String, CurationNote[]>} byTaxon - The notes of each taxon, by taxon id
+ */
+bioreportr.curation.addBubbles = function (list, byTaxon) {
+    list.children.forEach(item => {
+        const name = item.children.find(child => child.tag === "p" && child.attrs?.["data-row-id"]);
+        if (name) {
+            const id = name.attrs["data-row-id"];
+            const noted = !!byTaxon[id];
+            const bubble = {tag: "span", attrs: {
+                "class": "mxcw-curation-bubble" + (noted ? " mxcw-curation-noted" : ""),
+                "data-curation-id": id,
+                "role": "button",
+                "aria-label": noted ? "Community notes on this taxon" : "Add a community note on this taxon"
+            }, children: []};
+            const sublist = item.children.findIndex(child => child.tag === "ul");
+            item.children.splice(sublist === -1 ? item.children.length : sublist, 0, bubble);
+            if (sublist !== -1) {
+                bioreportr.curation.addBubbles(item.children[sublist + 1], byTaxon);
+            }
+        }
+    });
+};
+
+/**
+ * Handle a click within a checklist - on a speech bubble, which opens the curation of its taxon, or else as the
+ * checklist itself does.
+ * @param {Event} event - The click
+ * @param {hortis.checklist} checklist - The checklist
+ * @param {bioreportr.storyPage} storyPage - The story page
+ */
+bioreportr.curation.checklistClick = function (event, checklist, storyPage) {
+    const bubble = event.target.closest(".mxcw-curation-bubble");
+    if (bubble) {
+        bioreportr.curation.open(storyPage, bubble.dataset.curationId);
+        checklist.hoverAt(null);
+    } else {
+        hortis.checklist.click(event, checklist);
+    }
+};
+
+/**
+ * Show a tooltip summarising the notes of a taxon whose speech bubble is under the pointer, or else that of the taxon
+ * whose name is under it, as the checklist itself does.
+ * @param {Event} event - A mouse event within the checklist
+ * @param {hortis.checklist} checklist - The checklist
+ */
+bioreportr.curation.checklistHover = function (event, checklist) {
+    const bubble = event.type === "mouseleave" ? null : event.target.closest?.(".mxcw-curation-bubble");
+    if (bubble) {
+        checklist.hoverAt(bioreportr.curation.hoverPrefix + bubble.dataset.curationId, event);
+    } else {
+        hortis.checklist.hover(event, checklist);
+    }
+};
+
+// The prefix of the hover id of a speech bubble, distinguishing it from that of a taxon's name
+bioreportr.curation.hoverPrefix = "curation:";
+
+/**
+ * Render the tooltip of a checklist - for a speech bubble, a condensed summary of its taxon's notes, or else that of a
+ * taxon.
+ * @param {Object<String, TaxonRow>} rowById - The taxa, by id
+ * @param {Object<String, CurationNote[]>} byTaxon - The notes of each taxon, by taxon id
+ * @param {String} hoverId - The hover id, of a bubble or a taxon
+ * @return {String|null} The markup of the tooltip
+ */
+bioreportr.curation.renderChecklistTooltip = function (rowById, byTaxon, hoverId) {
+    const prefix = bioreportr.curation.hoverPrefix;
+    return String(hoverId).startsWith(prefix) ? bioreportr.curation.summaryMarkup(rowById[hoverId.substring(prefix.length)],
+        byTaxon[hoverId.substring(prefix.length)] || []) : hortis.renderTaxonTooltip(rowById, hoverId);
+};
+
+/**
+ * Render a condensed summary of the notes on a taxon - their number, the tally of their votes and the latest comments.
+ * @param {TaxonRow} taxon - The taxon
+ * @param {CurationNote[]} notes - Its notes, most recent first
+ * @return {String} The markup of the summary
+ */
+bioreportr.curation.summaryMarkup = function (taxon, notes) {
+    const encode = hortis.dataTable.encode;
+    const name = taxon ? encode(hortis.rowToScientific(taxon)) : "";
+    const comments = notes.filter(note => note.comment).slice(0, 3).map(note =>
+        `<li><b>${encode(note.author)}</b>: ${encode(note.comment.length > 140 ? note.comment.substring(0, 140) + "…" : note.comment)}</li>`).join("");
+    const body = notes.length > 0 ? `${bioreportr.curation.tallyMarkup(notes)}${comments ? `<ul class="mxcw-tip-list mxcw-curation-comments">${comments}</ul>` : ""}` :
+        "<div class=\"mxcw-tip-note\">No community notes yet</div>";
+    return `<div class="mxcw-cell-tip mxcw-curation-tip">
+        <div class="mxcw-tip-title"><i>${name}</i> <span>${bioreportr.cellTooltip.plural(notes.length, "note")}</span></div>
+        ${body}
+        <div class="mxcw-curation-tip-action">Click to add your own curation note</div>
+    </div>`;
+};
+
+/**
+ * Find the pane of a story holding its curation - the one whose section is rendered by `bioreportr.curationPane`.
+ * @param {PaneSettings[]} panes - The panes of the story
+ * @return {String|null} The pane's key, or null if the story has none
+ */
+bioreportr.curation.paneKey = function (panes) {
+    return panes.find(pane => pane.paneComponent === "bioreportr.curationPane")?.paneKey ?? null;
+};
+
+/**
+ * Open the curation of a taxon - the story's curation pane, with the taxon chosen in the checklist's search, so that
+ * the map and records show the taxon.
+ * @param {bioreportr.storyPage} storyPage - The story page
+ * @param {String} taxonId - The id of the taxon
+ */
+bioreportr.curation.open = function (storyPage, taxonId) {
+    const paneKey = bioreportr.curation.paneKey(storyPage.panes);
+    if (paneKey) {
+        storyPage.checklist.search.select(taxonId);
+        storyPage.selectPane(paneKey);
+    }
+};
+
+/**
+ * The taxon chosen for curation - that chosen in the checklist's search, whilst the curation pane is shown. The search's
+ * state, when decoded from the URL, holds only the taxon's id, so the taxon's row is looked up.
+ * @param {PaneSettings} activePane - The pane shown
+ * @param {Object|null} chosen - The state of the checklist's search - the taxon chosen, or an object holding its `id`
+ * @param {Object<String, TaxonRow>} rowById - The taxa, by id
+ * @return {TaxonRow|null} The taxon chosen for curation, if any
+ */
+bioreportr.curation.chosenTaxon = function (activePane, chosen, rowById) {
+    return activePane.paneComponent === "bioreportr.curationPane" && chosen ? rowById[chosen.id] || null : null;
+};
+
+/** Signing in and submission **/
+
+/**
+ * Determine whether a story's curation is connected to somewhere to submit its notes.
+ * @param {Object} config - The contents of the project's curation config.json
+ * @return {Boolean} `true` if notes may be submitted
+ */
+bioreportr.curation.isConnected = function (config) {
+    return config.backend === "memory" || !!(config.repository && config.repositoryId && config.categoryId && config.oauthEndpoint);
+};
+
+/**
+ * Create the backend submitting a story's notes, as named by the `backend` of its configuration.
+ * @param {Object} config - The contents of the project's curation config.json
+ * @param {Window} window - The window
+ * @return {Object} The backend, as created by one of `bioreportr.curation.backends`
+ */
+bioreportr.curation.makeBackend = function (config, window) {
+    const make = bioreportr.curation.backends[config.backend || "github"];
+    return make(config, window);
+};
+
+/**
+ * Read the user's token from local storage.
+ * @param {String} tokenKey - The key of the token in local storage
+ * @param {Number} tokenVersion - Advanced whenever the token is written, so that it is read again
+ * @param {Window} window - The window
+ * @return {String|null} The token, if the user has signed in
+ */
+bioreportr.curation.readToken = function (tokenKey, tokenVersion, window) {
+    let token = null;
+    try {
+        token = window.localStorage.getItem(tokenKey);
+    } catch (error) {
+        token = null;
+    }
+    return token;
+};
+
+/**
+ * Take up a session returned to the page after signing in, exchanging it for the user's token, which is kept in local
+ * storage. The session is removed from the page's URL.
+ * @param {bioreportr.curation} that - The curation component, whose `tokenVersion` is advanced once the token is kept
+ * @param {Object} backend - The backend
+ * @param {Window} window - The window
+ */
+bioreportr.curation.takeSession = function (that, backend, window) {
+    // Nothing to take up where there is no browser, e.g. under hydrate.js
+    const url = window.location ? new window.URL(window.location.href) : null;
+    const session = url?.searchParams.get("curation_session");
+    if (session && backend.exchangeSession) {
+        url.searchParams.delete("curation_session");
+        window.history.replaceState(window.history.state, "", url.toString());
+        backend.exchangeSession(session).then(token => {
+            window.localStorage.setItem(that.tokenKey, token);
+            that.tokenVersion++;
+        }, error => {
+            that.status = "Signing in to GitHub failed: " + error.message;
+        });
+    }
+};
+
+/**
+ * Look up the user signed in, writing it into the component's `viewer`.
+ * @param {bioreportr.curation} that - The curation component
+ * @param {Object} backend - The backend
+ * @param {String|null} token - The user's token, if signed in
+ */
+bioreportr.curation.loadViewer = function (that, backend, token) {
+    if (token || backend.alwaysSignedIn) {
+        backend.viewer(token).then(viewer => {
+            that.viewer = viewer;
+        }, error => {
+            // A token which GitHub no longer accepts, e.g. one revoked or expired, is forgotten
+            console.error("Could not look up the user signed in to GitHub", error);
+            that.signOut();
+        });
+    } else {
+        fluid.invokeLater(() => that.viewer = null);
+    }
+};
+
+bioreportr.curation.signIn = function (backend, window) {
+    backend.signIn(window.location.href);
+};
+
+bioreportr.curation.signOut = function (that, window) {
+    try {
+        window.localStorage.removeItem(that.tokenKey);
+    } catch (error) {
+        // Nothing to forget
+    }
+    that.viewer = null;
+    that.tokenVersion++;
+};
+
+/**
+ * Submit a note on a taxon, displacing the user's earlier note on it. The note is allocated a claim id and kept in
+ * local storage, so that it is shown at once, as if it were consolidated.
+ * @param {bioreportr.curation} that - The curation component
+ * @param {TaxonRow} taxon - The taxon
+ * @param {Object} answers - The answers of the form, with a member for each question and `comment`
+ * @param {Window} window - The window
+ * @return {Promise} Resolving once the note has been submitted
+ */
+bioreportr.curation.submit = async function (that, taxon, answers, window) {
+    const note = {
+        claimId: bioreportr.curation.nanoid(window.crypto),
+        taxonId: taxon.id,
+        taxonName: hortis.rowToScientific(taxon),
+        author: that.viewer.login,
+        submitted: new Date().toISOString(),
+        ...Object.fromEntries(bioreportr.curation.questions.map(([question]) => [question, answers[question] || "no opinion"])),
+        comment: (answers.comment || "").trim(),
+        url: ""
+    };
+    that.status = "Submitting your note ...";
+    try {
+        const pageUrl = window.location.origin + window.location.pathname + "#pane:" + that.paneKey + "&taxon:" + taxon.id;
+        const comment = await that.backend.submit(that.token, note, bioreportr.curation.commentBody(note, pageUrl));
+        const pending = bioreportr.curation.readPending(window, that.storageKey);
+        // Only one note per taxon is kept, as the one submitted displaces the earlier
+        Object.keys(pending).filter(claimId => pending[claimId].taxonId === note.taxonId).forEach(claimId => delete pending[claimId]);
+        pending[note.claimId] = {...note, url: comment.url || ""};
+        bioreportr.curation.writePending(window, that.storageKey, pending);
+        that.pendingVersion++;
+        that.status = "";
+    } catch (error) {
+        console.error("Could not submit the curation note", error);
+        that.status = "Your note could not be submitted: " + error.message;
+    }
+};
+
+/** Backends **/
+
+/**
+ * A backend holding notes as comments on GitHub Discussions, posted as the signed-in user through GitHub's GraphQL API,
+ * one thread per taxon in a category of the project's repository, as giscus does. Signing in goes through the token
+ * exchange named by the configuration's `oauthEndpoint` - see src/curation/oauthWorker.mjs and
+ * notes/curation-token-exchange.md.
+ * @param {Object} config - The contents of the project's curation config.json
+ * @param {Window} window - The window
+ * @return {Object} The backend
+ */
+bioreportr.curation.backends.github = function (config, window) {
+    const endpoint = (config.oauthEndpoint || "").replace(/\/$/, "");
+    const graphql = async function (token, query, variables) {
+        const response = await window.fetch("https://api.github.com/graphql", {
+            method: "POST",
+            headers: {"Authorization": "bearer " + token, "Content-Type": "application/json"},
+            body: JSON.stringify({query, variables})
+        });
+        const result = await response.json();
+        if (!response.ok || result.errors) {
+            throw new Error(result.errors ? result.errors.map(error => error.message).join("; ") : response.status + " " + response.statusText);
+        }
+        return result.data;
+    };
+    const threadTitle = note => "taxon:" + note.taxonId + " " + note.taxonName;
+    const findThread = async function (token, taxonId) {
+        const query = `repo:${config.repository} in:title "taxon:${taxonId}"`;
+        const data = await graphql(token, `query($query: String!) {
+            search(type: DISCUSSION, query: $query, first: 20) { nodes { ... on Discussion { id title category { id } } } }
+        }`, {query});
+        return data.search.nodes.find(node => node.category?.id === config.categoryId && node.title.split(" ")[0] === "taxon:" + taxonId);
+    };
+    return {
+        signIn: redirect => {
+            window.location.href = endpoint + "/authorize?redirect_uri=" + encodeURIComponent(redirect);
+        },
+        exchangeSession: async function (session) {
+            const response = await window.fetch(endpoint + "/token", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({session})
+            });
+            const result = await response.json();
+            if (!response.ok || !result.token) {
+                throw new Error(result.error || response.statusText);
+            }
+            return result.token;
+        },
+        viewer: async function (token) {
+            const data = await graphql(token, "query { viewer { login avatarUrl url } }", {});
+            return data.viewer;
+        },
+        submit: async function (token, note, body) {
+            let thread = await findThread(token, note.taxonId);
+            if (!thread) {
+                const created = await graphql(token, `mutation($input: CreateDiscussionInput!) {
+                    createDiscussion(input: $input) { discussion { id } }
+                }`, {input: {repositoryId: config.repositoryId, categoryId: config.categoryId, title: threadTitle(note),
+                    body: `Community curation notes on *${note.taxonName}*. Each comment is one person's note, submitted from the site.`}});
+                thread = created.createDiscussion.discussion;
+            } else {
+                // Displace the user's earlier notes on the taxon
+                const data = await graphql(token, `query($id: ID!) {
+                    node(id: $id) { ... on Discussion { comments(first: 100) { nodes { id viewerDidAuthor body } } } }
+                }`, {id: thread.id});
+                const earlier = data.node.comments.nodes.filter(comment => comment.viewerDidAuthor && comment.body.includes(bioreportr.curation.marker));
+                for (const comment of earlier) {
+                    await graphql(token, `mutation($id: ID!) { deleteDiscussionComment(input: {id: $id}) { comment { id } } }`, {id: comment.id});
+                }
+            }
+            const added = await graphql(token, `mutation($id: ID!, $body: String!) {
+                addDiscussionComment(input: {discussionId: $id, body: $body}) { comment { id url } }
+            }`, {id: thread.id, body});
+            return added.addDiscussionComment.comment;
+        }
+    };
+};
+
+/**
+ * A backend keeping notes only in the browser, for trying the curation pane without GitHub, e.g. in testing. Its user
+ * is always signed in, as the configuration's `memoryUser`, or else "local-user".
+ * @param {Object} config - The contents of the project's curation config.json
+ * @return {Object} The backend
+ */
+bioreportr.curation.backends.memory = function (config) {
+    return {
+        alwaysSignedIn: true,
+        signIn: () => {},
+        viewer: () => Promise.resolve({login: config.memoryUser || "local-user", avatarUrl: "", url: ""}),
+        submit: (token, note, body) => {
+            bioreportr.curation.backends.memory.submitted.push({note, body});
+            return Promise.resolve({id: note.claimId, url: ""});
+        }
+    };
+};
+
+// The comments submitted to the memory backend, for inspection in testing
+bioreportr.curation.backends.memory.submitted = [];
+
+/** The form of the curation pane **/
+
+/**
+ * Compute what the curation form shows of a taxon.
+ * @param {TaxonRow|null} taxon - The taxon chosen for curation, if any
+ * @param {Object<String, CurationNote[]>} byTaxon - The notes of each taxon, by taxon id
+ * @param {Object|null} viewer - The user signed in, if any, with their `login`
+ * @param {Boolean} connected - Whether notes may be submitted
+ * @param {String} status - A message on the progress of a submission
+ * @return {Object} The model of the form
+ */
+bioreportr.curationForm.model = function (taxon, byTaxon, viewer, connected, status) {
+    const notes = taxon ? byTaxon[taxon.id] || [] : [];
+    const own = viewer ? notes.find(note => note.author === viewer.login) : null;
+    return {
+        hasTaxon: !!taxon,
+        taxonName: taxon ? hortis.rowToScientific(taxon) : "",
+        linkName: taxon?.iNaturalistTaxonName || "",
+        commonName: taxon?.commonName || "",
+        image: taxon ? hortis.renderTaxonImage(taxon.iNaturalistTaxonImage, taxon.id) : "",
+        pending: !!own?.pending,
+        // Keyed by taxon, so that the controls are rendered afresh, discarding any unsubmitted choices, only for another taxon
+        controls: taxon ? bioreportr.curationForm.controlsMarkup(own) + "<!-- " + taxon.id + " -->" : "",
+        connected,
+        signedIn: connected && !!viewer,
+        signedOut: connected && !viewer,
+        viewerLogin: viewer?.login || "",
+        submitLabel: own ? "Replace your note" : "Submit your note",
+        status,
+        consensus: notes.length > 0 ? bioreportr.curationForm.consensusMarkup(notes) : "<p class=\"mxcw-curation-none\">No one has added a note on this taxon yet.</p>"
+    };
+};
+
+/**
+ * Render the controls of the form - the vote on each question, and the comment - showing the user's own note, if any.
+ * @param {CurationNote|null} own - The user's own note on the taxon, if any
+ * @return {String} The markup of the controls
+ */
+bioreportr.curationForm.controlsMarkup = function (own) {
+    const encode = hortis.dataTable.encode;
+    const heads = bioreportr.curation.votes.map(vote => `<span class="mxcw-curation-vote-head">${vote}</span>`).join("");
+    const rows = bioreportr.curation.questions.map(([question, label]) => `<span class="mxcw-curation-vote-label">${label}:</span>` +
+        bioreportr.curation.votes.map(vote => `<input type="radio" name="${question}" value="${vote}" aria-label="${label}: ${vote}"${(own?.[question] || "no opinion") === vote ? " checked" : ""}>`).join("")).join("");
+    return `<fieldset class="mxcw-curation-vote"><legend>Vote</legend><div class="mxcw-curation-vote-grid"><span></span>${heads}${rows}</div></fieldset>
+        <fieldset class="mxcw-curation-comment"><legend>Comment</legend><textarea name="comment" rows="4" aria-label="Comment">${encode(own?.comment || "")}</textarea></fieldset>`;
+};
+
+/**
+ * Render the consensus of the community on a taxon - the tally of the votes, and each note.
+ * @param {CurationNote[]} notes - The notes, most recent first
+ * @return {String} The markup of the consensus
+ */
+bioreportr.curationForm.consensusMarkup = function (notes) {
+    const encode = hortis.dataTable.encode;
+    const answers = note => bioreportr.curation.questions.map(([question, label]) => `${label}: ${encode(note[question])}`).join(" · ");
+    const items = notes.map(note => `<li class="mxcw-curation-note">
+        <div class="mxcw-curation-note-head"><b>${encode(note.author)}</b> ${encode(bioreportr.eventDay(note.submitted))}${note.pending ? " <i>(being processed)</i>" : ""}
+            ${note.url ? `<a href="${encode(note.url)}" target="_blank" rel="noopener">on GitHub</a>` : ""}</div>
+        <div class="mxcw-curation-note-answers">${answers(note)}</div>
+        ${note.comment ? `<div class="mxcw-curation-note-comment">${encode(note.comment)}</div>` : ""}
+    </li>`).join("");
+    return `${bioreportr.curation.tallyMarkup(notes)}<ul class="mxcw-curation-notes">${items}</ul>`;
+};
+
+/**
+ * Submit the form's note, read from its controls.
+ * @param {bioreportr.curation} curation - The story page's curation component
+ * @param {TaxonRow} taxon - The taxon chosen for curation
+ * @param {Event} event - The click on the form's submit button
+ * @param {Window} window - The window
+ */
+bioreportr.curationForm.submit = function (curation, taxon, event, window) {
+    const form = event.target.closest("form");
+    const data = new window.FormData(form);
+    const answers = Object.fromEntries([...bioreportr.curation.questions.map(([question]) => [question, data.get(question)]), ["comment", data.get("comment")]]);
+    curation.submit(taxon, answers);
+};
+
+}).call(globalThis);
+//# sourceURL=../bioreportr/js/curation.js</script>
+    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.storyPage-10">(function () {
 "use strict";
 
 // The story page of a bioReportR project - its panes, knitted from R Markdown, each shown beside a map of the
@@ -3407,7 +4076,7 @@ fluid.def("bioreportr.storyPage", {
     activePane: "$compute:bioreportr.storyPage.activePane({self}.panes, {self}.activePaneKey)",
     // A record selected in one pane is cleared on moving to another
     clearRecordOnPaneChange: "$effect:bioreportr.storyPage.clearRecordOnPaneChange({self}, {self}.activePaneKey)",
-    classes: "$compute:bioreportr.storyPage.classes({self}.activePane)",
+    classes: "$compute:bioreportr.storyPage.classes({self}.activePane, {self}.checklist.search.filterState)",
     selectPane: "$method:bioreportr.storyPage.selectPane({self}, {0}:paneKey)",
     // The reporting status chosen in the status filter, or in the legend of a map coloured by status
     selectedStatus: null,
@@ -3498,9 +4167,29 @@ fluid.def("bioreportr.storyPage", {
             $layers: "hortis.standardChecklist",
             label: "Plants",
             rootId: "47126", // Plantae
-            decorate: "hortis.blitzChecklistDecoration"
+            decorate: "hortis.blitzChecklistDecoration",
+            // Each taxon bears a speech bubble leading to its curation, which summarises its notes on hover - see curation.js
+            renderTooltip: "$method:bioreportr.curation.renderChecklistTooltip({self}.rowById, {storyPage}.curation.byTaxon, {0}:hoverId)",
+            tree: {
+                $component: {
+                    view: {
+                        $component: {
+                            templateTree: `$compute:bioreportr.curation.renderChecklistTree({checklist}, {checklist}.rootEntry,
+                                {checklist}.idToState, {checklist}.selectedId, {storyPage}.curation.byTaxon)`
+                        }
+                    }
+                }
+            }
         }
     },
+    // Community curation of the taxa - see notes/community-curation-design.md and the pane rendered by bioreportr.curationPane
+    curation: {
+        $component: {
+            $layers: "bioreportr.curation"
+        }
+    },
+    // The taxon chosen for curation, whilst the curation pane is shown - that chosen in the checklist's search
+    curationTaxon: "$compute:bioreportr.curation.chosenTaxon({self}.activePane, {self}.checklist.search.filterState, {self}.taxa.rowById)",
     recordReporter: {
         $component: {
             $layers: "bioreportr.recordAndTaxaReporter",
@@ -3679,15 +4368,17 @@ fluid.def("bioreportr.storyPage", {
 });
 
 /**
- * Compute the classes of the parts of the story page which are shown or hidden according to the active pane.
+ * Compute the classes of the parts of the story page which are shown or hidden according to the active pane. A pane
+ * whose settings have foldVizControlsOnTaxon, e.g. the curation pane, folds away the checklist once a taxon is chosen.
  * @param {PaneSettings} pane - The active pane
+ * @param {TaxonRow|null} chosenTaxon - The taxon chosen in the checklist's search, if any
  * @return {Object<String, String>} The classes of each part
  */
-bioreportr.storyPage.classes = function (pane) {
+bioreportr.storyPage.classes = function (pane, chosenTaxon) {
     const hidden = visible => visible ? "" : "fl-hidden";
     return {
         map: pane.visibleMap ? "" : "mxcw-hideMap",
-        vizControls: hidden(pane.visibleVizControls),
+        vizControls: hidden(pane.visibleVizControls && !(pane.foldVizControlsOnTaxon && chosenTaxon)),
         obsFilters: hidden(pane.visibleObsFilters),
         filters: hidden(pane.visibleFilters),
         obsTable: hidden(pane.visibleObsTable),
@@ -6196,6 +6887,106 @@ saanich.remembering.bindHover = function (map, mapData, window) {
 }
 
 /*# sourceURL=file:///home/amb26/Source/gits/saanich-peninsula-flora/docs/local/story/saanich-rememberingPane.vue*/</style>
+    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.curationPane-3">(function () {
+"use strict";
+
+// Community curation of the taxa of a story - see notes/community-curation-design.md
+
+// The curation state of a story page, held as its member `curation`: the notes consolidated from GitHub, those pending
+// in local storage, the user signed in, and the submission of notes
+fluid.def("bioreportr.curation", {
+    $layers: "fluid.component",
+    // The files written by the consolidation job, src/js/consolidateCuration.js, relative to the story page
+    configFile: "../curation/config.json",
+    curationsFile: "../curation/curations.csv",
+    claimStatusFile: "../curation/claimStatus.json",
+    config: "$compute:fluid.fetchJSON({self}.configFile)",
+    claimStatus: "$compute:fluid.fetchJSON({self}.claimStatusFile)",
+    records: {
+        $component: {
+            $layers: "hortis.csvReader",
+            url: "{curation}.curationsFile"
+        }
+    },
+    paneKey: "$compute:bioreportr.curation.paneKey({storyPage}.panes)",
+    storageKey: "$compute:bioreportr.curation.storageKey({self}.config)",
+    tokenKey: "bioreportr-curation-token",
+    // Advanced whenever the pending notes, or the token, are written to local storage, so that they are read again
+    pendingVersion: 0,
+    tokenVersion: 0,
+    pending: "$compute:bioreportr.curation.readPending({global}, {self}.storageKey, {self}.pendingVersion)",
+    byTaxon: "$compute:bioreportr.curation.byTaxon({self}.records.rows, {self}.pending, {self}.claimStatus)",
+    prune: "$effect:bioreportr.curation.prune({self}, {self}.pending, {self}.claimStatus, {self}.records.rows, {global})",
+    connected: "$compute:bioreportr.curation.isConnected({self}.config)",
+    backend: "$compute:bioreportr.curation.makeBackend({self}.config, {global})",
+    token: "$compute:bioreportr.curation.readToken({self}.tokenKey, {self}.tokenVersion, {global})",
+    takeSession: "$effect:bioreportr.curation.takeSession({self}, {self}.backend, {global})",
+    // The user signed in, with their `login`, or null if none is
+    viewer: null,
+    loadViewer: "$effect:bioreportr.curation.loadViewer({self}, {self}.backend, {self}.token)",
+    // A message on the progress of a submission
+    status: "",
+    submit: "$method:bioreportr.curation.submit({self}, {0}:taxon, {1}:answers, {global})",
+    signOut: "$method:bioreportr.curation.signOut({self}, {global})"
+});
+
+// The section of the curation pane, rendering the pane's R Markdown, which places the form in <div @id="curationForm">
+fluid.def("bioreportr.curationPane", {
+    $layers: ["fluid.sfcLayer","fluid.component"],
+    curationForm: {
+        $component: {
+            $layers: "bioreportr.curationForm"
+        }
+    },
+    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
+"template":{"sfcLayer":"bioreportr.curationPane"}}}
+});
+
+}).call(globalThis);
+//# sourceURL=../bioreportr/sfc/bioreportr-curationPane.vue</script>
+    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.curationForm-3">(function () {
+"use strict";
+
+// The form of the curation pane, on which a member of the community records what they know of the taxon chosen - see
+// notes/community-curation-design.md. It is placed by the pane's R Markdown, in an element <div @id="curationForm">
+fluid.def("bioreportr.curationForm", {
+    $layers: ["fluid.sfcLayer","fluid.component"],
+    taxon: "{storyPage}.curationTaxon",
+    model: `$compute:bioreportr.curationForm.model({self}.taxon, {storyPage}.curation.byTaxon, {storyPage}.curation.viewer,
+        {storyPage}.curation.connected, {storyPage}.curation.status)`,
+    image: {
+        $component: {
+            $layers: "hortis.verbatimSlot",
+            markup: "{curationForm}.model.image"
+        }
+    },
+    consensus: {
+        $component: {
+            $layers: "hortis.verbatimSlot",
+            markup: "{curationForm}.model.consensus"
+        }
+    },
+    controls: {
+        $component: {
+            $layers: "hortis.verbatimSlot",
+            markup: "{curationForm}.model.controls"
+        }
+    },
+    submit: "$method:bioreportr.curationForm.submit({storyPage}.curation, {self}.taxon, {0}:event, {global})",
+    signIn: "$method:bioreportr.curation.signIn({storyPage}.curation.backend, {global})",
+    signOut: "$method:bioreportr.curation.signOut({storyPage}.curation, {global})",
+    // Brings back the checklist, from which another taxon may be chosen
+    chooseAnother: "$method:bioreportr.curationForm.chooseAnother({storyPage})",
+    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
+"template":{"sfcLayer":"bioreportr.curationForm"}}}
+});
+
+bioreportr.curationForm.chooseAnother = function (storyPage) {
+    storyPage.checklist.search.reset();
+};
+
+}).call(globalThis);
+//# sourceURL=../bioreportr/sfc/bioreportr-curationForm.vue</script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.standardChecklist-0" fluid-client="" fluid-src="../vendor/@popperjs/core/dist/umd/popper-lite.min.js" src="../vendor/@popperjs/core/dist/umd/popper-lite.min.js"></script>
     <script data-fluid-indent="4" data-fluid-hydrated="" fluid-src="../vendor/imerss-bioinfo/src/client/js/i6/tooltip.js" id="fl-script-hortis.standardChecklist-3">(function () {/*
 Copyright 2017-2026 Antranig Basman
@@ -9210,7 +10001,7 @@ fluid.def("hortis.valueFilter.row", {
         }
       }
     </style>
-    <div data-fluid-hydrated="{&quot;attrs&quot;:{&quot;fluid-layers&quot;:&quot;saanich.story&quot;},&quot;html&quot;:&quot;&quot;}" class="imerss-main imerss-loading" fluid-layers="saanich.story"><div data-mxcw-startup-hidden="map"><div></div><div aria-orientation="horizontal" class="resize-bar resize-bar--vertical" aria-label="Resize panels" tabindex="0" role="separator"></div><div class="mxcw-data fld-imerss-nodismiss-map"><div class="mxcw-data-pane-widget mxcw-atlas-taxon-holder"><div></div></div><div aria-orientation="horizontal" class="resize-bar resize-bar--vertical" aria-label="Resize panels" tabindex="0" role="separator"></div><div class="mxcw-records-collapsed"><div class="mxcw-obs-table-controls"><button aria-expanded="false" aria-controls="mxcw-records-table" type="button" class="mxcw-records-toggle mxcw-data-widget-text">Records<span class="mxcw-records-filter-label"></span></button><button disabled aria-label="Clear the selected record" title="Clear the selected record" type="button" class="imerss-download-button mxcw-record-reset"><svg aria-hidden="true" height="24" width="24"><use href="#imerss-i-reset" /></svg></button><span title="Download records as CSV" class="imerss-download-button imerss-basic-tooltip"><svg height="24" width="24"><use href="#imerss-i-download" /></svg></span></div><div id="mxcw-records-table" class="mxcw-obs-table hortis-datatable hortis-dataTable-wrap"><div class="hortis-dataTable-scroll"><table><thead><tr><th class="hortis-dataTable-select-cell"></th><th><div class="hortis-dataTable-sort-wrap">Date</div></th><th><div class="hortis-dataTable-sort-wrap">Taxon</div></th><th><div class="hortis-dataTable-sort-wrap">Locality</div></th><th><div class="hortis-dataTable-sort-wrap">Recorder</div></th><th><div class="hortis-dataTable-sort-wrap">Record type</div></th><th><div class="hortis-dataTable-sort-wrap">Institution</div></th><th><div class="hortis-dataTable-sort-wrap">Catalogue no.</div></th><th><div class="hortis-dataTable-sort-wrap">Latitude</div></th><th><div class="hortis-dataTable-sort-wrap">Longitude</div></th><th><div class="hortis-dataTable-sort-wrap">Uncertainty (m)</div></th><th><div class="hortis-dataTable-sort-wrap">Elevation</div></th><th><div class="hortis-dataTable-sort-wrap">Count</div></th><th><div class="hortis-dataTable-sort-wrap">Establishment</div></th><th><div class="hortis-dataTable-sort-wrap">Identified by</div></th><th><div class="hortis-dataTable-sort-wrap">Date identified</div></th><th><div class="hortis-dataTable-sort-wrap">Type status</div></th><th><div class="hortis-dataTable-sort-wrap">Collection</div></th><th><div class="hortis-dataTable-sort-wrap">Record no.</div></th><th><div class="hortis-dataTable-sort-wrap">Licence</div></th><th><div class="hortis-dataTable-sort-wrap">Rights holder</div></th><th><div class="hortis-dataTable-sort-wrap">Occurrence ID</div></th><th><div class="hortis-dataTable-sort-wrap">GBIF ID</div></th></tr></thead><tbody><tr data-row-index="0" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="0" type="checkbox" class="hortis-dataTable-row-check"></td><td>1967-06-14</td><td>Abies amabilis</td><td>V.I. , Brentwood, end of Greig Rd.</td><td>Harrison, A. S.</td><td>PRESERVED_SPECIMEN</td><td>Université Laval</td><td>QFA0212927</td><td>48.566667</td><td>-123.45</td><td></td><td>68</td><td></td><td></td><td>Chuang, Ching-chang</td><td></td><td></td><td>QFA</td><td>32.4</td><td>CC0_1_0</td><td>Université Laval</td><td>QFA0212927</td><td>1248731719</td></tr><tr data-row-index="1" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="1" type="checkbox" class="hortis-dataTable-row-check"></td><td>1967-06-14</td><td>Abies amabilis</td><td></td><td>A.S. Harrison</td><td></td><td>QFA</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>QFA021927</td><td></td></tr><tr data-row-index="2" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="2" type="checkbox" class="hortis-dataTable-row-check"></td><td>1967-07-18</td><td>Abies amabilis</td><td>Vancouver Island, creek outflow at east end of Durrance Lake</td><td>A. S. Harrison</td><td>PRESERVED_SPECIMEN</td><td>BBM</td><td>V216898</td><td>48.541667</td><td>-123.466667</td><td></td><td></td><td></td><td></td><td>C.C. Chuang 1973</td><td></td><td></td><td>UBC</td><td>37.2A</td><td>CC0_1_0</td><td>The University of British Columbia</td><td>F75FA487-E806-ED46-B254-237F071C5F8C</td><td>1988068725</td></tr><tr data-row-index="3" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="3" type="checkbox" class="hortis-dataTable-row-check"></td><td>1967-07-18</td><td>Abies amabilis</td><td></td><td>A. S. Harrison</td><td></td><td>BBM</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>F75FA487-E806-ED46-B254-237F071C5F8C</td><td></td></tr><tr data-row-index="4" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="4" type="checkbox" class="hortis-dataTable-row-check"></td><td>1887-02-25</td><td>Abies grandis</td><td>Vicinity of Victoria</td><td>John Macoun</td><td>PRESERVED_SPECIMEN</td><td>NHMUK</td><td>BM015754290</td><td>48.428421</td><td>-123.365644</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>BOT</td><td>s.n.</td><td>CC0_1_0</td><td></td><td>16eadc9f-cc91-461b-8931-d9ccff7107a4</td><td>5028932721</td></tr><tr data-row-index="5" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="5" type="checkbox" class="hortis-dataTable-row-check"></td><td>1921-08-05</td><td>Abies grandis</td><td>Vancouver Island. Esquimalt</td><td>F. W. Hunnewell</td><td>PRESERVED_SPECIMEN</td><td>NY</td><td>29332</td><td>48.435825</td><td>-123.411258</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>NY</td><td>7626</td><td>CC0_1_0</td><td>The New York Botanical Garden</td><td>55a03525-8e24-4832-99df-8b92e6c4ecb8</td><td>1928978551</td></tr><tr data-row-index="6" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="6" type="checkbox" class="hortis-dataTable-row-check"></td><td>1921-08-05</td><td>Abies grandis</td><td></td><td>F.W. Hunnewell</td><td></td><td>NY</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>NY00029332</td><td></td></tr><tr data-row-index="7" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="7" type="checkbox" class="hortis-dataTable-row-check"></td><td>1966-05-12</td><td>Abies grandis</td><td>Vancouver Island, 1 mile north of Prospect Lake, off West Saanich road</td><td>A. S. Harrison</td><td>PRESERVED_SPECIMEN</td><td>BBM</td><td>V216893</td><td>48.541667</td><td>-123.441667</td><td></td><td></td><td></td><td></td><td>C.C. Chuang 1973</td><td></td><td></td><td>UBC</td><td>44.1</td><td>CC0_1_0</td><td>The University of British Columbia</td><td>545C1ABF-3D29-544D-B989-2B549F26D7CE</td><td>1988184875</td></tr></tbody></table></div><div class="hortis-dataTable-pagination"><span class="hortis-dataTable-pageInfo">1–8 of 8</span><div class="hortis-dataTable-pageControls"><button disabled data-move="start">Start</button><button disabled data-move="prev">← Prev</button><button disabled data-move="next">Next →</button><button disabled data-move="end">End</button></div></div></div></div><div><div class="mxcw-solow-taxon-holder"><div class="mxcw-solow-taxon-pane fl-hidden"><div class="mxcw-taxon-image"></div><div class="mxcw-taxon-info"><div class="mxcw-taxon-name"></div><dl class="mxcw-taxon-fields"><dt>Date first seen:</dt><dd></dd><dt>Date last seen:</dt><dd></dd><dt>Total sightings:</dt><dd></dd><dt>Regional EP:</dt><dd></dd></dl><div></div></div></div></div><div class="mxcw-solow-radius-holder"><div class="mxcw-solow-radius"><div class="mxcw-solow-radius-title">Population radius (m)</div><div class="mxcw-solow-radius-slider-wrap"><div class="mxcw-solow-radius-track"><div style="width: 33.33333333333333%" class="mxcw-solow-radius-fill"></div><input value="2" aria-label="Population radius in metres" step="1" max="6" min="0" type="range" class="mxcw-solow-radius-input"></div></div><div class="mxcw-solow-radius-snap-markers"><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">500</div></div><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">750</div></div><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">1k</div></div><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">2k</div></div><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">5k</div></div><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">7.5k</div></div><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">10k</div></div></div><div class="mxcw-solow-radius-current-value">1,000 m</div><div class="mxcw-solow-radius-note">*Aggregate sightings into populations: default = 1000 m</div></div></div></div><div aria-orientation="horizontal" class="resize-bar resize-bar--vertical" aria-label="Resize panels" tabindex="0" role="separator"></div><div class="mxcw-solow-records-collapsed"><div class="mxcw-obs-table-controls"><button aria-expanded="false" aria-controls="mxcw-solow-records-table" type="button" class="mxcw-records-toggle mxcw-data-widget-text">Records<span class="mxcw-solow-records-species"></span></button><button disabled aria-label="Clear the selected record" title="Clear the selected record" type="button" class="imerss-download-button mxcw-record-reset"><svg aria-hidden="true" height="24" width="24"><use href="#imerss-i-reset" /></svg></button><span title="Download this species' records as CSV" class="imerss-download-button imerss-basic-tooltip"><svg height="24" width="24"><use href="#imerss-i-download" /></svg></span></div><div id="mxcw-solow-records-table" class="mxcw-solow-records-table hortis-datatable hortis-dataTable-wrap"><div class="hortis-dataTable-scroll"><table><thead><tr><th class="hortis-dataTable-select-cell"></th><th><div class="hortis-dataTable-sort-wrap">Date<button aria-label="Sort by Date" data-key="eventDate" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sort-descending" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Locality<button aria-label="Sort by Locality" data-key="locality" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Recorder<button aria-label="Sort by Recorder" data-key="recordedBy" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Record type<button aria-label="Sort by Record type" data-key="basisOfRecord" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Institution<button aria-label="Sort by Institution" data-key="institutionCode" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Catalogue no.<button aria-label="Sort by Catalogue no." data-key="catalogNumber" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Latitude<button aria-label="Sort by Latitude" data-key="decimalLatitude" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Longitude<button aria-label="Sort by Longitude" data-key="decimalLongitude" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Uncertainty (m)<button aria-label="Sort by Uncertainty (m)" data-key="coordinateUncertaintyInMetres" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Elevation<button aria-label="Sort by Elevation" data-key="elevation" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Count<button aria-label="Sort by Count" data-key="individualCount" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Establishment<button aria-label="Sort by Establishment" data-key="establishmentMeans" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Identified by<button aria-label="Sort by Identified by" data-key="identifiedBy" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Date identified<button aria-label="Sort by Date identified" data-key="dateIdentified" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Type status<button aria-label="Sort by Type status" data-key="typeStatus" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Collection<button aria-label="Sort by Collection" data-key="collectionCode" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Record no.<button aria-label="Sort by Record no." data-key="recordNumber" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Licence<button aria-label="Sort by Licence" data-key="license" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Rights holder<button aria-label="Sort by Rights holder" data-key="rightsHolder" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Occurrence ID<button aria-label="Sort by Occurrence ID" data-key="occurrenceID" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">GBIF ID<button aria-label="Sort by GBIF ID" data-key="gbifID" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th></tr></thead><tbody></tbody></table></div><div class="hortis-dataTable-pagination"><span class="hortis-dataTable-pageInfo">No data</span><div class="hortis-dataTable-pageControls"><button disabled data-move="start">Start</button><button disabled data-move="prev">← Prev</button><button disabled data-move="next">Next →</button><button disabled data-move="end">End</button></div></div></div></div><div class="mxcw-dataPanes"><div class="mxcw-dataPane mxcw-dataPane-Traces"><div></div><div class="mxcw-iNatPanels"></div><div><div></div></div></div><div class="mxcw-dataPane mxcw-dataPane-LostPlants"><div></div><div class="mxcw-iNatPanels"></div><div><div><div class="saanich-lost-gallery"></div></div></div></div><div class="mxcw-dataPane mxcw-dataPane-Status"><div></div><div class="mxcw-iNatPanels"></div><div><div></div></div></div><div class="mxcw-dataPane mxcw-dataPane-TopContributions"><div></div><div class="mxcw-iNatPanels"><div id="inat-components-TopContributions-0" class="mxcw-inat-components"></div></div><div><div></div></div></div><div class="mxcw-dataPane mxcw-dataPane-Solow"><div></div><div class="mxcw-iNatPanels"></div><div><div></div></div></div><div class="mxcw-dataPane mxcw-dataPane-Remembering"><div></div><div class="mxcw-iNatPanels"></div><div><div></div></div></div></div></div></div><div aria-orientation="vertical" class="resize-bar resize-bar--horizontal" aria-label="Resize panels" tabindex="0" role="separator"></div><div class="imerss-page"><div><div class="imerss-subnav">
+    <div data-fluid-hydrated="{&quot;attrs&quot;:{&quot;fluid-layers&quot;:&quot;saanich.story&quot;},&quot;html&quot;:&quot;&quot;}" class="imerss-main imerss-loading" fluid-layers="saanich.story"><div data-mxcw-startup-hidden="map"><div></div><div aria-orientation="horizontal" class="resize-bar resize-bar--vertical" aria-label="Resize panels" tabindex="0" role="separator"></div><div class="mxcw-data fld-imerss-nodismiss-map"><div class="mxcw-data-pane-widget mxcw-atlas-taxon-holder"><div></div></div><div aria-orientation="horizontal" class="resize-bar resize-bar--vertical" aria-label="Resize panels" tabindex="0" role="separator"></div><div class="mxcw-records-collapsed"><div class="mxcw-obs-table-controls"><button aria-expanded="false" aria-controls="mxcw-records-table" type="button" class="mxcw-records-toggle mxcw-data-widget-text">Records<span class="mxcw-records-filter-label"></span></button><button disabled aria-label="Clear the selected record" title="Clear the selected record" type="button" class="imerss-download-button mxcw-record-reset"><svg aria-hidden="true" height="24" width="24"><use href="#imerss-i-reset" /></svg></button><span title="Download records as CSV" class="imerss-download-button imerss-basic-tooltip"><svg height="24" width="24"><use href="#imerss-i-download" /></svg></span></div><div id="mxcw-records-table" class="mxcw-obs-table hortis-datatable hortis-dataTable-wrap"><div class="hortis-dataTable-scroll"><table><thead><tr><th class="hortis-dataTable-select-cell"></th><th><div class="hortis-dataTable-sort-wrap">Date</div></th><th><div class="hortis-dataTable-sort-wrap">Taxon</div></th><th><div class="hortis-dataTable-sort-wrap">Locality</div></th><th><div class="hortis-dataTable-sort-wrap">Recorder</div></th><th><div class="hortis-dataTable-sort-wrap">Record type</div></th><th><div class="hortis-dataTable-sort-wrap">Institution</div></th><th><div class="hortis-dataTable-sort-wrap">Catalogue no.</div></th><th><div class="hortis-dataTable-sort-wrap">Latitude</div></th><th><div class="hortis-dataTable-sort-wrap">Longitude</div></th><th><div class="hortis-dataTable-sort-wrap">Uncertainty (m)</div></th><th><div class="hortis-dataTable-sort-wrap">Elevation</div></th><th><div class="hortis-dataTable-sort-wrap">Count</div></th><th><div class="hortis-dataTable-sort-wrap">Establishment</div></th><th><div class="hortis-dataTable-sort-wrap">Identified by</div></th><th><div class="hortis-dataTable-sort-wrap">Date identified</div></th><th><div class="hortis-dataTable-sort-wrap">Type status</div></th><th><div class="hortis-dataTable-sort-wrap">Collection</div></th><th><div class="hortis-dataTable-sort-wrap">Record no.</div></th><th><div class="hortis-dataTable-sort-wrap">Licence</div></th><th><div class="hortis-dataTable-sort-wrap">Rights holder</div></th><th><div class="hortis-dataTable-sort-wrap">Occurrence ID</div></th><th><div class="hortis-dataTable-sort-wrap">GBIF ID</div></th></tr></thead><tbody><tr data-row-index="0" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="0" type="checkbox" class="hortis-dataTable-row-check"></td><td>1967-06-14</td><td>Abies amabilis</td><td>V.I. , Brentwood, end of Greig Rd.</td><td>Harrison, A. S.</td><td>PRESERVED_SPECIMEN</td><td>Université Laval</td><td>QFA0212927</td><td>48.566667</td><td>-123.45</td><td></td><td>68</td><td></td><td></td><td>Chuang, Ching-chang</td><td></td><td></td><td>QFA</td><td>32.4</td><td>CC0_1_0</td><td>Université Laval</td><td>QFA0212927</td><td>1248731719</td></tr><tr data-row-index="1" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="1" type="checkbox" class="hortis-dataTable-row-check"></td><td>1967-06-14</td><td>Abies amabilis</td><td></td><td>A.S. Harrison</td><td></td><td>QFA</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>QFA021927</td><td></td></tr><tr data-row-index="2" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="2" type="checkbox" class="hortis-dataTable-row-check"></td><td>1967-07-18</td><td>Abies amabilis</td><td>Vancouver Island, creek outflow at east end of Durrance Lake</td><td>A. S. Harrison</td><td>PRESERVED_SPECIMEN</td><td>BBM</td><td>V216898</td><td>48.541667</td><td>-123.466667</td><td></td><td></td><td></td><td></td><td>C.C. Chuang 1973</td><td></td><td></td><td>UBC</td><td>37.2A</td><td>CC0_1_0</td><td>The University of British Columbia</td><td>F75FA487-E806-ED46-B254-237F071C5F8C</td><td>1988068725</td></tr><tr data-row-index="3" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="3" type="checkbox" class="hortis-dataTable-row-check"></td><td>1967-07-18</td><td>Abies amabilis</td><td></td><td>A. S. Harrison</td><td></td><td>BBM</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>F75FA487-E806-ED46-B254-237F071C5F8C</td><td></td></tr><tr data-row-index="4" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="4" type="checkbox" class="hortis-dataTable-row-check"></td><td>1887-02-25</td><td>Abies grandis</td><td>Vicinity of Victoria</td><td>John Macoun</td><td>PRESERVED_SPECIMEN</td><td>NHMUK</td><td>BM015754290</td><td>48.428421</td><td>-123.365644</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>BOT</td><td>s.n.</td><td>CC0_1_0</td><td></td><td>16eadc9f-cc91-461b-8931-d9ccff7107a4</td><td>5028932721</td></tr><tr data-row-index="5" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="5" type="checkbox" class="hortis-dataTable-row-check"></td><td>1921-08-05</td><td>Abies grandis</td><td>Vancouver Island. Esquimalt</td><td>F. W. Hunnewell</td><td>PRESERVED_SPECIMEN</td><td>NY</td><td>29332</td><td>48.435825</td><td>-123.411258</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>NY</td><td>7626</td><td>CC0_1_0</td><td>The New York Botanical Garden</td><td>55a03525-8e24-4832-99df-8b92e6c4ecb8</td><td>1928978551</td></tr><tr data-row-index="6" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="6" type="checkbox" class="hortis-dataTable-row-check"></td><td>1921-08-05</td><td>Abies grandis</td><td></td><td>F.W. Hunnewell</td><td></td><td>NY</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>NY00029332</td><td></td></tr><tr data-row-index="7" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="7" type="checkbox" class="hortis-dataTable-row-check"></td><td>1966-05-12</td><td>Abies grandis</td><td>Vancouver Island, 1 mile north of Prospect Lake, off West Saanich road</td><td>A. S. Harrison</td><td>PRESERVED_SPECIMEN</td><td>BBM</td><td>V216893</td><td>48.541667</td><td>-123.441667</td><td></td><td></td><td></td><td></td><td>C.C. Chuang 1973</td><td></td><td></td><td>UBC</td><td>44.1</td><td>CC0_1_0</td><td>The University of British Columbia</td><td>545C1ABF-3D29-544D-B989-2B549F26D7CE</td><td>1988184875</td></tr></tbody></table></div><div class="hortis-dataTable-pagination"><span class="hortis-dataTable-pageInfo">1–8 of 8</span><div class="hortis-dataTable-pageControls"><button disabled data-move="start">Start</button><button disabled data-move="prev">← Prev</button><button disabled data-move="next">Next →</button><button disabled data-move="end">End</button></div></div></div></div><div><div class="mxcw-solow-taxon-holder"><div class="mxcw-solow-taxon-pane fl-hidden"><div class="mxcw-taxon-image"></div><div class="mxcw-taxon-info"><div class="mxcw-taxon-name"></div><dl class="mxcw-taxon-fields"><dt>Date first seen:</dt><dd></dd><dt>Date last seen:</dt><dd></dd><dt>Total sightings:</dt><dd></dd><dt>Regional EP:</dt><dd></dd></dl><div></div></div></div></div><div class="mxcw-solow-radius-holder"><div class="mxcw-solow-radius"><div class="mxcw-solow-radius-title">Population radius (m)</div><div class="mxcw-solow-radius-slider-wrap"><div class="mxcw-solow-radius-track"><div style="width: 33.33333333333333%" class="mxcw-solow-radius-fill"></div><input value="2" aria-label="Population radius in metres" step="1" max="6" min="0" type="range" class="mxcw-solow-radius-input"></div></div><div class="mxcw-solow-radius-snap-markers"><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">500</div></div><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">750</div></div><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">1k</div></div><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">2k</div></div><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">5k</div></div><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">7.5k</div></div><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">10k</div></div></div><div class="mxcw-solow-radius-current-value">1,000 m</div><div class="mxcw-solow-radius-note">*Aggregate sightings into populations: default = 1000 m</div></div></div></div><div aria-orientation="horizontal" class="resize-bar resize-bar--vertical" aria-label="Resize panels" tabindex="0" role="separator"></div><div class="mxcw-solow-records-collapsed"><div class="mxcw-obs-table-controls"><button aria-expanded="false" aria-controls="mxcw-solow-records-table" type="button" class="mxcw-records-toggle mxcw-data-widget-text">Records<span class="mxcw-solow-records-species"></span></button><button disabled aria-label="Clear the selected record" title="Clear the selected record" type="button" class="imerss-download-button mxcw-record-reset"><svg aria-hidden="true" height="24" width="24"><use href="#imerss-i-reset" /></svg></button><span title="Download this species' records as CSV" class="imerss-download-button imerss-basic-tooltip"><svg height="24" width="24"><use href="#imerss-i-download" /></svg></span></div><div id="mxcw-solow-records-table" class="mxcw-solow-records-table hortis-datatable hortis-dataTable-wrap"><div class="hortis-dataTable-scroll"><table><thead><tr><th class="hortis-dataTable-select-cell"></th><th><div class="hortis-dataTable-sort-wrap">Date<button aria-label="Sort by Date" data-key="eventDate" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sort-descending" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Locality<button aria-label="Sort by Locality" data-key="locality" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Recorder<button aria-label="Sort by Recorder" data-key="recordedBy" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Record type<button aria-label="Sort by Record type" data-key="basisOfRecord" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Institution<button aria-label="Sort by Institution" data-key="institutionCode" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Catalogue no.<button aria-label="Sort by Catalogue no." data-key="catalogNumber" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Latitude<button aria-label="Sort by Latitude" data-key="decimalLatitude" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Longitude<button aria-label="Sort by Longitude" data-key="decimalLongitude" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Uncertainty (m)<button aria-label="Sort by Uncertainty (m)" data-key="coordinateUncertaintyInMetres" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Elevation<button aria-label="Sort by Elevation" data-key="elevation" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Count<button aria-label="Sort by Count" data-key="individualCount" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Establishment<button aria-label="Sort by Establishment" data-key="establishmentMeans" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Identified by<button aria-label="Sort by Identified by" data-key="identifiedBy" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Date identified<button aria-label="Sort by Date identified" data-key="dateIdentified" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Type status<button aria-label="Sort by Type status" data-key="typeStatus" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Collection<button aria-label="Sort by Collection" data-key="collectionCode" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Record no.<button aria-label="Sort by Record no." data-key="recordNumber" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Licence<button aria-label="Sort by Licence" data-key="license" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Rights holder<button aria-label="Sort by Rights holder" data-key="rightsHolder" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Occurrence ID<button aria-label="Sort by Occurrence ID" data-key="occurrenceID" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">GBIF ID<button aria-label="Sort by GBIF ID" data-key="gbifID" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th></tr></thead><tbody></tbody></table></div><div class="hortis-dataTable-pagination"><span class="hortis-dataTable-pageInfo">No data</span><div class="hortis-dataTable-pageControls"><button disabled data-move="start">Start</button><button disabled data-move="prev">← Prev</button><button disabled data-move="next">Next →</button><button disabled data-move="end">End</button></div></div></div></div><div class="mxcw-dataPanes"><div class="mxcw-dataPane mxcw-dataPane-Traces"><div></div><div class="mxcw-iNatPanels"></div><div><div></div></div></div><div class="mxcw-dataPane mxcw-dataPane-LostPlants"><div></div><div class="mxcw-iNatPanels"></div><div><div><div class="saanich-lost-gallery"></div></div></div></div><div class="mxcw-dataPane mxcw-dataPane-Status"><div></div><div class="mxcw-iNatPanels"></div><div><div></div></div></div><div class="mxcw-dataPane mxcw-dataPane-TopContributions"><div></div><div class="mxcw-iNatPanels"><div id="inat-components-TopContributions-0" class="mxcw-inat-components"></div></div><div><div></div></div></div><div class="mxcw-dataPane mxcw-dataPane-Solow"><div></div><div class="mxcw-iNatPanels"></div><div><div></div></div></div><div class="mxcw-dataPane mxcw-dataPane-Remembering"><div></div><div class="mxcw-iNatPanels"></div><div><div></div></div></div><div class="mxcw-dataPane mxcw-dataPane-Curation"><div></div><div class="mxcw-iNatPanels"></div><div><div></div></div></div></div></div></div><div aria-orientation="vertical" class="resize-bar resize-bar--horizontal" aria-label="Resize panels" tabindex="0" role="separator"></div><div class="imerss-page"><div><div class="imerss-subnav">
     <nav class="hx-mx-auto hx-flex hx-items-center hx-justify-start hx-gap-2 hx-h-16 hx-px-6 hx-max-w-[90rem]"><a href="https://salishseabiodiversity.org/" title="Home" class="contrast-more:hx-text-gray-700 contrast-more:dark:hx-text-gray-100 hx-relative -hx-ml-2 hx-hidden hx-whitespace-nowrap hx-p-2 md:hx-inline-block hx-text-gray-600 hover:hx-text-gray-800 dark:hx-text-gray-400 dark:hover:hx-text-gray-200">
             <span class="hx-text-center">Home</span>
         </a><a href="https://salishseabiodiversity.org/data/" title="Data" class="contrast-more:hx-text-gray-700 contrast-more:dark:hx-text-gray-100 hx-relative -hx-ml-2 hx-hidden hx-whitespace-nowrap hx-p-2 md:hx-inline-block hx-text-gray-600 hover:hx-text-gray-800 dark:hx-text-gray-400 dark:hover:hx-text-gray-200">
@@ -9227,7 +10018,7 @@ fluid.def("hortis.valueFilter.row", {
         </a><button aria-label="Menu" type="button" class="hamburger-menu -hx-mr-2 hx-rounded hx-p-2 active:hx-bg-gray-400/20 md:hx-hidden"><svg stroke="currentColor" viewBox="0 0 24 24" fill="none" height="24"><g><path d="M4 8H20" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" /></g><g><path d="M4 16H20" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" /></g></svg></button>
     </nav>
 </div>
-</div><div class="mxcw-story-holder"><div class="max-xl:hx-hidden hx-h-0 hx-w-64 hx-shrink-0"></div><div class="mxcw-container"><div class="mxcw-content-holder"><div class="mxcw-section-nav"><nav aria-label="Section navigation" role="tablist" class="chevron-nav"><button class="chevron-tab" role="tab" type="button">In Memoriam</button><button class="chevron-tab" role="tab" type="button">Lost Plants</button><button class="chevron-tab" role="tab" type="button">Atlas</button><button class="chevron-tab" role="tab" type="button">Community Science</button><button class="chevron-tab" role="tab" type="button">Find the Plants</button><button class="chevron-tab" role="tab" type="button">Harvey’s footsteps</button></nav></div><div data-mxcw-startup-hidden="" class="mxcw-content imerss-nodismiss-map"><div class="mxcw-storyPane" data-pane="Traces"><div><div id="in-memory-of-plants" class="section level2 mxcw-paneKey-Traces"><h2>In Memory of Plants</h2><div class="mxcw-sectionInner"><div class="mxcw-sectionColumn"><p>W̱SÁNEĆ peoples have cared for these lands and waters since time
+</div><div class="mxcw-story-holder"><div class="max-xl:hx-hidden hx-h-0 hx-w-64 hx-shrink-0"></div><div class="mxcw-container"><div class="mxcw-content-holder"><div class="mxcw-section-nav"><nav aria-label="Section navigation" role="tablist" class="chevron-nav"><button class="chevron-tab" role="tab" type="button">In Memoriam</button><button class="chevron-tab" role="tab" type="button">Lost Plants</button><button class="chevron-tab" role="tab" type="button">Atlas</button><button class="chevron-tab" role="tab" type="button">Community Science</button><button class="chevron-tab" role="tab" type="button">Find the Plants</button><button class="chevron-tab" role="tab" type="button">Harvey’s footsteps</button><button class="chevron-tab" role="tab" type="button">Community Consensus</button></nav></div><div data-mxcw-startup-hidden="" class="mxcw-content imerss-nodismiss-map"><div class="mxcw-storyPane" data-pane="Traces"><div><div id="in-memory-of-plants" class="section level2 mxcw-paneKey-Traces"><h2>In Memory of Plants</h2><div class="mxcw-sectionInner"><div class="mxcw-sectionColumn"><p>W̱SÁNEĆ peoples have cared for these lands and waters since time
 immemorial.</p><p>The memory preserved here is much more limited: collected specimens,
 names written down on lists, and observations shared through
 iNaturalist, reaching back to 1859.</p><p>Each record is a moment when someone stopped to take note of a
@@ -9348,7 +10139,14 @@ species checklists for the southern Gulf Islands, the Saanich Peninsula,
 and the San Juan Islands. Through this initiative we invite you to help
 carry this work forward, by sharing your local plant knowledge and
 contributing to the co-creation of a living <em>Flora of the
-W̱SÁNEĆ/Saanich Peninsula.</em></p></div></div></div></div></div></div></div><div aria-orientation="horizontal" class="resize-bar resize-bar--vertical" aria-label="Resize panels" tabindex="0" role="separator"></div><div data-mxcw-startup-hidden=""><div class="imerss-filters-collapsed"><div class="imerss-panel-label imerss-filters-header"><button aria-expanded="true" aria-controls="imerss-main-filters" type="button" class="imerss-filters-toggle">Filters:</button><div class="imerss-filter-controls"><svg height="24" width="24" class="imerss-reset-filter"><title>Reset all filters</title><use href="#imerss-i-filter-reset" /></svg><div></div></div></div><div id="imerss-main-filters"><div class="imerss-filter"></div><div class="imerss-status-filter imerss-filter"><div class="imerss-filter-title">Status:</div><div class="imerss-filter-body imerss-region-filter-rows"><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input data-status="confirmed" type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">confirmed</div></div><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input data-status="unconfirmed" type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">historical</div></div><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input data-status="new" type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">new</div></div></div></div><div class="imerss-collector-filter imerss-filter"><label for="fli-imerss-collector" class="imerss-filter-title">Recorder:</label><div class="imerss-filter-body imerss-filter-autocomplete"><div></div><div class="imerss-filter-clear imerss-basic-tooltip fl-hidden" title="Reset this filter"><svg height="24" width="24"><use href="#imerss-i-x-circle-close" /></svg></div></div></div><div class="imerss-locality-filter imerss-filter imerss-collector-filter"><label for="fli-saanich-locality" class="imerss-filter-title">Locality:</label><div class="imerss-filter-body imerss-filter-autocomplete"><div></div><div class="imerss-filter-clear imerss-basic-tooltip fl-hidden" title="Reset this filter"><svg height="24" width="24"><use href="#imerss-i-x-circle-close" /></svg></div></div></div><div class="imerss-time-filter imerss-filter"><div class="imerss-filter-title">Time period:</div><div class="imerss-filter-body saanich-ep-range saanich-time-range"><label><span>From</span><input aria-label="Earliest year" value="0" step="1" max="1000" min="0" type="range" class="saanich-time-min"><output>1887</output></label><label><span>To</span><input aria-label="Latest year" value="1000" step="1" max="1000" min="0" type="range" class="saanich-time-max"><output>1967</output></label></div></div></div><div class="imerss-reporter imerss-record-reporter"><p>Displaying <b>8</b> of <span>8</span> records for <span>2</span> taxa</p></div><div class="imerss-main-checklist imerss-checklist-holder"><div class="imerss-panel-label"><span>Plants</span><span title="Download checklist as CSV" class="imerss-download-button imerss-basic-tooltip"><svg height="24" width="24"><use href="#imerss-i-download-wide" /></svg></span><span class="imerss-search-checklist"><span class="imerss-filter-autocomplete"><div></div><div class="imerss-filter-clear imerss-basic-tooltip fl-hidden" title="Reset this filter"><svg height="24" width="24"><use href="#imerss-i-x-circle-close" /></svg></div></span><svg height="32" width="32"><use href="#imerss-i-search-wide" /></svg></span></div><div class="imerss-checklist"><ul><li class="checklist-row checklist-rank-family"><span data-row-id="47562" class="pretty p-icon checklist-fold-control"><span class="state"><i class="icon mdi mdi-none"></i><label></label></span></span><p data-row-id="47562" class="checklist-scientific-name">Pinaceae</p> - <p data-row-id="47562" class="checklist-common-name">pine family</p><ul><li class="checklist-row checklist-rank-genus"><span data-row-id="54262" class="pretty p-icon checklist-fold-control active"><span class="state"><i class="icon mdi mdi-chevron-down"></i><label></label></span></span><p data-row-id="54262" class="checklist-scientific-name">Abies</p> - <p data-row-id="54262" class="checklist-common-name">firs</p><ul><li class="checklist-row checklist-rank-species"><span data-row-id="75240" class="pretty p-icon checklist-fold-control"><span class="state"><i class="icon mdi mdi-none"></i><label></label></span></span><svg height="18" width="18" class="imerss-checklist-decoration"><title>Unconfirmed: This historical record is yet to be confirmed by a project contributor</title><use href="#imerss-i-question" /></svg><p data-row-id="75240" class="checklist-scientific-name">Abies amabilis</p> - <p data-row-id="75240" class="checklist-common-name">Pacific silver fir</p></li><li class="checklist-row checklist-rank-species"><span data-row-id="63690" class="pretty p-icon checklist-fold-control"><span class="state"><i class="icon mdi mdi-none"></i><label></label></span></span><svg height="18" width="18" class="imerss-checklist-decoration"><title>Confirmed: This historical record has been confirmed by a project contributor</title><use href="#imerss-i-tick" /></svg><p data-row-id="63690" class="checklist-scientific-name">Abies grandis</p> - <p data-row-id="63690" class="checklist-common-name">grand fir</p></li></ul></li></ul></li></ul></div></div></div><div class="mxcw-solow-taxa-holder"><div class="mxcw-taxa-filters-holder imerss-filters-collapsed"><div class="imerss-panel-label imerss-filters-header"><button aria-expanded="true" type="button" class="imerss-filters-toggle">Filters:</button><div class="imerss-filter-controls"><svg height="24" width="24" class="imerss-reset-filter"><title>Reset all filters</title><use href="#imerss-i-filter-reset" /></svg><div></div></div></div><div class="imerss-filters imerss-taxa-filters"><div class="imerss-ep-filter imerss-filter imerss-ep-filter-body"><div class="imerss-filter-title">Extirpation probability (EP):</div><div class="imerss-filter-body mxcw-ep-range"><label><span>Min</span><input value="0" aria-label="Minimum extirpation probability" step="5" max="100" min="0" type="range" class="mxcw-ep-min"><output>0.00</output></label><label><span>Max</span><input value="100" aria-label="Maximum extirpation probability" step="5" max="100" min="0" type="range" class="mxcw-ep-max"><output>1.00</output></label></div></div><div><div class="imerss-value-filter imerss-filter"><div class="imerss-filter-title">Infrataxon:</div><div class="imerss-filter-body imerss-value-filter-rows"><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">infrataxon</div></div><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">non-infrataxon</div></div></div></div><div class="imerss-value-filter imerss-filter"><div class="imerss-filter-title">Introduction:</div><div class="imerss-filter-body imerss-value-filter-rows"><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">native</div></div><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">exotic</div></div><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">unknown</div></div></div></div><div class="imerss-value-filter imerss-filter"><div class="imerss-filter-title">Provenance:</div><div class="imerss-filter-body imerss-value-filter-rows"><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">voucher</div></div><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">no_voucher</div></div><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">unknown</div></div></div></div><div class="imerss-value-filter imerss-filter"><div class="imerss-filter-title">Conservation:</div><div class="imerss-filter-body imerss-value-filter-rows"><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">concern</div></div><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">secure</div></div></div></div><div class="imerss-value-filter imerss-filter"><div class="imerss-filter-title">Graminoid:</div><div class="imerss-filter-body imerss-value-filter-rows"><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">graminoid</div></div><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">non-graminoid</div></div></div></div></div></div></div><div class="hortis-dataTable-wrap"><div class="hortis-dataTable-scroll"><table><thead><tr><th class="hortis-dataTable-select-cell"></th><th><div class="hortis-dataTable-sort-wrap">Taxon name<button aria-label="Sort by Taxon name" data-key="scientificName" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">EP<button aria-label="Sort by EP" data-key="solow_EP" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sort-descending" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">obs<button aria-label="Sort by obs" data-key="n_obs" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">No coords<button aria-label="Sort by No coords" data-key="n_unmapped" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Rank<button aria-label="Sort by Rank" data-key="taxon_rank" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Introduction<button aria-label="Sort by Introduction" data-key="introduction_status" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Has Voucher<button aria-label="Sort by Has Voucher" data-key="provenance_status" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Common Name<button aria-label="Sort by Common Name" data-key="commonName" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Reporting status<button aria-label="Sort by Reporting status" data-key="reportingStatus" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">ID<button aria-label="Sort by ID" data-key="id" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Link name<button aria-label="Sort by Link name" data-key="iNaturalistTaxonName" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th></tr></thead><tbody><tr data-row-index="0" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="0" type="checkbox" class="hortis-dataTable-row-check"></td><td>Abies amabilis</td><td>0.467</td><td>4</td><td><span title="2 of 4 records have no coordinates" class="mxcw-georef-flag">⚠ 2</span></td><td>species</td><td>native</td><td>voucher</td><td>Pacific silver fir</td><td>unconfirmed</td><td>75240</td><td>Abies amabilis</td></tr><tr data-row-index="1" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="1" type="checkbox" class="hortis-dataTable-row-check"></td><td>Abies grandis</td><td>0</td><td>4</td><td><span title="1 of 4 records have no coordinates" class="mxcw-georef-flag">⚠ 1</span></td><td>species</td><td>native</td><td>voucher</td><td>grand fir</td><td>confirmed</td><td>63690</td><td>Abies grandis</td></tr></tbody></table></div><div class="hortis-dataTable-pagination"><span class="hortis-dataTable-pageInfo">1–2 of 2</span><div class="hortis-dataTable-pageControls"><button disabled data-move="start">Start</button><button disabled data-move="prev">← Prev</button><button disabled data-move="next">Next →</button><button disabled data-move="end">End</button></div></div></div></div></div></div></div></div></div>
+W̱SÁNEĆ/Saanich Peninsula.</em></p></div></div></div></div></div><div class="mxcw-storyPane" data-pane="Curation"><div><div id="community-consensus" class="section level2 mxcw-paneKey-Curation"><h2>Community consensus</h2><div class="mxcw-sectionInner"><div class="mxcw-sectionColumn"><div class="mxcw-curation-invitation"><p>This atlas is a living flora of the W̱SÁNEĆ/Saanich Peninsula, and its
+records are only as good as what we know of them. If you know whether a
+plant is still to be found here, whether it was planted, or whether it
+has failed to establish, please add your note.</p><p><span class="saanich-callout">Click on any taxon in the checklist
+below</span> to choose it for curation. You can also choose a taxon from
+any other part of the atlas, through the speech bubble beside its
+name.</p></div><div class="mxcw-curation-form-holder mxcw-curation-form-root"><div class="mxcw-curation-form"><div class="mxcw-curation-pending">Your comment has been submitted and is being processed</div><div class="mxcw-curation-taxon"><div class="mxcw-curation-photo"></div><dl class="mxcw-curation-names"><dt>Taxon name:</dt><dd><i></i></dd><dt>Link name:</dt><dd></dd><dt>Common name:</dt><dd></dd></dl></div><form onsubmit="return false" class="mxcw-curation-note-form"><div></div><div class="mxcw-curation-account"><span>Community curation is not yet connected to GitHub, so notes can't be submitted from this site yet.</span><span><button type="button" class="mxcw-curation-button">Sign in with GitHub</button>
+                    to add your note - or <a rel="noopener" target="_blank" href="https://github.com/signup">create a GitHub account</a></span><span>Signed in as <b></b><button type="button" class="mxcw-curation-link">sign out</button></span><button class="mxcw-curation-button mxcw-curation-submit" type="button"></button></div><div aria-live="polite" class="mxcw-curation-status"></div></form><div class="mxcw-curation-consensus"><h3>Community consensus</h3><div></div></div><button type="button" class="mxcw-curation-link mxcw-curation-choose">Choose another taxon</button></div></div></div></div></div></div></div></div></div><div aria-orientation="horizontal" class="resize-bar resize-bar--vertical" aria-label="Resize panels" tabindex="0" role="separator"></div><div data-mxcw-startup-hidden=""><div class="imerss-filters-collapsed"><div class="imerss-panel-label imerss-filters-header"><button aria-expanded="true" aria-controls="imerss-main-filters" type="button" class="imerss-filters-toggle">Filters:</button><div class="imerss-filter-controls"><svg height="24" width="24" class="imerss-reset-filter"><title>Reset all filters</title><use href="#imerss-i-filter-reset" /></svg><div></div></div></div><div id="imerss-main-filters"><div class="imerss-filter"></div><div class="imerss-status-filter imerss-filter"><div class="imerss-filter-title">Status:</div><div class="imerss-filter-body imerss-region-filter-rows"><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input data-status="confirmed" type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">confirmed</div></div><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input data-status="unconfirmed" type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">historical</div></div><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input data-status="new" type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">new</div></div></div></div><div class="imerss-collector-filter imerss-filter"><label for="fli-imerss-collector" class="imerss-filter-title">Recorder:</label><div class="imerss-filter-body imerss-filter-autocomplete"><div></div><div class="imerss-filter-clear imerss-basic-tooltip fl-hidden" title="Reset this filter"><svg height="24" width="24"><use href="#imerss-i-x-circle-close" /></svg></div></div></div><div class="imerss-locality-filter imerss-filter imerss-collector-filter"><label for="fli-saanich-locality" class="imerss-filter-title">Locality:</label><div class="imerss-filter-body imerss-filter-autocomplete"><div></div><div class="imerss-filter-clear imerss-basic-tooltip fl-hidden" title="Reset this filter"><svg height="24" width="24"><use href="#imerss-i-x-circle-close" /></svg></div></div></div><div class="imerss-time-filter imerss-filter"><div class="imerss-filter-title">Time period:</div><div class="imerss-filter-body saanich-ep-range saanich-time-range"><label><span>From</span><input aria-label="Earliest year" value="0" step="1" max="1000" min="0" type="range" class="saanich-time-min"><output>1887</output></label><label><span>To</span><input aria-label="Latest year" value="1000" step="1" max="1000" min="0" type="range" class="saanich-time-max"><output>1967</output></label></div></div></div><div class="imerss-reporter imerss-record-reporter"><p>Displaying <b>8</b> of <span>8</span> records for <span>2</span> taxa</p></div><div class="imerss-main-checklist imerss-checklist-holder"><div class="imerss-panel-label"><span>Plants</span><span title="Download checklist as CSV" class="imerss-download-button imerss-basic-tooltip"><svg height="24" width="24"><use href="#imerss-i-download-wide" /></svg></span><span class="imerss-search-checklist"><span class="imerss-filter-autocomplete"><div></div><div class="imerss-filter-clear imerss-basic-tooltip fl-hidden" title="Reset this filter"><svg height="24" width="24"><use href="#imerss-i-x-circle-close" /></svg></div></span><svg height="32" width="32"><use href="#imerss-i-search-wide" /></svg></span></div><div class="imerss-checklist"><ul><li class="checklist-row checklist-rank-family"><span data-row-id="47562" class="pretty p-icon checklist-fold-control"><span class="state"><i class="icon mdi mdi-none"></i><label></label></span></span><p data-row-id="47562" class="checklist-scientific-name">Pinaceae</p> - <p data-row-id="47562" class="checklist-common-name">pine family</p><span aria-label="Add a community note on this taxon" role="button" data-curation-id="47562" class="mxcw-curation-bubble"></span><ul><li class="checklist-row checklist-rank-genus"><span data-row-id="54262" class="pretty p-icon checklist-fold-control active"><span class="state"><i class="icon mdi mdi-chevron-down"></i><label></label></span></span><p data-row-id="54262" class="checklist-scientific-name">Abies</p> - <p data-row-id="54262" class="checklist-common-name">firs</p><span aria-label="Add a community note on this taxon" role="button" data-curation-id="54262" class="mxcw-curation-bubble"></span><ul><li class="checklist-row checklist-rank-species"><span data-row-id="75240" class="pretty p-icon checklist-fold-control"><span class="state"><i class="icon mdi mdi-none"></i><label></label></span></span><svg height="18" width="18" class="imerss-checklist-decoration"><title>Unconfirmed: This historical record is yet to be confirmed by a project contributor</title><use href="#imerss-i-question" /></svg><p data-row-id="75240" class="checklist-scientific-name">Abies amabilis</p> - <p data-row-id="75240" class="checklist-common-name">Pacific silver fir</p><span aria-label="Add a community note on this taxon" role="button" data-curation-id="75240" class="mxcw-curation-bubble"></span></li><li class="checklist-row checklist-rank-species"><span data-row-id="63690" class="pretty p-icon checklist-fold-control"><span class="state"><i class="icon mdi mdi-none"></i><label></label></span></span><svg height="18" width="18" class="imerss-checklist-decoration"><title>Confirmed: This historical record has been confirmed by a project contributor</title><use href="#imerss-i-tick" /></svg><p data-row-id="63690" class="checklist-scientific-name">Abies grandis</p> - <p data-row-id="63690" class="checklist-common-name">grand fir</p><span aria-label="Add a community note on this taxon" role="button" data-curation-id="63690" class="mxcw-curation-bubble"></span></li></ul></li></ul></li></ul></div></div></div><div class="mxcw-solow-taxa-holder"><div class="mxcw-taxa-filters-holder imerss-filters-collapsed"><div class="imerss-panel-label imerss-filters-header"><button aria-expanded="true" type="button" class="imerss-filters-toggle">Filters:</button><div class="imerss-filter-controls"><svg height="24" width="24" class="imerss-reset-filter"><title>Reset all filters</title><use href="#imerss-i-filter-reset" /></svg><div></div></div></div><div class="imerss-filters imerss-taxa-filters"><div class="imerss-ep-filter imerss-filter imerss-ep-filter-body"><div class="imerss-filter-title">Extirpation probability (EP):</div><div class="imerss-filter-body mxcw-ep-range"><label><span>Min</span><input value="0" aria-label="Minimum extirpation probability" step="5" max="100" min="0" type="range" class="mxcw-ep-min"><output>0.00</output></label><label><span>Max</span><input value="100" aria-label="Maximum extirpation probability" step="5" max="100" min="0" type="range" class="mxcw-ep-max"><output>1.00</output></label></div></div><div><div class="imerss-value-filter imerss-filter"><div class="imerss-filter-title">Infrataxon:</div><div class="imerss-filter-body imerss-value-filter-rows"><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">infrataxon</div></div><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">non-infrataxon</div></div></div></div><div class="imerss-value-filter imerss-filter"><div class="imerss-filter-title">Introduction:</div><div class="imerss-filter-body imerss-value-filter-rows"><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">native</div></div><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">exotic</div></div><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">unknown</div></div></div></div><div class="imerss-value-filter imerss-filter"><div class="imerss-filter-title">Provenance:</div><div class="imerss-filter-body imerss-value-filter-rows"><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">voucher</div></div><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">no_voucher</div></div><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">unknown</div></div></div></div><div class="imerss-value-filter imerss-filter"><div class="imerss-filter-title">Conservation:</div><div class="imerss-filter-body imerss-value-filter-rows"><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">concern</div></div><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">secure</div></div></div></div><div class="imerss-value-filter imerss-filter"><div class="imerss-filter-title">Graminoid:</div><div class="imerss-filter-body imerss-value-filter-rows"><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">graminoid</div></div><div class="imerss-filter-row"><div class="imerss-row-checkbox"><span class="pretty p-icon"><input type="checkbox" class="checklist-check"><span class="state p-success"><i class="icon mdi mdi-check"></i><label></label></span></span></div><div class="imerss-row-label">non-graminoid</div></div></div></div></div></div></div><div class="hortis-dataTable-wrap"><div class="hortis-dataTable-scroll"><table><thead><tr><th class="hortis-dataTable-select-cell"></th><th><div class="hortis-dataTable-sort-wrap">Taxon name<button aria-label="Sort by Taxon name" data-key="scientificName" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">EP<button aria-label="Sort by EP" data-key="solow_EP" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sort-descending" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">obs<button aria-label="Sort by obs" data-key="n_obs" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">No coords<button aria-label="Sort by No coords" data-key="n_unmapped" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Rank<button aria-label="Sort by Rank" data-key="taxon_rank" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Introduction<button aria-label="Sort by Introduction" data-key="introduction_status" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Has Voucher<button aria-label="Sort by Has Voucher" data-key="provenance_status" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Common Name<button aria-label="Sort by Common Name" data-key="commonName" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Reporting status<button aria-label="Sort by Reporting status" data-key="reportingStatus" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">ID<button aria-label="Sort by ID" data-key="id" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Link name<button aria-label="Sort by Link name" data-key="iNaturalistTaxonName" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th></tr></thead><tbody><tr data-row-index="0" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="0" type="checkbox" class="hortis-dataTable-row-check"></td><td>Abies amabilis</td><td>0.467</td><td>4</td><td><span title="2 of 4 records have no coordinates" class="mxcw-georef-flag">⚠ 2</span></td><td>species</td><td>native</td><td>voucher</td><td>Pacific silver fir</td><td>unconfirmed</td><td>75240</td><td>Abies amabilis</td></tr><tr data-row-index="1" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="1" type="checkbox" class="hortis-dataTable-row-check"></td><td>Abies grandis</td><td>0</td><td>4</td><td><span title="1 of 4 records have no coordinates" class="mxcw-georef-flag">⚠ 1</span></td><td>species</td><td>native</td><td>voucher</td><td>grand fir</td><td>confirmed</td><td>63690</td><td>Abies grandis</td></tr></tbody></table></div><div class="hortis-dataTable-pagination"><span class="hortis-dataTable-pageInfo">1–2 of 2</span><div class="hortis-dataTable-pageControls"><button disabled data-move="start">Start</button><button disabled data-move="prev">← Prev</button><button disabled data-move="next">Next →</button><button disabled data-move="end">End</button></div></div></div></div></div></div></div></div></div>
       <footer class="hextra-footer hx-bg-gray-100 hx-pb-[env(safe-area-inset-bottom)] dark:hx-bg-neutral-900 print:hx-bg-transparent"><div class="hextra-custom-footer hx-max-w-screen-xl hx-pl-[max(env(safe-area-inset-left),1.5rem)] hx-pr-[max(env(safe-area-inset-right),1.5rem)] hx-text-gray-600 dark:hx-text-gray-400"></div><div class="imerss-copyright">
         IMERSS · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener license">CC BY 4.0</a>
       </div></footer>

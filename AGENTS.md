@@ -58,6 +58,16 @@ The section is a template, so its R Markdown may bind members of the component w
 raw HTML, e.g. `` `<span class="saanich-lost-count">@{count}</span>`{=html} ``, since pandoc would otherwise read
 `@{count}` as a citation.
 
+### Community curation
+
+Both projects end their story with a Community Consensus pane, `content/story/Curation.Rmd`, rendered by the shared
+`bioreportr.curationPane`, through which the community adds notes on taxa as comments on GitHub Discussions. Read
+`notes/community-curation-design.md` before changing it. Each project's own settings are in
+`static/curation/config.json`. `static/curation/curations.csv` and `claimStatus.json` are written by the
+consolidation job, `.github/workflows/curation.yml` - never edit them by hand. Since `bioreportr-curationPane.vue` is
+shared, its template holds the section of whichever project was built last, and each project's `npm run story`
+rewrites it.
+
 ### Building the site
 
 `npm run build` runs every step. `npm run site` builds the published site, `docs`, with `hugo --cleanDestinationDir`,

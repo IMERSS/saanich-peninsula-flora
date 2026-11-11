@@ -1,0 +1,26 @@
+---
+title: Community Consensus
+shortTitle: Community Consensus
+weight: 7
+knit: (function(input, ...) { source(here::here("R/knit_render.R"), local = TRUE)$value(input, ...) })
+# The component rendering this pane's section, into whose template npm run story writes it - see AGENTS.md
+paneComponent: bioreportr.curationPane
+paneHandlerLayers: ["reknitr.obsMapPaneHandler"]
+# The checklist folds away once a taxon is chosen for curation, leaving the curation form
+foldVizControlsOnTaxon: true
+---
+
+## Community consensus
+
+::: {.mxcw-curation-invitation}
+This atlas is a living flora of the W̱SÁNEĆ/Saanich Peninsula, and its records are only as good as what we know of
+them. If you know whether a plant is still to be found here, whether it was planted, or whether it has failed to
+establish, please add your note.
+
+<span class="saanich-callout">Click on any taxon in the checklist below</span> to choose it for curation. You can
+also choose a taxon from any other part of the atlas, through the speech bubble beside its name.
+:::
+
+```{=html}
+<div class="mxcw-curation-form-holder" @id="curationForm"></div>
+```
