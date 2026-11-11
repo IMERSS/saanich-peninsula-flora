@@ -269,41 +269,88 @@ saanich.phoneGestures = function (map, window) {
 </script>
 
 <style>
-/* The atlas's panel of the chosen plant, which charts the history of its records beneath its facts - see
-   saanich.atlas.historyMarkup. The extirpation risk pane's panel, which shares its other styles, has no charts */
+/* The atlas's panel of the chosen plant: its facts, and beside them a chart of the history of its observations, by
+   decade or by month as chosen by the chart's tabs - see saanich.atlas.historyMarkup. The extirpation risk pane's panel,
+   which shares its other styles, has no chart. On a narrow panel the chart falls beneath the facts */
 .saanich-atlas-taxon-pane .mxcw-taxon-info {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 10px 18px;
+}
+
+/* The photo yields room to the chart, which it does not share in the extirpation risk pane's panel */
+.saanich-atlas-taxon-pane .mxcw-taxon-image {
+    max-width: 34%;
+}
+
+.saanich-atlas-facts {
+    flex: 1 1 165px;
+    min-width: 0;
 }
 
 .saanich-history {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
-    margin-top: auto;
-    padding-top: 10px;
+    flex: 1.3 1 180px;
+    min-width: 0;
+    align-self: flex-start;
+    padding-top: 6px;
 }
 
-/* Side by side once the panel's column has room, the decades given the wider share */
-@container (min-width: 250px) {
-    .saanich-history {
-        grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
-        gap: 16px;
-    }
+/* The heading has a line of its own, so that the tabs beneath it are never cut off however narrow the chart */
+.saanich-history-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px;
+    margin-bottom: 8px;
 }
 
 .saanich-history-heading {
-    margin-bottom: 4px;
+    flex: 0 0 100%;
+    margin-bottom: 2px;
     color: #5a7680;
     font-size: 11px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
 }
 
+/* The tabs are radio buttons, hidden behind their labels */
+.saanich-history-tabs input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.saanich-history-tabs label {
+    padding: 1px 9px;
+    border: 1px solid #c9d6dc;
+    border-radius: 999px;
+    color: #4b778f;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.saanich-history-tabs input:checked + label {
+    border-color: #2f7f8f;
+    background: #2f7f8f;
+    color: #fff;
+}
+
+.saanich-history-tabs input:focus-visible + label {
+    outline: 2px solid #4b778f;
+    outline-offset: 1px;
+}
+
+.saanich-history:has(.saanich-history-decade-tab:checked) .saanich-history-months,
+.saanich-history:has(.saanich-history-month-tab:checked) .saanich-history-decades {
+    display: none;
+}
+
 .saanich-history-chart {
     display: flex;
     gap: 2px;
-    height: 58px;
+    height: 90px;
+    margin-bottom: 16px;
     border-bottom: 1px solid rgba(90, 118, 128, 0.35);
 }
 
@@ -333,7 +380,7 @@ saanich.phoneGestures = function (map, window) {
     background: #184e62;
 }
 
-/* The labels hang beneath the axis, outside the chart's height, so that the bars of every chart share their scale */
+/* The labels hang beneath the axis, outside the chart's height */
 .saanich-history-label {
     position: absolute;
     top: calc(100% + 2px);
@@ -349,9 +396,5 @@ saanich.phoneGestures = function (map, window) {
 .saanich-history-slot:first-child .saanich-history-label {
     left: 0;
     transform: none;
-}
-
-.saanich-history-block {
-    padding-bottom: 14px;
 }
 </style>

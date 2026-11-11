@@ -29,7 +29,7 @@ list.
 
 <span class="saanich-callout">Community members have now documented `r inat.percent` percent of the total plant diversity known to the region on iNaturalist.</span>
 
-Contribute to this growing record by submitting your observations to the [“Lost” plants of the Saanich Peninsula iNaturalist project](https://www.inaturalist.org/projects/lost-plants-of-the-saanich-peninsula)!
+Contribute to this growing record by submitting your observations to the [“Lost” plants of the Saanich Peninsula iNaturalist project](https://www.inaturalist.org/projects/lost-plants-of-the-saanich-peninsula).
 
 :::: {.saanich-howto}
 Here, you can browse photos of some of the most commonly documented plants, as well as recent observations and

@@ -222,15 +222,17 @@ saanich.atlas.panelMarkup = function (taxon, records) {
         togo = `<div class="mxcw-solow-taxon-pane saanich-atlas-taxon-pane">
   <div class="mxcw-taxon-image">${hortis.renderTaxonImage(taxon.iNaturalistTaxonImage, taxon.id)}</div>
   <div class="mxcw-taxon-info">
-    <div class="mxcw-taxon-name">${hortis.dataTable.encode((taxon.scientificName || taxon.iNaturalistTaxonName) + (taxon.commonName ? ` (${taxon.commonName})` : ""))}</div>
-    <dl class="mxcw-taxon-fields">
-      <dt>Date first seen:</dt> <dd>${bioreportr.eventDay(records[0].eventDate)}</dd>
-      <dt>Date last seen:</dt> <dd>${bioreportr.eventDay(fluid.peek(records).eventDate)}</dd>
-      <dt>Total records:</dt> <dd>${saanich.formatCount(records.length)}</dd>
-      ${saanich.atlas.field("Status", saanich.atlas.statusLabels[taxon.reportingStatus])}
-    </dl>
-    ${bioreportr.georefNote(records)}
-    ${saanich.atlas.historyMarkup(records)}
+    <div class="saanich-atlas-facts">
+      <div class="mxcw-taxon-name">${hortis.dataTable.encode((taxon.scientificName || taxon.iNaturalistTaxonName) + (taxon.commonName ? ` (${taxon.commonName})` : ""))}</div>
+      <dl class="mxcw-taxon-fields">
+        <dt>Date first seen:</dt> <dd>${bioreportr.eventDay(records[0].eventDate)}</dd>
+        <dt>Date last seen:</dt> <dd>${bioreportr.eventDay(fluid.peek(records).eventDate)}</dd>
+        <dt>Total records:</dt> <dd>${saanich.formatCount(records.length)}</dd>
+        ${saanich.atlas.field("Status", saanich.atlas.statusLabels[taxon.reportingStatus])}
+      </dl>
+      ${bioreportr.georefNote(records)}
+    </div>
+    ${saanich.atlas.historyMarkup(records, taxon.id)}
   </div>
 </div>`;
     }
@@ -288,20 +290,27 @@ saanich.atlas.columns = function (columns, kind) {
 };
 
 /**
- * Render the history of a plant's records - how many were made in each decade, and in each month of the year.
+ * Render the history of a plant's observations - how many were made in each decade, and in each month of the year - as
+ * one chart at a time, chosen by its tabs. The tabs are radio buttons, so that they work without script, the chart shown
+ * being picked by CSS - see the styles in saanich-story.vue.
  * @param {Object[]} records - The plant's dated records
- * @return {String} The markup of the charts
+ * @param {String} taxonId - The plant's id, naming its tabs apart from any other panel's
+ * @return {String} The markup of the charts and their tabs
  */
-saanich.atlas.historyMarkup = function (records) {
+saanich.atlas.historyMarkup = function (records, taxonId) {
     const {decades, months} = saanich.atlas.history(records);
-    const count = n => saanich.formatCount(n) + (n === 1 ? " record" : " records");
+    const count = n => saanich.formatCount(n) + (n === 1 ? " observation" : " observations");
     const decadeColumns = decades.map(({decade, count: n}) => ({value: n, title: `${decade}s: ${count(n)}`,
         label: decade % 50 === 0 ? String(decade) : ""}));
     const monthColumns = months.map((n, month) => ({value: n, title: `${saanich.atlas.monthNames[month]}: ${count(n)}`,
         label: saanich.atlas.monthNames[month][0]}));
+    const name = "saanich-history-" + taxonId;
+    const tab = (kind, label, checked) => `<input type="radio" class="saanich-history-${kind}-tab" id="${name}-${kind}" name="${name}"${checked ? " checked" : ""}>` +
+        `<label for="${name}-${kind}">${label}</label>`;
     return `<div class="saanich-history">
-      <div class="saanich-history-block"><div class="saanich-history-heading">Records by decade</div>${saanich.atlas.columns(decadeColumns, "decades")}</div>
-      <div class="saanich-history-block"><div class="saanich-history-heading">By month</div>${saanich.atlas.columns(monthColumns, "months")}</div>
+      <div class="saanich-history-tabs"><span class="saanich-history-heading">Observations by:</span>${tab("decade", "Decade", true)}${tab("month", "Month", false)}</div>
+      ${saanich.atlas.columns(decadeColumns, "decades")}
+      ${saanich.atlas.columns(monthColumns, "months")}
     </div>`;
 };
 
