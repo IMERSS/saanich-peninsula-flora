@@ -63,7 +63,7 @@ fluid.def("bioreportr.curationPane", {
      section written is that of the project last built - each project writes its own. The R Markdown places the form in
      a raw HTML block, ```{=html} <div @id="curationForm"></div> ``` -->
 <template>
-<div id="community-consensus" class="section level2 mxcw-paneKey-Curation"><h2>Community consensus</h2><div class="mxcw-sectionInner"><div class="mxcw-sectionColumn">
+<div id="community-curation" class="section level2 mxcw-paneKey-Curation"><h2>Community Curation</h2><div class="mxcw-sectionInner"><div class="mxcw-sectionColumn">
 
 <div class="mxcw-curation-invitation">
 <p>This atlas is a living flora of the W̱SÁNEĆ/Saanich Peninsula, and its

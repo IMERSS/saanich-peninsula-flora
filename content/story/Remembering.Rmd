@@ -1,7 +1,7 @@
 ---
 title: Harvey’s footsteps
 shortTitle: Harvey’s footsteps
-weight: 6
+weight: 7
 knit: (function(input, ...) { source(here::here("R/knit_render.R"), local = TRUE)$value(input, ...) })
 # The component rendering this pane's section, into whose template npm run story writes it - see AGENTS.md
 paneComponent: saanich.rememberingPane

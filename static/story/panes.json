@@ -67,9 +67,23 @@
     "layers": []
   },
   {
+    "title": "Community Curation",
+    "shortTitle": "Living Data",
+    "weight": 6,
+    "paneComponent": "bioreportr.curationPane",
+    "foldVizControlsOnTaxon": true,
+    "paneKey": "Curation",
+    "file": null,
+    "dataFile": null,
+    "widgetIds": [],
+    "layers": [
+      "reknitr.obsMapPaneHandler"
+    ]
+  },
+  {
     "title": "Harvey’s footsteps",
     "shortTitle": "Harvey’s footsteps",
-    "weight": 6,
+    "weight": 7,
     "paneComponent": "saanich.rememberingPane",
     "view": {
       "type": "view",
@@ -88,19 +102,5 @@
     "dataFile": null,
     "widgetIds": [],
     "layers": []
-  },
-  {
-    "title": "Community Consensus",
-    "shortTitle": "Community Consensus",
-    "weight": 7,
-    "paneComponent": "bioreportr.curationPane",
-    "foldVizControlsOnTaxon": true,
-    "paneKey": "Curation",
-    "file": null,
-    "dataFile": null,
-    "widgetIds": [],
-    "layers": [
-      "reknitr.obsMapPaneHandler"
-    ]
   }
 ]

@@ -1,7 +1,7 @@
 ---
-title: Community Consensus
-shortTitle: Community Consensus
-weight: 7
+title: Community Curation
+shortTitle: Living Data
+weight: 6
 knit: (function(input, ...) { source(here::here("R/knit_render.R"), local = TRUE)$value(input, ...) })
 # The component rendering this pane's section, into whose template npm run story writes it - see AGENTS.md
 paneComponent: bioreportr.curationPane
@@ -10,7 +10,7 @@ paneHandlerLayers: ["reknitr.obsMapPaneHandler"]
 foldVizControlsOnTaxon: true
 ---
 
-## Community consensus
+## Community Curation
 
 ::: {.mxcw-curation-invitation}
 This atlas is a living flora of the W̱SÁNEĆ/Saanich Peninsula, and its records are only as good as what we know of
