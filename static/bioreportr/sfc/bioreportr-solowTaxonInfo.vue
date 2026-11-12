@@ -7,7 +7,7 @@
 fluid.def("bioreportr.solowTaxonInfo", {
     $layers: "fluid.component",
     // taxon: TaxonRow|null, taxonObsRows: Object[] - supplied by the story page
-    model: "$compute:bioreportr.solowTaxonInfo.model({self}.taxon, {self}.taxonObsRows)",
+    model: "$compute:bioreportr.solowTaxonInfo.model({self}.taxon, {self}.taxonObsRows, {storyPage}.recordAnnotations)",
     image: {
         $component: {
             $layers: "hortis.verbatimSlot",

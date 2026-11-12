@@ -30,17 +30,19 @@ fluid.def("bioreportr.solowRadius", {
 </script>
 
 <template>
-    <div class="mxcw-solow-radius">
-        <div class="mxcw-solow-radius-title">Population radius (m)</div>
-        <div class="mxcw-solow-radius-slider-wrap">
-            <div class="mxcw-solow-radius-track">
-                <div class="mxcw-solow-radius-fill" style="@{display.fill}"></div>
-                <input type="range" class="mxcw-solow-radius-input" min="0" max="6" step="1" value="@{selectedIndex}"
-                    aria-label="Population radius in metres" @oninput="bioreportr.solowRadius.input({0}, {self})"/>
+    <!-- A slim strip: its title, the slider with its scale beneath, and the radius chosen. The default is told on hovering -->
+    <div class="mxcw-solow-radius" title="Aggregates sightings into populations - the default radius is @{defaultRadius} m">
+        <div class="mxcw-solow-radius-title">Population radius</div>
+        <div class="mxcw-solow-radius-scale">
+            <div class="mxcw-solow-radius-slider-wrap">
+                <div class="mxcw-solow-radius-track">
+                    <div class="mxcw-solow-radius-fill" style="@{display.fill}"></div>
+                    <input type="range" class="mxcw-solow-radius-input" min="0" max="6" step="1" value="@{selectedIndex}"
+                        aria-label="Population radius in metres" @oninput="bioreportr.solowRadius.input({0}, {self})"/>
+                </div>
             </div>
+            <div class="mxcw-solow-radius-snap-markers" @id="ticks"></div>
         </div>
-        <div class="mxcw-solow-radius-snap-markers" @id="ticks"></div>
         <div class="mxcw-solow-radius-current-value">@{display.value}</div>
-        <div class="mxcw-solow-radius-note">*Aggregate sightings into populations: default = @{defaultRadius} m</div>
     </div>
 </template>

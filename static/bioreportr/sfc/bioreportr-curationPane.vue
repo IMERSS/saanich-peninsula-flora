@@ -13,6 +13,9 @@ fluid.def("bioreportr.curation", {
     $layers: "fluid.component",
     // The files written by the consolidation job, src/js/consolidateCuration.js, relative to the story page
     configFile: "../curation/config.json",
+    // The history of the curatorial notes on each taxon from before the site's own curation, if the project has one
+    historyFile: "{storyPage}.curationHistoryFile",
+    historyById: "$compute:bioreportr.curation.loadHistory({self}.historyFile)",
     taxaFile: "../curation/taxa.csv",
     observationsFile: "../curation/observations.csv",
     claimStatusFile: "../curation/claimStatus.json",

@@ -28,8 +28,10 @@ fluid.def("saanich.lostPlants", {
     // Observes iNaturalist's requested limit of about one request per second
     batchDelay: 1100,
     cards: [],
-    plants: "$compute:saanich.lostPlants.select({storyPage}.taxa.allRows, {storyPage}.obsRows, {self})",
+    plants: "$compute:saanich.lostPlants.select({storyPage}.taxa.allRows, {storyPage}.obsRows, {self}, {storyPage}.recordAnnotations)",
     load: "$effect:saanich.lostPlants.load({self}, {self}.plants, {storyPage}.loaded)",
+    // The cards are shown in a fresh random order each time the pane is opened, so that a different assemblage leads
+    reshuffle: "$effect:saanich.lostPlants.reshuffle({self}, {storyPage}.activePaneKey)",
     markup: "$compute:saanich.lostPlants.markup({self}.cards)",
     count: "$compute:saanich.lostPlants.count({self}.cards)"
 });
@@ -49,11 +51,13 @@ fluid.def("saanich.lostPlantsPane", {
  * @param {TaxonRow[]} taxaRows - All taxa
  * @param {Object[]} obsRows - All records
  * @param {Object} options - Members `minEP` and `maxRecords`
+ * @param {Object<String, Object>} [annotations] - The annotations of records, by occurrenceID - those suspended from the
+ * calculation of extirpation probability, e.g. of a planted population, are not counted as sightings
  * @return {Object[]} The selected plants, each with members `taxon`, `nRecords`, `nUnmapped` and `lastRecorded`
  */
-saanich.lostPlants.select = function (taxaRows, obsRows, options) {
+saanich.lostPlants.select = function (taxaRows, obsRows, options, annotations) {
     const sightings = new Map();
-    obsRows.forEach(obs => {
+    obsRows.filter(obs => !annotations?.[obs.occurrenceID]?.excludeFromEP).forEach(obs => {
         const entry = sightings.get(obs.iNaturalistTaxonId) || {nRecords: 0, nUnmapped: 0, lastRecorded: NaN};
         const year = parseInt(obs.eventDate, 10);
         entry.nRecords++;
@@ -116,6 +120,36 @@ saanich.lostPlants.load = function (that, plants, loaded) {
 };
 
 /**
+ * Return a copy of a list in random order, by the Fisher-Yates shuffle.
+ * @param {Array} list - The list
+ * @return {Array} The shuffled copy
+ */
+saanich.lostPlants.shuffle = function (list) {
+    const togo = list.slice();
+    for (let i = togo.length - 1; i > 0; --i) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [togo[i], togo[j]] = [togo[j], togo[i]];
+    }
+    return togo;
+};
+
+/**
+ * Shuffle the gallery's cards each time its pane is opened. Deferred, since an effect may not write signals, and
+ * reading the cards there keeps them from becoming a dependency of the effect, which would then shuffle them forever.
+ * @param {fluid.component} that - The component holding the gallery
+ * @param {String} activePaneKey - The key of the pane shown
+ */
+saanich.lostPlants.reshuffle = function (that, activePaneKey) {
+    if (activePaneKey === "LostPlants") {
+        fluid.invokeLater(() => {
+            if (that.cards.length > 1) {
+                that.cards = saanich.lostPlants.shuffle(that.cards);
+            }
+        });
+    }
+};
+
+/**
  * Fetch the photos of the plants of a gallery from iNaturalist and render their cards - see `saanich.lostPlants.load`.
  * @param {fluid.component} that - The component holding the gallery
  * @param {Object[]} plants - The plants, as selected by `saanich.lostPlants.select`
@@ -143,7 +177,7 @@ saanich.lostPlants.fetchCards = async function (that, plants) {
     }
     // Shown only once complete, so that the text never gives a partial count. Until then it reads "These native species"
     if (current()) {
-        that.cards = cards;
+        that.cards = saanich.lostPlants.shuffle(cards);
     }
 };
 

@@ -979,6 +979,11 @@ bioreportr.curationForm.model = function (taxon, observation, rowById, byTaxon, 
         isObservation: !!row,
         provenanceSelected: type === "provenance",
         taxonomySelected: type === "taxonomy",
+        // The History tab holds no note of its own - it shows those made on the taxon before, and through the site
+        historySelected: type === "history",
+        isHistory: type === "history",
+        // Neither the History nor the Location tab takes a note of its own, so they show no form and no consensus
+        noNote: type === "history" || type === "location",
         // The Location tab holds no note of its own - it leads to the records of the taxon, each corrected on its own
         // A record is chosen from the Location tab, which stays selected whilst it is curated
         locationSelected: type === "location" || !!row,
@@ -1008,8 +1013,74 @@ bioreportr.curationForm.model = function (taxon, observation, rowById, byTaxon, 
         viewerLogin: viewer?.login || "",
         submitLabel: own ? "Replace your note" : "Submit your note",
         status,
-        consensus: type === "location" ? "" : bioreportr.curationForm.consensusMarkup(type, notes)
+        consensus: type === "location" || type === "history" ? "" : bioreportr.curationForm.consensusMarkup(type, notes)
     };
+};
+
+/** The history of the curatorial notes on a taxon **/
+
+/**
+ * Load the history of the curatorial notes on each taxon, as prepared by the project, e.g. by Saanich's
+ * scripts/prepare_curation_history.R - a CSV file with a row for each taxon, keyed by its id.
+ * @param {String|null} historyFile - The file, relative to the story page, or null if the project has none
+ * @return {Promise<Object<String, Object>>|Object<String, Object>} The history of each taxon, by taxon id
+ */
+bioreportr.curation.loadHistory = function (historyFile) {
+    return historyFile ? hortis.csvReader.load(historyFile, {header: true, skipEmptyLines: true}).then(parsed => {
+        const togo = {};
+        (parsed?.data || []).forEach(row => togo[row.id] = row);
+        return togo;
+    }) : {};
+};
+
+// The sources of the history of a taxon, in the order in which they are shown, oldest first, each with the field of the
+// history holding its note
+bioreportr.curationForm.historySources = [
+    {field: "original", source: "Szczawinski & Harrison", label: "Original account"},
+    {field: "harvey", source: "Harvey Janszen", label: "Revised account"},
+    {field: "fpnw", source: "Flora of the Pacific Northwest", label: "Remarks"},
+    {field: "critical", source: "Reviewers", label: "Critical notes"}
+];
+
+/**
+ * Render a note's text, with any web address in it a link.
+ * @param {String} text - The text
+ * @return {String} Its markup
+ */
+bioreportr.curationForm.linkify = function (text) {
+    return hortis.dataTable.encode(text).replace(/https?:\/\/[^\s<)]+[^\s<).,;]/g, url => `<a href="${url}" target="_blank" rel="noopener">${url}</a>`);
+};
+
+/**
+ * Render the History tab - the notes on the taxon chosen, from the earliest account to those submitted through the
+ * site, oldest first.
+ * @param {TaxonRow|null} taxon - The taxon chosen for curation
+ * @param {Object<String, Object>} historyById - The history of each taxon, by taxon id - see
+ * `bioreportr.curation.loadHistory`
+ * @param {Object<String, CurationNote[]>} byTaxon - The notes submitted through the site on each taxon, by taxon id
+ * @return {String} The markup of the history
+ */
+bioreportr.curationForm.historyMarkup = function (taxon, historyById, byTaxon) {
+    const encode = hortis.dataTable.encode;
+    let togo = "";
+    if (taxon) {
+        const history = historyById?.[taxon.id] || {};
+        const entries = bioreportr.curationForm.historySources.filter(({field}) => history[field])
+            .map(({field, source, label}) => `<li class="mxcw-curation-history-entry">
+                <div class="mxcw-curation-history-head"><b>${source}</b> <span>${label}</span></div>
+                <div class="mxcw-curation-history-text">${bioreportr.curationForm.linkify(history[field])}</div>
+            </li>`);
+        const reviewed = history.reviewedBy ? `<p class="mxcw-curation-history-reviewed">Reviewed by ${encode(history.reviewedBy)}</p>` : "";
+        // The notes added through the site, oldest first, follow - so that the history grows with each
+        const site = (byTaxon[taxon.id] || []).slice().reverse().map(note => `<li class="mxcw-curation-history-entry mxcw-curation-history-site">
+                <div class="mxcw-curation-history-head"><b>${encode(note.author)}</b> <span>${encode(note.type || "note")}, ${encode(bioreportr.eventDay(note.submitted))}${note.pending ? " (being processed)" : ""}</span></div>
+                <div class="mxcw-curation-history-text">${note.comment ? bioreportr.curationForm.linkify(note.comment) :
+        bioreportr.curation.questions.filter(([question]) => note[question]).map(([question, label]) => `${label}: ${encode(note[question])}`).join(" · ")}</div>
+            </li>`);
+        togo = entries.length || site.length ? `<ol class="mxcw-curation-history">${entries.join("")}${site.join("")}</ol>${reviewed}` :
+            `<p class="mxcw-curation-none">No curatorial notes have been recorded on this taxon yet.</p>`;
+    }
+    return togo;
 };
 
 // How many of a taxon's records the Location tab lists - the rest are found on the map or in the table of records

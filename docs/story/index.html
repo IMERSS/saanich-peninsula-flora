@@ -1204,12 +1204,18 @@ saanich.atlas.taxonRecords = function (obsRows, rowById, taxon) {
 };
 
 /**
- * Render the panel of the plant or group chosen in the checklist.
+ * Render the panel of the plant or group chosen in the checklist - or, in the extirpation risk pane, of the plant chosen
+ * for its analysis, which also gives its regional EP.
  * @param {TaxonRow|null} taxon - The chosen taxon
  * @param {Object[]} records - Its dated records
+ * @param {Object<String, Object>} [historyById] - The history of the curatorial notes on each taxon, by id
+ * @param {Object<String, CurationNote[]>} [byTaxon] - The notes added through the site on each taxon, by id
+ * @param {Object<String, Object>} [annotations] - The annotations of records, by occurrenceID
+ * @param {String} [context] - "atlas", or "solow" for the extirpation risk pane - which also names the panel's tabs,
+ * so that those of the two panes are chosen apart
  * @return {String} The panel's markup, empty if no taxon with records is chosen
  */
-saanich.atlas.panelMarkup = function (taxon, records) {
+saanich.atlas.panelMarkup = function (taxon, records, historyById, byTaxon, annotations, context = "atlas") {
     let togo = "";
     if (taxon && records.length > 0) {
         togo = `<div class="mxcw-solow-taxon-pane saanich-atlas-taxon-pane">
@@ -1222,10 +1228,11 @@ saanich.atlas.panelMarkup = function (taxon, records) {
         <dt>Date last seen:</dt> <dd>${bioreportr.eventDay(fluid.peek(records).eventDate)}</dd>
         <dt>Total records:</dt> <dd>${saanich.formatCount(records.length)}</dd>
         ${saanich.atlas.field("Status", saanich.atlas.statusLabels[taxon.reportingStatus])}
+      ${context === "solow" ? saanich.atlas.field("Regional EP", taxon.solow_EP) : ""}
       </dl>
       ${bioreportr.georefNote(records)}
     </div>
-    ${saanich.atlas.historyMarkup(records, taxon.id)}
+    ${saanich.atlas.historyMarkup(records, context + "-" + taxon.id, saanich.atlas.notesMarkup(taxon, records, historyById, byTaxon, annotations))}
   </div>
 </div>`;
     }
@@ -1290,22 +1297,43 @@ saanich.atlas.columns = function (columns, kind) {
  * @param {String} taxonId - The plant's id, naming its tabs apart from any other panel's
  * @return {String} The markup of the charts and their tabs
  */
-saanich.atlas.historyMarkup = function (records, taxonId) {
+saanich.atlas.historyMarkup = function (records, taxonId, notes = "") {
     const {decades, months} = saanich.atlas.history(records);
-    const count = n => saanich.formatCount(n) + (n === 1 ? " observation" : " observations");
+    const count = n => saanich.formatCount(n) + (n === 1 ? " report" : " reports");
     const decadeColumns = decades.map(({decade, count: n}) => ({value: n, title: `${decade}s: ${count(n)}`,
         label: decade % 50 === 0 ? String(decade) : ""}));
     const monthColumns = months.map((n, month) => ({value: n, title: `${saanich.atlas.monthNames[month]}: ${count(n)}`,
         label: saanich.atlas.monthNames[month][0]}));
     const name = "saanich-history-" + taxonId;
-    const tab = (kind, label, checked) => `<input type="radio" class="saanich-history-${kind}-tab" id="${name}-${kind}" name="${name}"${checked ? " checked" : ""}>` +
-        `<label for="${name}-${kind}">${label}</label>`;
+    const tab = (kind, label, title, checked) => `<input type="radio" class="saanich-history-${kind}-tab" id="${name}-${kind}" name="${name}"${checked ? " checked" : ""}>` +
+        `<label for="${name}-${kind}" title="${title}">${label}</label>`;
     return `<div class="saanich-history">
-      <div class="saanich-history-tabs"><span class="saanich-history-heading">Observations by:</span>${tab("decade", "Decade", true)}${tab("month", "Month", false)}</div>
+      <div class="saanich-history-tabs" role="tablist">${tab("decade", "Decades", "Reports by decade", true)}${tab("month", "Months", "Reports by month", false)}${tab("notes", "Notes", "Annotation history", false)}</div>
       ${saanich.atlas.columns(decadeColumns, "decades")}
       ${saanich.atlas.columns(monthColumns, "months")}
+      <div class="saanich-history-notes">${notes}</div>
     </div>`;
 };
+
+/**
+ * Render the history of the annotations of a plant, shown by the Notes tab of the atlas's panel - any records set aside,
+ * e.g. as planted, then its curatorial notes from the earliest account to those added through the site, as the History
+ * tab of the curation pane shows them - see bioreportr.curationForm.historyMarkup.
+ * @param {TaxonRow} taxon - The plant
+ * @param {Object[]} records - Its records
+ * @param {Object<String, Object>} historyById - The history of the curatorial notes on each taxon, by id
+ * @param {Object<String, CurationNote[]>} byTaxon - The notes added through the site on each taxon, by id
+ * @param {Object<String, Object>} annotations - The annotations of records, by occurrenceID
+ * @return {String} The markup of the history
+ */
+saanich.atlas.notesMarkup = function (taxon, records, historyById, byTaxon, annotations) {
+    const setAside = bioreportr.solowAnnotationNote(records, annotations);
+    const history = bioreportr.curationForm?.historyMarkup ? bioreportr.curationForm.historyMarkup(taxon, historyById || {}, byTaxon || {}) : "";
+    return setAside + history;
+};
+
+// The dated records of a plant, as the panel charts them
+saanich.atlas.dated = records => records.filter(record => record.eventDate);
 
 // The panel is shown only on the atlas pane and only while a plant with records is selected
 saanich.atlas.panelVisible = (markup, activePaneKey, atlasPane) => !!markup && activePaneKey === atlasPane;
@@ -1799,6 +1827,10 @@ fluid.def("saanich.story", {
             selectedIndex: 2
         }
     },
+    // The annotations of records, e.g. of planted populations, applied by scripts/apply_record_annotations.R
+    recordAnnotationsFile: "../local/data/tabular/Saanich_Tracheophyta_record-annotations_2026-08-20.csv",
+    // The history of the curatorial notes on each taxon, prepared by scripts/prepare_curation_history.R
+    curationHistoryFile: "../local/data/tabular/Saanich_Tracheophyta_curation-history_2026-08-20.csv",
     // The tiles of the atlas's three groups of species, placed in its section
     atlasTiles: "$compute:saanich.atlas.tilesMarkup({self}.taxa.allRows, {self}.selectedStatus)",
     sectionInserts: "$compute:saanich.atlas.sectionInserts({self}.atlasTiles)",
@@ -1808,10 +1840,19 @@ fluid.def("saanich.story", {
     atlasRecords: "$compute:saanich.atlas.taxonRecords({self}.obsRows, {self}.taxa.rowById, {self}.checklistTaxon)",
     taxonPanel: {
         $component: {
-            markup: "$compute:saanich.atlas.panelMarkup({storyPage}.checklistTaxon, {storyPage}.atlasRecords)"
+            markup: `$compute:saanich.atlas.panelMarkup({storyPage}.checklistTaxon, {storyPage}.atlasRecords,
+                {storyPage}.curation.historyById, {storyPage}.curation.byTaxon, {storyPage}.recordAnnotations)`
         }
     },
     taxonPanelVisible: "$compute:saanich.atlas.panelVisible({self}.taxonPanel.markup, {self}.activePaneKey, Status)",
+    // The extirpation risk pane shows the same panel of its chosen plant, with its regional EP
+    solowTaxonPanel: {
+        $component: {
+            markup: `$compute:saanich.atlas.panelMarkup({storyPage}.solowTaxa.selectedTaxon, {storyPage}.solowDatedObs,
+                {storyPage}.curation.historyById, {storyPage}.curation.byTaxon, {storyPage}.recordAnnotations, solow)`
+        }
+    },
+    solowDatedObs: "$compute:saanich.atlas.dated({self}.solowTaxonObs)",
     // Summaries of each group of species, shown when hovering over its tile in the atlas or its row of the map's legend
     statusTooltip: {
         $component: {
@@ -1939,6 +1980,19 @@ saanich.phoneGestures = function (map, window) {
     }
 }
 
+/* On a phone the chart always falls beneath the facts, the panel's column scrolling to it */
+@media (max-width: 767.98px) {
+    .saanich-atlas-taxon-pane .mxcw-taxon-info {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto;
+    }
+
+    .saanich-atlas-taxon-pane .saanich-history-chart,
+    .saanich-atlas-taxon-pane .saanich-history-notes {
+        min-height: 90px;
+    }
+}
+
 /* The photo yields room to the chart, which it does not share in the extirpation risk pane's panel */
 .saanich-atlas-taxon-pane .mxcw-taxon-image {
     max-width: 34%;
@@ -2010,8 +2064,72 @@ saanich.phoneGestures = function (map, window) {
 }
 
 .saanich-history:has(.saanich-history-decade-tab:checked) .saanich-history-months,
-.saanich-history:has(.saanich-history-month-tab:checked) .saanich-history-decades {
+.saanich-history:has(.saanich-history-month-tab:checked) .saanich-history-decades,
+.saanich-history:has(.saanich-history-notes-tab:checked) .saanich-history-chart,
+.saanich-history:not(:has(.saanich-history-notes-tab:checked)) .saanich-history-notes {
     display: none;
+}
+
+/* The Notes tab's history of the plant's annotations, scrolling within the room the charts take */
+.saanich-history-notes {
+    flex: 1 1 auto;
+    min-height: 70px;
+    max-height: 150px;
+    overflow-y: auto;
+    padding-right: 4px;
+    color: #1f2a30;
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.saanich-history-notes .mxcw-curation-history {
+    margin: 0 0 0 6px;
+    padding: 0 0 0 14px;
+    border-left: 2px solid rgba(90, 118, 128, 0.35);
+    list-style: none;
+}
+
+.saanich-history-notes .mxcw-curation-history-entry {
+    position: relative;
+    margin: 0 0 8px;
+    list-style: none;
+}
+
+.saanich-history-notes .mxcw-curation-history-entry::marker {
+    content: none;
+}
+
+.saanich-history-notes .mxcw-curation-history-entry::before {
+    content: "";
+    position: absolute;
+    top: 0.45em;
+    left: -19px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #5a7680;
+}
+
+.saanich-history-notes .mxcw-curation-history-site::before {
+    background: #e8711a;
+}
+
+.saanich-history-notes .mxcw-curation-history-head span,
+.saanich-history-notes .mxcw-curation-history-reviewed,
+.saanich-history-notes .mxcw-curation-none {
+    color: #5a7680;
+}
+
+.saanich-history-notes .mxcw-curation-history-reviewed {
+    margin: 2px 0 0;
+}
+
+.saanich-history-notes .mxcw-curation-history-text a {
+    color: #184e62;
+}
+
+.saanich-history-notes .mxcw-solow-annotation-note {
+    margin: 0 0 6px;
 }
 
 .saanich-history-chart {
@@ -3300,12 +3418,53 @@ bioreportr.solowObsForTaxon = function (obsRows, taxonRow) {
 };
 
 /**
+ * Load the annotations of records which the project keeps, e.g. those of planted populations - see Saanich's
+ * scripts/apply_record_annotations.R. Each row names a record by its occurrenceID, with its `annotation`, whether it is
+ * suspended from the calculation of extirpation probability, `excludeFromEP`, and a `note`.
+ * @param {String|null} file - The CSV file of annotations, relative to the story page, or null if the project has none
+ * @return {Promise<Object<String, Object>>|Object<String, Object>} The annotation of each record, by its occurrenceID
+ */
+bioreportr.loadRecordAnnotations = function (file) {
+    return file ? hortis.csvReader.load(file, {header: true, skipEmptyLines: true}).then(parsed => {
+        const togo = {};
+        (parsed?.data || []).forEach(row => togo[row.occurrenceID] = {...row, excludeFromEP: /^true$/i.test(row.excludeFromEP)});
+        return togo;
+    }) : {};
+};
+
+/**
+ * The records of a taxon which count towards its extirpation probability - all but those suspended by an annotation.
+ * @param {Object[]} taxonObsRows - The taxon's records
+ * @param {Object<String, Object>} annotations - The annotations of records, by occurrenceID
+ * @return {Object[]} The records which count
+ */
+bioreportr.solowObsForEP = function (taxonObsRows, annotations) {
+    return taxonObsRows.filter(row => !annotations?.[row.occurrenceID]?.excludeFromEP);
+};
+
+/**
+ * Note the records of a taxon suspended from the calculation of its extirpation probability, and why.
+ * @param {Object[]} taxonObsRows - The taxon's records
+ * @param {Object<String, Object>} annotations - The annotations of records, by occurrenceID
+ * @return {String} The markup of the note, or "" if none of its records is suspended
+ */
+bioreportr.solowAnnotationNote = function (taxonObsRows, annotations) {
+    const suspended = taxonObsRows.filter(row => annotations?.[row.occurrenceID]?.excludeFromEP);
+    const ids = new Set(suspended.map(row => row.occurrenceID));
+    const notes = [...new Set(suspended.map(row => annotations[row.occurrenceID].note).filter(Boolean))];
+    return suspended.length ? `<div class="mxcw-solow-annotation-note" title="${hortis.dataTable.encode(notes.join(" "))}">` +
+        `${ids.size} ${ids.size === 1 ? "record" : "records"} set aside from EP: ${hortis.dataTable.encode([...new Set(suspended.map(row => annotations[row.occurrenceID].annotation))].join(", "))}</div>` : "";
+};
+
+/**
  * Compute the information shown about the chosen taxon.
  * @param {TaxonRow|null} taxon - The taxon, or null if none is chosen
  * @param {Object[]} taxonObsRows - Its observations, in order of date
+ * @param {Object<String, Object>} [annotations] - The annotations of records, by occurrenceID, of which any suspending
+ * records from the calculation of extirpation probability are noted
  * @return {Object} The information - with member `none` true if no taxon is chosen
  */
-bioreportr.solowTaxonInfo.model = function (taxon, taxonObsRows) {
+bioreportr.solowTaxonInfo.model = function (taxon, taxonObsRows, annotations) {
     return taxon && taxonObsRows.length > 0 ? {
         none: false,
         taxonName: taxon.scientificName + (taxon.commonName ? ` (${taxon.commonName})` : ""),
@@ -3313,7 +3472,7 @@ bioreportr.solowTaxonInfo.model = function (taxon, taxonObsRows) {
         dateLastSeen: bioreportr.eventDay(taxonObsRows[taxonObsRows.length - 1].eventDate),
         numObs: taxonObsRows.length,
         regionalEP: taxon.solow_EP,
-        georefNote: bioreportr.georefNote(taxonObsRows),
+        georefNote: bioreportr.georefNote(taxonObsRows) + bioreportr.solowAnnotationNote(taxonObsRows, annotations),
         taxonImage: hortis.renderTaxonImage(taxon.iNaturalistTaxonImage, taxon.id)
     } : {none: true, taxonName: "", dateFirstSeen: "", dateLastSeen: "", numObs: "", regionalEP: "", georefNote: "", taxonImage: ""};
 };
@@ -4700,6 +4859,11 @@ bioreportr.curationForm.model = function (taxon, observation, rowById, byTaxon, 
         isObservation: !!row,
         provenanceSelected: type === "provenance",
         taxonomySelected: type === "taxonomy",
+        // The History tab holds no note of its own - it shows those made on the taxon before, and through the site
+        historySelected: type === "history",
+        isHistory: type === "history",
+        // Neither the History nor the Location tab takes a note of its own, so they show no form and no consensus
+        noNote: type === "history" || type === "location",
         // The Location tab holds no note of its own - it leads to the records of the taxon, each corrected on its own
         // A record is chosen from the Location tab, which stays selected whilst it is curated
         locationSelected: type === "location" || !!row,
@@ -4729,8 +4893,74 @@ bioreportr.curationForm.model = function (taxon, observation, rowById, byTaxon, 
         viewerLogin: viewer?.login || "",
         submitLabel: own ? "Replace your note" : "Submit your note",
         status,
-        consensus: type === "location" ? "" : bioreportr.curationForm.consensusMarkup(type, notes)
+        consensus: type === "location" || type === "history" ? "" : bioreportr.curationForm.consensusMarkup(type, notes)
     };
+};
+
+/** The history of the curatorial notes on a taxon **/
+
+/**
+ * Load the history of the curatorial notes on each taxon, as prepared by the project, e.g. by Saanich's
+ * scripts/prepare_curation_history.R - a CSV file with a row for each taxon, keyed by its id.
+ * @param {String|null} historyFile - The file, relative to the story page, or null if the project has none
+ * @return {Promise<Object<String, Object>>|Object<String, Object>} The history of each taxon, by taxon id
+ */
+bioreportr.curation.loadHistory = function (historyFile) {
+    return historyFile ? hortis.csvReader.load(historyFile, {header: true, skipEmptyLines: true}).then(parsed => {
+        const togo = {};
+        (parsed?.data || []).forEach(row => togo[row.id] = row);
+        return togo;
+    }) : {};
+};
+
+// The sources of the history of a taxon, in the order in which they are shown, oldest first, each with the field of the
+// history holding its note
+bioreportr.curationForm.historySources = [
+    {field: "original", source: "Szczawinski & Harrison", label: "Original account"},
+    {field: "harvey", source: "Harvey Janszen", label: "Revised account"},
+    {field: "fpnw", source: "Flora of the Pacific Northwest", label: "Remarks"},
+    {field: "critical", source: "Reviewers", label: "Critical notes"}
+];
+
+/**
+ * Render a note's text, with any web address in it a link.
+ * @param {String} text - The text
+ * @return {String} Its markup
+ */
+bioreportr.curationForm.linkify = function (text) {
+    return hortis.dataTable.encode(text).replace(/https?:\/\/[^\s<)]+[^\s<).,;]/g, url => `<a href="${url}" target="_blank" rel="noopener">${url}</a>`);
+};
+
+/**
+ * Render the History tab - the notes on the taxon chosen, from the earliest account to those submitted through the
+ * site, oldest first.
+ * @param {TaxonRow|null} taxon - The taxon chosen for curation
+ * @param {Object<String, Object>} historyById - The history of each taxon, by taxon id - see
+ * `bioreportr.curation.loadHistory`
+ * @param {Object<String, CurationNote[]>} byTaxon - The notes submitted through the site on each taxon, by taxon id
+ * @return {String} The markup of the history
+ */
+bioreportr.curationForm.historyMarkup = function (taxon, historyById, byTaxon) {
+    const encode = hortis.dataTable.encode;
+    let togo = "";
+    if (taxon) {
+        const history = historyById?.[taxon.id] || {};
+        const entries = bioreportr.curationForm.historySources.filter(({field}) => history[field])
+            .map(({field, source, label}) => `<li class="mxcw-curation-history-entry">
+                <div class="mxcw-curation-history-head"><b>${source}</b> <span>${label}</span></div>
+                <div class="mxcw-curation-history-text">${bioreportr.curationForm.linkify(history[field])}</div>
+            </li>`);
+        const reviewed = history.reviewedBy ? `<p class="mxcw-curation-history-reviewed">Reviewed by ${encode(history.reviewedBy)}</p>` : "";
+        // The notes added through the site, oldest first, follow - so that the history grows with each
+        const site = (byTaxon[taxon.id] || []).slice().reverse().map(note => `<li class="mxcw-curation-history-entry mxcw-curation-history-site">
+                <div class="mxcw-curation-history-head"><b>${encode(note.author)}</b> <span>${encode(note.type || "note")}, ${encode(bioreportr.eventDay(note.submitted))}${note.pending ? " (being processed)" : ""}</span></div>
+                <div class="mxcw-curation-history-text">${note.comment ? bioreportr.curationForm.linkify(note.comment) :
+        bioreportr.curation.questions.filter(([question]) => note[question]).map(([question, label]) => `${label}: ${encode(note[question])}`).join(" · ")}</div>
+            </li>`);
+        togo = entries.length || site.length ? `<ol class="mxcw-curation-history">${entries.join("")}${site.join("")}</ol>${reviewed}` :
+            `<p class="mxcw-curation-none">No curatorial notes have been recorded on this taxon yet.</p>`;
+    }
+    return togo;
 };
 
 // How many of a taxon's records the Location tab lists - the rest are found on the map or in the table of records
@@ -5089,6 +5319,9 @@ fluid.def("bioreportr.storyPage", {
             }
         }
     },
+    // The history of the curatorial notes on each taxon from before the site's own curation, as a CSV file relative to the
+    // story page, if the project has one - shown by the History tab of the curation pane, see bioreportr.curation.history
+    curationHistoryFile: null,
     // Community curation of the taxa - see notes/community-curation-design.md and the pane rendered by bioreportr.curationPane
     curation: {
         $component: {
@@ -5190,6 +5423,11 @@ fluid.def("bioreportr.storyPage", {
         }
     },
     solowTaxonObs: "$compute:bioreportr.solowObsForTaxon({self}.obsRows, {self}.solowTaxa.selectedTaxon)",
+    // The annotations of records the project keeps, e.g. of planted populations, as a CSV file relative to the story page,
+    // if it has any - records they suspend from the calculation of extirpation probability are left out of the populations
+    recordAnnotationsFile: null,
+    recordAnnotations: "$compute:bioreportr.loadRecordAnnotations({self}.recordAnnotationsFile)",
+    solowEPObs: "$compute:bioreportr.solowObsForEP({self}.solowTaxonObs, {self}.recordAnnotations)",
     solowTaxonInfo: {
         $component: {
             $layers: "bioreportr.solowTaxonInfo",
@@ -5198,6 +5436,15 @@ fluid.def("bioreportr.storyPage", {
         }
     },
     solowHasTaxon: "$compute:hortis.isValue({self}.solowTaxa.selectedTaxon)",
+    // A panel of the taxon chosen for the extirpation risk analysis, which a project may supply in place of the standard
+    // solowTaxonInfo, e.g. the same panel as its atlas shows - empty unless it does
+    solowTaxonPanel: {
+        $component: {
+            $layers: "hortis.verbatimSlot",
+            markup: ""
+        }
+    },
+    solowHasPanel: "$compute:bioreportr.storyPage.hasMarkup({self}.solowTaxonPanel.markup)",
     // The records of the chosen taxon, most recent first, since the last known sightings are the best guide to where to look
     solowRecordsTable: {
         $component: {
@@ -5215,7 +5462,7 @@ fluid.def("bioreportr.storyPage", {
     solowRecordsCollapsed: true,
     toggleSolowRecords: "$method:bioreportr.storyPage.toggle({self}, solowRecordsCollapsed)",
     downloadSolowRecords: "$method:bioreportr.storyPage.downloadTaxonObs({self}.solowTaxa.selectedTaxon, {self}.solowTaxonObs)",
-    solowClusters: "$compute:bioreportr.solow.clusters({self}.solowTaxonObs, {self}.solowRadius.radius, {self}.solowParams)",
+    solowClusters: "$compute:bioreportr.solow.clusters({self}.solowEPObs, {self}.solowRadius.radius, {self}.solowParams)",
     solowMapLayer: {
         $component: {
             $layers: "bioreportr.solowMapLayer",
@@ -5308,6 +5555,9 @@ bioreportr.storyPage.toggleFilters = function (that) {
  * @param {fluid.component} that - The component
  * @param {String} member - The name of the member
  */
+// Whether a slot has been given markup by the project
+bioreportr.storyPage.hasMarkup = markup => !!markup;
+
 bioreportr.storyPage.toggle = function (that, member) {
     that[member] = !that[member];
 };
@@ -6073,7 +6323,7 @@ hortis.dataTable.navigate = function (that, scrollEl, move) {
 fluid.def("bioreportr.solowTaxonInfo", {
     $layers: ["fluid.sfcLayer","fluid.component"],
     // taxon: TaxonRow|null, taxonObsRows: Object[] - supplied by the story page
-    model: "$compute:bioreportr.solowTaxonInfo.model({self}.taxon, {self}.taxonObsRows)",
+    model: "$compute:bioreportr.solowTaxonInfo.model({self}.taxon, {self}.taxonObsRows, {storyPage}.recordAnnotations)",
     image: {
         $component: {
             $layers: "hortis.verbatimSlot",
@@ -6195,26 +6445,6 @@ hortis.recordReporter.renderModel = function (filteredRows, allRows) {
 
 }).call(globalThis);
 //# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/core/hortis-recordReporter.vue</script>
-    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.filterControls-0">(function () {
-"use strict";
-
-// The button resetting every filter and checklist beneath the visualisation loader
-fluid.def("hortis.filterControls", {
-    $layers: ["fluid.sfcLayer","hortis.icons","fluid.component"],
-    filters: "{vizLoader hortis.filter}",
-    checklists: "{vizLoader hortis.checklist}",
-    resetAll: "$method:hortis.filterControls.resetAll({self}.filters, {self}.checklists)",
-    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
-"template":{"sfcLayer":"hortis.filterControls"}}}
-});
-
-hortis.filterControls.resetAll = function (filters, checklists) {
-    filters.forEach(filter => filter.reset());
-    checklists.forEach(checklist => checklist.reset());
-};
-
-}).call(globalThis);
-//# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/filters/hortis-filterControls.vue</script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.autocomplete-0" fluid-client="" fluid-src="../vendor/accessible-autocomplete/dist/accessible-autocomplete.min.js" src="../vendor/accessible-autocomplete/dist/accessible-autocomplete.min.js"></script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.autocomplete-1">(function () {
 "use strict";
@@ -6301,42 +6531,6 @@ fluid.def("hortis.valueFilter", {
 }).call(globalThis);
 //# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/filters/hortis-valueFilter.vue</script>
     <link data-fluid-indent="4" data-fluid-hydrated="" id="fl-style-hortis.valueFilter-0" href="../vendor/pretty-checkbox/dist/pretty-checkbox.min.css" rel="stylesheet">
-    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.epFilter-2">(function () {
-"use strict";
-
-// Filters the taxa of the extirpation risk analysis by their range of extirpation probability, chosen by a pair of
-// sliders
-fluid.def("bioreportr.epFilter", {
-    $layers: ["fluid.sfcLayer","hortis.taxaFilter"],
-    filterName: "Extirpation probability (EP)",
-    // The range, between 0 and 1
-    filterState: {min: 0, max: 1},
-    display: "$compute:bioreportr.epFilter.display({self}.filterState)",
-    // The handles are placed from code: the renderer writes the value of a bound input back into what it is bound to,
-    // which left the readings stuck and the other handle out of place
-    placeHandles: "$effect:bioreportr.epFilter.placeHandles({self}.display, {global}.document)",
-    filterSummary: "$compute:bioreportr.epFilter.summarise({self}.filterState)",
-    doFilter: "$method:bioreportr.epFilter.doFilter({0}:rows, {1}:filterState)",
-    reset: "$method:bioreportr.epFilter.reset({self})",
-    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
-"template":{"sfcLayer":"bioreportr.epFilter"}}}
-});
-
-/**
- * Place the handles of the sliders at the range of the filter's state.
- * @param {Object} display - The range as percentages, with members `min` and `max`
- * @param {Document} dokkument - The document holding the filter
- */
-bioreportr.epFilter.placeHandles = function (display, dokkument) {
-    const min = dokkument.querySelector(".mxcw-ep-min"), max = dokkument.querySelector(".mxcw-ep-max");
-    if (min && max) {
-        min.value = display.min;
-        max.value = display.max;
-    }
-};
-
-}).call(globalThis);
-//# sourceURL=../bioreportr/sfc/bioreportr-epFilter.vue</script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.sectionTab-1">(function () {
 "use strict";
 
@@ -7557,8 +7751,10 @@ fluid.def("saanich.lostPlants", {
     // Observes iNaturalist's requested limit of about one request per second
     batchDelay: 1100,
     cards: [],
-    plants: "$compute:saanich.lostPlants.select({storyPage}.taxa.allRows, {storyPage}.obsRows, {self})",
+    plants: "$compute:saanich.lostPlants.select({storyPage}.taxa.allRows, {storyPage}.obsRows, {self}, {storyPage}.recordAnnotations)",
     load: "$effect:saanich.lostPlants.load({self}, {self}.plants, {storyPage}.loaded)",
+    // The cards are shown in a fresh random order each time the pane is opened, so that a different assemblage leads
+    reshuffle: "$effect:saanich.lostPlants.reshuffle({self}, {storyPage}.activePaneKey)",
     markup: "$compute:saanich.lostPlants.markup({self}.cards)",
     count: "$compute:saanich.lostPlants.count({self}.cards)"
 });
@@ -7580,11 +7776,13 @@ fluid.def("saanich.lostPlantsPane", {
  * @param {TaxonRow[]} taxaRows - All taxa
  * @param {Object[]} obsRows - All records
  * @param {Object} options - Members `minEP` and `maxRecords`
+ * @param {Object<String, Object>} [annotations] - The annotations of records, by occurrenceID - those suspended from the
+ * calculation of extirpation probability, e.g. of a planted population, are not counted as sightings
  * @return {Object[]} The selected plants, each with members `taxon`, `nRecords`, `nUnmapped` and `lastRecorded`
  */
-saanich.lostPlants.select = function (taxaRows, obsRows, options) {
+saanich.lostPlants.select = function (taxaRows, obsRows, options, annotations) {
     const sightings = new Map();
-    obsRows.forEach(obs => {
+    obsRows.filter(obs => !annotations?.[obs.occurrenceID]?.excludeFromEP).forEach(obs => {
         const entry = sightings.get(obs.iNaturalistTaxonId) || {nRecords: 0, nUnmapped: 0, lastRecorded: NaN};
         const year = parseInt(obs.eventDate, 10);
         entry.nRecords++;
@@ -7647,6 +7845,36 @@ saanich.lostPlants.load = function (that, plants, loaded) {
 };
 
 /**
+ * Return a copy of a list in random order, by the Fisher-Yates shuffle.
+ * @param {Array} list - The list
+ * @return {Array} The shuffled copy
+ */
+saanich.lostPlants.shuffle = function (list) {
+    const togo = list.slice();
+    for (let i = togo.length - 1; i > 0; --i) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [togo[i], togo[j]] = [togo[j], togo[i]];
+    }
+    return togo;
+};
+
+/**
+ * Shuffle the gallery's cards each time its pane is opened. Deferred, since an effect may not write signals, and
+ * reading the cards there keeps them from becoming a dependency of the effect, which would then shuffle them forever.
+ * @param {fluid.component} that - The component holding the gallery
+ * @param {String} activePaneKey - The key of the pane shown
+ */
+saanich.lostPlants.reshuffle = function (that, activePaneKey) {
+    if (activePaneKey === "LostPlants") {
+        fluid.invokeLater(() => {
+            if (that.cards.length > 1) {
+                that.cards = saanich.lostPlants.shuffle(that.cards);
+            }
+        });
+    }
+};
+
+/**
  * Fetch the photos of the plants of a gallery from iNaturalist and render their cards - see `saanich.lostPlants.load`.
  * @param {fluid.component} that - The component holding the gallery
  * @param {Object[]} plants - The plants, as selected by `saanich.lostPlants.select`
@@ -7674,7 +7902,7 @@ saanich.lostPlants.fetchCards = async function (that, plants) {
     }
     // Shown only once complete, so that the text never gives a partial count. Until then it reads "These native species"
     if (current()) {
-        that.cards = cards;
+        that.cards = saanich.lostPlants.shuffle(cards);
     }
 };
 
@@ -7872,6 +8100,9 @@ fluid.def("bioreportr.curation", {
     $layers: "fluid.component",
     // The files written by the consolidation job, src/js/consolidateCuration.js, relative to the story page
     configFile: "../curation/config.json",
+    // The history of the curatorial notes on each taxon from before the site's own curation, if the project has one
+    historyFile: "{storyPage}.curationHistoryFile",
+    historyById: "$compute:bioreportr.curation.loadHistory({self}.historyFile)",
     taxaFile: "../curation/taxa.csv",
     observationsFile: "../curation/observations.csv",
     claimStatusFile: "../curation/claimStatus.json",
@@ -8319,6 +8550,13 @@ fluid.def("bioreportr.curationForm", {
             markup: "{curationForm}.model.recordLink"
         }
     },
+    // The history of the notes on the taxon, shown by the History tab - see bioreportr.curationForm.historyMarkup
+    history: {
+        $component: {
+            $layers: "hortis.verbatimSlot",
+            markup: "$compute:bioreportr.curationForm.historyMarkup({curationForm}.taxon, {storyPage}.curation.historyById, {storyPage}.curation.byTaxon)"
+        }
+    },
     // The records of the taxon, listed by the Location tab - see bioreportr.curationForm.locationRecordsMarkup
     locationRecords: {
         $component: {
@@ -8351,6 +8589,7 @@ fluid.def("bioreportr.curationForm", {
     selectProvenance: "$method:bioreportr.curationForm.selectTab({self}, provenance, {storyPage}.map.recordSelector)",
     selectTaxonomy: "$method:bioreportr.curationForm.selectTab({self}, taxonomy, {storyPage}.map.recordSelector)",
     selectLocation: "$method:bioreportr.curationForm.selectTab({self}, location, {storyPage}.map.recordSelector)",
+    selectHistory: "$method:bioreportr.curationForm.selectTab({self}, history, {storyPage}.map.recordSelector)",
     chooseRecord: "$method:bioreportr.curationForm.chooseRecord({storyPage}.map.recordSelector, {0}:event)",
     submit: "$method:bioreportr.curationForm.submit({storyPage}.curation, {self}, {0}:event, {global})",
     signIn: "$method:bioreportr.curation.signIn({storyPage}.curation.backend, {global})",
@@ -8448,6 +8687,62 @@ bioreportr.curationForm.selectTab = function (that, tab, recordSelector) {
     border-left: 4px solid #e8711a;
     background: rgba(232, 113, 26, 0.14);
     font-weight: 400;
+}
+
+/* The History tab's timeline of notes, oldest first, down a rule, those added through the site marked in the orange of
+   the tabs' guidance */
+/* Set in from the box's edge, its dots centred on its rule */
+.mxcw-curation-history {
+    margin: 4px 0 0 10px;
+    padding: 0 0 0 18px;
+    border-left: 2px solid rgba(168, 200, 208, 0.45);
+    list-style: none;
+}
+
+.mxcw-curation-location .mxcw-curation-history-entry {
+    position: relative;
+    margin: 0 0 12px;
+    padding: 0;
+    list-style: none;
+}
+
+.mxcw-curation-location .mxcw-curation-history-entry::marker {
+    content: none;
+}
+
+.mxcw-curation-history-entry::before {
+    content: "";
+    position: absolute;
+    top: 0.45em;
+    /* Half the dot's width and the rule's, back across the list's padding */
+    left: -24px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #a8c8d0;
+}
+
+.mxcw-curation-history-site::before {
+    background: #e8711a;
+}
+
+.mxcw-curation-history-head span {
+    margin-left: 4px;
+    color: #a8c8d0;
+}
+
+.mxcw-curation-history-text {
+    margin-top: 2px;
+    overflow-wrap: anywhere;
+}
+
+.mxcw-curation-history-text a {
+    color: #fdf2ce;
+}
+
+.mxcw-curation-history-reviewed {
+    margin: 4px 0 0;
+    color: #a8c8d0;
 }
 
 /* The particulars of a record being placed, as label and value */
@@ -9674,6 +9969,62 @@ hortis.taxonSearchFilter.doFilter = function (obsRows, filterState, rowById) {
 
 }).call(globalThis);
 //# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/filters/hortis-taxonSearchFilter.vue</script>
+    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.filterControls-0">(function () {
+"use strict";
+
+// The button resetting every filter and checklist beneath the visualisation loader
+fluid.def("hortis.filterControls", {
+    $layers: ["fluid.sfcLayer","hortis.icons","fluid.component"],
+    filters: "{vizLoader hortis.filter}",
+    checklists: "{vizLoader hortis.checklist}",
+    resetAll: "$method:hortis.filterControls.resetAll({self}.filters, {self}.checklists)",
+    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
+"template":{"sfcLayer":"hortis.filterControls"}}}
+});
+
+hortis.filterControls.resetAll = function (filters, checklists) {
+    filters.forEach(filter => filter.reset());
+    checklists.forEach(checklist => checklist.reset());
+};
+
+}).call(globalThis);
+//# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/filters/hortis-filterControls.vue</script>
+    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.epFilter-2">(function () {
+"use strict";
+
+// Filters the taxa of the extirpation risk analysis by their range of extirpation probability, chosen by a pair of
+// sliders
+fluid.def("bioreportr.epFilter", {
+    $layers: ["fluid.sfcLayer","hortis.taxaFilter"],
+    filterName: "Extirpation probability (EP)",
+    // The range, between 0 and 1
+    filterState: {min: 0, max: 1},
+    display: "$compute:bioreportr.epFilter.display({self}.filterState)",
+    // The handles are placed from code: the renderer writes the value of a bound input back into what it is bound to,
+    // which left the readings stuck and the other handle out of place
+    placeHandles: "$effect:bioreportr.epFilter.placeHandles({self}.display, {global}.document)",
+    filterSummary: "$compute:bioreportr.epFilter.summarise({self}.filterState)",
+    doFilter: "$method:bioreportr.epFilter.doFilter({0}:rows, {1}:filterState)",
+    reset: "$method:bioreportr.epFilter.reset({self})",
+    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
+"template":{"sfcLayer":"bioreportr.epFilter"}}}
+});
+
+/**
+ * Place the handles of the sliders at the range of the filter's state.
+ * @param {Object} display - The range as percentages, with members `min` and `max`
+ * @param {Document} dokkument - The document holding the filter
+ */
+bioreportr.epFilter.placeHandles = function (display, dokkument) {
+    const min = dokkument.querySelector(".mxcw-ep-min"), max = dokkument.querySelector(".mxcw-ep-max");
+    if (min && max) {
+        min.value = display.min;
+        max.value = display.max;
+    }
+};
+
+}).call(globalThis);
+//# sourceURL=../bioreportr/sfc/bioreportr-epFilter.vue</script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.storyMap-0" fluid-client="" fluid-src="../vendor/maplibre-gl/dist/maplibre-gl-dev.js" src="../vendor/maplibre-gl/dist/maplibre-gl-dev.js"></script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.storyMap-1" fluid-client="" fluid-src="../vendor/@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw-unminified.js" src="../vendor/@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw-unminified.js"></script>
     <script data-fluid-indent="4" data-fluid-hydrated="" fluid-src="../vendor/imerss-bioinfo/src/lib/point-in-polygon.js" id="fl-script-bioreportr.storyMap-3">/* eslint-env node */
@@ -11611,7 +11962,7 @@ fluid.def("hortis.icons", {
         }
       }
     </style>
-    <div data-fluid-hydrated="{&quot;attrs&quot;:{&quot;fluid-layers&quot;:&quot;saanich.story&quot;},&quot;html&quot;:&quot;&quot;}" class="imerss-main imerss-loading" fluid-layers="saanich.story"><div data-mxcw-startup-hidden="map"><div></div><div aria-orientation="horizontal" class="resize-bar resize-bar--vertical" aria-label="Resize panels" tabindex="0" role="separator"></div><div class="mxcw-data fld-imerss-nodismiss-map"><div class="mxcw-data-pane-widget mxcw-atlas-taxon-holder"><div></div></div><div aria-orientation="horizontal" class="resize-bar resize-bar--vertical" aria-label="Resize panels" tabindex="0" role="separator"></div><div class="mxcw-records-collapsed"><div class="mxcw-obs-table-controls"><button aria-expanded="false" aria-controls="mxcw-records-table" type="button" class="mxcw-records-toggle mxcw-data-widget-text">Records<span class="mxcw-records-filter-label"></span></button><button disabled aria-label="Clear the selected record" title="Clear the selected record" type="button" class="imerss-download-button mxcw-record-reset"><svg aria-hidden="true" height="24" width="24"><use href="#imerss-i-reset" /></svg></button><span title="Download records as CSV" class="imerss-download-button imerss-basic-tooltip"><svg height="24" width="24"><use href="#imerss-i-download" /></svg></span></div><div id="mxcw-records-table" class="mxcw-obs-table hortis-datatable hortis-dataTable-wrap"><div class="hortis-dataTable-scroll"><table><thead><tr><th class="hortis-dataTable-select-cell"></th><th style="width:1.75em"><div class="hortis-dataTable-sort-wrap"></div></th><th><div class="hortis-dataTable-sort-wrap">Date</div></th><th><div class="hortis-dataTable-sort-wrap">Taxon</div></th><th><div class="hortis-dataTable-sort-wrap">Locality</div></th><th><div class="hortis-dataTable-sort-wrap">Recorder</div></th><th><div class="hortis-dataTable-sort-wrap">Record type</div></th><th><div class="hortis-dataTable-sort-wrap">Institution</div></th><th><div class="hortis-dataTable-sort-wrap">Catalogue no.</div></th><th><div class="hortis-dataTable-sort-wrap">Latitude</div></th><th><div class="hortis-dataTable-sort-wrap">Longitude</div></th><th><div class="hortis-dataTable-sort-wrap">Uncertainty (m)</div></th><th><div class="hortis-dataTable-sort-wrap">Elevation</div></th><th><div class="hortis-dataTable-sort-wrap">Count</div></th><th><div class="hortis-dataTable-sort-wrap">Establishment</div></th><th><div class="hortis-dataTable-sort-wrap">Identified by</div></th><th><div class="hortis-dataTable-sort-wrap">Date identified</div></th><th><div class="hortis-dataTable-sort-wrap">Type status</div></th><th><div class="hortis-dataTable-sort-wrap">Collection</div></th><th><div class="hortis-dataTable-sort-wrap">Record no.</div></th><th><div class="hortis-dataTable-sort-wrap">Licence</div></th><th><div class="hortis-dataTable-sort-wrap">Rights holder</div></th><th><div class="hortis-dataTable-sort-wrap">Occurrence ID</div></th><th><div class="hortis-dataTable-sort-wrap">GBIF ID</div></th></tr></thead><tbody><tr data-row-index="0" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="0" type="checkbox" class="hortis-dataTable-row-check"></td><td><button aria-label="Correct where this record was made, or add a note on it" title="Correct where this record was made, or add a note on it" data-curation-record="QFA0212927" type="button" class="mxcw-curation-bubble mxcw-curation-record-bubble"></button></td><td>1967-06-14</td><td>Abies amabilis</td><td>V.I. , Brentwood, end of Greig Rd.</td><td>Harrison, A. S.</td><td>PRESERVED_SPECIMEN</td><td>Université Laval</td><td>QFA0212927</td><td>48.566667</td><td>-123.45</td><td></td><td>68</td><td></td><td></td><td>Chuang, Ching-chang</td><td></td><td></td><td>QFA</td><td>32.4</td><td>CC0_1_0</td><td>Université Laval</td><td>QFA0212927</td><td>1248731719</td></tr><tr data-row-index="1" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="1" type="checkbox" class="hortis-dataTable-row-check"></td><td><button aria-label="Correct where this record was made, or add a note on it" title="Correct where this record was made, or add a note on it" data-curation-record="QFA021927" type="button" class="mxcw-curation-bubble mxcw-curation-record-bubble"></button></td><td>1967-06-14</td><td>Abies amabilis</td><td></td><td>A.S. Harrison</td><td></td><td>QFA</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>QFA021927</td><td></td></tr><tr data-row-index="2" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="2" type="checkbox" class="hortis-dataTable-row-check"></td><td><button aria-label="Correct where this record was made, or add a note on it" title="Correct where this record was made, or add a note on it" data-curation-record="F75FA487-E806-ED46-B254-237F071C5F8C" type="button" class="mxcw-curation-bubble mxcw-curation-record-bubble"></button></td><td>1967-07-18</td><td>Abies amabilis</td><td>Vancouver Island, creek outflow at east end of Durrance Lake</td><td>A. S. Harrison</td><td>PRESERVED_SPECIMEN</td><td>BBM</td><td>V216898</td><td>48.541667</td><td>-123.466667</td><td></td><td></td><td></td><td></td><td>C.C. Chuang 1973</td><td></td><td></td><td>UBC</td><td>37.2A</td><td>CC0_1_0</td><td>The University of British Columbia</td><td>F75FA487-E806-ED46-B254-237F071C5F8C</td><td>1988068725</td></tr><tr data-row-index="3" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="3" type="checkbox" class="hortis-dataTable-row-check"></td><td><button aria-label="Correct where this record was made, or add a note on it" title="Correct where this record was made, or add a note on it" data-curation-record="F75FA487-E806-ED46-B254-237F071C5F8C" type="button" class="mxcw-curation-bubble mxcw-curation-record-bubble"></button></td><td>1967-07-18</td><td>Abies amabilis</td><td></td><td>A. S. Harrison</td><td></td><td>BBM</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>F75FA487-E806-ED46-B254-237F071C5F8C</td><td></td></tr><tr data-row-index="4" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="4" type="checkbox" class="hortis-dataTable-row-check"></td><td><button aria-label="Correct where this record was made, or add a note on it" title="Correct where this record was made, or add a note on it" data-curation-record="16eadc9f-cc91-461b-8931-d9ccff7107a4" type="button" class="mxcw-curation-bubble mxcw-curation-record-bubble"></button></td><td>1887-02-25</td><td>Abies grandis</td><td>Vicinity of Victoria</td><td>John Macoun</td><td>PRESERVED_SPECIMEN</td><td>NHMUK</td><td>BM015754290</td><td>48.428421</td><td>-123.365644</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>BOT</td><td>s.n.</td><td>CC0_1_0</td><td></td><td>16eadc9f-cc91-461b-8931-d9ccff7107a4</td><td>5028932721</td></tr><tr data-row-index="5" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="5" type="checkbox" class="hortis-dataTable-row-check"></td><td><button aria-label="Correct where this record was made, or add a note on it" title="Correct where this record was made, or add a note on it" data-curation-record="55a03525-8e24-4832-99df-8b92e6c4ecb8" type="button" class="mxcw-curation-bubble mxcw-curation-record-bubble"></button></td><td>1921-08-05</td><td>Abies grandis</td><td>Vancouver Island. Esquimalt</td><td>F. W. Hunnewell</td><td>PRESERVED_SPECIMEN</td><td>NY</td><td>29332</td><td>48.435825</td><td>-123.411258</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>NY</td><td>7626</td><td>CC0_1_0</td><td>The New York Botanical Garden</td><td>55a03525-8e24-4832-99df-8b92e6c4ecb8</td><td>1928978551</td></tr><tr data-row-index="6" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="6" type="checkbox" class="hortis-dataTable-row-check"></td><td><button aria-label="Correct where this record was made, or add a note on it" title="Correct where this record was made, or add a note on it" data-curation-record="NY00029332" type="button" class="mxcw-curation-bubble mxcw-curation-record-bubble"></button></td><td>1921-08-05</td><td>Abies grandis</td><td></td><td>F.W. Hunnewell</td><td></td><td>NY</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>NY00029332</td><td></td></tr><tr data-row-index="7" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="7" type="checkbox" class="hortis-dataTable-row-check"></td><td><button aria-label="Correct where this record was made, or add a note on it" title="Correct where this record was made, or add a note on it" data-curation-record="545C1ABF-3D29-544D-B989-2B549F26D7CE" type="button" class="mxcw-curation-bubble mxcw-curation-record-bubble"></button></td><td>1966-05-12</td><td>Abies grandis</td><td>Vancouver Island, 1 mile north of Prospect Lake, off West Saanich road</td><td>A. S. Harrison</td><td>PRESERVED_SPECIMEN</td><td>BBM</td><td>V216893</td><td>48.541667</td><td>-123.441667</td><td></td><td></td><td></td><td></td><td>C.C. Chuang 1973</td><td></td><td></td><td>UBC</td><td>44.1</td><td>CC0_1_0</td><td>The University of British Columbia</td><td>545C1ABF-3D29-544D-B989-2B549F26D7CE</td><td>1988184875</td></tr></tbody></table></div><div class="hortis-dataTable-pagination"><span class="hortis-dataTable-pageInfo">1–8 of 8</span><div class="hortis-dataTable-pageControls"><button disabled data-move="start">Start</button><button disabled data-move="prev">← Prev</button><button disabled data-move="next">Next →</button><button disabled data-move="end">End</button></div></div></div></div><div><div class="mxcw-solow-taxon-holder"><div class="mxcw-solow-taxon-pane fl-hidden"><div class="mxcw-taxon-image"></div><div class="mxcw-taxon-info"><div class="mxcw-taxon-name"></div><dl class="mxcw-taxon-fields"><dt>Date first seen:</dt><dd></dd><dt>Date last seen:</dt><dd></dd><dt>Total sightings:</dt><dd></dd><dt>Regional EP:</dt><dd></dd></dl><div></div></div></div></div><div class="mxcw-solow-radius-holder"><div class="mxcw-solow-radius"><div class="mxcw-solow-radius-title">Population radius (m)</div><div class="mxcw-solow-radius-slider-wrap"><div class="mxcw-solow-radius-track"><div style="width: 33.33333333333333%" class="mxcw-solow-radius-fill"></div><input value="2" aria-label="Population radius in metres" step="1" max="6" min="0" type="range" class="mxcw-solow-radius-input"></div></div><div class="mxcw-solow-radius-snap-markers"><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">500</div></div><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">750</div></div><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">1k</div></div><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">2k</div></div><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">5k</div></div><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">7.5k</div></div><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">10k</div></div></div><div class="mxcw-solow-radius-current-value">1,000 m</div><div class="mxcw-solow-radius-note">*Aggregate sightings into populations: default = 1000 m</div></div></div></div><div aria-orientation="horizontal" class="resize-bar resize-bar--vertical" aria-label="Resize panels" tabindex="0" role="separator"></div><div class="mxcw-solow-records-collapsed"><div class="mxcw-obs-table-controls"><button aria-expanded="false" aria-controls="mxcw-solow-records-table" type="button" class="mxcw-records-toggle mxcw-data-widget-text">Records<span class="mxcw-solow-records-species"></span></button><button disabled aria-label="Clear the selected record" title="Clear the selected record" type="button" class="imerss-download-button mxcw-record-reset"><svg aria-hidden="true" height="24" width="24"><use href="#imerss-i-reset" /></svg></button><span title="Download this species' records as CSV" class="imerss-download-button imerss-basic-tooltip"><svg height="24" width="24"><use href="#imerss-i-download" /></svg></span></div><div id="mxcw-solow-records-table" class="mxcw-solow-records-table hortis-datatable hortis-dataTable-wrap"><div class="hortis-dataTable-scroll"><table><thead><tr><th class="hortis-dataTable-select-cell"></th><th><div class="hortis-dataTable-sort-wrap">Date<button aria-label="Sort by Date" data-key="eventDate" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sort-descending" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Locality<button aria-label="Sort by Locality" data-key="locality" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Recorder<button aria-label="Sort by Recorder" data-key="recordedBy" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Record type<button aria-label="Sort by Record type" data-key="basisOfRecord" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Institution<button aria-label="Sort by Institution" data-key="institutionCode" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Catalogue no.<button aria-label="Sort by Catalogue no." data-key="catalogNumber" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Latitude<button aria-label="Sort by Latitude" data-key="decimalLatitude" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Longitude<button aria-label="Sort by Longitude" data-key="decimalLongitude" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Uncertainty (m)<button aria-label="Sort by Uncertainty (m)" data-key="coordinateUncertaintyInMetres" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Elevation<button aria-label="Sort by Elevation" data-key="elevation" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Count<button aria-label="Sort by Count" data-key="individualCount" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Establishment<button aria-label="Sort by Establishment" data-key="establishmentMeans" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Identified by<button aria-label="Sort by Identified by" data-key="identifiedBy" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Date identified<button aria-label="Sort by Date identified" data-key="dateIdentified" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Type status<button aria-label="Sort by Type status" data-key="typeStatus" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Collection<button aria-label="Sort by Collection" data-key="collectionCode" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Record no.<button aria-label="Sort by Record no." data-key="recordNumber" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Licence<button aria-label="Sort by Licence" data-key="license" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Rights holder<button aria-label="Sort by Rights holder" data-key="rightsHolder" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Occurrence ID<button aria-label="Sort by Occurrence ID" data-key="occurrenceID" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">GBIF ID<button aria-label="Sort by GBIF ID" data-key="gbifID" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th></tr></thead><tbody></tbody></table></div><div class="hortis-dataTable-pagination"><span class="hortis-dataTable-pageInfo">No data</span><div class="hortis-dataTable-pageControls"><button disabled data-move="start">Start</button><button disabled data-move="prev">← Prev</button><button disabled data-move="next">Next →</button><button disabled data-move="end">End</button></div></div></div></div><div class="mxcw-dataPanes"><div class="mxcw-dataPane mxcw-dataPane-Traces"><div></div><div class="mxcw-iNatPanels"></div><div><div></div></div></div><div class="mxcw-dataPane mxcw-dataPane-LostPlants"><div></div><div class="mxcw-iNatPanels"></div><div><div><div class="saanich-lost-gallery"></div></div></div></div><div class="mxcw-dataPane mxcw-dataPane-Status"><div></div><div class="mxcw-iNatPanels"></div><div><div></div></div></div><div class="mxcw-dataPane mxcw-dataPane-TopContributions"><div></div><div class="mxcw-iNatPanels"><div id="inat-components-TopContributions-0" class="mxcw-inat-components"></div></div><div><div></div></div></div><div class="mxcw-dataPane mxcw-dataPane-Solow"><div></div><div class="mxcw-iNatPanels"></div><div><div></div></div></div><div class="mxcw-dataPane mxcw-dataPane-Curation"><div></div><div class="mxcw-iNatPanels"></div><div><div></div></div></div><div class="mxcw-dataPane mxcw-dataPane-Remembering"><div></div><div class="mxcw-iNatPanels"></div><div><div></div></div></div></div></div></div><div aria-orientation="vertical" class="resize-bar resize-bar--horizontal" aria-label="Resize panels" tabindex="0" role="separator"></div><div class="imerss-page"><div><div class="imerss-subnav">
+    <div data-fluid-hydrated="{&quot;attrs&quot;:{&quot;fluid-layers&quot;:&quot;saanich.story&quot;},&quot;html&quot;:&quot;&quot;}" class="imerss-main imerss-loading" fluid-layers="saanich.story"><div data-mxcw-startup-hidden="map"><div></div><div aria-orientation="horizontal" class="resize-bar resize-bar--vertical" aria-label="Resize panels" tabindex="0" role="separator"></div><div class="mxcw-data fld-imerss-nodismiss-map"><div class="mxcw-data-pane-widget mxcw-atlas-taxon-holder"><div></div></div><div aria-orientation="horizontal" class="resize-bar resize-bar--vertical" aria-label="Resize panels" tabindex="0" role="separator"></div><div class="mxcw-records-collapsed"><div class="mxcw-obs-table-controls"><button aria-expanded="false" aria-controls="mxcw-records-table" type="button" class="mxcw-records-toggle mxcw-data-widget-text">Records<span class="mxcw-records-filter-label"></span></button><button disabled aria-label="Clear the selected record" title="Clear the selected record" type="button" class="imerss-download-button mxcw-record-reset"><svg aria-hidden="true" height="24" width="24"><use href="#imerss-i-reset" /></svg></button><span title="Download records as CSV" class="imerss-download-button imerss-basic-tooltip"><svg height="24" width="24"><use href="#imerss-i-download" /></svg></span></div><div id="mxcw-records-table" class="mxcw-obs-table hortis-datatable hortis-dataTable-wrap"><div class="hortis-dataTable-scroll"><table><thead><tr><th class="hortis-dataTable-select-cell"></th><th style="width:1.75em"><div class="hortis-dataTable-sort-wrap"></div></th><th><div class="hortis-dataTable-sort-wrap">Date</div></th><th><div class="hortis-dataTable-sort-wrap">Taxon</div></th><th><div class="hortis-dataTable-sort-wrap">Locality</div></th><th><div class="hortis-dataTable-sort-wrap">Recorder</div></th><th><div class="hortis-dataTable-sort-wrap">Record type</div></th><th><div class="hortis-dataTable-sort-wrap">Institution</div></th><th><div class="hortis-dataTable-sort-wrap">Catalogue no.</div></th><th><div class="hortis-dataTable-sort-wrap">Latitude</div></th><th><div class="hortis-dataTable-sort-wrap">Longitude</div></th><th><div class="hortis-dataTable-sort-wrap">Uncertainty (m)</div></th><th><div class="hortis-dataTable-sort-wrap">Elevation</div></th><th><div class="hortis-dataTable-sort-wrap">Count</div></th><th><div class="hortis-dataTable-sort-wrap">Establishment</div></th><th><div class="hortis-dataTable-sort-wrap">Identified by</div></th><th><div class="hortis-dataTable-sort-wrap">Date identified</div></th><th><div class="hortis-dataTable-sort-wrap">Type status</div></th><th><div class="hortis-dataTable-sort-wrap">Collection</div></th><th><div class="hortis-dataTable-sort-wrap">Record no.</div></th><th><div class="hortis-dataTable-sort-wrap">Licence</div></th><th><div class="hortis-dataTable-sort-wrap">Rights holder</div></th><th><div class="hortis-dataTable-sort-wrap">Occurrence ID</div></th><th><div class="hortis-dataTable-sort-wrap">GBIF ID</div></th></tr></thead><tbody><tr data-row-index="0" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="0" type="checkbox" class="hortis-dataTable-row-check"></td><td><button aria-label="Correct where this record was made, or add a note on it" title="Correct where this record was made, or add a note on it" data-curation-record="QFA0212927" type="button" class="mxcw-curation-bubble mxcw-curation-record-bubble"></button></td><td>1967-06-14</td><td>Abies amabilis</td><td>V.I. , Brentwood, end of Greig Rd.</td><td>Harrison, A. S.</td><td>PRESERVED_SPECIMEN</td><td>Université Laval</td><td>QFA0212927</td><td>48.566667</td><td>-123.45</td><td></td><td>68</td><td></td><td></td><td>Chuang, Ching-chang</td><td></td><td></td><td>QFA</td><td>32.4</td><td>CC0_1_0</td><td>Université Laval</td><td>QFA0212927</td><td>1248731719</td></tr><tr data-row-index="1" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="1" type="checkbox" class="hortis-dataTable-row-check"></td><td><button aria-label="Correct where this record was made, or add a note on it" title="Correct where this record was made, or add a note on it" data-curation-record="QFA021927" type="button" class="mxcw-curation-bubble mxcw-curation-record-bubble"></button></td><td>1967-06-14</td><td>Abies amabilis</td><td></td><td>A.S. Harrison</td><td></td><td>QFA</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>QFA021927</td><td></td></tr><tr data-row-index="2" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="2" type="checkbox" class="hortis-dataTable-row-check"></td><td><button aria-label="Correct where this record was made, or add a note on it" title="Correct where this record was made, or add a note on it" data-curation-record="F75FA487-E806-ED46-B254-237F071C5F8C" type="button" class="mxcw-curation-bubble mxcw-curation-record-bubble"></button></td><td>1967-07-18</td><td>Abies amabilis</td><td>Vancouver Island, creek outflow at east end of Durrance Lake</td><td>A. S. Harrison</td><td>PRESERVED_SPECIMEN</td><td>BBM</td><td>V216898</td><td>48.541667</td><td>-123.466667</td><td></td><td></td><td></td><td></td><td>C.C. Chuang 1973</td><td></td><td></td><td>UBC</td><td>37.2A</td><td>CC0_1_0</td><td>The University of British Columbia</td><td>F75FA487-E806-ED46-B254-237F071C5F8C</td><td>1988068725</td></tr><tr data-row-index="3" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="3" type="checkbox" class="hortis-dataTable-row-check"></td><td><button aria-label="Correct where this record was made, or add a note on it" title="Correct where this record was made, or add a note on it" data-curation-record="F75FA487-E806-ED46-B254-237F071C5F8C" type="button" class="mxcw-curation-bubble mxcw-curation-record-bubble"></button></td><td>1967-07-18</td><td>Abies amabilis</td><td></td><td>A. S. Harrison</td><td></td><td>BBM</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>F75FA487-E806-ED46-B254-237F071C5F8C</td><td></td></tr><tr data-row-index="4" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="4" type="checkbox" class="hortis-dataTable-row-check"></td><td><button aria-label="Correct where this record was made, or add a note on it" title="Correct where this record was made, or add a note on it" data-curation-record="16eadc9f-cc91-461b-8931-d9ccff7107a4" type="button" class="mxcw-curation-bubble mxcw-curation-record-bubble"></button></td><td>1887-02-25</td><td>Abies grandis</td><td>Vicinity of Victoria</td><td>John Macoun</td><td>PRESERVED_SPECIMEN</td><td>NHMUK</td><td>BM015754290</td><td>48.428421</td><td>-123.365644</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>BOT</td><td>s.n.</td><td>CC0_1_0</td><td></td><td>16eadc9f-cc91-461b-8931-d9ccff7107a4</td><td>5028932721</td></tr><tr data-row-index="5" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="5" type="checkbox" class="hortis-dataTable-row-check"></td><td><button aria-label="Correct where this record was made, or add a note on it" title="Correct where this record was made, or add a note on it" data-curation-record="55a03525-8e24-4832-99df-8b92e6c4ecb8" type="button" class="mxcw-curation-bubble mxcw-curation-record-bubble"></button></td><td>1921-08-05</td><td>Abies grandis</td><td>Vancouver Island. Esquimalt</td><td>F. W. Hunnewell</td><td>PRESERVED_SPECIMEN</td><td>NY</td><td>29332</td><td>48.435825</td><td>-123.411258</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>NY</td><td>7626</td><td>CC0_1_0</td><td>The New York Botanical Garden</td><td>55a03525-8e24-4832-99df-8b92e6c4ecb8</td><td>1928978551</td></tr><tr data-row-index="6" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="6" type="checkbox" class="hortis-dataTable-row-check"></td><td><button aria-label="Correct where this record was made, or add a note on it" title="Correct where this record was made, or add a note on it" data-curation-record="NY00029332" type="button" class="mxcw-curation-bubble mxcw-curation-record-bubble"></button></td><td>1921-08-05</td><td>Abies grandis</td><td></td><td>F.W. Hunnewell</td><td></td><td>NY</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>NY00029332</td><td></td></tr><tr data-row-index="7" class="hortis-dataTable-selectable-row"><td class="hortis-dataTable-select-cell"><input data-row-index="7" type="checkbox" class="hortis-dataTable-row-check"></td><td><button aria-label="Correct where this record was made, or add a note on it" title="Correct where this record was made, or add a note on it" data-curation-record="545C1ABF-3D29-544D-B989-2B549F26D7CE" type="button" class="mxcw-curation-bubble mxcw-curation-record-bubble"></button></td><td>1966-05-12</td><td>Abies grandis</td><td>Vancouver Island, 1 mile north of Prospect Lake, off West Saanich road</td><td>A. S. Harrison</td><td>PRESERVED_SPECIMEN</td><td>BBM</td><td>V216893</td><td>48.541667</td><td>-123.441667</td><td></td><td></td><td></td><td></td><td>C.C. Chuang 1973</td><td></td><td></td><td>UBC</td><td>44.1</td><td>CC0_1_0</td><td>The University of British Columbia</td><td>545C1ABF-3D29-544D-B989-2B549F26D7CE</td><td>1988184875</td></tr></tbody></table></div><div class="hortis-dataTable-pagination"><span class="hortis-dataTable-pageInfo">1–8 of 8</span><div class="hortis-dataTable-pageControls"><button disabled data-move="start">Start</button><button disabled data-move="prev">← Prev</button><button disabled data-move="next">Next →</button><button disabled data-move="end">End</button></div></div></div></div><div><div class="mxcw-solow-radius-holder"><div title="Aggregates sightings into populations - the default radius is 1000 m" class="mxcw-solow-radius"><div class="mxcw-solow-radius-title">Population radius</div><div class="mxcw-solow-radius-scale"><div class="mxcw-solow-radius-slider-wrap"><div class="mxcw-solow-radius-track"><div style="width: 33.33333333333333%" class="mxcw-solow-radius-fill"></div><input value="2" aria-label="Population radius in metres" step="1" max="6" min="0" type="range" class="mxcw-solow-radius-input"></div></div><div class="mxcw-solow-radius-snap-markers"><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">500</div></div><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">750</div></div><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">1k</div></div><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">2k</div></div><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">5k</div></div><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">7.5k</div></div><div class="mxcw-solow-radius-snap-marker"><div class="mxcw-solow-radius-snap-tick"></div><div class="mxcw-solow-radius-snap-label">10k</div></div></div></div><div class="mxcw-solow-radius-current-value">1,000 m</div></div></div><div class="mxcw-solow-taxon-holder"><div></div><div class="mxcw-solow-standard-panel"><div class="mxcw-solow-taxon-pane fl-hidden"><div class="mxcw-taxon-image"></div><div class="mxcw-taxon-info"><div class="mxcw-taxon-name"></div><dl class="mxcw-taxon-fields"><dt>Date first seen:</dt><dd></dd><dt>Date last seen:</dt><dd></dd><dt>Total sightings:</dt><dd></dd><dt>Regional EP:</dt><dd></dd></dl><div></div></div></div></div></div></div><div aria-orientation="horizontal" class="resize-bar resize-bar--vertical" aria-label="Resize panels" tabindex="0" role="separator"></div><div class="mxcw-solow-records-collapsed"><div class="mxcw-obs-table-controls"><button aria-expanded="false" aria-controls="mxcw-solow-records-table" type="button" class="mxcw-records-toggle mxcw-data-widget-text">Records<span class="mxcw-solow-records-species"></span></button><button disabled aria-label="Clear the selected record" title="Clear the selected record" type="button" class="imerss-download-button mxcw-record-reset"><svg aria-hidden="true" height="24" width="24"><use href="#imerss-i-reset" /></svg></button><span title="Download this species' records as CSV" class="imerss-download-button imerss-basic-tooltip"><svg height="24" width="24"><use href="#imerss-i-download" /></svg></span></div><div id="mxcw-solow-records-table" class="mxcw-solow-records-table hortis-datatable hortis-dataTable-wrap"><div class="hortis-dataTable-scroll"><table><thead><tr><th class="hortis-dataTable-select-cell"></th><th><div class="hortis-dataTable-sort-wrap">Date<button aria-label="Sort by Date" data-key="eventDate" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sort-descending" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Locality<button aria-label="Sort by Locality" data-key="locality" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Recorder<button aria-label="Sort by Recorder" data-key="recordedBy" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Record type<button aria-label="Sort by Record type" data-key="basisOfRecord" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Institution<button aria-label="Sort by Institution" data-key="institutionCode" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Catalogue no.<button aria-label="Sort by Catalogue no." data-key="catalogNumber" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Latitude<button aria-label="Sort by Latitude" data-key="decimalLatitude" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Longitude<button aria-label="Sort by Longitude" data-key="decimalLongitude" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Uncertainty (m)<button aria-label="Sort by Uncertainty (m)" data-key="coordinateUncertaintyInMetres" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Elevation<button aria-label="Sort by Elevation" data-key="elevation" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Count<button aria-label="Sort by Count" data-key="individualCount" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Establishment<button aria-label="Sort by Establishment" data-key="establishmentMeans" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Identified by<button aria-label="Sort by Identified by" data-key="identifiedBy" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Date identified<button aria-label="Sort by Date identified" data-key="dateIdentified" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Type status<button aria-label="Sort by Type status" data-key="typeStatus" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Collection<button aria-label="Sort by Collection" data-key="collectionCode" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Record no.<button aria-label="Sort by Record no." data-key="recordNumber" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Licence<button aria-label="Sort by Licence" data-key="license" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Rights holder<button aria-label="Sort by Rights holder" data-key="rightsHolder" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">Occurrence ID<button aria-label="Sort by Occurrence ID" data-key="occurrenceID" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th><th><div class="hortis-dataTable-sort-wrap">GBIF ID<button aria-label="Sort by GBIF ID" data-key="gbifID" class="hortis-dataTable-sort"><svg class="hortis-dataTable-icon"><use href="#sortable" /></svg></button></div></th></tr></thead><tbody></tbody></table></div><div class="hortis-dataTable-pagination"><span class="hortis-dataTable-pageInfo">No data</span><div class="hortis-dataTable-pageControls"><button disabled data-move="start">Start</button><button disabled data-move="prev">← Prev</button><button disabled data-move="next">Next →</button><button disabled data-move="end">End</button></div></div></div></div><div class="mxcw-dataPanes"><div class="mxcw-dataPane mxcw-dataPane-Traces"><div></div><div class="mxcw-iNatPanels"></div><div><div></div></div></div><div class="mxcw-dataPane mxcw-dataPane-LostPlants"><div></div><div class="mxcw-iNatPanels"></div><div><div><div class="saanich-lost-gallery"></div></div></div></div><div class="mxcw-dataPane mxcw-dataPane-Status"><div></div><div class="mxcw-iNatPanels"></div><div><div></div></div></div><div class="mxcw-dataPane mxcw-dataPane-TopContributions"><div></div><div class="mxcw-iNatPanels"><div id="inat-components-TopContributions-0" class="mxcw-inat-components"></div></div><div><div></div></div></div><div class="mxcw-dataPane mxcw-dataPane-Solow"><div></div><div class="mxcw-iNatPanels"></div><div><div></div></div></div><div class="mxcw-dataPane mxcw-dataPane-Curation"><div></div><div class="mxcw-iNatPanels"></div><div><div></div></div></div><div class="mxcw-dataPane mxcw-dataPane-Remembering"><div></div><div class="mxcw-iNatPanels"></div><div><div></div></div></div></div></div></div><div aria-orientation="vertical" class="resize-bar resize-bar--horizontal" aria-label="Resize panels" tabindex="0" role="separator"></div><div class="imerss-page"><div><div class="imerss-subnav">
     <nav class="hx-mx-auto hx-flex hx-items-center hx-justify-start hx-gap-2 hx-h-16 hx-px-6 hx-max-w-[90rem]"><a href="https://salishseabiodiversity.org/" title="Home" class="contrast-more:hx-text-gray-700 contrast-more:dark:hx-text-gray-100 hx-relative -hx-ml-2 hx-hidden hx-whitespace-nowrap hx-p-2 md:hx-inline-block hx-text-gray-600 hover:hx-text-gray-800 dark:hx-text-gray-400 dark:hover:hx-text-gray-200">
             <span class="hx-text-center">Home</span>
         </a><a href="https://salishseabiodiversity.org/data/" title="Data" class="contrast-more:hx-text-gray-700 contrast-more:dark:hx-text-gray-100 hx-relative -hx-ml-2 hx-hidden hx-whitespace-nowrap hx-p-2 md:hx-inline-block hx-text-gray-600 hover:hx-text-gray-800 dark:hx-text-gray-400 dark:hover:hx-text-gray-200">
@@ -11746,7 +12097,8 @@ here by adding curatorial notes regarding the provenance, taxonomy, or
 georeferencing of records.</p><p><span class="saanich-callout">Click on any taxon in the checklist
 below</span> to add a curatorial note. You can also choose a taxon from
 any other part of the atlas, through the speech bubble beside its
-name.</p></div><div class="mxcw-curation-form-holder mxcw-curation-form-root"><div class="mxcw-curation-form"><div class="mxcw-curation-pending">Your comment has been submitted and is being processed</div><div class="mxcw-curation-taxon"><div class="mxcw-curation-photo"></div><div class="mxcw-taxon-name"></div></div><div class="mxcw-curation-tabs" aria-label="Type of note" role="tablist"><button role="tab" type="button" class="mxcw-curation-tab">Provenance</button><button role="tab" type="button" class="mxcw-curation-tab">Taxonomy</button><button role="tab" type="button" class="mxcw-curation-tab">Location</button></div><div class="mxcw-curation-location"><fieldset><legend>Location</legend><p class="mxcw-curation-hint">Please help improve the accuracy of georeferencing of reports. Choose a record from
+name.</p></div><div class="mxcw-curation-form-holder mxcw-curation-form-root"><div class="mxcw-curation-form"><div class="mxcw-curation-pending">Your comment has been submitted and is being processed</div><div class="mxcw-curation-taxon"><div class="mxcw-curation-photo"></div><div class="mxcw-taxon-name"></div></div><div class="mxcw-curation-tabs" aria-label="Type of note" role="tablist"><button role="tab" type="button" class="mxcw-curation-tab">Provenance</button><button role="tab" type="button" class="mxcw-curation-tab">Taxonomy</button><button role="tab" type="button" class="mxcw-curation-tab">Location</button><button role="tab" type="button" class="mxcw-curation-tab">History</button></div><div class="mxcw-curation-location"><fieldset><legend>History</legend><p class="mxcw-curation-hint">The history of curatorial notes on this species, from the earliest account to those
+                added through this site.</p><div></div></fieldset></div><div class="mxcw-curation-location"><fieldset><legend>Location</legend><p class="mxcw-curation-hint">Please help improve the accuracy of georeferencing of reports. Choose a record from
                 the list below, or select it from the map. Drag the marker to reposition the record, and add a curatorial note to
                 justify your correction.</p><div><div></div></div></fieldset></div><div class="mxcw-curation-location"><fieldset><legend>Location</legend><p class="mxcw-curation-hint">Drag the orange marker on the map to where this plant was actually found, and add a
                 curatorial note below to justify your correction.</p><dl class="mxcw-curation-record"><dt>Recorded by:</dt><dd></dd><dt>Date:</dt><dd></dd><dt>Locality:</dt><dd></dd><dt>Recorded position:</dt><dd></dd><dt>Corrected position:</dt><dd><button class="mxcw-curation-link" type="button">return the marker to the recorded position</button></dd><dt>Record:</dt><dd class="mxcw-curation-record-id"><span></span></dd></dl></fieldset></div><form onsubmit="return false"><div></div><div class="mxcw-curation-account"><span>Community curation is not yet connected to GitHub, so notes can't be submitted from this site yet.</span><span><button type="button" class="mxcw-curation-button">Sign in with GitHub</button>

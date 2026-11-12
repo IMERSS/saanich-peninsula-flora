@@ -436,47 +436,48 @@ h2 {
     border-radius: 0;
 }
 
-.mxcw-solow-radius {
-
-
-/* ============================================================
-   solowRadius.css
-   All rules are scoped to .mxcw-solow-radius so nothing leaks
-   outside the component container.
-   ============================================================ */
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    background: #0d3040;
-    border: 2px solid #4a9aaa;
-    border-radius: var(--data-table-radius);
-    padding: var(--story-gap) 16px;
-    width: 100%;
-    min-width: 0;
-    box-sizing: border-box;
-    overflow-y: auto;
-    font-family: Arial, sans-serif;
-    border-width: 1px;
-}
-
+/* The extirpation risk pane's widgets beneath the map: a slim strip holding the slider of the population radius, above
+   the panel of the taxon chosen, which takes the rest of the height */
 .mxcw-solow-widgets-holder {
     display: flex;
+    flex-direction: column;
+    gap: 6px;
     height: 100%;
     width: 100%;
-}
-
-.mxcw-solow-taxon-holder {
-    width: 64%;
-    min-width: 0;
 }
 
 .mxcw-solow-radius-holder {
-    display: flex;
-    width: 36%;
+    flex: none;
+    width: 100%;
     min-width: 0;
-    height: 100%;
-    /* Lets the slider panel compact itself to the room it is given, wherever the map resize bars leave it */
+    /* Lets the strip compact itself to the width it is given */
     container-type: inline-size;
+}
+
+.mxcw-solow-taxon-holder {
+    flex: 1 1 0;
+    min-height: 0;
+    width: 100%;
+}
+
+.mxcw-solow-taxon-holder > div,
+.mxcw-solow-standard-panel {
+    height: 100%;
+}
+
+/* The strip: title, slider with its scale, and value, in a row */
+.mxcw-solow-radius {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0 14px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 3px 12px 4px;
+    background: #0d3040;
+    border: 1px solid #4a9aaa;
+    border-radius: var(--data-table-radius);
+    font-family: Arial, sans-serif;
 }
 
 .mxcw-solow-taxon-pane {
@@ -488,7 +489,6 @@ h2 {
     display: flex;
     box-sizing: border-box;
     height: 100%;
-    margin-right: var(--story-gap);
     overflow: hidden;
     gap: 12px;
 }
@@ -538,17 +538,16 @@ h2 {
     text-overflow: ellipsis;
 }
 
-/* ── Title ─────────────────────────────────────────────────── */
-
 .mxcw-solow-radius .mxcw-solow-radius-title {
     color: #ffffff;
-    font-size: var(--story-body);
+    font-size: 13px;
     font-weight: 700;
-    /* Auto margins here and on the note centre the contents vertically, without clipping the top if they overflow */
-    margin-top: auto;
+    white-space: nowrap;
 }
 
-/* ── Slider wrapper ─────────────────────────────────────────── */
+.mxcw-solow-radius .mxcw-solow-radius-scale {
+    min-width: 0;
+}
 
 .mxcw-solow-radius .mxcw-solow-radius-slider-wrap {
     position: relative;
@@ -556,10 +555,10 @@ h2 {
 
 .mxcw-solow-radius .mxcw-solow-radius-track {
     position: relative;
-    height: 6px;
+    height: 4px;
+    margin: 9px 0 3px;
     background: #4a9aaa;
-    border-radius: 3px;
-    margin: 16px 0;
+    border-radius: 2px;
 }
 
 .mxcw-solow-radius .mxcw-solow-radius-fill {
@@ -568,11 +567,9 @@ h2 {
     top: 0;
     height: 100%;
     background: #4a9aaa;
-    border-radius: 3px;
+    border-radius: 2px;
     pointer-events: none;
 }
-
-/* ── Range input ────────────────────────────────────────────── */
 
 .mxcw-solow-radius .mxcw-solow-radius-input {
     -webkit-appearance: none;
@@ -582,7 +579,7 @@ h2 {
     left: 0;
     transform: translateY(-50%);
     width: 100%;
-    height: 6px;
+    height: 18px;
     background: transparent;
     margin: 0;
     cursor: pointer;
@@ -592,44 +589,43 @@ h2 {
 .mxcw-solow-radius .mxcw-solow-radius-input::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 28px;
-    height: 28px;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
-    background: #7a8fa0;
+    background: #a8c8d0;
     cursor: pointer;
     border: none;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
     transition: background 0.15s;
 }
 
 .mxcw-solow-radius .mxcw-solow-radius-input::-moz-range-thumb {
-    width: 28px;
-    height: 28px;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
-    background: #7a8fa0;
+    background: #a8c8d0;
     cursor: pointer;
     border: none;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
     transition: background 0.15s;
 }
 
-.mxcw-solow-radius .mxcw-solow-radius-input:hover::-webkit-slider-thumb {
-    background: #99b0be;
+.mxcw-solow-radius .mxcw-solow-radius-input:hover::-webkit-slider-thumb,
+.mxcw-solow-radius .mxcw-solow-radius-input:focus-visible::-webkit-slider-thumb {
+    background: #fdf2ce;
 }
 
-.mxcw-solow-radius .mxcw-solow-radius-input:hover::-moz-range-thumb {
-    background: #99b0be;
+.mxcw-solow-radius .mxcw-solow-radius-input:hover::-moz-range-thumb,
+.mxcw-solow-radius .mxcw-solow-radius-input:focus-visible::-moz-range-thumb {
+    background: #fdf2ce;
 }
 
-/* ── Scale labels (0 … 10,000) ──────────────────────────────── */
-
-/* ── Snap markers row ───────────────────────────────────────── */
-
+/* The scale beneath the slider, a tick at each value it snaps to */
 .mxcw-solow-radius .mxcw-solow-radius-snap-markers {
     display: flex;
     justify-content: space-between;
-    padding: 0 14px; /* Half the 28px slider thumb size */
-    margin-top: 6px;
+    /* Half the slider's thumb */
+    padding: 0 8px;
 }
 
 .mxcw-solow-radius .mxcw-solow-radius-snap-marker {
@@ -637,62 +633,44 @@ h2 {
     flex-direction: column;
     align-items: center;
     width: 0;
-    gap: 4px;
+    gap: 1px;
 }
 
 .mxcw-solow-radius .mxcw-solow-radius-snap-tick {
-    width: 2px;
-    height: 8px;
+    width: 1px;
+    height: 4px;
     background: #4a9aaa;
-    opacity: 0.6;
-    border-radius: 1px;
 }
 
 .mxcw-solow-radius .mxcw-solow-radius-snap-label {
     color: #7ab8c4;
-    font-size: 14px;
+    font-size: 10px;
+    line-height: 1.1;
     white-space: nowrap;
 }
 
-/* ── Current selected value ─────────────────────────────────── */
-
 .mxcw-solow-radius .mxcw-solow-radius-current-value {
-    text-align: center;
+    min-width: 4.5em;
     color: #ffffff;
-    font-size: var(--story-body);
+    font-size: 13px;
     font-weight: 600;
-    letter-spacing: 0.02em;
+    text-align: right;
+    white-space: nowrap;
 }
 
-/* ── Footnote ───────────────────────────────────────────────── */
-
-.mxcw-solow-radius .mxcw-solow-radius-note {
-    color: #a8c8d0;
-    font-style: italic;
-    font-size: 14px;
-    line-height: 1.3;
-    margin-top: 4px;
-    margin-bottom: auto;
+/* Where the strip is narrow its scale's labels give way, the ticks remaining, and then its title */
+@container (max-width: 420px) {
+    .mxcw-solow-radius .mxcw-solow-radius-snap-label {
+        display: none;
+    }
 }
 
 @container (max-width: 260px) {
     .mxcw-solow-radius {
-        padding: 6px 10px;
+        grid-template-columns: minmax(0, 1fr) auto;
     }
 
-    .mxcw-solow-radius .mxcw-solow-radius-snap-label {
-        font-size: 11px;
-    }
-
-    .mxcw-solow-radius .mxcw-solow-radius-note {
-        font-size: 12px;
-        line-height: 1.2;
-    }
-}
-
-/* The labels begin to collide below about 170px - the ticks and the current value remain */
-@container (max-width: 190px) {
-    .mxcw-solow-radius .mxcw-solow-radius-snap-label {
+    .mxcw-solow-radius .mxcw-solow-radius-title {
         display: none;
     }
 }
@@ -1229,10 +1207,6 @@ h2 {
 .mxcw-taxon-fields dt,
 .mxcw-taxon-fields dd {
     font-size: var(--story-data);
-}
-.mxcw-solow-radius .mxcw-solow-radius-snap-label,
-.mxcw-solow-radius .mxcw-solow-radius-note {
-    font-size: var(--story-small);
 }
 .imerss-legend,
 .imerss-legend .imerss-legend-title,
@@ -1796,6 +1770,13 @@ body {
     margin-top: 4px;
 }
 
+/* The note, in the extirpation risk pane's panel, of records set aside from the calculation of EP, e.g. as planted */
+.mxcw-solow-annotation-note {
+    margin-top: 4px;
+    color: #9a4a0a;
+    font-size: var(--story-small);
+}
+
 .mxcw-curation-tally {
     display: grid;
     grid-template-columns: auto repeat(3, auto);
@@ -1868,7 +1849,7 @@ body {
 }
 
 .mxcw-curation-taxon .mxcw-taxon-name {
-    text-align: left;
+    text-align: center;
 }
 
 .mxcw-curation-note-form fieldset {

@@ -12,7 +12,11 @@ dir.create(dst_dir, recursive = TRUE, showWarnings = FALSE)
 files <- c(
   "Saanich_Tracheophyta_ultimate-catalogue_2026-08-20-selected-labels.csv",
   "Saanich_Tracheophyta_ultimate-catalogue_2026-08-20-selected-regionIndirection.csv",
-  "Saanich_Tracheophyta_ultimate-summary_2026-08-20-prepared-taxa.csv"
+  "Saanich_Tracheophyta_ultimate-summary_2026-08-20-prepared-taxa.csv",
+  # The history of the curatorial notes on each taxon - see scripts/prepare_curation_history.R
+  "Saanich_Tracheophyta_curation-history_2026-08-20.csv",
+  # The annotations of records, e.g. of planted populations - see scripts/apply_record_annotations.R
+  "Saanich_Tracheophyta_record-annotations_2026-08-20.csv"
 )
 
 for (f in files) {

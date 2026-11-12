@@ -32,6 +32,13 @@ fluid.def("bioreportr.curationForm", {
             markup: "{curationForm}.model.recordLink"
         }
     },
+    // The history of the notes on the taxon, shown by the History tab - see bioreportr.curationForm.historyMarkup
+    history: {
+        $component: {
+            $layers: "hortis.verbatimSlot",
+            markup: "$compute:bioreportr.curationForm.historyMarkup({curationForm}.taxon, {storyPage}.curation.historyById, {storyPage}.curation.byTaxon)"
+        }
+    },
     // The records of the taxon, listed by the Location tab - see bioreportr.curationForm.locationRecordsMarkup
     locationRecords: {
         $component: {
@@ -64,6 +71,7 @@ fluid.def("bioreportr.curationForm", {
     selectProvenance: "$method:bioreportr.curationForm.selectTab({self}, provenance, {storyPage}.map.recordSelector)",
     selectTaxonomy: "$method:bioreportr.curationForm.selectTab({self}, taxonomy, {storyPage}.map.recordSelector)",
     selectLocation: "$method:bioreportr.curationForm.selectTab({self}, location, {storyPage}.map.recordSelector)",
+    selectHistory: "$method:bioreportr.curationForm.selectTab({self}, history, {storyPage}.map.recordSelector)",
     chooseRecord: "$method:bioreportr.curationForm.chooseRecord({storyPage}.map.recordSelector, {0}:event)",
     submit: "$method:bioreportr.curationForm.submit({storyPage}.curation, {self}, {0}:event, {global})",
     signIn: "$method:bioreportr.curation.signIn({storyPage}.curation.backend, {global})",
@@ -110,6 +118,16 @@ bioreportr.curationForm.selectTab = function (that, tab, recordSelector) {
                 @onclick="{self}.selectTaxonomy()">Taxonomy</button>
             <button type="button" role="tab" class="mxcw-curation-tab" aria-selected="@{model.locationSelected}"
                 @onclick="{self}.selectLocation()">Location</button>
+            <button type="button" role="tab" class="mxcw-curation-tab" aria-selected="@{model.historySelected}"
+                @onclick="{self}.selectHistory()">History</button>
+        </div>
+        <!-- The History tab: the notes on the taxon, from its earliest account to those submitted through the site -->
+        <div class="mxcw-curation-location" @class="fl-hidden:!@{model.isHistory}">
+            <fieldset><legend>History</legend>
+            <p class="mxcw-curation-hint">The history of curatorial notes on this species, from the earliest account to those
+                added through this site.</p>
+            <div @id="history"></div>
+            </fieldset>
         </div>
         <!-- The Location tab: positions are corrected record by record, so it leads to the taxon's records -->
         <div class="mxcw-curation-location" @class="fl-hidden:!@{model.isLocation}">
@@ -137,7 +155,7 @@ bioreportr.curationForm.selectTab = function (that, tab, recordSelector) {
             </dl>
             </fieldset>
         </div>
-        <form class="mxcw-curation-note-form mxcw-curation-type-@{model.type}" @class="fl-hidden:@{model.isLocation}" onsubmit="return false">
+        <form class="mxcw-curation-note-form mxcw-curation-type-@{model.type}" @class="fl-hidden:@{model.noNote}" onsubmit="return false">
             <!-- The controls are rendered as markup, not bound to the model, since a binding of a control is two-way and the
                  user's choices would be written into the model - see bioreportr.curationForm.taxonControlsMarkup -->
             <div @id="controls"></div>
@@ -154,7 +172,7 @@ bioreportr.curationForm.selectTab = function (that, tab, recordSelector) {
             </div>
             <div class="mxcw-curation-status" aria-live="polite">@{model.status}</div>
         </form>
-        <div class="mxcw-curation-consensus" @class="fl-hidden:@{model.isLocation}">
+        <div class="mxcw-curation-consensus" @class="fl-hidden:@{model.noNote}">
             <h3>Community consensus</h3>
             <div @id="consensus"></div>
         </div>
@@ -229,6 +247,62 @@ bioreportr.curationForm.selectTab = function (that, tab, recordSelector) {
     border-left: 4px solid #e8711a;
     background: rgba(232, 113, 26, 0.14);
     font-weight: 400;
+}
+
+/* The History tab's timeline of notes, oldest first, down a rule, those added through the site marked in the orange of
+   the tabs' guidance */
+/* Set in from the box's edge, its dots centred on its rule */
+.mxcw-curation-history {
+    margin: 4px 0 0 10px;
+    padding: 0 0 0 18px;
+    border-left: 2px solid rgba(168, 200, 208, 0.45);
+    list-style: none;
+}
+
+.mxcw-curation-location .mxcw-curation-history-entry {
+    position: relative;
+    margin: 0 0 12px;
+    padding: 0;
+    list-style: none;
+}
+
+.mxcw-curation-location .mxcw-curation-history-entry::marker {
+    content: none;
+}
+
+.mxcw-curation-history-entry::before {
+    content: "";
+    position: absolute;
+    top: 0.45em;
+    /* Half the dot's width and the rule's, back across the list's padding */
+    left: -24px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #a8c8d0;
+}
+
+.mxcw-curation-history-site::before {
+    background: #e8711a;
+}
+
+.mxcw-curation-history-head span {
+    margin-left: 4px;
+    color: #a8c8d0;
+}
+
+.mxcw-curation-history-text {
+    margin-top: 2px;
+    overflow-wrap: anywhere;
+}
+
+.mxcw-curation-history-text a {
+    color: #fdf2ce;
+}
+
+.mxcw-curation-history-reviewed {
+    margin: 4px 0 0;
+    color: #a8c8d0;
 }
 
 /* The particulars of a record being placed, as label and value */
