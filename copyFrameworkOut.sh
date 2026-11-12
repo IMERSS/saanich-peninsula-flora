@@ -55,6 +55,7 @@ FILES=(
     static/bioreportr/sfc/bioreportr-recordAndTaxaReporter.vue
     static/bioreportr/sfc/bioreportr-sectionTab.vue
     static/bioreportr/sfc/bioreportr-solowRadius.vue
+    static/bioreportr/sfc/bioreportr-solowSearch.vue
     static/bioreportr/sfc/bioreportr-solowTaxa.vue
     static/bioreportr/sfc/bioreportr-solowTaxonInfo.vue
     static/bioreportr/sfc/bioreportr-statusFilter.vue

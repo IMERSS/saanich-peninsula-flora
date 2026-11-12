@@ -28,6 +28,15 @@ in only one project.
 Rather than spread material of the same type into shared .css and .js files,
 instead consolidate code and styling into .vue files related to a widget or pane.
 
+### Vendored libraries
+
+Never edit the vendored libraries, such as imerss-bioinfo and Infusion, in `static/vendor` or `docs/vendor`, nor in
+`node_modules`. `npm run vendor` copies them from `node_modules`, so any edit is lost or reverted by the next copy. A
+change one of them needs must be made upstream in its own repository, normally offered as a patch for a human to apply.
+It then reaches this project only once its dependency in `package.json` is updated to the release holding it, and
+`npm run build` is run. Don't commit vendored files changed by `npm run vendor` unless the dependency's version was
+deliberately updated, since a stale local `node_modules` would otherwise revert the libraries.
+
 ### Panes of a story
 
 Each pane of the story page is knitted from an R Markdown file, `content/story/<PaneKey>.Rmd`, by the RStudio user.
@@ -61,10 +70,11 @@ raw HTML, e.g. `` `<span class="saanich-lost-count">@{count}</span>`{=html} ``, 
 ### Community curation
 
 Both projects end their story with a Community Consensus pane, `content/story/Curation.Rmd`, rendered by the shared
-`bioreportr.curationPane`, through which the community adds notes on taxa as comments on GitHub Discussions. Read
+`bioreportr.curationPane`, through which the community adds notes on taxa - their provenance and taxonomy - and on
+individual records, chiefly correcting their positions, as comments on GitHub Discussions. Read
 `notes/community-curation-design.md` before changing it. Each project's own settings are in
-`static/curation/config.json`. `static/curation/curations.csv` and `claimStatus.json` are written by the
-consolidation job, `.github/workflows/curation.yml` - never edit them by hand. Since `bioreportr-curationPane.vue` is
+`static/curation/config.json`. `static/curation/taxa.csv`, `observations.csv` and `claimStatus.json` are written by
+the consolidation job, `.github/workflows/curation.yml` - never edit them by hand. Since `bioreportr-curationPane.vue` is
 shared, its template holds the section of whichever project was built last, and each project's `npm run story`
 rewrites it.
 
@@ -73,8 +83,9 @@ rewrites it.
 `npm run build` runs every step. RStudio's *Build Website*, through blogdown, builds the same site: blogdown runs
 `R/build.R` before Hugo, which runs `npm run story` and `npm run vendor` and adopts published files, and
 `R/build2.R` after it, which runs `npm run hydrate`, both through `R/npm.R`. Keep the two routes doing the same steps.
-blogdown's Hugo doesn't clean `docs`, so a file the build no longer produces is only removed by `npm run build`. `npm run site` builds the published site, `docs`, with `hugo --cleanDestinationDir`,
-which deletes everything in `docs` that the build does not produce. Never place anything by hand in `docs`: every file
+blogdown's Hugo doesn't clean `docs`, so a file the build no longer produces is only removed by `npm run build`.
+`npm run site` builds the published site, `docs`, with `hugo --cleanDestinationDir`, which deletes everything in
+`docs` that the build does not produce. Never place anything by hand in `docs`: every file
 published must have a source from which the build produces it, usually in `static`. The one exception is a file which
 GitHub Pages itself writes into `docs`, such as `CNAME`. `src/js/adoptPublished.js` adopts any such file into `static`
 before the build, so that it is published again; commit the adopted file there.

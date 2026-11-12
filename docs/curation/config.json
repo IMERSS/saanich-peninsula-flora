@@ -2,7 +2,7 @@
     "backend": "github",
     "repository": "IMERSS/saanich-peninsula-flora",
     "repositoryId": "R_kgDORzf2ow",
-    "category": "Taxa",
-    "categoryId": "DIC_kwDORzf2o84DK2I6",
+    "category": "Curation",
+    "categoryId": "DIC_kwDORzf2o84DK7EB",
     "oauthEndpoint": "https://bioreportr-curation.imerss.workers.dev"
 }

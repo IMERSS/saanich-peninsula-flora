@@ -1,5 +1,5 @@
 # Consolidates the community's curation notes, each a comment on a thread of this repository's GitHub Discussions,
-# into static/curation/curations.csv and claimStatus.json, and their published copies in docs/curation - see
+# into static/curation/taxa.csv, observations.csv and claimStatus.json, and their published copies in docs/curation - see
 # notes/community-curation-design.md and src/js/consolidateCuration.js. It runs when the site is published, whenever
 # a curation comment changes, hourly, and on demand. A run which finds nothing changed commits nothing, so its own
 # publication does not set it off again.

@@ -61,7 +61,7 @@ fluid.def("bioreportr.storyPage", {
     activePane: "$compute:bioreportr.storyPage.activePane({self}.panes, {self}.activePaneKey)",
     // A record selected in one pane is cleared on moving to another
     clearRecordOnPaneChange: "$effect:bioreportr.storyPage.clearRecordOnPaneChange({self}, {self}.activePaneKey)",
-    classes: "$compute:bioreportr.storyPage.classes({self}.activePane, {self}.checklist.search.filterState)",
+    classes: "$compute:bioreportr.storyPage.classes({self}.activePane, {self}.checklist.search.filterState, {self}.map.recordSelector.filterState)",
     selectPane: "$method:bioreportr.storyPage.selectPane({self}, {0}:paneKey)",
     // The reporting status chosen in the status filter, or in the legend of a map coloured by status
     selectedStatus: null,
@@ -184,6 +184,9 @@ fluid.def("bioreportr.storyPage", {
     },
     // The taxon chosen for curation, whilst the curation pane is shown - that chosen in the checklist's search
     curationTaxon: "$compute:bioreportr.curation.chosenTaxon({self}.activePane, {self}.checklist.search.filterState, {self}.taxa.rowById)",
+    // The observation chosen for curation, whilst the curation pane is shown - the record selected, held in the URL
+    curationObservation: `$compute:bioreportr.curation.chosenObservation({self}.activePane, {self}.map.recordSelector.filterState,
+        {self}.map.recordSelector.selectedRow)`,
     recordReporter: {
         $component: {
             $layers: "bioreportr.recordAndTaxaReporter",
@@ -209,7 +212,16 @@ fluid.def("bioreportr.storyPage", {
             // Clicking a record shows its marker alone on the map - see hortis.libreMap.recordSelector
             rowSelectable: true,
             selectedRow: "{storyPage}.map.recordSelector.selectedRow",
-            selectRow: "$method:hortis.libreMap.recordSelector.select({storyPage}.map.recordSelector, {0}:row)"
+            selectRow: "$method:hortis.libreMap.recordSelector.select({storyPage}.map.recordSelector, {0}:row)",
+            // Each record bears a speech bubble leading to its curation - see bioreportr.curation.recordTableBody
+            resolvedColumns: "$compute:bioreportr.curation.recordTableColumns({self}.rows, {self}.columns)",
+            body: {
+                $component: {
+                    markup: `$compute:bioreportr.curation.recordTableBody({dataTable}.displayRows, {dataTable}.resolvedColumns,
+                        {dataTable}.window, {dataTable}.rowHeight, {dataTable}.rowSelectable, {dataTable}.selectedRow,
+                        {storyPage}.curation.byObservation, {storyPage}.map.recordSelector.recordIndex)`
+                }
+            }
         }
     },
     // The buttons beside the tables of records clearing the record selected in them, disabled whilst there is none
@@ -353,16 +365,18 @@ fluid.def("bioreportr.storyPage", {
 
 /**
  * Compute the classes of the parts of the story page which are shown or hidden according to the active pane. A pane
- * whose settings have foldVizControlsOnTaxon, e.g. the curation pane, folds away the checklist once a taxon is chosen.
+ * whose settings have foldVizControlsOnTaxon, e.g. the curation pane, folds away the checklist once a taxon, or a
+ * record, is chosen.
  * @param {PaneSettings} pane - The active pane
  * @param {TaxonRow|null} chosenTaxon - The taxon chosen in the checklist's search, if any
+ * @param {String|null} recordId - The id of the record selected, if any
  * @return {Object<String, String>} The classes of each part
  */
-bioreportr.storyPage.classes = function (pane, chosenTaxon) {
+bioreportr.storyPage.classes = function (pane, chosenTaxon, recordId) {
     const hidden = visible => visible ? "" : "fl-hidden";
     return {
         map: pane.visibleMap ? "" : "mxcw-hideMap",
-        vizControls: hidden(pane.visibleVizControls && !(pane.foldVizControlsOnTaxon && chosenTaxon)),
+        vizControls: hidden(pane.visibleVizControls && !(pane.foldVizControlsOnTaxon && (chosenTaxon || hortis.isValue(recordId)))),
         obsFilters: hidden(pane.visibleObsFilters),
         filters: hidden(pane.visibleFilters),
         obsTable: hidden(pane.visibleObsTable),
@@ -392,7 +406,8 @@ bioreportr.storyPage.toggle = function (that, member) {
             <div class="mxcw-data fld-imerss-nodismiss-map">
                 <div class="mxcw-data-pane-widget mxcw-atlas-taxon-holder" @class="mxcw-atlas-has-taxon:@{taxonPanelVisible}"><div @id="taxonPanel"></div></div>
                 <div @id="taxonPanelResizeBar"></div>
-                <div class="mxcw-data-pane-widget mxcw-obs-table-holder @{classes.obsTable}" @class="mxcw-records-collapsed:@{recordsCollapsed}">
+                <div class="mxcw-data-pane-widget mxcw-obs-table-holder @{classes.obsTable}" @class="mxcw-records-collapsed:@{recordsCollapsed}"
+                    @onclick="bioreportr.curation.recordTableClick({0}, {self})">
                     <div class="mxcw-obs-table-controls">
                         <button type="button" class="mxcw-records-toggle mxcw-data-widget-text" aria-expanded="@{recordsExpanded}"
                             aria-controls="mxcw-records-table" @onclick="{self}.toggleRecords()">Records<span class="mxcw-records-filter-label" title="@{recordsLabel.title}">@{recordsLabel.text}</span></button>

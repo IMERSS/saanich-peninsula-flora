@@ -1291,12 +1291,6 @@ body {
 .mxcw-taxon-info {
     overscroll-behavior: contain;
 }
-
-/* A table renders only the rows near those in view, between spacers. The browser's scroll anchoring would otherwise
-   move the scrollbar each time a new block of rows replaces the old, so that scrolling runs away from the pointer */
-.hortis-dataTable-scroll {
-    overflow-anchor: none;
-}
 .imerss-main .hortis-dataTable-pagination {
     padding: 2px 8px;
     font-size: var(--story-small);
@@ -1742,6 +1736,13 @@ body {
 
 /* ── Community curation - see notes/community-curation-design.md and static/bioreportr/js/curation.js ── */
 
+/* The speech bubble, outlined and filled, drawn as a mask so that it takes the colour of its background - beside each
+   taxon of the checklist, here, and each record of the table of records, in bioreportr-curationPane.vue */
+:root {
+    --mxcw-curation-bubble-outline: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='black' stroke-width='2.2' stroke-linejoin='round' d='M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-9l-5 4v-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z'/%3E%3C/svg%3E");
+    --mxcw-curation-bubble-filled: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-9l-5 4v-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z'/%3E%3C/svg%3E");
+}
+
 /* The speech bubble beside each taxon of the checklist, shown on hovering over the taxon, and always, filled, once it
    has notes. The bubble is drawn as a mask, so that it takes the colour of the checklist's labels */
 .imerss-checklist .mxcw-curation-bubble {
@@ -1753,14 +1754,14 @@ body {
     cursor: pointer;
     visibility: hidden;
     background-color: #4b778f;
-    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='black' stroke-width='2.2' stroke-linejoin='round' d='M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-9l-5 4v-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z'/%3E%3C/svg%3E") center / contain no-repeat;
-    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='black' stroke-width='2.2' stroke-linejoin='round' d='M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-9l-5 4v-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z'/%3E%3C/svg%3E") center / contain no-repeat;
+    -webkit-mask: var(--mxcw-curation-bubble-outline) center / contain no-repeat;
+    mask: var(--mxcw-curation-bubble-outline) center / contain no-repeat;
 }
 
 .imerss-checklist .mxcw-curation-bubble.mxcw-curation-noted {
     visibility: visible;
-    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-9l-5 4v-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z'/%3E%3C/svg%3E");
-    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-9l-5 4v-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z'/%3E%3C/svg%3E");
+    -webkit-mask-image: var(--mxcw-curation-bubble-filled);
+    mask-image: var(--mxcw-curation-bubble-filled);
 }
 
 /* Only the taxon under the pointer shows its bubble, not every taxon above it in the tree */

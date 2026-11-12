@@ -764,9 +764,13 @@ bioreportr.storyPage.noRecordSelected = filterState => !hortis.isValue(filterSta
 // The pane last shown by each story page, so that a record selected in it is cleared on moving to another
 bioreportr.storyPage.lastPaneKey = new WeakMap();
 
+// The id of a record selected together with a move to another pane, which is kept as the pane changes, e.g. on opening
+// the curation of a record - see bioreportr.curation.openRecord
+bioreportr.storyPage.keepRecord = new WeakMap();
+
 /**
  * Clear the selected record when the story page moves from one pane to another - but not as it first shows a pane,
- * so that a record held in the URL survives the page's loading.
+ * so that a record held in the URL survives the page's loading, nor a record selected together with the move.
  * @param {bioreportr.storyPage} storyPage - The story page
  * @param {String} activePaneKey - The key of the active pane
  */
@@ -775,7 +779,13 @@ bioreportr.storyPage.clearRecordOnPaneChange = function (storyPage, activePaneKe
     bioreportr.storyPage.lastPaneKey.set(storyPage, activePaneKey);
     if (lastPaneKey !== undefined && lastPaneKey !== activePaneKey) {
         // Deferred since an effect may not write signals
-        fluid.invokeLater(() => storyPage.map.recordSelector.reset());
+        fluid.invokeLater(() => {
+            const kept = bioreportr.storyPage.keepRecord.get(storyPage);
+            bioreportr.storyPage.keepRecord.delete(storyPage);
+            if (kept === undefined || kept !== storyPage.map.recordSelector.filterState) {
+                storyPage.map.recordSelector.reset();
+            }
+        });
     }
 };
 
