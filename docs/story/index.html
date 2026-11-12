@@ -911,9 +911,15 @@ bioreportr.storyPage.lastPaneKey = new WeakMap();
 // the curation of a record - see bioreportr.curation.openRecord
 bioreportr.storyPage.keepRecord = new WeakMap();
 
+// The story pages moving to the curation pane together with the choice of a taxon, by its speech bubble, which is kept -
+// see bioreportr.curation.open. Any other move to the curation pane, e.g. by its tab, opens it on its landing page, with
+// the checklist from which to choose, rather than on a taxon chosen in another pane
+bioreportr.storyPage.keepTaxon = new WeakSet();
+
 /**
  * Clear the selected record when the story page moves from one pane to another - but not as it first shows a pane,
- * so that a record held in the URL survives the page's loading, nor a record selected together with the move.
+ * so that a record held in the URL survives the page's loading, nor a record selected together with the move. A move to
+ * the curation pane also clears the taxon chosen, unless it was chosen together with the move.
  * @param {bioreportr.storyPage} storyPage - The story page
  * @param {String} activePaneKey - The key of the active pane
  */
@@ -927,6 +933,11 @@ bioreportr.storyPage.clearRecordOnPaneChange = function (storyPage, activePaneKe
             bioreportr.storyPage.keepRecord.delete(storyPage);
             if (kept === undefined || kept !== storyPage.map.recordSelector.filterState) {
                 storyPage.map.recordSelector.reset();
+            }
+            const keepTaxon = bioreportr.storyPage.keepTaxon.has(storyPage);
+            bioreportr.storyPage.keepTaxon.delete(storyPage);
+            if (!keepTaxon && bioreportr.curation?.paneKey && activePaneKey === bioreportr.curation.paneKey(storyPage.panes)) {
+                storyPage.checklist.search.reset();
             }
         });
     }
@@ -2058,7 +2069,7 @@ saanich.phoneGestures = function (map, window) {
     transform: none;
 }
 
-/*# sourceURL=file:///home/amb26/Source/gits/saanich-peninsula-flora/docs/local/story/saanich-story.vue*/</style>
+/*# sourceURL=file:///Users/andrewsimon/GitHub/saanich-peninsula-flora/docs/local/story/saanich-story.vue*/</style>
     <script data-fluid-indent="4" data-fluid-hydrated="" fluid-src="../vendor/papaparse/papaparse.min.js" id="fl-script-bioreportr.storyPage-0">/* @license
 Papa Parse
 v5.4.1
@@ -4238,6 +4249,8 @@ bioreportr.curation.paneKey = function (panes) {
 bioreportr.curation.open = function (storyPage, taxonId) {
     const paneKey = bioreportr.curation.paneKey(storyPage.panes);
     if (paneKey) {
+        // Kept as the pane changes, which otherwise opens the curation pane on its own landing page
+        bioreportr.storyPage.keepTaxon.add(storyPage);
         storyPage.checklist.search.select(taxonId);
         storyPage.selectPane(paneKey);
     }
@@ -4256,6 +4269,7 @@ bioreportr.curation.openRecord = function (storyPage, recordId) {
     const row = selector.recordIndex.byId.get(recordId);
     if (paneKey && row) {
         bioreportr.storyPage.keepRecord.set(storyPage, recordId);
+        bioreportr.storyPage.keepTaxon.add(storyPage);
         storyPage.checklist.search.select(String(hortis.rowToLinkTaxonId(row)));
         storyPage.selectPane(paneKey);
         selector.filterState = recordId;
@@ -4686,6 +4700,10 @@ bioreportr.curationForm.model = function (taxon, observation, rowById, byTaxon, 
         isObservation: !!row,
         provenanceSelected: type === "provenance",
         taxonomySelected: type === "taxonomy",
+        // The Location tab holds no note of its own - it leads to the records of the taxon, each corrected on its own
+        // A record is chosen from the Location tab, which stays selected whilst it is curated
+        locationSelected: type === "location" || !!row,
+        isLocation: type === "location",
         subject: {taxonId: subjectTaxon?.id ?? (row ? String(hortis.rowToLinkTaxonId(row)) : ""), taxonName, recordId: observation?.recordId},
         recordId: observation?.recordId || "",
         taxonName,
@@ -4711,8 +4729,63 @@ bioreportr.curationForm.model = function (taxon, observation, rowById, byTaxon, 
         viewerLogin: viewer?.login || "",
         submitLabel: own ? "Replace your note" : "Submit your note",
         status,
-        consensus: bioreportr.curationForm.consensusMarkup(type, notes)
+        consensus: type === "location" ? "" : bioreportr.curationForm.consensusMarkup(type, notes)
     };
+};
+
+// How many of a taxon's records the Location tab lists - the rest are found on the map or in the table of records
+bioreportr.curationForm.locationRecordLimit = 12;
+
+/**
+ * Render the list of the Location tab - the records of the taxon chosen, any without a position first and then the
+ * oldest, each a button choosing it
+ * for the correction of its position. Records without a position, and those with notes already, are marked.
+ * @param {TaxonRow|null} taxon - The taxon chosen for curation
+ * @param {Object} recordIndex - The index of the records, as `hortis.libreMap.recordIndex`, whose `ids` map each row to
+ * its id
+ * @param {Object<String, CurationNote[]>} byObservation - The notes of each record, by record id
+ * @return {String} The markup of the list
+ */
+bioreportr.curationForm.locationRecordsMarkup = function (taxon, recordIndex, byObservation) {
+    const encode = hortis.dataTable.encode;
+    let togo = "";
+    if (taxon && recordIndex?.ids) {
+        const records = [...recordIndex.ids.entries()].filter(([row]) => String(hortis.rowToLinkTaxonId(row)) === String(taxon.id))
+            // Those most in need of placing first - any without a position, then the oldest, whose localities are vaguest
+            .sort(([a], [b]) => hortis.libreMap.hasCoords(a) - hortis.libreMap.hasCoords(b) ||
+                String(a.eventDate || "9999").localeCompare(String(b.eventDate || "9999")));
+        const shown = records.slice(0, bioreportr.curationForm.locationRecordLimit);
+        const items = shown.map(([row, id]) => {
+            const notes = byObservation[id]?.length || 0;
+            const flags = [!hortis.libreMap.hasCoords(row) && "no position recorded",
+                notes && bioreportr.cellTooltip.plural(notes, "note")].filter(Boolean);
+            return `<li><button type="button" class="mxcw-curation-record-choice" data-record-id="${encode(id)}">
+                <span class="mxcw-curation-record-date">${encode(row.eventDate ? bioreportr.eventDay(row.eventDate) : "Undated")}</span>
+                <span class="mxcw-curation-record-who">${encode((row.recordedBy || "Unknown").split(";")[0].trim())}${row.locality ? " · " + encode(row.locality) : ""}</span>
+                ${flags.length ? `<span class="mxcw-curation-record-flags">${flags.join(" · ")}</span>` : ""}
+            </button></li>`;
+        }).join("");
+        const more = records.length > shown.length ? `<p class="mxcw-curation-none">and ${records.length - shown.length} more - choose them on the map or in the table of records</p>` : "";
+        togo = records.length ? `<ul class="mxcw-curation-record-list">${items}</ul>${more}` : `<p class="mxcw-curation-none">This taxon has no records to correct.</p>`;
+    }
+    return togo;
+};
+
+/**
+ * Choose for curation the record whose button was clicked in the Location tab's list, by selecting it as the map
+ * would - the form then turns to the record, see `bioreportr.curation.chosenObservation`.
+ * @param {hortis.libreMap.recordSelector} recordSelector - The map's selector of records
+ * @param {Event} event - The click
+ */
+bioreportr.curationForm.chooseRecord = function (recordSelector, event) {
+    const button = event.target.closest?.(".mxcw-curation-record-choice");
+    if (button) {
+        const id = button.dataset.recordId;
+        const entry = [...recordSelector.recordIndex.ids.entries()].find(([, candidate]) => candidate === id);
+        if (entry) {
+            recordSelector.select(entry[0]);
+        }
+    }
 };
 
 /**
@@ -4728,12 +4801,13 @@ bioreportr.curationForm.taxonControlsMarkup = function (ownProvenance, ownTaxono
     const rows = bioreportr.curation.questions.map(([question, label]) => `<span class="mxcw-curation-vote-label">${label}:</span>` +
         bioreportr.curation.votes.map(vote => `<input type="radio" name="${question}" value="${vote}" aria-label="${label}: ${vote}"${(ownProvenance?.[question] || "no opinion") === vote ? " checked" : ""}>`).join("")).join("");
     return `<div class="mxcw-curation-panel" data-type="provenance">
-        <fieldset class="mxcw-curation-vote"><legend>Vote</legend><div class="mxcw-curation-vote-grid"><span></span>${heads}${rows}</div></fieldset>
+        <fieldset class="mxcw-curation-vote"><legend>Provenance</legend>
+            <p class="mxcw-curation-hint">Please enter information on the provenance of this species.</p><div class="mxcw-curation-vote-grid"><span></span>${heads}${rows}</div></fieldset>
         <fieldset class="mxcw-curation-comment"><legend>Comment</legend><textarea name="comment" rows="4" aria-label="Comment">${encode(ownProvenance?.comment || "")}</textarea></fieldset>
     </div>
     <div class="mxcw-curation-panel" data-type="taxonomy">
         <fieldset class="mxcw-curation-comment"><legend>Taxonomy</legend>
-            <label class="mxcw-curation-field-label" for="mxcw-curation-synonymy">Enter a correction for the synonymy of this taxon</label>
+            <label class="mxcw-curation-hint" for="mxcw-curation-synonymy">Please enter any taxonomic notes regarding this species report.</label>
             <textarea id="mxcw-curation-synonymy" name="synonymy" rows="4">${encode(ownTaxonomy?.comment || "")}</textarea></fieldset>
     </div>`;
 };
@@ -5693,7 +5767,7 @@ fluid.def("bioreportr.solowTaxa", {
     text-align: right;
 }
 
-/*# sourceURL=file:///home/amb26/Source/gits/saanich-peninsula-flora/docs/bioreportr/sfc/bioreportr-solowTaxa.vue*/</style>
+/*# sourceURL=file:///Users/andrewsimon/GitHub/saanich-peninsula-flora/docs/bioreportr/sfc/bioreportr-solowTaxa.vue*/</style>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.solowRadius-1">(function () {
 "use strict";
 
@@ -5757,10 +5831,6 @@ fluid.def("hortis.dataTable", {
     scrollTop: 0,
     viewHeight: 0,
     rowHeight: 26.5,
-    // The least change in the measured height of a row for which `rowHeight` is updated. Rows differ in height by a
-    // fraction of a pixel, by their content and the display's scaling, and since every row not rendered is reckoned at
-    // `rowHeight`, following each such difference would change the height of a long table by thousands of pixels
-    rowHeightTolerance: 0.5,
     resolvedColumns: "$compute:hortis.dataTable.resolveColumns({self}.rows, {self}.columns)",
     displayRows: "$compute:hortis.dataTable.sortRows({self}.rows, {self}.sortColumn, {self}.sortDirection)",
     window: "$compute:hortis.dataTable.window({self}.displayRows.length, {self}.scrollTop, {self}.viewHeight, {self}.rowHeight, {self}.minBlockSize)",
@@ -5912,27 +5982,9 @@ hortis.dataTable.pageInfo = function (window) {
 };
 
 /**
- * Measure the height of the rows rendered in a table's scrolled element, as their mean, since they may differ by a
- * fraction of a pixel.
- * @param {Element} scrollEl - The table's scrolled element
- * @return {Number} The mean height of the rendered rows, or 0 if none is rendered
- */
-hortis.dataTable.measureRowHeight = function (scrollEl) {
-    const rows = scrollEl.querySelectorAll("tbody tr:not(.hortis-dataTable-spacer)");
-    const first = rows[0], last = rows[rows.length - 1];
-    return rows.length > 0 ? (last.getBoundingClientRect().bottom - first.getBoundingClientRect().top) / rows.length : 0;
-};
-
-/**
  * Track the scrolled position and the height of the view of a table's scrolled element, writing them into the table
  * on each animation frame in which they change, and the height of its head into the element's CSS variable
  * --data-table-head-height.
- * The table's `rowHeight`, by which the heights of the spacers standing for the rows not rendered are reckoned, is
- * corrected only when the rows' measured height departs from it by more than `rowHeightTolerance`, and never whilst
- * the pointer is pressed within the scrolled element. A change of `rowHeight` changes the height of the whole table,
- * and whilst the scrollbar's thumb is dragged, the browser holds the thumb at the pointer by moving the scrolled
- * position in proportion - which rendered other rows, measured afresh, in a loop which ran the table to its end. Once
- * `rowHeight` is corrected, the scrolled position is moved so that the same row stays at the top of the view.
  * @param {hortis.dataTable} that - The table
  * @param {Element} container - The table's rendered container
  * @param {Window} window - The window holding the table
@@ -5941,50 +5993,32 @@ hortis.dataTable.measureRowHeight = function (scrollEl) {
 hortis.dataTable.track = function (that, container, window) {
     const scrollEl = container.querySelector(".hortis-dataTable-scroll");
     let frame = null;
-    // Whether the pointer is pressed within the scrolled element, e.g. dragging its scrollbar's thumb
-    let pressed = false;
     const update = () => {
         frame = null;
         const theadHeight = scrollEl.querySelector("thead")?.getBoundingClientRect().height || 0;
+        const row = scrollEl.querySelector("tbody tr:not(.hortis-dataTable-spacer)");
+        const rowHeight = row?.getBoundingClientRect().height;
         // Confines the vertical scrollbar's track to the rows, beneath the sticky head - see data-table.css
         scrollEl.style.setProperty("--data-table-head-height", theadHeight + "px");
-        const rowHeight = hortis.dataTable.measureRowHeight(scrollEl);
-        if (!pressed && rowHeight > 0 && Math.abs(rowHeight - that.rowHeight) > that.rowHeightTolerance) {
-            const topRow = scrollEl.scrollTop / that.rowHeight;
-            that.rowHeight = rowHeight;
-            scrollEl.scrollTop = topRow * rowHeight;
-        }
         that.scrollTop = scrollEl.scrollTop;
         that.viewHeight = Math.max(scrollEl.clientHeight - theadHeight, 0);
+        if (rowHeight > 0 && Math.abs(rowHeight - that.rowHeight) > 0.01) {
+            that.rowHeight = rowHeight;
+        }
     };
     const schedule = () => {
         if (!frame) {
             frame = window.requestAnimationFrame(update);
         }
     };
-    const press = () => {
-        pressed = true;
-    };
-    const release = () => {
-        if (pressed) {
-            pressed = false;
-            schedule();
-        }
-    };
     scrollEl.addEventListener("scroll", schedule);
-    scrollEl.addEventListener("pointerdown", press);
-    window.addEventListener("pointerup", release);
-    window.addEventListener("pointercancel", release);
     const observer = new window.ResizeObserver(schedule);
     observer.observe(scrollEl);
-    return {scrollEl, schedule, press, release, observer, window, cancel: () => frame && window.cancelAnimationFrame(frame)};
+    return {scrollEl, schedule, observer, window, cancel: () => frame && window.cancelAnimationFrame(frame)};
 };
 
 hortis.dataTable.untrack = function (record) {
     record.scrollEl.removeEventListener("scroll", record.schedule);
-    record.scrollEl.removeEventListener("pointerdown", record.press);
-    record.window.removeEventListener("pointerup", record.release);
-    record.window.removeEventListener("pointercancel", record.release);
     record.observer.disconnect();
     record.cancel();
 };
@@ -7494,7 +7528,7 @@ saanich.traces.control = function (that, storyPage, map, events, active, loaded,
     }
 }
 
-/*# sourceURL=file:///home/amb26/Source/gits/saanich-peninsula-flora/docs/local/story/saanich-tracesPane.vue*/</style>
+/*# sourceURL=file:///Users/andrewsimon/GitHub/saanich-peninsula-flora/docs/local/story/saanich-tracesPane.vue*/</style>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-saanich.lostPlantsPane-2">(function () {
 "use strict";
 
@@ -7826,7 +7860,7 @@ saanich.paneMarkup = galleryMarkup => ({LostPlants: galleryMarkup});
     }
 }
 
-/*# sourceURL=file:///home/amb26/Source/gits/saanich-peninsula-flora/docs/local/story/saanich-lostPlantsPane.vue*/</style>
+/*# sourceURL=file:///Users/andrewsimon/GitHub/saanich-peninsula-flora/docs/local/story/saanich-lostPlantsPane.vue*/</style>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.curationPane-3">(function () {
 "use strict";
 
@@ -7958,7 +7992,7 @@ fluid.def("bioreportr.curationPane", {
     fill: #fff;
 }
 
-/*# sourceURL=file:///home/amb26/Source/gits/saanich-peninsula-flora/docs/bioreportr/sfc/bioreportr-curationPane.vue*/</style>
+/*# sourceURL=file:///Users/andrewsimon/GitHub/saanich-peninsula-flora/docs/bioreportr/sfc/bioreportr-curationPane.vue*/</style>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-saanich.rememberingPane-2">(function () {
 "use strict";
 
@@ -8253,13 +8287,13 @@ saanich.remembering.bindHover = function (map, mapData, window) {
     .saanich-supporters-list .saanich-supporter-keefer-ecological-services img { height: 36px; }
 }
 
-/*# sourceURL=file:///home/amb26/Source/gits/saanich-peninsula-flora/docs/local/story/saanich-rememberingPane.vue*/</style>
+/*# sourceURL=file:///Users/andrewsimon/GitHub/saanich-peninsula-flora/docs/local/story/saanich-rememberingPane.vue*/</style>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.curationForm-3">(function () {
 "use strict";
 
 // The form of the curation pane, on which a member of the community records what they know of the taxon or the
 // observation chosen - see notes/community-curation-design.md. For a taxon, its tabs choose between notes on its
-// provenance and on its taxonomy. For an observation, the user's main task is to correct its position, by dragging a
+// provenance and on its taxonomy, or lead by the Location tab to its records. For an observation, the user's main task is to correct its position, by dragging a
 // duplicate of its marker on the map. It is placed by the pane's R Markdown, in an element <div @id="curationForm">
 fluid.def("bioreportr.curationForm", {
     $layers: ["fluid.sfcLayer","fluid.component"],
@@ -8285,7 +8319,15 @@ fluid.def("bioreportr.curationForm", {
             markup: "{curationForm}.model.recordLink"
         }
     },
-    consensus: {
+    // The records of the taxon, listed by the Location tab - see bioreportr.curationForm.locationRecordsMarkup
+    locationRecords: {
+        $component: {
+            $layers: "hortis.verbatimSlot",
+            markup: `$compute:bioreportr.curationForm.locationRecordsMarkup({curationForm}.taxon, {storyPage}.map.recordSelector.recordIndex,
+                {storyPage}.curation.byObservation)`
+        }
+    },
+        consensus: {
         $component: {
             $layers: "hortis.verbatimSlot",
             markup: "{curationForm}.model.consensus"
@@ -8306,8 +8348,10 @@ fluid.def("bioreportr.curationForm", {
     },
     showDragMarker: "$effect:bioreportr.curationForm.showDragMarker({self}.dragMarker, {self}.model.markerPosition)",
     resetPosition: "$method:bioreportr.curationForm.resetPosition({self})",
-    selectProvenance: "$method:bioreportr.curationForm.selectTab({self}, provenance)",
-    selectTaxonomy: "$method:bioreportr.curationForm.selectTab({self}, taxonomy)",
+    selectProvenance: "$method:bioreportr.curationForm.selectTab({self}, provenance, {storyPage}.map.recordSelector)",
+    selectTaxonomy: "$method:bioreportr.curationForm.selectTab({self}, taxonomy, {storyPage}.map.recordSelector)",
+    selectLocation: "$method:bioreportr.curationForm.selectTab({self}, location, {storyPage}.map.recordSelector)",
+    chooseRecord: "$method:bioreportr.curationForm.chooseRecord({storyPage}.map.recordSelector, {0}:event)",
     submit: "$method:bioreportr.curationForm.submit({storyPage}.curation, {self}, {0}:event, {global})",
     signIn: "$method:bioreportr.curation.signIn({storyPage}.curation.backend, {global})",
     signOut: "$method:bioreportr.curation.signOut({storyPage}.curation, {global})",
@@ -8324,8 +8368,18 @@ bioreportr.curationForm.chooseAnother = function (storyPage) {
     storyPage.checklist.search.reset();
 };
 
-bioreportr.curationForm.selectTab = function (that, tab) {
+/**
+ * Choose a tab of the form. Whilst a record is curated, under the Location tab, any tab returns to the taxon - the
+ * Location tab to its list of records.
+ * @param {bioreportr.curationForm} that - The form
+ * @param {String} tab - The type of note chosen
+ * @param {hortis.libreMap.recordSelector} recordSelector - The map's selector of records
+ */
+bioreportr.curationForm.selectTab = function (that, tab, recordSelector) {
     that.tab = tab;
+    if (hortis.isValue(recordSelector.filterState)) {
+        recordSelector.reset();
+    }
 };
 
 }).call(globalThis);
@@ -8373,18 +8427,6 @@ bioreportr.curationForm.selectTab = function (that, tab) {
     font-weight: 600;
 }
 
-/* The rubric of the curation of an observation, and its corrected position */
-.mxcw-curation-rubric {
-    margin: 0 0 12px;
-    padding: 8px 12px;
-    border-left: 4px solid #e8711a;
-    background: rgba(232, 113, 26, 0.14);
-}
-
-.mxcw-curation-rubric p {
-    margin: 0;
-}
-
 .mxcw-curation-record-id {
     overflow-wrap: anywhere;
 }
@@ -8393,16 +8435,106 @@ bioreportr.curationForm.selectTab = function (that, tab) {
     display: inline;
 }
 
-.mxcw-curation-position {
+/* The Location tab's guidance, and its list of the taxon's records, each a button choosing it */
+.mxcw-curation-location {
     margin: 12px 0 0;
 }
 
-.mxcw-curation-position .mxcw-curation-field-label {
-    display: inline;
-    margin-right: 0.4em;
+/* The note heading the panel of each tab - and of a record's location - saying what to enter there */
+.mxcw-curation-hint {
+    display: block;
+    margin: 0 0 10px;
+    padding: 8px 12px;
+    border-left: 4px solid #e8711a;
+    background: rgba(232, 113, 26, 0.14);
+    font-weight: 400;
 }
 
-/*# sourceURL=file:///home/amb26/Source/gits/saanich-peninsula-flora/docs/bioreportr/sfc/bioreportr-curationForm.vue*/</style>
+/* The particulars of a record being placed, as label and value */
+.mxcw-curation-record {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 4px 10px;
+    margin: 0;
+}
+
+.mxcw-curation-record dt {
+    color: #a8c8d0;
+}
+
+.mxcw-curation-record dd {
+    margin: 0;
+}
+
+/* Framed as the other tabs' fieldsets are - see .mxcw-curation-note-form fieldset in imerss-story.css */
+.mxcw-curation-location > fieldset {
+    margin: 0 0 var(--story-gap);
+    padding: 8px 12px 10px;
+    border: 1px solid rgba(168, 200, 208, 0.45);
+    border-radius: var(--data-table-radius, 8px);
+}
+
+.mxcw-curation-location > fieldset > legend {
+    padding: 0 6px;
+    color: #a8c8d0;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+
+
+.mxcw-curation-location .mxcw-curation-record-list,
+.mxcw-curation-location .mxcw-curation-record-list li {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mxcw-curation-location .mxcw-curation-record-list li::before,
+.mxcw-curation-location .mxcw-curation-record-list li::marker {
+    content: none;
+}
+
+.mxcw-curation-record-choice {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0 10px;
+    width: 100%;
+    padding: 6px 8px;
+    border: 0;
+    border-bottom: 1px solid rgba(168, 200, 208, 0.3);
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.mxcw-curation-record-choice:hover,
+.mxcw-curation-record-choice:focus-visible {
+    background: rgba(253, 242, 206, 0.12);
+}
+
+.mxcw-curation-record-date {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.mxcw-curation-record-who {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mxcw-curation-record-flags {
+    grid-column: 2;
+    color: #fdf2ce;
+    font-size: 0.9em;
+}
+
+
+/*# sourceURL=file:///Users/andrewsimon/GitHub/saanich-peninsula-flora/docs/bioreportr/sfc/bioreportr-curationForm.vue*/</style>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.standardChecklist-0" fluid-client="" fluid-src="../vendor/@popperjs/core/dist/umd/popper-lite.min.js" src="../vendor/@popperjs/core/dist/umd/popper-lite.min.js"></script>
     <script data-fluid-indent="4" data-fluid-hydrated="" fluid-src="../vendor/imerss-bioinfo/src/client/js/i6/tooltip.js" id="fl-script-hortis.standardChecklist-3">(function () {/*
 Copyright 2017-2026 Antranig Basman
@@ -9468,7 +9600,7 @@ bioreportr.solowSearch.reset = function (table, controlId, dokkument) {
     flex: none;
 }
 
-/*# sourceURL=file:///home/amb26/Source/gits/saanich-peninsula-flora/docs/bioreportr/sfc/bioreportr-solowSearch.vue*/</style>
+/*# sourceURL=file:///Users/andrewsimon/GitHub/saanich-peninsula-flora/docs/bioreportr/sfc/bioreportr-solowSearch.vue*/</style>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.taxonSearchFilter-3">(function () {
 "use strict";
 
@@ -11402,17 +11534,6 @@ fluid.def("bioreportr.storyMap", {
 //# sourceURL=../bioreportr/sfc/bioreportr-storyMap.vue</script>
     <link data-fluid-indent="4" data-fluid-hydrated="" id="fl-style-bioreportr.storyMap-0" href="../vendor/imerss-bioinfo/src/client/css/maplibre-gl.css" rel="stylesheet">
     <link data-fluid-indent="4" data-fluid-hydrated="" id="fl-style-bioreportr.storyMap-1" href="../vendor/imerss-bioinfo/src/client/css/mapbox-gl-draw.css" rel="stylesheet">
-    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.icons-0">(function () {
-"use strict";
-
-// The icons of the BBEA visualisation's interface, shared by several of its components. A component whose template
-// refers to one of them bears this layer, so that the icons are injected into any document it renders into
-fluid.def("hortis.icons", {
-    $layers: ["fluid.sfcLayer","fluid.component"]
-});
-
-}).call(globalThis);
-//# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/core/hortis-icons.vue</script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.valueFilter.row-1">(function () {
 "use strict";
 
@@ -11427,6 +11548,17 @@ fluid.def("hortis.valueFilter.row", {
 
 }).call(globalThis);
 //# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/filters/hortis-valueFilter-row.vue</script>
+    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.icons-0">(function () {
+"use strict";
+
+// The icons of the BBEA visualisation's interface, shared by several of its components. A component whose template
+// refers to one of them bears this layer, so that the icons are injected into any document it renders into
+fluid.def("hortis.icons", {
+    $layers: ["fluid.sfcLayer","fluid.component"]
+});
+
+}).call(globalThis);
+//# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/core/hortis-icons.vue</script>
     <template id="site-subnav"><div class="imerss-subnav">
     <nav class="hx-mx-auto hx-flex hx-items-center hx-justify-start hx-gap-2 hx-h-16 hx-px-6 hx-max-w-[90rem]"><a title="Home" href="https://salishseabiodiversity.org/" class="contrast-more:hx-text-gray-700 contrast-more:dark:hx-text-gray-100 hx-relative -hx-ml-2 hx-hidden hx-whitespace-nowrap hx-p-2 md:hx-inline-block hx-text-gray-600 hover:hx-text-gray-800 dark:hx-text-gray-400 dark:hover:hx-text-gray-200">
             <span class="hx-text-center">Home</span>
@@ -11500,9 +11632,9 @@ fluid.def("hortis.valueFilter.row", {
 since time immemorial.</p><p>The memory preserved here is much more limited: collected specimens,
 names written down on lists, and observations shared through
 iNaturalist, reaching back to 1859.</p><p>Each record is a moment when someone stopped to take note of a
-plant.</p><p>Some plants are reported often. Some have appeared only in more
-recent years, while <a href="#pane:LostPlants" class="saanich-traces-next">others have quietly disappeared from the
-record.</a></p></div></div></div></div></div><div class="mxcw-storyPane" data-pane="LostPlants"><div><div id="the-lost-plants-of-the-wsánećsaanich-peninsula" class="section level2 mxcw-paneKey-LostPlants"><h2>The lost plants of the W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw-sectionColumn"><p>The gallery shows <span class="saanich-lost-count"></span>
+plant.</p><p>Some plants are reported often, while others have appeared only in
+more recent years. Still others have gone unseen for decades, <a href="#pane:LostPlants" class="saanich-traces-next">quietly disappearing
+from the record.</a></p></div></div></div></div></div><div class="mxcw-storyPane" data-pane="LostPlants"><div><div id="the-lost-plants-of-the-wsánećsaanich-peninsula" class="section level2 mxcw-paneKey-LostPlants"><h2>The lost plants of the W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw-sectionColumn"><p>This gallery shows <span class="saanich-lost-count"></span>
 native species once reported for the Saanich Peninsula, which have not
 been seen in recent decades. Some may be lost <em>to us</em>—overlooked,
 forgotten, or waiting to be rediscovered. Others may be lost <em>because
@@ -11614,9 +11746,10 @@ here by adding curatorial notes regarding the provenance, taxonomy, or
 georeferencing of records.</p><p><span class="saanich-callout">Click on any taxon in the checklist
 below</span> to add a curatorial note. You can also choose a taxon from
 any other part of the atlas, through the speech bubble beside its
-name.</p></div><div class="mxcw-curation-form-holder mxcw-curation-form-root"><div class="mxcw-curation-form"><div class="mxcw-curation-pending">Your comment has been submitted and is being processed</div><div class="mxcw-curation-rubric"><p><b>Help us place this record.</b> Your main task here is to correct where this record was made. If its marker
-                on the map is in the wrong place, drag the orange marker to where the plant was actually found, then submit
-                your correction. Add a comment saying how you know, e.g. the locality the record names, or a visit of your own.</p></div><div class="mxcw-curation-taxon"><div class="mxcw-curation-photo"></div><div class="mxcw-taxon-name"></div><dl class="mxcw-curation-names mxcw-curation-record"><dt>Taxon name:</dt><dd><i></i></dd><dt>Recorded by:</dt><dd></dd><dt>Date:</dt><dd></dd><dt>Locality:</dt><dd></dd><dt>Recorded position:</dt><dd></dd><dt>Record:</dt><dd class="mxcw-curation-record-id"><span></span></dd></dl></div><div class="mxcw-curation-tabs" aria-label="Type of note" role="tablist"><button role="tab" type="button" class="mxcw-curation-tab">Provenance</button><button role="tab" type="button" class="mxcw-curation-tab">Taxonomy</button></div><form onsubmit="return false"><div class="mxcw-curation-position"><span class="mxcw-curation-field-label">Corrected position:</span><span></span><button class="mxcw-curation-link" type="button">return the marker to the recorded position</button></div><div></div><div class="mxcw-curation-account"><span>Community curation is not yet connected to GitHub, so notes can't be submitted from this site yet.</span><span><button type="button" class="mxcw-curation-button">Sign in with GitHub</button>
+name.</p></div><div class="mxcw-curation-form-holder mxcw-curation-form-root"><div class="mxcw-curation-form"><div class="mxcw-curation-pending">Your comment has been submitted and is being processed</div><div class="mxcw-curation-taxon"><div class="mxcw-curation-photo"></div><div class="mxcw-taxon-name"></div></div><div class="mxcw-curation-tabs" aria-label="Type of note" role="tablist"><button role="tab" type="button" class="mxcw-curation-tab">Provenance</button><button role="tab" type="button" class="mxcw-curation-tab">Taxonomy</button><button role="tab" type="button" class="mxcw-curation-tab">Location</button></div><div class="mxcw-curation-location"><fieldset><legend>Location</legend><p class="mxcw-curation-hint">Please help improve the accuracy of georeferencing of reports. Choose a record from
+                the list below, or select it from the map. Drag the marker to reposition the record, and add a curatorial note to
+                justify your correction.</p><div><div></div></div></fieldset></div><div class="mxcw-curation-location"><fieldset><legend>Location</legend><p class="mxcw-curation-hint">Drag the orange marker on the map to where this plant was actually found, and add a
+                curatorial note below to justify your correction.</p><dl class="mxcw-curation-record"><dt>Recorded by:</dt><dd></dd><dt>Date:</dt><dd></dd><dt>Locality:</dt><dd></dd><dt>Recorded position:</dt><dd></dd><dt>Corrected position:</dt><dd><button class="mxcw-curation-link" type="button">return the marker to the recorded position</button></dd><dt>Record:</dt><dd class="mxcw-curation-record-id"><span></span></dd></dl></fieldset></div><form onsubmit="return false"><div></div><div class="mxcw-curation-account"><span>Community curation is not yet connected to GitHub, so notes can't be submitted from this site yet.</span><span><button type="button" class="mxcw-curation-button">Sign in with GitHub</button>
                     to add your note - or <a rel="noopener" target="_blank" href="https://github.com/signup">create a GitHub account</a></span><span>Signed in as <b></b><button type="button" class="mxcw-curation-link">sign out</button></span><button class="mxcw-curation-button mxcw-curation-submit" type="button"></button></div><div aria-live="polite" class="mxcw-curation-status"></div></form><div class="mxcw-curation-consensus"><h3>Community consensus</h3><div></div></div><button class="mxcw-curation-link mxcw-curation-choose" type="button">Back to the taxon</button><button type="button" class="mxcw-curation-link mxcw-curation-choose">Choose another taxon</button></div></div></div></div></div></div></div><div class="mxcw-storyPane" data-pane="Remembering"><div><div id="harveys-footsteps" class="section level2 mxcw-paneKey-Remembering"><h2>Harvey’s footsteps</h2><div class="mxcw-sectionInner"><div class="mxcw-sectionColumn"><figure class="saanich-harvey-portrait"><img alt="Harvey Janszen, Galiano Island, May 3, 2019" src="img/HJ.png"></figure><p>This project is dedicated to the memory of Harvey Janszen (July 11,
 1946–May 10, 2021) and other fellow naturalists, including Hans Roemer,
 who have passed away in recent years. Harvey spent decades getting to

@@ -337,7 +337,7 @@ saanich.paneMarkup = galleryMarkup => ({LostPlants: galleryMarkup});
 <template>
 <div id="the-lost-plants-of-the-wsánećsaanich-peninsula" class="section level2 mxcw-paneKey-LostPlants"><h2>The lost plants of the W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw-sectionColumn">
 
-<p>The gallery shows <span class="saanich-lost-count">@{count}</span>
+<p>This gallery shows <span class="saanich-lost-count">@{count}</span>
 native species once reported for the Saanich Peninsula, which have not
 been seen in recent decades. Some may be lost <em>to us</em>—overlooked,
 forgotten, or waiting to be rediscovered. Others may be lost <em>because

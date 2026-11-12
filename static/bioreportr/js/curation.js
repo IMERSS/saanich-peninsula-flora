@@ -528,6 +528,8 @@ bioreportr.curation.paneKey = function (panes) {
 bioreportr.curation.open = function (storyPage, taxonId) {
     const paneKey = bioreportr.curation.paneKey(storyPage.panes);
     if (paneKey) {
+        // Kept as the pane changes, which otherwise opens the curation pane on its own landing page
+        bioreportr.storyPage.keepTaxon.add(storyPage);
         storyPage.checklist.search.select(taxonId);
         storyPage.selectPane(paneKey);
     }
@@ -546,6 +548,7 @@ bioreportr.curation.openRecord = function (storyPage, recordId) {
     const row = selector.recordIndex.byId.get(recordId);
     if (paneKey && row) {
         bioreportr.storyPage.keepRecord.set(storyPage, recordId);
+        bioreportr.storyPage.keepTaxon.add(storyPage);
         storyPage.checklist.search.select(String(hortis.rowToLinkTaxonId(row)));
         storyPage.selectPane(paneKey);
         selector.filterState = recordId;
@@ -976,6 +979,10 @@ bioreportr.curationForm.model = function (taxon, observation, rowById, byTaxon, 
         isObservation: !!row,
         provenanceSelected: type === "provenance",
         taxonomySelected: type === "taxonomy",
+        // The Location tab holds no note of its own - it leads to the records of the taxon, each corrected on its own
+        // A record is chosen from the Location tab, which stays selected whilst it is curated
+        locationSelected: type === "location" || !!row,
+        isLocation: type === "location",
         subject: {taxonId: subjectTaxon?.id ?? (row ? String(hortis.rowToLinkTaxonId(row)) : ""), taxonName, recordId: observation?.recordId},
         recordId: observation?.recordId || "",
         taxonName,
@@ -1001,8 +1008,63 @@ bioreportr.curationForm.model = function (taxon, observation, rowById, byTaxon, 
         viewerLogin: viewer?.login || "",
         submitLabel: own ? "Replace your note" : "Submit your note",
         status,
-        consensus: bioreportr.curationForm.consensusMarkup(type, notes)
+        consensus: type === "location" ? "" : bioreportr.curationForm.consensusMarkup(type, notes)
     };
+};
+
+// How many of a taxon's records the Location tab lists - the rest are found on the map or in the table of records
+bioreportr.curationForm.locationRecordLimit = 12;
+
+/**
+ * Render the list of the Location tab - the records of the taxon chosen, any without a position first and then the
+ * oldest, each a button choosing it
+ * for the correction of its position. Records without a position, and those with notes already, are marked.
+ * @param {TaxonRow|null} taxon - The taxon chosen for curation
+ * @param {Object} recordIndex - The index of the records, as `hortis.libreMap.recordIndex`, whose `ids` map each row to
+ * its id
+ * @param {Object<String, CurationNote[]>} byObservation - The notes of each record, by record id
+ * @return {String} The markup of the list
+ */
+bioreportr.curationForm.locationRecordsMarkup = function (taxon, recordIndex, byObservation) {
+    const encode = hortis.dataTable.encode;
+    let togo = "";
+    if (taxon && recordIndex?.ids) {
+        const records = [...recordIndex.ids.entries()].filter(([row]) => String(hortis.rowToLinkTaxonId(row)) === String(taxon.id))
+            // Those most in need of placing first - any without a position, then the oldest, whose localities are vaguest
+            .sort(([a], [b]) => hortis.libreMap.hasCoords(a) - hortis.libreMap.hasCoords(b) ||
+                String(a.eventDate || "9999").localeCompare(String(b.eventDate || "9999")));
+        const shown = records.slice(0, bioreportr.curationForm.locationRecordLimit);
+        const items = shown.map(([row, id]) => {
+            const notes = byObservation[id]?.length || 0;
+            const flags = [!hortis.libreMap.hasCoords(row) && "no position recorded",
+                notes && bioreportr.cellTooltip.plural(notes, "note")].filter(Boolean);
+            return `<li><button type="button" class="mxcw-curation-record-choice" data-record-id="${encode(id)}">
+                <span class="mxcw-curation-record-date">${encode(row.eventDate ? bioreportr.eventDay(row.eventDate) : "Undated")}</span>
+                <span class="mxcw-curation-record-who">${encode((row.recordedBy || "Unknown").split(";")[0].trim())}${row.locality ? " · " + encode(row.locality) : ""}</span>
+                ${flags.length ? `<span class="mxcw-curation-record-flags">${flags.join(" · ")}</span>` : ""}
+            </button></li>`;
+        }).join("");
+        const more = records.length > shown.length ? `<p class="mxcw-curation-none">and ${records.length - shown.length} more - choose them on the map or in the table of records</p>` : "";
+        togo = records.length ? `<ul class="mxcw-curation-record-list">${items}</ul>${more}` : `<p class="mxcw-curation-none">This taxon has no records to correct.</p>`;
+    }
+    return togo;
+};
+
+/**
+ * Choose for curation the record whose button was clicked in the Location tab's list, by selecting it as the map
+ * would - the form then turns to the record, see `bioreportr.curation.chosenObservation`.
+ * @param {hortis.libreMap.recordSelector} recordSelector - The map's selector of records
+ * @param {Event} event - The click
+ */
+bioreportr.curationForm.chooseRecord = function (recordSelector, event) {
+    const button = event.target.closest?.(".mxcw-curation-record-choice");
+    if (button) {
+        const id = button.dataset.recordId;
+        const entry = [...recordSelector.recordIndex.ids.entries()].find(([, candidate]) => candidate === id);
+        if (entry) {
+            recordSelector.select(entry[0]);
+        }
+    }
 };
 
 /**
@@ -1018,12 +1080,13 @@ bioreportr.curationForm.taxonControlsMarkup = function (ownProvenance, ownTaxono
     const rows = bioreportr.curation.questions.map(([question, label]) => `<span class="mxcw-curation-vote-label">${label}:</span>` +
         bioreportr.curation.votes.map(vote => `<input type="radio" name="${question}" value="${vote}" aria-label="${label}: ${vote}"${(ownProvenance?.[question] || "no opinion") === vote ? " checked" : ""}>`).join("")).join("");
     return `<div class="mxcw-curation-panel" data-type="provenance">
-        <fieldset class="mxcw-curation-vote"><legend>Vote</legend><div class="mxcw-curation-vote-grid"><span></span>${heads}${rows}</div></fieldset>
+        <fieldset class="mxcw-curation-vote"><legend>Provenance</legend>
+            <p class="mxcw-curation-hint">Please enter information on the provenance of this species.</p><div class="mxcw-curation-vote-grid"><span></span>${heads}${rows}</div></fieldset>
         <fieldset class="mxcw-curation-comment"><legend>Comment</legend><textarea name="comment" rows="4" aria-label="Comment">${encode(ownProvenance?.comment || "")}</textarea></fieldset>
     </div>
     <div class="mxcw-curation-panel" data-type="taxonomy">
         <fieldset class="mxcw-curation-comment"><legend>Taxonomy</legend>
-            <label class="mxcw-curation-field-label" for="mxcw-curation-synonymy">Enter a correction for the synonymy of this taxon</label>
+            <label class="mxcw-curation-hint" for="mxcw-curation-synonymy">Please enter any taxonomic notes regarding this species report.</label>
             <textarea id="mxcw-curation-synonymy" name="synonymy" rows="4">${encode(ownTaxonomy?.comment || "")}</textarea></fieldset>
     </div>`;
 };

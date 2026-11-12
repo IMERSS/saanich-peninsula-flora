@@ -20,4 +20,4 @@ The memory preserved here is much more limited: collected specimens, names writt
 
 Each record is a moment when someone stopped to take note of a plant.
 
-Some plants are reported often. Some have appeared only in more recent years, while [others have quietly disappeared from the record.](#pane:LostPlants){.saanich-traces-next}
+Some plants are reported often, while others have appeared only in more recent years. Still others have gone unseen for decades, [quietly disappearing from the record.](#pane:LostPlants){.saanich-traces-next}

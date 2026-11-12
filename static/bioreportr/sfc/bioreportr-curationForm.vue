@@ -6,7 +6,7 @@
 
 // The form of the curation pane, on which a member of the community records what they know of the taxon or the
 // observation chosen - see notes/community-curation-design.md. For a taxon, its tabs choose between notes on its
-// provenance and on its taxonomy. For an observation, the user's main task is to correct its position, by dragging a
+// provenance and on its taxonomy, or lead by the Location tab to its records. For an observation, the user's main task is to correct its position, by dragging a
 // duplicate of its marker on the map. It is placed by the pane's R Markdown, in an element <div @id="curationForm">
 fluid.def("bioreportr.curationForm", {
     $layers: "fluid.component",
@@ -32,7 +32,15 @@ fluid.def("bioreportr.curationForm", {
             markup: "{curationForm}.model.recordLink"
         }
     },
-    consensus: {
+    // The records of the taxon, listed by the Location tab - see bioreportr.curationForm.locationRecordsMarkup
+    locationRecords: {
+        $component: {
+            $layers: "hortis.verbatimSlot",
+            markup: `$compute:bioreportr.curationForm.locationRecordsMarkup({curationForm}.taxon, {storyPage}.map.recordSelector.recordIndex,
+                {storyPage}.curation.byObservation)`
+        }
+    },
+        consensus: {
         $component: {
             $layers: "hortis.verbatimSlot",
             markup: "{curationForm}.model.consensus"
@@ -53,8 +61,10 @@ fluid.def("bioreportr.curationForm", {
     },
     showDragMarker: "$effect:bioreportr.curationForm.showDragMarker({self}.dragMarker, {self}.model.markerPosition)",
     resetPosition: "$method:bioreportr.curationForm.resetPosition({self})",
-    selectProvenance: "$method:bioreportr.curationForm.selectTab({self}, provenance)",
-    selectTaxonomy: "$method:bioreportr.curationForm.selectTab({self}, taxonomy)",
+    selectProvenance: "$method:bioreportr.curationForm.selectTab({self}, provenance, {storyPage}.map.recordSelector)",
+    selectTaxonomy: "$method:bioreportr.curationForm.selectTab({self}, taxonomy, {storyPage}.map.recordSelector)",
+    selectLocation: "$method:bioreportr.curationForm.selectTab({self}, location, {storyPage}.map.recordSelector)",
+    chooseRecord: "$method:bioreportr.curationForm.chooseRecord({storyPage}.map.recordSelector, {0}:event)",
     submit: "$method:bioreportr.curationForm.submit({storyPage}.curation, {self}, {0}:event, {global})",
     signIn: "$method:bioreportr.curation.signIn({storyPage}.curation.backend, {global})",
     signOut: "$method:bioreportr.curation.signOut({storyPage}.curation, {global})",
@@ -69,8 +79,18 @@ bioreportr.curationForm.chooseAnother = function (storyPage) {
     storyPage.checklist.search.reset();
 };
 
-bioreportr.curationForm.selectTab = function (that, tab) {
+/**
+ * Choose a tab of the form. Whilst a record is curated, under the Location tab, any tab returns to the taxon - the
+ * Location tab to its list of records.
+ * @param {bioreportr.curationForm} that - The form
+ * @param {String} tab - The type of note chosen
+ * @param {hortis.libreMap.recordSelector} recordSelector - The map's selector of records
+ */
+bioreportr.curationForm.selectTab = function (that, tab, recordSelector) {
     that.tab = tab;
+    if (hortis.isValue(recordSelector.filterState)) {
+        recordSelector.reset();
+    }
 };
 </script>
 
@@ -78,34 +98,46 @@ bioreportr.curationForm.selectTab = function (that, tab) {
     <div class="mxcw-curation-form-root">
     <div class="mxcw-curation-form" @class="fl-hidden:!@{model.hasSubject}">
         <div class="mxcw-curation-pending" @class="fl-hidden:!@{model.pending}">Your comment has been submitted and is being processed</div>
-        <div class="mxcw-curation-rubric" @class="fl-hidden:!@{model.isObservation}">
-            <p><b>Help us place this record.</b> Your main task here is to correct where this record was made. If its marker
-                on the map is in the wrong place, drag the orange marker to where the plant was actually found, then submit
-                your correction. Add a comment saying how you know, e.g. the locality the record names, or a visit of your own.</p>
-        </div>
         <div class="mxcw-curation-taxon">
             <div class="mxcw-curation-photo" @id="image"></div>
-            <div class="mxcw-taxon-name" @class="fl-hidden:@{model.isObservation}">@{model.displayName}</div>
-            <dl class="mxcw-curation-names mxcw-curation-record" @class="fl-hidden:!@{model.isObservation}">
-                <dt>Taxon name:</dt> <dd><i>@{model.taxonName}</i></dd>
-                <dt>Recorded by:</dt> <dd>@{model.recordedBy}</dd>
-                <dt>Date:</dt> <dd>@{model.eventDate}</dd>
-                <dt>Locality:</dt> <dd>@{model.locality}</dd>
-                <dt>Recorded position:</dt> <dd>@{model.originalText}</dd>
-                <dt>Record:</dt> <dd class="mxcw-curation-record-id">@{model.recordId} <span @id="recordLink"></span></dd>
-            </dl>
+            <!-- The taxon is named as on every tab, above the particulars of a record when one is chosen -->
+            <div class="mxcw-taxon-name">@{model.displayName}</div>
         </div>
-        <div class="mxcw-curation-tabs" role="tablist" aria-label="Type of note" @class="fl-hidden:!@{model.isTaxon}">
+        <div class="mxcw-curation-tabs" role="tablist" aria-label="Type of note" @class="fl-hidden:!@{model.hasSubject}">
             <button type="button" role="tab" class="mxcw-curation-tab" aria-selected="@{model.provenanceSelected}"
                 @onclick="{self}.selectProvenance()">Provenance</button>
             <button type="button" role="tab" class="mxcw-curation-tab" aria-selected="@{model.taxonomySelected}"
                 @onclick="{self}.selectTaxonomy()">Taxonomy</button>
+            <button type="button" role="tab" class="mxcw-curation-tab" aria-selected="@{model.locationSelected}"
+                @onclick="{self}.selectLocation()">Location</button>
         </div>
-        <form class="mxcw-curation-note-form mxcw-curation-type-@{model.type}" onsubmit="return false">
-            <div class="mxcw-curation-position" @class="fl-hidden:!@{model.isObservation}">
-                <span class="mxcw-curation-field-label">Corrected position:</span> <span>@{model.positionText}</span>
-                <button type="button" class="mxcw-curation-link" @class="fl-hidden:!@{model.corrected}" @onclick="{self}.resetPosition()">return the marker to the recorded position</button>
-            </div>
+        <!-- The Location tab: positions are corrected record by record, so it leads to the taxon's records -->
+        <div class="mxcw-curation-location" @class="fl-hidden:!@{model.isLocation}">
+            <fieldset><legend>Location</legend>
+            <p class="mxcw-curation-hint">Please help improve the accuracy of georeferencing of reports. Choose a record from
+                the list below, or select it from the map. Drag the marker to reposition the record, and add a curatorial note to
+                justify your correction.</p>
+            <!-- The click is caught around the list, whose own element is replaced by its markup -->
+            <div @onclick="{self}.chooseRecord({0})"><div @id="locationRecords"></div></div>
+            </fieldset>
+        </div>
+        <!-- A record chosen from the Location tab, framed as the tabs' panels are, its comment following in the form -->
+        <div class="mxcw-curation-location" @class="fl-hidden:!@{model.isObservation}">
+            <fieldset><legend>Location</legend>
+            <p class="mxcw-curation-hint">Drag the orange marker on the map to where this plant was actually found, and add a
+                curatorial note below to justify your correction.</p>
+            <dl class="mxcw-curation-record">
+                <dt>Recorded by:</dt> <dd>@{model.recordedBy}</dd>
+                <dt>Date:</dt> <dd>@{model.eventDate}</dd>
+                <dt>Locality:</dt> <dd>@{model.locality}</dd>
+                <dt>Recorded position:</dt> <dd>@{model.originalText}</dd>
+                <dt>Corrected position:</dt> <dd>@{model.positionText}
+                    <button type="button" class="mxcw-curation-link" @class="fl-hidden:!@{model.corrected}" @onclick="{self}.resetPosition()">return the marker to the recorded position</button></dd>
+                <dt>Record:</dt> <dd class="mxcw-curation-record-id">@{model.recordId} <span @id="recordLink"></span></dd>
+            </dl>
+            </fieldset>
+        </div>
+        <form class="mxcw-curation-note-form mxcw-curation-type-@{model.type}" @class="fl-hidden:@{model.isLocation}" onsubmit="return false">
             <!-- The controls are rendered as markup, not bound to the model, since a binding of a control is two-way and the
                  user's choices would be written into the model - see bioreportr.curationForm.taxonControlsMarkup -->
             <div @id="controls"></div>
@@ -122,7 +154,7 @@ bioreportr.curationForm.selectTab = function (that, tab) {
             </div>
             <div class="mxcw-curation-status" aria-live="polite">@{model.status}</div>
         </form>
-        <div class="mxcw-curation-consensus">
+        <div class="mxcw-curation-consensus" @class="fl-hidden:@{model.isLocation}">
             <h3>Community consensus</h3>
             <div @id="consensus"></div>
         </div>
@@ -176,18 +208,6 @@ bioreportr.curationForm.selectTab = function (that, tab) {
     font-weight: 600;
 }
 
-/* The rubric of the curation of an observation, and its corrected position */
-.mxcw-curation-rubric {
-    margin: 0 0 12px;
-    padding: 8px 12px;
-    border-left: 4px solid #e8711a;
-    background: rgba(232, 113, 26, 0.14);
-}
-
-.mxcw-curation-rubric p {
-    margin: 0;
-}
-
 .mxcw-curation-record-id {
     overflow-wrap: anywhere;
 }
@@ -196,12 +216,102 @@ bioreportr.curationForm.selectTab = function (that, tab) {
     display: inline;
 }
 
-.mxcw-curation-position {
+/* The Location tab's guidance, and its list of the taxon's records, each a button choosing it */
+.mxcw-curation-location {
     margin: 12px 0 0;
 }
 
-.mxcw-curation-position .mxcw-curation-field-label {
-    display: inline;
-    margin-right: 0.4em;
+/* The note heading the panel of each tab - and of a record's location - saying what to enter there */
+.mxcw-curation-hint {
+    display: block;
+    margin: 0 0 10px;
+    padding: 8px 12px;
+    border-left: 4px solid #e8711a;
+    background: rgba(232, 113, 26, 0.14);
+    font-weight: 400;
 }
+
+/* The particulars of a record being placed, as label and value */
+.mxcw-curation-record {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 4px 10px;
+    margin: 0;
+}
+
+.mxcw-curation-record dt {
+    color: #a8c8d0;
+}
+
+.mxcw-curation-record dd {
+    margin: 0;
+}
+
+/* Framed as the other tabs' fieldsets are - see .mxcw-curation-note-form fieldset in imerss-story.css */
+.mxcw-curation-location > fieldset {
+    margin: 0 0 var(--story-gap);
+    padding: 8px 12px 10px;
+    border: 1px solid rgba(168, 200, 208, 0.45);
+    border-radius: var(--data-table-radius, 8px);
+}
+
+.mxcw-curation-location > fieldset > legend {
+    padding: 0 6px;
+    color: #a8c8d0;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+
+
+.mxcw-curation-location .mxcw-curation-record-list,
+.mxcw-curation-location .mxcw-curation-record-list li {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mxcw-curation-location .mxcw-curation-record-list li::before,
+.mxcw-curation-location .mxcw-curation-record-list li::marker {
+    content: none;
+}
+
+.mxcw-curation-record-choice {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0 10px;
+    width: 100%;
+    padding: 6px 8px;
+    border: 0;
+    border-bottom: 1px solid rgba(168, 200, 208, 0.3);
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.mxcw-curation-record-choice:hover,
+.mxcw-curation-record-choice:focus-visible {
+    background: rgba(253, 242, 206, 0.12);
+}
+
+.mxcw-curation-record-date {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.mxcw-curation-record-who {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mxcw-curation-record-flags {
+    grid-column: 2;
+    color: #fdf2ce;
+    font-size: 0.9em;
+}
+
 </style>

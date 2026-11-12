@@ -768,9 +768,15 @@ bioreportr.storyPage.lastPaneKey = new WeakMap();
 // the curation of a record - see bioreportr.curation.openRecord
 bioreportr.storyPage.keepRecord = new WeakMap();
 
+// The story pages moving to the curation pane together with the choice of a taxon, by its speech bubble, which is kept -
+// see bioreportr.curation.open. Any other move to the curation pane, e.g. by its tab, opens it on its landing page, with
+// the checklist from which to choose, rather than on a taxon chosen in another pane
+bioreportr.storyPage.keepTaxon = new WeakSet();
+
 /**
  * Clear the selected record when the story page moves from one pane to another - but not as it first shows a pane,
- * so that a record held in the URL survives the page's loading, nor a record selected together with the move.
+ * so that a record held in the URL survives the page's loading, nor a record selected together with the move. A move to
+ * the curation pane also clears the taxon chosen, unless it was chosen together with the move.
  * @param {bioreportr.storyPage} storyPage - The story page
  * @param {String} activePaneKey - The key of the active pane
  */
@@ -784,6 +790,11 @@ bioreportr.storyPage.clearRecordOnPaneChange = function (storyPage, activePaneKe
             bioreportr.storyPage.keepRecord.delete(storyPage);
             if (kept === undefined || kept !== storyPage.map.recordSelector.filterState) {
                 storyPage.map.recordSelector.reset();
+            }
+            const keepTaxon = bioreportr.storyPage.keepTaxon.has(storyPage);
+            bioreportr.storyPage.keepTaxon.delete(storyPage);
+            if (!keepTaxon && bioreportr.curation?.paneKey && activePaneKey === bioreportr.curation.paneKey(storyPage.panes)) {
+                storyPage.checklist.search.reset();
             }
         });
     }
