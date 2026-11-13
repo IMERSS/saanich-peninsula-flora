@@ -98,6 +98,10 @@ params:
   # Given in full, since sites fetching it need an absolute address, which relativeUrls would otherwise not give
   images:
     - "https://imerss.github.io/saanich-peninsula-flora/local/images/social-preview.jpg"
+  # The site's address on GitHub Pages, from which a shared page gives its own address in full as its og:url - see
+  # layouts/partials/opengraph.html. Facebook follows og:url, and a bare "/story/" led it to the root of github.io.
+  # baseURL itself stays "/", since relativeUrls makes every link within the site relative to it
+  siteURL: "https://imerss.github.io/saanich-peninsula-flora"
 
   # Displays bizarrely on hextra once we change background colour
   toc: false
