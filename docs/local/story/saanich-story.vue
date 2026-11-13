@@ -151,6 +151,10 @@ fluid.def("saanich.story", {
             selectedIndex: 2
         }
     },
+    // The annotations of records, e.g. of planted populations, applied by scripts/apply_record_annotations.R
+    recordAnnotationsFile: "../local/data/tabular/Saanich_Tracheophyta_record-annotations_2026-08-20.csv",
+    // The history of the curatorial notes on each taxon, prepared by scripts/prepare_curation_history.R
+    curationHistoryFile: "../local/data/tabular/Saanich_Tracheophyta_curation-history_2026-08-20.csv",
     // The tiles of the atlas's three groups of species, placed in its section
     atlasTiles: "$compute:saanich.atlas.tilesMarkup({self}.taxa.allRows, {self}.selectedStatus)",
     sectionInserts: "$compute:saanich.atlas.sectionInserts({self}.atlasTiles)",
@@ -160,10 +164,19 @@ fluid.def("saanich.story", {
     atlasRecords: "$compute:saanich.atlas.taxonRecords({self}.obsRows, {self}.taxa.rowById, {self}.checklistTaxon)",
     taxonPanel: {
         $component: {
-            markup: "$compute:saanich.atlas.panelMarkup({storyPage}.checklistTaxon, {storyPage}.atlasRecords)"
+            markup: `$compute:saanich.atlas.panelMarkup({storyPage}.checklistTaxon, {storyPage}.atlasRecords,
+                {storyPage}.curation.historyById, {storyPage}.curation.byTaxon, {storyPage}.recordAnnotations)`
         }
     },
     taxonPanelVisible: "$compute:saanich.atlas.panelVisible({self}.taxonPanel.markup, {self}.activePaneKey, Status)",
+    // The extirpation risk pane shows the same panel of its chosen plant, with its regional EP
+    solowTaxonPanel: {
+        $component: {
+            markup: `$compute:saanich.atlas.panelMarkup({storyPage}.solowTaxa.selectedTaxon, {storyPage}.solowDatedObs,
+                {storyPage}.curation.historyById, {storyPage}.curation.byTaxon, {storyPage}.recordAnnotations, solow)`
+        }
+    },
+    solowDatedObs: "$compute:saanich.atlas.dated({self}.solowTaxonObs)",
     // Summaries of each group of species, shown when hovering over its tile in the atlas or its row of the map's legend
     statusTooltip: {
         $component: {
@@ -287,6 +300,19 @@ saanich.phoneGestures = function (map, window) {
     }
 }
 
+/* On a phone the chart always falls beneath the facts, the panel's column scrolling to it */
+@media (max-width: 767.98px) {
+    .saanich-atlas-taxon-pane .mxcw-taxon-info {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto;
+    }
+
+    .saanich-atlas-taxon-pane .saanich-history-chart,
+    .saanich-atlas-taxon-pane .saanich-history-notes {
+        min-height: 90px;
+    }
+}
+
 /* The photo yields room to the chart, which it does not share in the extirpation risk pane's panel */
 .saanich-atlas-taxon-pane .mxcw-taxon-image {
     max-width: 34%;
@@ -358,8 +384,72 @@ saanich.phoneGestures = function (map, window) {
 }
 
 .saanich-history:has(.saanich-history-decade-tab:checked) .saanich-history-months,
-.saanich-history:has(.saanich-history-month-tab:checked) .saanich-history-decades {
+.saanich-history:has(.saanich-history-month-tab:checked) .saanich-history-decades,
+.saanich-history:has(.saanich-history-notes-tab:checked) .saanich-history-chart,
+.saanich-history:not(:has(.saanich-history-notes-tab:checked)) .saanich-history-notes {
     display: none;
+}
+
+/* The Notes tab's history of the plant's annotations, scrolling within the room the charts take */
+.saanich-history-notes {
+    flex: 1 1 auto;
+    min-height: 70px;
+    max-height: 150px;
+    overflow-y: auto;
+    padding-right: 4px;
+    color: #1f2a30;
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.saanich-history-notes .mxcw-curation-history {
+    margin: 0 0 0 6px;
+    padding: 0 0 0 14px;
+    border-left: 2px solid rgba(90, 118, 128, 0.35);
+    list-style: none;
+}
+
+.saanich-history-notes .mxcw-curation-history-entry {
+    position: relative;
+    margin: 0 0 8px;
+    list-style: none;
+}
+
+.saanich-history-notes .mxcw-curation-history-entry::marker {
+    content: none;
+}
+
+.saanich-history-notes .mxcw-curation-history-entry::before {
+    content: "";
+    position: absolute;
+    top: 0.45em;
+    left: -19px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #5a7680;
+}
+
+.saanich-history-notes .mxcw-curation-history-site::before {
+    background: #e8711a;
+}
+
+.saanich-history-notes .mxcw-curation-history-head span,
+.saanich-history-notes .mxcw-curation-history-reviewed,
+.saanich-history-notes .mxcw-curation-none {
+    color: #5a7680;
+}
+
+.saanich-history-notes .mxcw-curation-history-reviewed {
+    margin: 2px 0 0;
+}
+
+.saanich-history-notes .mxcw-curation-history-text a {
+    color: #184e62;
+}
+
+.saanich-history-notes .mxcw-solow-annotation-note {
+    margin: 0 0 6px;
 }
 
 .saanich-history-chart {

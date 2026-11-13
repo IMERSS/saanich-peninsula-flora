@@ -6,6 +6,9 @@
 // curation, and the speech bubbles leading to curation beside each taxon of the checklist and each record of the tables
 // of records, whose clicks open the curation of their subject
 fluid.def("bioreportr.storyPageCuration", {
+    // The history of the curatorial notes on each taxon from before the site's own curation, as a CSV file relative to the
+    // story page, if the project has one - shown by the History tab of the curation pane, see bioreportr.curation.loadHistory
+    curationHistoryFile: null,
     // Community curation of the taxa - see notes/community-curation-design.md and the pane rendered by bioreportr.curationPane
     curation: {
         $component: {

@@ -237,6 +237,11 @@ fluid.def("bioreportr.storyPage", {
         }
     },
     solowTaxonObs: "$compute:bioreportr.solowObsForTaxon({self}.obsRows, {self}.solowTaxa.selectedTaxon)",
+    // The annotations of records the project keeps, e.g. of planted populations, as a CSV file relative to the story page,
+    // if it has any - records they suspend from the calculation of extirpation probability are left out of the populations
+    recordAnnotationsFile: null,
+    recordAnnotations: "$compute:bioreportr.loadRecordAnnotations({self}.recordAnnotationsFile)",
+    solowEPObs: "$compute:bioreportr.solowObsForEP({self}.solowTaxonObs, {self}.recordAnnotations)",
     solowTaxonInfo: {
         $component: {
             $layers: "bioreportr.solowTaxonInfo",
@@ -245,6 +250,15 @@ fluid.def("bioreportr.storyPage", {
         }
     },
     solowHasTaxon: "$compute:hortis.isValue({self}.solowTaxa.selectedTaxon)",
+    // A panel of the taxon chosen for the extirpation risk analysis, which a project may supply in place of the standard
+    // solowTaxonInfo, e.g. the same panel as its atlas shows - empty unless it does
+    solowTaxonPanel: {
+        $component: {
+            $layers: "hortis.verbatimSlot",
+            markup: ""
+        }
+    },
+    solowHasPanel: "$compute:bioreportr.storyPage.hasMarkup({self}.solowTaxonPanel.markup)",
     // The records of the chosen taxon, most recent first, since the last known sightings are the best guide to where to look
     solowRecordsTable: {
         $component: {
@@ -262,7 +276,7 @@ fluid.def("bioreportr.storyPage", {
     solowRecordsCollapsed: true,
     toggleSolowRecords: "$method:bioreportr.storyPage.toggle({self}, solowRecordsCollapsed)",
     downloadSolowRecords: "$method:bioreportr.storyPage.downloadTaxonObs({self}.solowTaxa.selectedTaxon, {self}.solowTaxonObs)",
-    solowClusters: "$compute:bioreportr.solow.clusters({self}.solowTaxonObs, {self}.solowRadius.radius, {self}.solowParams)",
+    solowClusters: "$compute:bioreportr.solow.clusters({self}.solowEPObs, {self}.solowRadius.radius, {self}.solowParams)",
     solowMapLayer: {
         $component: {
             $layers: "bioreportr.solowMapLayer",
@@ -356,6 +370,13 @@ bioreportr.storyPage.toggleFilters = function (that) {
 bioreportr.storyPage.toggle = function (that, member) {
     that[member] = !that[member];
 };
+
+/**
+ * Determine whether a slot has been given markup by the project.
+ * @param {String} markup - The slot's markup
+ * @return {Boolean} `true` if it has any
+ */
+bioreportr.storyPage.hasMarkup = markup => !!markup;
 </script>
 
 <template>
@@ -381,9 +402,13 @@ bioreportr.storyPage.toggle = function (that, member) {
                     </div>
                     <div id="mxcw-records-table" class="mxcw-obs-table hortis-datatable" @id="obsTable"></div>
                 </div>
+                <!-- The slider of the population radius, in a slim strip beneath the map, above the panel of the taxon -->
                 <div class="mxcw-data-pane-widget mxcw-solow-widgets-holder @{classes.solow}" @class="mxcw-solow-has-taxon:@{solowHasTaxon}">
-                    <div class="mxcw-solow-taxon-holder"><div @id="solowTaxonInfo"></div></div>
                     <div class="mxcw-solow-radius-holder"><div @id="solowRadius"></div></div>
+                    <div class="mxcw-solow-taxon-holder">
+                        <div @id="solowTaxonPanel"></div>
+                        <div class="mxcw-solow-standard-panel" @class="fl-hidden:@{solowHasPanel}"><div @id="solowTaxonInfo"></div></div>
+                    </div>
                 </div>
                 <div @id="solowRecordsResizeBar"></div>
                 <div class="mxcw-data-pane-widget mxcw-solow-records-holder @{classes.solow}" @class="mxcw-solow-records-collapsed:@{solowRecordsCollapsed}">

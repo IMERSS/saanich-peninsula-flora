@@ -1,0 +1,2 @@
+taxon_name,latitude,longitude,radius_m,annotation,exclude_from_ep,note,annotated_by,annotated_on
+Plagiobothrys tenellus,48.433694,-123.45262,1000,planted,TRUE,"Planted at Fort Rodd Hill: records within 1 km of the site are suspended from the extirpation probability (EP) calculation",Andrew Simon,2026-11-12

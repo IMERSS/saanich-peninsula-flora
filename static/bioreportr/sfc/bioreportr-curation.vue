@@ -19,6 +19,9 @@ fluid.def("bioreportr.curation", {
     $layers: "fluid.component",
     // The files written by the consolidation job, src/js/consolidateCuration.js, relative to the story page
     configFile: "../curation/config.json",
+    // The history of the curatorial notes on each taxon from before the site's own curation, if the project has one
+    historyFile: "{storyPage}.curationHistoryFile",
+    historyById: "$compute:bioreportr.curation.loadHistory({self}.historyFile)",
     taxaFile: "../curation/taxa.csv",
     observationsFile: "../curation/observations.csv",
     claimStatusFile: "../curation/claimStatus.json",
@@ -565,6 +568,8 @@ bioreportr.curation.paneKey = function (panes) {
 bioreportr.curation.open = function (storyPage, taxonId) {
     const paneKey = bioreportr.curation.paneKey(storyPage.panes);
     if (paneKey) {
+        // Kept as the pane changes, which otherwise opens the curation pane on its own landing page
+        bioreportr.storyPage.keepTaxon.add(storyPage);
         storyPage.checklist.search.select(taxonId);
         storyPage.selectPane(paneKey);
     }
@@ -583,6 +588,7 @@ bioreportr.curation.openRecord = function (storyPage, recordId) {
     const row = selector.recordIndex.byId.get(recordId);
     if (paneKey && row) {
         bioreportr.storyPage.keepRecord.set(storyPage, recordId);
+        bioreportr.storyPage.keepTaxon.add(storyPage);
         storyPage.checklist.search.select(String(hortis.rowToLinkTaxonId(row)));
         storyPage.selectPane(paneKey);
         selector.filterState = recordId;
@@ -951,4 +957,20 @@ bioreportr.curation.backends.memory = function (config) {
 
 // The comments submitted to the memory backend, for inspection in testing
 bioreportr.curation.backends.memory.submitted = [];
+
+/** The history of the curatorial notes on a taxon **/
+
+/**
+ * Load the history of the curatorial notes on each taxon, as prepared by the project, e.g. by Saanich's
+ * scripts/prepare_curation_history.R - a CSV file with a row for each taxon, keyed by its id.
+ * @param {String|null} historyFile - The file, relative to the story page, or null if the project has none
+ * @return {Promise<Object<String, Object>>|Object<String, Object>} The history of each taxon, by taxon id
+ */
+bioreportr.curation.loadHistory = function (historyFile) {
+    return historyFile ? hortis.csvReader.load(historyFile, {header: true, skipEmptyLines: true}).then(parsed => {
+        const togo = {};
+        (parsed?.data || []).forEach(row => togo[row.id] = row);
+        return togo;
+    }) : {};
+};
 </script>

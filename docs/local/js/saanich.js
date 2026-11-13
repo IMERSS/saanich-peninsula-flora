@@ -211,12 +211,18 @@ saanich.atlas.taxonRecords = function (obsRows, rowById, taxon) {
 };
 
 /**
- * Render the panel of the plant or group chosen in the checklist.
+ * Render the panel of the plant or group chosen in the checklist - or, in the extirpation risk pane, of the plant chosen
+ * for its analysis, which also gives its regional EP.
  * @param {TaxonRow|null} taxon - The chosen taxon
  * @param {Object[]} records - Its dated records
+ * @param {Object<String, Object>} [historyById] - The history of the curatorial notes on each taxon, by id
+ * @param {Object<String, CurationNote[]>} [byTaxon] - The notes added through the site on each taxon, by id
+ * @param {Object<String, Object>} [annotations] - The annotations of records, by occurrenceID
+ * @param {String} [context] - "atlas", or "solow" for the extirpation risk pane - which also names the panel's tabs,
+ * so that those of the two panes are chosen apart
  * @return {String} The panel's markup, empty if no taxon with records is chosen
  */
-saanich.atlas.panelMarkup = function (taxon, records) {
+saanich.atlas.panelMarkup = function (taxon, records, historyById, byTaxon, annotations, context = "atlas") {
     let togo = "";
     if (taxon && records.length > 0) {
         togo = `<div class="mxcw-solow-taxon-pane saanich-atlas-taxon-pane">
@@ -229,10 +235,11 @@ saanich.atlas.panelMarkup = function (taxon, records) {
         <dt>Date last seen:</dt> <dd>${bioreportr.eventDay(fluid.peek(records).eventDate)}</dd>
         <dt>Total records:</dt> <dd>${saanich.formatCount(records.length)}</dd>
         ${saanich.atlas.field("Status", saanich.atlas.statusLabels[taxon.reportingStatus])}
+      ${context === "solow" ? saanich.atlas.field("Regional EP", taxon.solow_EP) : ""}
       </dl>
       ${bioreportr.georefNote(records)}
     </div>
-    ${saanich.atlas.historyMarkup(records, taxon.id)}
+    ${saanich.atlas.historyMarkup(records, context + "-" + taxon.id, saanich.atlas.notesMarkup(taxon, records, historyById, byTaxon, annotations))}
   </div>
 </div>`;
     }
@@ -297,22 +304,43 @@ saanich.atlas.columns = function (columns, kind) {
  * @param {String} taxonId - The plant's id, naming its tabs apart from any other panel's
  * @return {String} The markup of the charts and their tabs
  */
-saanich.atlas.historyMarkup = function (records, taxonId) {
+saanich.atlas.historyMarkup = function (records, taxonId, notes = "") {
     const {decades, months} = saanich.atlas.history(records);
-    const count = n => saanich.formatCount(n) + (n === 1 ? " observation" : " observations");
+    const count = n => saanich.formatCount(n) + (n === 1 ? " report" : " reports");
     const decadeColumns = decades.map(({decade, count: n}) => ({value: n, title: `${decade}s: ${count(n)}`,
         label: decade % 50 === 0 ? String(decade) : ""}));
     const monthColumns = months.map((n, month) => ({value: n, title: `${saanich.atlas.monthNames[month]}: ${count(n)}`,
         label: saanich.atlas.monthNames[month][0]}));
     const name = "saanich-history-" + taxonId;
-    const tab = (kind, label, checked) => `<input type="radio" class="saanich-history-${kind}-tab" id="${name}-${kind}" name="${name}"${checked ? " checked" : ""}>` +
-        `<label for="${name}-${kind}">${label}</label>`;
+    const tab = (kind, label, title, checked) => `<input type="radio" class="saanich-history-${kind}-tab" id="${name}-${kind}" name="${name}"${checked ? " checked" : ""}>` +
+        `<label for="${name}-${kind}" title="${title}">${label}</label>`;
     return `<div class="saanich-history">
-      <div class="saanich-history-tabs"><span class="saanich-history-heading">Observations by:</span>${tab("decade", "Decade", true)}${tab("month", "Month", false)}</div>
+      <div class="saanich-history-tabs" role="tablist">${tab("decade", "Decades", "Reports by decade", true)}${tab("month", "Months", "Reports by month", false)}${tab("notes", "Notes", "Annotation history", false)}</div>
       ${saanich.atlas.columns(decadeColumns, "decades")}
       ${saanich.atlas.columns(monthColumns, "months")}
+      <div class="saanich-history-notes">${notes}</div>
     </div>`;
 };
+
+/**
+ * Render the history of the annotations of a plant, shown by the Notes tab of the atlas's panel - any records set aside,
+ * e.g. as planted, then its curatorial notes from the earliest account to those added through the site, as the History
+ * tab of the curation pane shows them - see bioreportr.curationForm.historyMarkup.
+ * @param {TaxonRow} taxon - The plant
+ * @param {Object[]} records - Its records
+ * @param {Object<String, Object>} historyById - The history of the curatorial notes on each taxon, by id
+ * @param {Object<String, CurationNote[]>} byTaxon - The notes added through the site on each taxon, by id
+ * @param {Object<String, Object>} annotations - The annotations of records, by occurrenceID
+ * @return {String} The markup of the history
+ */
+saanich.atlas.notesMarkup = function (taxon, records, historyById, byTaxon, annotations) {
+    const setAside = bioreportr.solowAnnotationNote(records, annotations);
+    const history = bioreportr.curationForm?.historyMarkup ? bioreportr.curationForm.historyMarkup(taxon, historyById || {}, byTaxon || {}) : "";
+    return setAside + history;
+};
+
+// The dated records of a plant, as the panel charts them
+saanich.atlas.dated = records => records.filter(record => record.eventDate);
 
 // The panel is shown only on the atlas pane and only while a plant with records is selected
 saanich.atlas.panelVisible = (markup, activePaneKey, atlasPane) => !!markup && activePaneKey === atlasPane;

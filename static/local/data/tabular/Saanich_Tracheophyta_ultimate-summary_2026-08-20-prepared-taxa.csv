@@ -915,7 +915,7 @@ id,parentId,iNaturalistTaxonName,commonName,rank,iNaturalistTaxonImage,scientifi
 57787,57285,Plectritis congesta brachystemon,Pink Plectritis,subspecies,https://inaturalist-open-data.s3.amazonaws.com/photos/197028733/medium.jpg,Plectritis brachystemon,subspecies,non-infrataxon,no_voucher,secure,native,confirmed,0.006,congesta,Plectritis congesta brachystemon,"",unaccepted,1
 57862,57863,Rhynchospora alba,white beak-sedge,species,https://inaturalist-open-data.s3.amazonaws.com/photos/439968923/medium.jpeg,Rhynchospora alba,"",non-infrataxon,no_voucher,secure,native,unconfirmed,0.31,alba,"","",accepted,1
 57976,47604,Filago,cudweeds,genus,https://inaturalist-open-data.s3.amazonaws.com/photos/73639992/medium.jpeg,,,,unknown,,,,,,,,,
-58066,49139,Plagiobothrys tenellus,Pacific popcornflower,species,https://inaturalist-open-data.s3.amazonaws.com/photos/117919798/medium.jpg,Plagiobothrys tenellus,species,non-infrataxon,voucher,concern,native,confirmed,0.013,tenellus,"","",accepted,1
+58066,49139,Plagiobothrys tenellus,Pacific popcornflower,species,https://inaturalist-open-data.s3.amazonaws.com/photos/117919798/medium.jpg,Plagiobothrys tenellus,species,non-infrataxon,voucher,concern,native,unconfirmed,0.526,tenellus,"","",accepted,1
 58068,47204,Arabis,Rock-cresses,genus,https://inaturalist-open-data.s3.amazonaws.com/photos/15158/medium.jpg,,,,unknown,,,,,,,,,
 58070,47204,Athysanus,"",genus,https://inaturalist-open-data.s3.amazonaws.com/photos/264032231/medium.jpeg,,,,unknown,,,,,,,,,
 58073,47204,Descurainia,Tansymustards,genus,https://static.inaturalist.org/photos/90963163/medium.jpeg,,,,unknown,,,,,,,,,

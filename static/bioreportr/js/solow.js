@@ -64,12 +64,53 @@ bioreportr.solowObsForTaxon = function (obsRows, taxonRow) {
 };
 
 /**
+ * Load the annotations of records which the project keeps, e.g. those of planted populations - see Saanich's
+ * scripts/apply_record_annotations.R. Each row names a record by its occurrenceID, with its `annotation`, whether it is
+ * suspended from the calculation of extirpation probability, `excludeFromEP`, and a `note`.
+ * @param {String|null} file - The CSV file of annotations, relative to the story page, or null if the project has none
+ * @return {Promise<Object<String, Object>>|Object<String, Object>} The annotation of each record, by its occurrenceID
+ */
+bioreportr.loadRecordAnnotations = function (file) {
+    return file ? hortis.csvReader.load(file, {header: true, skipEmptyLines: true}).then(parsed => {
+        const togo = {};
+        (parsed?.data || []).forEach(row => togo[row.occurrenceID] = {...row, excludeFromEP: /^true$/i.test(row.excludeFromEP)});
+        return togo;
+    }) : {};
+};
+
+/**
+ * The records of a taxon which count towards its extirpation probability - all but those suspended by an annotation.
+ * @param {Object[]} taxonObsRows - The taxon's records
+ * @param {Object<String, Object>} annotations - The annotations of records, by occurrenceID
+ * @return {Object[]} The records which count
+ */
+bioreportr.solowObsForEP = function (taxonObsRows, annotations) {
+    return taxonObsRows.filter(row => !annotations?.[row.occurrenceID]?.excludeFromEP);
+};
+
+/**
+ * Note the records of a taxon suspended from the calculation of its extirpation probability, and why.
+ * @param {Object[]} taxonObsRows - The taxon's records
+ * @param {Object<String, Object>} annotations - The annotations of records, by occurrenceID
+ * @return {String} The markup of the note, or "" if none of its records is suspended
+ */
+bioreportr.solowAnnotationNote = function (taxonObsRows, annotations) {
+    const suspended = taxonObsRows.filter(row => annotations?.[row.occurrenceID]?.excludeFromEP);
+    const ids = new Set(suspended.map(row => row.occurrenceID));
+    const notes = [...new Set(suspended.map(row => annotations[row.occurrenceID].note).filter(Boolean))];
+    return suspended.length ? `<div class="mxcw-solow-annotation-note" title="${hortis.dataTable.encode(notes.join(" "))}">` +
+        `${ids.size} ${ids.size === 1 ? "record" : "records"} set aside from EP: ${hortis.dataTable.encode([...new Set(suspended.map(row => annotations[row.occurrenceID].annotation))].join(", "))}</div>` : "";
+};
+
+/**
  * Compute the information shown about the chosen taxon.
  * @param {TaxonRow|null} taxon - The taxon, or null if none is chosen
  * @param {Object[]} taxonObsRows - Its observations, in order of date
+ * @param {Object<String, Object>} [annotations] - The annotations of records, by occurrenceID, of which any suspending
+ * records from the calculation of extirpation probability are noted
  * @return {Object} The information - with member `none` true if no taxon is chosen
  */
-bioreportr.solowTaxonInfo.model = function (taxon, taxonObsRows) {
+bioreportr.solowTaxonInfo.model = function (taxon, taxonObsRows, annotations) {
     return taxon && taxonObsRows.length > 0 ? {
         none: false,
         taxonName: taxon.scientificName + (taxon.commonName ? ` (${taxon.commonName})` : ""),
@@ -77,7 +118,7 @@ bioreportr.solowTaxonInfo.model = function (taxon, taxonObsRows) {
         dateLastSeen: bioreportr.eventDay(taxonObsRows[taxonObsRows.length - 1].eventDate),
         numObs: taxonObsRows.length,
         regionalEP: taxon.solow_EP,
-        georefNote: bioreportr.georefNote(taxonObsRows),
+        georefNote: bioreportr.georefNote(taxonObsRows) + bioreportr.solowAnnotationNote(taxonObsRows, annotations),
         taxonImage: hortis.renderTaxonImage(taxon.iNaturalistTaxonImage, taxon.id)
     } : {none: true, taxonName: "", dateFirstSeen: "", dateLastSeen: "", numObs: "", regionalEP: "", georefNote: "", taxonImage: ""};
 };
