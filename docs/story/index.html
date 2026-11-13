@@ -8,8 +8,8 @@
 <link rel="apple-touch-icon" href="../local/apple-touch-icon.png" sizes="180x180">
 <link fetchpriority="low" href="../local/site.webmanifest" rel="manifest">
 <title>Flora of the W̱SÁNEĆ/Saanich Peninsula</title>
-  <meta name="description" content="An interactive atlas of the vascular plants of the W̱SÁNEĆ/Saanich Peninsula - explore more than 160 years of records, find the plants not seen in decades, and help curate a living flora."><link rel="canonical" href="../story/" itemprop="url"><meta property="og:title" content="Flora of the W̱SÁNEĆ/Saanich Peninsula">
-<meta property="og:description" content="An interactive atlas of the vascular plants of the W̱SÁNEĆ/Saanich Peninsula - explore more than 160 years of records, find the plants not seen in decades, and help curate a living flora.">
+  <meta name="description" content="A community atlas of the vascular plants of the W̱SÁNEĆ/Saanich Peninsula - explore more than 160 years of records, find the plants not seen in decades, and help curate a living flora."><link rel="canonical" href="../story/" itemprop="url"><meta property="og:title" content="Flora of the W̱SÁNEĆ/Saanich Peninsula">
+<meta property="og:description" content="A community atlas of the vascular plants of the W̱SÁNEĆ/Saanich Peninsula - explore more than 160 years of records, find the plants not seen in decades, and help curate a living flora.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://imerss.github.io/saanich-peninsula-flora/story/"><meta property="og:image" content="https://imerss.github.io/saanich-peninsula-flora/local/images/social-preview.jpg">
 <meta property="og:image:width" content="1200">
@@ -17,12 +17,12 @@
 <meta property="og:site_name" content="Flora of the W̱SÁNEĆ/Saanich Peninsula">
 
   <meta itemprop="name" content="Flora of the W̱SÁNEĆ/Saanich Peninsula">
-  <meta itemprop="description" content="An interactive atlas of the vascular plants of the W̱SÁNEĆ/Saanich Peninsula - explore more than 160 years of records, find the plants not seen in decades, and help curate a living flora.">
+  <meta itemprop="description" content="A community atlas of the vascular plants of the W̱SÁNEĆ/Saanich Peninsula - explore more than 160 years of records, find the plants not seen in decades, and help curate a living flora.">
   <meta itemprop="image" content="https://imerss.github.io/saanich-peninsula-flora/local/images/social-preview.jpg">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://imerss.github.io/saanich-peninsula-flora/local/images/social-preview.jpg">
   <meta name="twitter:title" content="Flora of the W̱SÁNEĆ/Saanich Peninsula">
-  <meta name="twitter:description" content="An interactive atlas of the vascular plants of the W̱SÁNEĆ/Saanich Peninsula - explore more than 160 years of records, find the plants not seen in decades, and help curate a living flora.">
+  <meta name="twitter:description" content="A community atlas of the vascular plants of the W̱SÁNEĆ/Saanich Peninsula - explore more than 160 years of records, find the plants not seen in decades, and help curate a living flora.">
 <link href="../bioreportr/hextra/css/main.css" rel="stylesheet">
 
 
@@ -6464,80 +6464,6 @@ hortis.filterControls.resetAll = function (filters, checklists) {
 
 }).call(globalThis);
 //# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/filters/hortis-filterControls.vue</script>
-    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.valueFilter-2">(function () {
-"use strict";
-
-// Filters taxon rows by the value of one of their fields, offering a checkbox for each value - or by a value computed
-// from each row by the global function named by `valueOf`, e.g. hortis.graminoidValue
-fluid.def("hortis.valueFilter", {
-    $layers: ["fluid.sfcLayer","hortis.taxaFilter","hortis.urlMappedFilter"],
-    // Several value filters may be held in a list, and so each is keyed in the URL by its field
-    urlKey: "{self}.fieldName",
-    urlCodec: "hortis.urlCodecs.keys",
-    // filterName: String
-    // fieldName: String
-    // fieldValues: String[]
-    fieldLabels: null,
-    valueOf: null,
-    // Hash of each selected value to true
-    filterState: {},
-    rows: "$compute:hortis.valueFilter.rows({self}.fieldValues, {self}.fieldLabels)",
-    filterSummary: "$compute:hortis.keyCountSummary({self}.filterState, {self}.summaryNouns)",
-    summaryNouns: ["value", "values"],
-    doFilter: "$method:hortis.valueFilter.doFilter({0}:rows, {1}:filterState, {self}.fieldName, {self}.valueOf)",
-    reset: "$method:hortis.valueFilter.reset({self})",
-    valueRows: {
-        $component: {
-            $layers: "hortis.valueFilter.row",
-            $for: {
-                source: "{valueFilter}.rows",
-                valueAs: "row"
-            }
-        }
-    },
-    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
-"template":{"sfcLayer":"hortis.valueFilter"}}}
-});
-
-}).call(globalThis);
-//# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/filters/hortis-valueFilter.vue</script>
-    <link data-fluid-indent="4" data-fluid-hydrated="" id="fl-style-hortis.valueFilter-0" href="../vendor/pretty-checkbox/dist/pretty-checkbox.min.css" rel="stylesheet">
-    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.epFilter-2">(function () {
-"use strict";
-
-// Filters the taxa of the extirpation risk analysis by their range of extirpation probability, chosen by a pair of
-// sliders
-fluid.def("bioreportr.epFilter", {
-    $layers: ["fluid.sfcLayer","hortis.taxaFilter"],
-    filterName: "Extirpation probability (EP)",
-    // The range, between 0 and 1
-    filterState: {min: 0, max: 1},
-    display: "$compute:bioreportr.epFilter.display({self}.filterState)",
-    // The handles are placed from code: the renderer writes the value of a bound input back into what it is bound to,
-    // which left the readings stuck and the other handle out of place
-    placeHandles: "$effect:bioreportr.epFilter.placeHandles({self}.display, {global}.document)",
-    filterSummary: "$compute:bioreportr.epFilter.summarise({self}.filterState)",
-    doFilter: "$method:bioreportr.epFilter.doFilter({0}:rows, {1}:filterState)",
-    reset: "$method:bioreportr.epFilter.reset({self})",
-    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
-"template":{"sfcLayer":"bioreportr.epFilter"}}}
-});
-
-/**
- * Place the handles of the sliders at the range of the filter's state.
- * @param {Object} display - The range as percentages, with members `min` and `max`
- * @param {Document} dokkument - The document holding the filter
- */
-bioreportr.epFilter.placeHandles = function (display, dokkument) {
-    const min = dokkument.querySelector(".mxcw-ep-min"), max = dokkument.querySelector(".mxcw-ep-max");
-    if (min && max) {
-        min.value = display.min;
-        max.value = display.max;
-    }
-};
-
-}).call(globalThis);
-//# sourceURL=../bioreportr/sfc/bioreportr-epFilter.vue</script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.autocomplete-0" fluid-client="" fluid-src="../vendor/accessible-autocomplete/dist/accessible-autocomplete.min.js" src="../vendor/accessible-autocomplete/dist/accessible-autocomplete.min.js"></script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.autocomplete-1">(function () {
 "use strict";
@@ -6586,6 +6512,80 @@ hortis.autocomplete.bind = function (that, host, container, accessibleAutocomple
 }).call(globalThis);
 //# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/components/hortis-autocomplete.vue</script>
     <link data-fluid-indent="4" data-fluid-hydrated="" id="fl-style-hortis.autocomplete-0" href="../vendor/accessible-autocomplete/dist/accessible-autocomplete.min.css" rel="stylesheet">
+    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.epFilter-2">(function () {
+"use strict";
+
+// Filters the taxa of the extirpation risk analysis by their range of extirpation probability, chosen by a pair of
+// sliders
+fluid.def("bioreportr.epFilter", {
+    $layers: ["fluid.sfcLayer","hortis.taxaFilter"],
+    filterName: "Extirpation probability (EP)",
+    // The range, between 0 and 1
+    filterState: {min: 0, max: 1},
+    display: "$compute:bioreportr.epFilter.display({self}.filterState)",
+    // The handles are placed from code: the renderer writes the value of a bound input back into what it is bound to,
+    // which left the readings stuck and the other handle out of place
+    placeHandles: "$effect:bioreportr.epFilter.placeHandles({self}.display, {global}.document)",
+    filterSummary: "$compute:bioreportr.epFilter.summarise({self}.filterState)",
+    doFilter: "$method:bioreportr.epFilter.doFilter({0}:rows, {1}:filterState)",
+    reset: "$method:bioreportr.epFilter.reset({self})",
+    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
+"template":{"sfcLayer":"bioreportr.epFilter"}}}
+});
+
+/**
+ * Place the handles of the sliders at the range of the filter's state.
+ * @param {Object} display - The range as percentages, with members `min` and `max`
+ * @param {Document} dokkument - The document holding the filter
+ */
+bioreportr.epFilter.placeHandles = function (display, dokkument) {
+    const min = dokkument.querySelector(".mxcw-ep-min"), max = dokkument.querySelector(".mxcw-ep-max");
+    if (min && max) {
+        min.value = display.min;
+        max.value = display.max;
+    }
+};
+
+}).call(globalThis);
+//# sourceURL=../bioreportr/sfc/bioreportr-epFilter.vue</script>
+    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.valueFilter-2">(function () {
+"use strict";
+
+// Filters taxon rows by the value of one of their fields, offering a checkbox for each value - or by a value computed
+// from each row by the global function named by `valueOf`, e.g. hortis.graminoidValue
+fluid.def("hortis.valueFilter", {
+    $layers: ["fluid.sfcLayer","hortis.taxaFilter","hortis.urlMappedFilter"],
+    // Several value filters may be held in a list, and so each is keyed in the URL by its field
+    urlKey: "{self}.fieldName",
+    urlCodec: "hortis.urlCodecs.keys",
+    // filterName: String
+    // fieldName: String
+    // fieldValues: String[]
+    fieldLabels: null,
+    valueOf: null,
+    // Hash of each selected value to true
+    filterState: {},
+    rows: "$compute:hortis.valueFilter.rows({self}.fieldValues, {self}.fieldLabels)",
+    filterSummary: "$compute:hortis.keyCountSummary({self}.filterState, {self}.summaryNouns)",
+    summaryNouns: ["value", "values"],
+    doFilter: "$method:hortis.valueFilter.doFilter({0}:rows, {1}:filterState, {self}.fieldName, {self}.valueOf)",
+    reset: "$method:hortis.valueFilter.reset({self})",
+    valueRows: {
+        $component: {
+            $layers: "hortis.valueFilter.row",
+            $for: {
+                source: "{valueFilter}.rows",
+                valueAs: "row"
+            }
+        }
+    },
+    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
+"template":{"sfcLayer":"hortis.valueFilter"}}}
+});
+
+}).call(globalThis);
+//# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/filters/hortis-valueFilter.vue</script>
+    <link data-fluid-indent="4" data-fluid-hydrated="" id="fl-style-hortis.valueFilter-0" href="../vendor/pretty-checkbox/dist/pretty-checkbox.min.css" rel="stylesheet">
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.sectionTab-1">(function () {
 "use strict";
 
@@ -11884,17 +11884,6 @@ fluid.def("bioreportr.storyMap", {
 //# sourceURL=../bioreportr/sfc/bioreportr-storyMap.vue</script>
     <link data-fluid-indent="4" data-fluid-hydrated="" id="fl-style-bioreportr.storyMap-0" href="../vendor/imerss-bioinfo/src/client/css/maplibre-gl.css" rel="stylesheet">
     <link data-fluid-indent="4" data-fluid-hydrated="" id="fl-style-bioreportr.storyMap-1" href="../vendor/imerss-bioinfo/src/client/css/mapbox-gl-draw.css" rel="stylesheet">
-    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.icons-0">(function () {
-"use strict";
-
-// The icons of the BBEA visualisation's interface, shared by several of its components. A component whose template
-// refers to one of them bears this layer, so that the icons are injected into any document it renders into
-fluid.def("hortis.icons", {
-    $layers: ["fluid.sfcLayer","fluid.component"]
-});
-
-}).call(globalThis);
-//# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/core/hortis-icons.vue</script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.valueFilter.row-1">(function () {
 "use strict";
 
@@ -11909,6 +11898,17 @@ fluid.def("hortis.valueFilter.row", {
 
 }).call(globalThis);
 //# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/filters/hortis-valueFilter-row.vue</script>
+    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.icons-0">(function () {
+"use strict";
+
+// The icons of the BBEA visualisation's interface, shared by several of its components. A component whose template
+// refers to one of them bears this layer, so that the icons are injected into any document it renders into
+fluid.def("hortis.icons", {
+    $layers: ["fluid.sfcLayer","fluid.component"]
+});
+
+}).call(globalThis);
+//# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/core/hortis-icons.vue</script>
     <template id="site-subnav"><div class="imerss-subnav">
     <nav class="hx-mx-auto hx-flex hx-items-center hx-justify-start hx-gap-2 hx-h-16 hx-px-6 hx-max-w-[90rem]"><a title="Home" href="https://salishseabiodiversity.org/" class="contrast-more:hx-text-gray-700 contrast-more:dark:hx-text-gray-100 hx-relative -hx-ml-2 hx-hidden hx-whitespace-nowrap hx-p-2 md:hx-inline-block hx-text-gray-600 hover:hx-text-gray-800 dark:hx-text-gray-400 dark:hover:hx-text-gray-200">
             <span class="hx-text-center">Home</span>
