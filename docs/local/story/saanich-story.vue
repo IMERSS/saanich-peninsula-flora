@@ -155,6 +155,13 @@ fluid.def("saanich.story", {
     recordAnnotationsFile: "../local/data/tabular/Saanich_Tracheophyta_record-annotations_2026-08-20.csv",
     // The history of the curatorial notes on each taxon, prepared by scripts/prepare_curation_history.R
     curationHistoryFile: "../local/data/tabular/Saanich_Tracheophyta_curation-history_2026-08-20.csv",
+    // The sources of that history, by the column of the file holding each, oldest first
+    curationHistorySources: [
+        {field: "original", source: "Szczawinski & Harrison", label: "Original account"},
+        {field: "harvey", source: "Harvey Janszen", label: "Revised account"},
+        {field: "fpnw", source: "Flora of the Pacific Northwest", label: "Remarks"},
+        {field: "critical", source: "Reviewers", label: "Critical notes"}
+    ],
     // The tiles of the atlas's three groups of species, placed in its section
     atlasTiles: "$compute:saanich.atlas.tilesMarkup({self}.taxa.allRows, {self}.selectedStatus)",
     sectionInserts: "$compute:saanich.atlas.sectionInserts({self}.atlasTiles)",

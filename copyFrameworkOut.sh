@@ -96,6 +96,10 @@ FILES=(
     layouts/partials/head-css.html
     layouts/_default/baseof.html
     layouts/partials/footer.html
+    # How a page is named in its tab, and described to sites it is shared on, from params of hugo.yaml - each project
+    # gives its own params.siteURL, and params.images for the image shown with a shared page
+    layouts/partials/head.html
+    layouts/partials/opengraph.html
     layouts/partials/language-switch.html
     layouts/partials/navbar.html
     layouts/partials/search.html

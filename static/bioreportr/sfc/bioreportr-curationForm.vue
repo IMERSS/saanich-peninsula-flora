@@ -38,7 +38,8 @@ fluid.def("bioreportr.curationForm", {
     history: {
         $component: {
             $layers: "hortis.verbatimSlot",
-            markup: "$compute:bioreportr.curationForm.historyMarkup({curationForm}.taxon, {storyPage}.curation.historyById, {storyPage}.curation.byTaxon)"
+            markup: `$compute:bioreportr.curationForm.historyMarkup({curationForm}.taxon, {storyPage}.curation.historyById,
+                {storyPage}.curationHistorySources, {storyPage}.curation.byTaxon)`
         }
     },
     // The records of the taxon, listed by the Location tab - see bioreportr.curationForm.locationRecordsMarkup
@@ -256,15 +257,6 @@ bioreportr.curationForm.vote = function (that, question, vote) {
     that.draft[question] = vote;
 };
 
-// The sources of the history of a taxon, in the order in which they are shown, oldest first, each with the field of the
-// history holding its note
-bioreportr.curationForm.historySources = [
-    {field: "original", source: "Szczawinski & Harrison", label: "Original account"},
-    {field: "harvey", source: "Harvey Janszen", label: "Revised account"},
-    {field: "fpnw", source: "Flora of the Pacific Northwest", label: "Remarks"},
-    {field: "critical", source: "Reviewers", label: "Critical notes"}
-];
-
 /**
  * Render a note's text, with any web address in it a link.
  * @param {String} text - The text
@@ -280,17 +272,20 @@ bioreportr.curationForm.linkify = function (text) {
  * @param {TaxonRow|null} taxon - The taxon chosen for curation
  * @param {Object<String, Object>} historyById - The history of each taxon, by taxon id - see
  * `bioreportr.curation.loadHistory`
+ * @param {Object[]} sources - The sources of the history, in the order in which they are shown, oldest first, each with
+ * the `field` of the history holding its note, the name of its `source` and a `label` for its note - see
+ * `bioreportr.storyPageCuration`
  * @param {Object<String, CurationNote[]>} byTaxon - The notes submitted through the site on each taxon, by taxon id
  * @return {String} The markup of the history
  */
-bioreportr.curationForm.historyMarkup = function (taxon, historyById, byTaxon) {
+bioreportr.curationForm.historyMarkup = function (taxon, historyById, sources, byTaxon) {
     const encode = hortis.dataTable.encode;
     let togo = "";
     if (taxon) {
         const history = historyById?.[taxon.id] || {};
-        const entries = bioreportr.curationForm.historySources.filter(({field}) => history[field])
+        const entries = (sources || []).filter(({field}) => history[field])
             .map(({field, source, label}) => `<li class="mxcw-curation-history-entry">
-                <div class="mxcw-curation-history-head"><b>${source}</b> <span>${label}</span></div>
+                <div class="mxcw-curation-history-head"><b>${encode(source)}</b> <span>${encode(label)}</span></div>
                 <div class="mxcw-curation-history-text">${bioreportr.curationForm.linkify(history[field])}</div>
             </li>`);
         const reviewed = history.reviewedBy ? `<p class="mxcw-curation-history-reviewed">Reviewed by ${encode(history.reviewedBy)}</p>` : "";

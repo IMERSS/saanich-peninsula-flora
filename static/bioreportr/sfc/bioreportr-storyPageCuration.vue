@@ -9,6 +9,10 @@ fluid.def("bioreportr.storyPageCuration", {
     // The history of the curatorial notes on each taxon from before the site's own curation, as a CSV file relative to the
     // story page, if the project has one - shown by the History tab of the curation pane, see bioreportr.curation.loadHistory
     curationHistoryFile: null,
+    // The sources of that history, in the order in which they are shown, oldest first, each with the `field` of the file
+    // holding its note, the name of its `source` and a `label` for its note, e.g.
+    // {field: "original", source: "Szczawinski & Harrison", label: "Original account"}
+    curationHistorySources: [],
     // Community curation of the taxa - see notes/community-curation-design.md and the pane rendered by bioreportr.curationPane
     curation: {
         $component: {

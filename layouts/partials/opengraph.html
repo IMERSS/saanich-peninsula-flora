@@ -1,9 +1,13 @@
 {{- /* Overrides the hextra theme's opengraph.html, which describes a page to sites it is shared on, e.g. Facebook. A page
-       may give the title it is shared under as shareTitle, a page without a title being shared under the site's; the
+       may give the title it is shared under as shareTitle, a page without a title being shared under the site's, and is
+       described by its own description, or else its summary, or else the site's; the
        site is named by its title, which the theme's looks for under params instead; and the page's address is given in
        full from params.siteURL, since Facebook follows it */ -}}
 <meta property="og:title" content="{{ .Params.shareTitle | default .Title | default .Site.Title }}" />
-<meta property="og:description" content="{{ with .Description }}{{ . }}{{ else }}{{if .IsPage}}{{ .Summary }}{{ else }}{{ with .Site.Params.description }}{{ . }}{{ end }}{{ end }}{{ end }}" />
+{{- /* A page is described by its own description, or else its summary, or else the site's description */ -}}
+{{- $summary := "" -}}
+{{- if .IsPage }}{{ $summary = .Summary | plainify | strings.TrimSpace }}{{ end -}}
+<meta property="og:description" content="{{ with .Description }}{{ . }}{{ else }}{{ with $summary }}{{ . }}{{ else }}{{ with .Site.Params.description }}{{ . }}{{ end }}{{ end }}{{ end }}" />
 <meta property="og:type" content="{{ if .IsPage }}article{{ else }}website{{ end }}" />
 <meta property="og:url" content="{{ with .Site.Params.siteURL }}{{ . }}{{ end }}{{ .RelPermalink }}" />
 

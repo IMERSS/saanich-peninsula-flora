@@ -8,8 +8,7 @@
 <link rel="apple-touch-icon" href="../local/apple-touch-icon.png" sizes="180x180">
 <link fetchpriority="low" href="../local/site.webmanifest" rel="manifest">
 <title>Flora of the W̱SÁNEĆ/Saanich Peninsula</title>
-  <meta name="description" content="A community atlas of the vascular plants of the W̱SÁNEĆ/Saanich Peninsula - explore more than 160 years of records, find the plants not seen in decades, and help curate a living flora."><link rel="canonical" href="../story/" itemprop="url"><meta property="og:title" content="Flora of the W̱SÁNEĆ/Saanich Peninsula">
-<meta property="og:description" content="A community atlas of the vascular plants of the W̱SÁNEĆ/Saanich Peninsula - explore more than 160 years of records, find the plants not seen in decades, and help curate a living flora.">
+  <meta name="description" content="A community atlas of the vascular plants of the W̱SÁNEĆ/Saanich Peninsula - explore more than 160 years of records, find the plants not seen in decades, and help curate a living flora."><link rel="canonical" href="../story/" itemprop="url"><meta property="og:title" content="Flora of the W̱SÁNEĆ/Saanich Peninsula"><meta property="og:description" content="A community atlas of the vascular plants of the W̱SÁNEĆ/Saanich Peninsula - explore more than 160 years of records, find the plants not seen in decades, and help curate a living flora.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://imerss.github.io/saanich-peninsula-flora/story/"><meta property="og:image" content="https://imerss.github.io/saanich-peninsula-flora/local/images/social-preview.jpg">
 <meta property="og:image:width" content="1200">
@@ -1805,6 +1804,13 @@ fluid.def("saanich.story", {
     recordAnnotationsFile: "../local/data/tabular/Saanich_Tracheophyta_record-annotations_2026-08-20.csv",
     // The history of the curatorial notes on each taxon, prepared by scripts/prepare_curation_history.R
     curationHistoryFile: "../local/data/tabular/Saanich_Tracheophyta_curation-history_2026-08-20.csv",
+    // The sources of that history, by the column of the file holding each, oldest first
+    curationHistorySources: [
+        {field: "original", source: "Szczawinski & Harrison", label: "Original account"},
+        {field: "harvey", source: "Harvey Janszen", label: "Revised account"},
+        {field: "fpnw", source: "Flora of the Pacific Northwest", label: "Remarks"},
+        {field: "critical", source: "Reviewers", label: "Critical notes"}
+    ],
     // The tiles of the atlas's three groups of species, placed in its section
     atlasTiles: "$compute:saanich.atlas.tilesMarkup({self}.taxa.allRows, {self}.selectedStatus)",
     sectionInserts: "$compute:saanich.atlas.sectionInserts({self}.atlasTiles)",
@@ -4432,6 +4438,10 @@ fluid.def("bioreportr.storyPageCuration", {
     // The history of the curatorial notes on each taxon from before the site's own curation, as a CSV file relative to the
     // story page, if the project has one - shown by the History tab of the curation pane, see bioreportr.curation.loadHistory
     curationHistoryFile: null,
+    // The sources of that history, in the order in which they are shown, oldest first, each with the `field` of the file
+    // holding its note, the name of its `source` and a `label` for its note, e.g.
+    // {field: "original", source: "Szczawinski & Harrison", label: "Original account"}
+    curationHistorySources: [],
     // Community curation of the taxa - see notes/community-curation-design.md and the pane rendered by bioreportr.curationPane
     curation: {
         $component: {
@@ -11694,7 +11704,8 @@ fluid.def("bioreportr.curationForm", {
     history: {
         $component: {
             $layers: "hortis.verbatimSlot",
-            markup: "$compute:bioreportr.curationForm.historyMarkup({curationForm}.taxon, {storyPage}.curation.historyById, {storyPage}.curation.byTaxon)"
+            markup: `$compute:bioreportr.curationForm.historyMarkup({curationForm}.taxon, {storyPage}.curation.historyById,
+                {storyPage}.curationHistorySources, {storyPage}.curation.byTaxon)`
         }
     },
     // The records of the taxon, listed by the Location tab - see bioreportr.curationForm.locationRecordsMarkup
@@ -11914,15 +11925,6 @@ bioreportr.curationForm.vote = function (that, question, vote) {
     that.draft[question] = vote;
 };
 
-// The sources of the history of a taxon, in the order in which they are shown, oldest first, each with the field of the
-// history holding its note
-bioreportr.curationForm.historySources = [
-    {field: "original", source: "Szczawinski & Harrison", label: "Original account"},
-    {field: "harvey", source: "Harvey Janszen", label: "Revised account"},
-    {field: "fpnw", source: "Flora of the Pacific Northwest", label: "Remarks"},
-    {field: "critical", source: "Reviewers", label: "Critical notes"}
-];
-
 /**
  * Render a note's text, with any web address in it a link.
  * @param {String} text - The text
@@ -11938,17 +11940,20 @@ bioreportr.curationForm.linkify = function (text) {
  * @param {TaxonRow|null} taxon - The taxon chosen for curation
  * @param {Object<String, Object>} historyById - The history of each taxon, by taxon id - see
  * `bioreportr.curation.loadHistory`
+ * @param {Object[]} sources - The sources of the history, in the order in which they are shown, oldest first, each with
+ * the `field` of the history holding its note, the name of its `source` and a `label` for its note - see
+ * `bioreportr.storyPageCuration`
  * @param {Object<String, CurationNote[]>} byTaxon - The notes submitted through the site on each taxon, by taxon id
  * @return {String} The markup of the history
  */
-bioreportr.curationForm.historyMarkup = function (taxon, historyById, byTaxon) {
+bioreportr.curationForm.historyMarkup = function (taxon, historyById, sources, byTaxon) {
     const encode = hortis.dataTable.encode;
     let togo = "";
     if (taxon) {
         const history = historyById?.[taxon.id] || {};
-        const entries = bioreportr.curationForm.historySources.filter(({field}) => history[field])
+        const entries = (sources || []).filter(({field}) => history[field])
             .map(({field, source, label}) => `<li class="mxcw-curation-history-entry">
-                <div class="mxcw-curation-history-head"><b>${source}</b> <span>${label}</span></div>
+                <div class="mxcw-curation-history-head"><b>${encode(source)}</b> <span>${encode(label)}</span></div>
                 <div class="mxcw-curation-history-text">${bioreportr.curationForm.linkify(history[field])}</div>
             </li>`);
         const reviewed = history.reviewedBy ? `<p class="mxcw-curation-history-reviewed">Reviewed by ${encode(history.reviewedBy)}</p>` : "";
