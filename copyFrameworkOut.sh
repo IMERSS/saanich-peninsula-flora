@@ -66,11 +66,13 @@ FILES=(
     # and its own content/story/Curation.Rmd, whose section each build writes into bioreportr-curationPane.vue
     static/bioreportr/sfc/bioreportr-curationPane.vue
     static/bioreportr/sfc/bioreportr-curationForm.vue
-    static/bioreportr/js/curation.js
+    static/bioreportr/sfc/bioreportr-curation.vue
+    static/bioreportr/sfc/bioreportr-storyPageCuration.vue
     src/js/consolidateCuration.js
     src/curation/oauthWorker.mjs
     src/curation/wrangler.toml
     src/curation/enrol.mjs
+    src/curation/listDiscussions.mjs
     .github/workflows/curation.yml
     static/bioreportr/js/story.js
     static/bioreportr/js/solow.js

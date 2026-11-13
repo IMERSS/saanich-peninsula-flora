@@ -1,12 +1,6 @@
-/*
-Copyright 2026 IMERSS
-Licensed under the Educational Community License (ECL), Version 2.0 or the New
-BSD license. You may not use this file except in compliance with one these
-Licenses.
-You may obtain a copy of the ECL 2.0 License and BSD License at
-https://github.com/fluid-project/infusion/raw/master/Infusion-LICENSE.txt
-*/
-
+<script src="%imerss-bioinfo/src/client/js/i6/imerss-core.js"></script>
+<script src="../js/story.js"></script>
+<script>
 "use strict";
 
 // Community curation of the taxa and records of a story - see notes/community-curation-design.md. Each note is a
@@ -16,14 +10,57 @@ https://github.com/fluid-project/infusion/raw/master/Infusion-LICENSE.txt
 // listing the claims consolidated. A note submitted from this page is held in local storage until its claim appears
 // there, and is shown meanwhile as if it were consolidated
 
-// noinspection ES6ConvertVarToLetConst // otherwise this is a duplicate on minifying
-var bioreportr = fluid.registerNamespace("bioreportr");
-// noinspection ES6ConvertVarToLetConst // otherwise this is a duplicate on minifying
-var hortis = fluid.registerNamespace("hortis");
-
 fluid.registerNamespace("bioreportr.curation");
 fluid.registerNamespace("bioreportr.curation.backends");
-fluid.registerNamespace("bioreportr.curationForm");
+
+// The curation state of a story page, held as its member `curation`: the notes on taxa and on observations
+// consolidated from GitHub, those pending in local storage, the user signed in, and the submission of notes
+fluid.def("bioreportr.curation", {
+    $layers: "fluid.component",
+    // The files written by the consolidation job, src/js/consolidateCuration.js, relative to the story page
+    configFile: "../curation/config.json",
+    taxaFile: "../curation/taxa.csv",
+    observationsFile: "../curation/observations.csv",
+    claimStatusFile: "../curation/claimStatus.json",
+    config: "$compute:fluid.fetchJSON({self}.configFile)",
+    claimStatus: "$compute:fluid.fetchJSON({self}.claimStatusFile)",
+    taxonRecords: {
+        $component: {
+            $layers: "hortis.csvReader",
+            url: "{curation}.taxaFile"
+        }
+    },
+    observationRecords: {
+        $component: {
+            $layers: "hortis.csvReader",
+            url: "{curation}.observationsFile"
+        }
+    },
+    consolidated: "$compute:bioreportr.curation.consolidatedClaims({self}.claimStatus, {self}.taxonRecords.rows, {self}.observationRecords.rows)",
+    paneKey: "$compute:bioreportr.curation.paneKey({storyPage}.panes)",
+    storageKey: "$compute:bioreportr.curation.storageKey({self}.config)",
+    tokenKey: "bioreportr-curation-token",
+    // Advanced whenever the pending notes, or the token, are written to local storage, so that they are read again
+    pendingVersion: 0,
+    tokenVersion: 0,
+    pending: "$compute:bioreportr.curation.readPending({global}, {self}.storageKey, {self}.pendingVersion)",
+    byTaxon: "$compute:bioreportr.curation.byTaxon({self}.taxonRecords.rows, {self}.pending, {self}.consolidated)",
+    byObservation: "$compute:bioreportr.curation.byObservation({self}.observationRecords.rows, {self}.pending, {self}.consolidated)",
+    prune: "$effect:bioreportr.curation.prune({self}, {self}.pending, {self}.consolidated, {global})",
+    // Drops any pending note whose comment has been deleted from GitHub before it could be consolidated
+    verifyPending: "$effect:bioreportr.curation.verifyPending({self}, {self}.backend, {self}.token, {global})",
+    connected: "$compute:bioreportr.curation.isConnected({self}.config)",
+    backend: "$compute:bioreportr.curation.makeBackend({self}.config, {global})",
+    token: "$compute:bioreportr.curation.readToken({self}.tokenKey, {self}.tokenVersion, {global})",
+    takeSession: "$effect:bioreportr.curation.takeSession({self}, {self}.backend, {global})",
+    // The user signed in, with their `login`, or null if none is
+    viewer: null,
+    loadViewer: "$effect:bioreportr.curation.loadViewer({self}, {self}.backend, {self}.token)",
+    // A message on the progress of a submission
+    status: "",
+    submit: "$method:bioreportr.curation.submit({self}, {0}:type, {1}:subject, {2}:answers, {global})",
+    signOut: "$method:bioreportr.curation.signOut({self}, {global})"
+});
 
 /**
  * A note on a taxon or an observation, as consolidated into taxa.csv or observations.csv, or held locally until it is.
@@ -914,242 +951,4 @@ bioreportr.curation.backends.memory = function (config) {
 
 // The comments submitted to the memory backend, for inspection in testing
 bioreportr.curation.backends.memory.submitted = [];
-
-/** The form of the curation pane **/
-/**
- * The corrected position of an observation shown by the form - that to which the user has dragged its marker, or
- * else that of their own note on it, if any.
- * @param {String} recordId - The id of the observation
- * @param {CurationNote|null} own - The user's own note on the observation, if any
- * @param {Object|null} correction - The user's correction in the form, if any, with its `recordId`, and either `lat` and
- * `long` or `cleared`
- * @return {Object|null} The corrected position, with members `lat` and `long`, or null if it is uncorrected
- */
-bioreportr.curationForm.position = function (recordId, own, correction) {
-    const ownPosition = own && own.lat !== "" && own.lat !== undefined ? {lat: +own.lat, long: +own.long} : null;
-    return correction?.recordId === recordId ? correction.cleared ? null : {lat: correction.lat, long: correction.long} : ownPosition;
-};
-
-/**
- * Render a position for reading.
- * @param {Object} position - The position, with members `lat` and `long`
- * @return {String} The position, as latitude and longitude to 5 decimal places, about a metre
- */
-bioreportr.curationForm.positionText = position => position.lat.toFixed(5) + ", " + position.long.toFixed(5);
-
-/**
- * Compute what the curation form shows - of the observation chosen for curation, if any, or else of the taxon, of
- * whose notes those of the type chosen by the form's tab are shown.
- * @param {TaxonRow|null} taxon - The taxon chosen for curation, if any
- * @param {Object|null} observation - The observation chosen for curation, if any, with members `recordId` and `row`
- * @param {Object<String, TaxonRow>} rowById - The taxa, by id
- * @param {Object<String, CurationNote[]>} byTaxon - The notes of each taxon, by taxon id
- * @param {Object<String, CurationNote[]>} byObservation - The notes of each observation, by record id
- * @param {Object|null} viewer - The user signed in, if any, with their `login`
- * @param {Boolean} connected - Whether notes may be submitted
- * @param {String} status - A message on the progress of a submission
- * @param {String} tab - The type of note on a taxon chosen by the form's tab, "provenance" or "taxonomy"
- * @param {Object|null} correction - The user's correction of the observation's position, if any - see
- * `bioreportr.curationForm.position`
- * @return {Object} The model of the form
- */
-bioreportr.curationForm.model = function (taxon, observation, rowById, byTaxon, byObservation, viewer, connected, status, tab, correction) {
-    const row = observation?.row || null;
-    const subjectTaxon = row ? rowById[hortis.rowToLinkTaxonId(row)] || null : taxon;
-    const type = row ? "observation" : taxon ? tab : "none";
-    const taxonNotes = subjectTaxon ? byTaxon[subjectTaxon.id] || [] : [];
-    const notes = row ? byObservation[observation.recordId] || [] : bioreportr.curation.ofType(taxonNotes, type);
-    const authored = candidates => viewer ? candidates.find(note => note.author === viewer.login) || null : null;
-    const own = authored(notes);
-    const original = row && hortis.libreMap.hasCoords(row) ? {lat: +row.decimalLatitude, long: +row.decimalLongitude} : null;
-    const position = row ? bioreportr.curationForm.position(observation.recordId, own, correction) : null;
-    const taxonName = subjectTaxon ? hortis.rowToScientific(subjectTaxon) : row?.taxon_name || "";
-    // Keyed by subject, so that the controls are rendered afresh, discarding any unsubmitted choices, only for another
-    const key = "<!-- " + hortis.dataTable.encode(row ? observation.recordId : taxon?.id || "").replace(/--/g, "- -") + " -->";
-    const controls = row ? bioreportr.curationForm.observationControlsMarkup(own) :
-        taxon ? bioreportr.curationForm.taxonControlsMarkup(authored(bioreportr.curation.ofType(taxonNotes, "provenance")),
-            authored(bioreportr.curation.ofType(taxonNotes, "taxonomy"))) : "";
-    return {
-        hasSubject: !!(taxon || row),
-        type,
-        isTaxon: !row && !!taxon,
-        isObservation: !!row,
-        provenanceSelected: type === "provenance",
-        taxonomySelected: type === "taxonomy",
-        subject: {taxonId: subjectTaxon?.id ?? (row ? String(hortis.rowToLinkTaxonId(row)) : ""), taxonName, recordId: observation?.recordId},
-        recordId: observation?.recordId || "",
-        taxonName,
-        // As the taxon is named elsewhere - its scientific name, then its common name in brackets
-        displayName: subjectTaxon ? hortis.rowToScientific(subjectTaxon) + (subjectTaxon.commonName ? ` (${subjectTaxon.commonName})` : "") : "",
-        commonName: subjectTaxon?.commonName || "",
-        image: subjectTaxon ? hortis.renderTaxonImage(subjectTaxon.iNaturalistTaxonImage, subjectTaxon.id) : "",
-        recordedBy: row?.recordedBy || "Unknown",
-        eventDate: row?.eventDate || "Unknown",
-        locality: row?.locality || "",
-        recordLink: row ? hortis.libreMap.iNatLinkMarkup(row) : "",
-        originalText: original ? bioreportr.curationForm.positionText(original) : "None recorded",
-        position,
-        positionText: position ? bioreportr.curationForm.positionText(position) : "Not corrected",
-        corrected: !!position,
-        // Where the draggable marker stands - at the corrected position, or else on the record's own
-        markerPosition: row ? position || original : null,
-        pending: !!own?.pending,
-        controls: controls ? controls + key : "",
-        connected,
-        signedIn: connected && !!viewer,
-        signedOut: connected && !viewer,
-        viewerLogin: viewer?.login || "",
-        submitLabel: own ? "Replace your note" : "Submit your note",
-        status,
-        consensus: bioreportr.curationForm.consensusMarkup(type, notes)
-    };
-};
-
-/**
- * Render the controls of the form for a taxon - a panel for each type of note, of which CSS shows only that of the tab
- * chosen, so that choosing a tab keeps what has been entered in the other. Each shows the user's own note, if any.
- * @param {CurationNote|null} ownProvenance - The user's own note on the provenance of the taxon, if any
- * @param {CurationNote|null} ownTaxonomy - The user's own note on its taxonomy, if any
- * @return {String} The markup of the controls
- */
-bioreportr.curationForm.taxonControlsMarkup = function (ownProvenance, ownTaxonomy) {
-    const encode = hortis.dataTable.encode;
-    const heads = bioreportr.curation.votes.map(vote => `<span class="mxcw-curation-vote-head">${vote}</span>`).join("");
-    const rows = bioreportr.curation.questions.map(([question, label]) => `<span class="mxcw-curation-vote-label">${label}:</span>` +
-        bioreportr.curation.votes.map(vote => `<input type="radio" name="${question}" value="${vote}" aria-label="${label}: ${vote}"${(ownProvenance?.[question] || "no opinion") === vote ? " checked" : ""}>`).join("")).join("");
-    return `<div class="mxcw-curation-panel" data-type="provenance">
-        <fieldset class="mxcw-curation-vote"><legend>Vote</legend><div class="mxcw-curation-vote-grid"><span></span>${heads}${rows}</div></fieldset>
-        <fieldset class="mxcw-curation-comment"><legend>Comment</legend><textarea name="comment" rows="4" aria-label="Comment">${encode(ownProvenance?.comment || "")}</textarea></fieldset>
-    </div>
-    <div class="mxcw-curation-panel" data-type="taxonomy">
-        <fieldset class="mxcw-curation-comment"><legend>Taxonomy</legend>
-            <label class="mxcw-curation-field-label" for="mxcw-curation-synonymy">Enter a correction for the synonymy of this taxon</label>
-            <textarea id="mxcw-curation-synonymy" name="synonymy" rows="4">${encode(ownTaxonomy?.comment || "")}</textarea></fieldset>
-    </div>`;
-};
-
-/**
- * Render the controls of the form for an observation - the comment on it. Its corrected position is set by dragging
- * its marker on the map, and shown by the form's template.
- * @param {CurationNote|null} own - The user's own note on the observation, if any
- * @return {String} The markup of the controls
- */
-bioreportr.curationForm.observationControlsMarkup = function (own) {
-    return `<div class="mxcw-curation-panel" data-type="observation">
-        <fieldset class="mxcw-curation-comment"><legend>Comment</legend><textarea name="observationComment" rows="4"
-            aria-label="Comment on this record">${hortis.dataTable.encode(own?.comment || "")}</textarea></fieldset>
-    </div>`;
-};
-
-/**
- * Render the consensus of the community on the subject of the form - for provenance, the tally of the votes, and for
- * every type, each note.
- * @param {String} type - The type of the notes, one of the `bioreportr.curation.types`, or "none" if there is no subject
- * @param {CurationNote[]} notes - The notes of that type on the subject, most recent first
- * @return {String} The markup of the consensus
- */
-bioreportr.curationForm.consensusMarkup = function (type, notes) {
-    const encode = hortis.dataTable.encode;
-    const none = {
-        provenance: "No one has added a note on the provenance of this taxon yet.",
-        taxonomy: "No one has added a note on the taxonomy of this taxon yet.",
-        observation: "No one has added a note on this record yet."
-    };
-    const details = {
-        provenance: note => bioreportr.curation.questions.map(([question, label]) => `${label}: ${encode(note[question])}`).join(" · "),
-        taxonomy: () => "",
-        observation: note => note.lat !== "" && note.lat !== undefined && Number.isFinite(+note.lat) ?
-            "Corrected position: " + bioreportr.curationForm.positionText({lat: +note.lat, long: +note.long}) : "Position not corrected"
-    };
-    const items = notes.map(note => {
-        const detail = details[type](note);
-        return `<li class="mxcw-curation-note">
-        <div class="mxcw-curation-note-head"><b>${encode(note.author)}</b> ${encode(bioreportr.eventDay(note.submitted))}${note.pending ? " <i>(being processed)</i>" : ""}
-            ${note.url ? `<a href="${encode(note.url)}" target="_blank" rel="noopener">on GitHub</a>` : ""}</div>
-        ${detail ? `<div class="mxcw-curation-note-answers">${detail}</div>` : ""}
-        ${note.comment ? `<div class="mxcw-curation-note-comment">${encode(note.comment)}</div>` : ""}
-    </li>`;
-    }).join("");
-    return type === "none" ? "" : notes.length === 0 ? `<p class="mxcw-curation-none">${none[type]}</p>` :
-        `${type === "provenance" ? bioreportr.curation.tallyMarkup(notes) : ""}<ul class="mxcw-curation-notes">${items}</ul>`;
-};
-
-/**
- * Submit the form's note, of the type shown, read from its controls - and for an observation, its corrected position.
- * @param {bioreportr.curation} curation - The story page's curation component
- * @param {bioreportr.curationForm} form - The form
- * @param {Event} event - The click on the form's submit button
- * @param {Window} window - The window
- */
-bioreportr.curationForm.submit = function (curation, form, event, window) {
-    const model = form.model;
-    const data = new window.FormData(event.target.closest("form"));
-    const answers = {
-        provenance: () => Object.fromEntries([...bioreportr.curation.questions.map(([question]) => [question, data.get(question)]), ["comment", data.get("comment")]]),
-        taxonomy: () => ({comment: data.get("synonymy")}),
-        observation: () => ({comment: data.get("observationComment"),
-            lat: model.position ? String(model.position.lat) : "", long: model.position ? String(model.position.long) : ""})
-    };
-    curation.submit(model.type, model.subject, answers[model.type]());
-};
-
-/** The draggable marker correcting an observation's position **/
-
-bioreportr.curationForm.dragMarkerMarkup = `<svg width="30" height="40" viewBox="0 0 30 40" aria-hidden="true">
-    <path d="M15 1C7.3 1 1 7.2 1 14.9 1 25.3 15 39 15 39s14-13.7 14-24.1C29 7.2 22.7 1 15 1Z"/>
-    <circle cx="15" cy="15" r="5.5"/>
-</svg>`;
-
-/**
- * Create the marker by which the position of an observation is corrected - a duplicate of its marker, which is dragged
- * to where the record was made, writing the position into the form's `correction`. It is added to the map only whilst
- * an observation is chosen - see `bioreportr.curationForm.showDragMarker`.
- * @param {bioreportr.curationForm} that - The form
- * @param {maplibregl.Map} map - The story's map, once ready
- * @param {Object} maplibregl - The MapLibre library
- * @return {Object} A record of the marker, with members `marker`, `map` and `shown`
- */
-bioreportr.curationForm.makeDragMarker = function (that, map, maplibregl) {
-    const element = map.getContainer().ownerDocument.createElement("div");
-    element.className = "mxcw-curation-drag-marker";
-    element.title = "Drag me to where this record was made";
-    element.innerHTML = bioreportr.curationForm.dragMarkerMarkup;
-    const marker = new maplibregl.Marker({element, anchor: "bottom", draggable: true});
-    // 6 decimal places is about 10cm, finer than any record is made
-    const round = coordinate => Math.round(coordinate * 1e6) / 1e6;
-    marker.on("dragend", () => {
-        const {lng, lat} = marker.getLngLat();
-        that.correction = {recordId: that.model.recordId, lat: round(lat), long: round(lng)};
-    });
-    return {marker, map, shown: false};
-};
-
-/**
- * Place the draggable marker at a position, or remove it from the map if there is none.
- * @param {Object} record - The record of the marker, as created by `bioreportr.curationForm.makeDragMarker`
- * @param {Object|null} position - Where it is to stand, with members `lat` and `long`, or null if no observation is chosen
- */
-bioreportr.curationForm.showDragMarker = function (record, position) {
-    if (position) {
-        record.marker.setLngLat([position.long, position.lat]);
-        if (!record.shown) {
-            record.marker.addTo(record.map);
-            record.shown = true;
-        }
-    } else if (record.shown) {
-        record.marker.remove();
-        record.shown = false;
-    }
-};
-
-bioreportr.curationForm.destroyDragMarker = function (record) {
-    record.marker.remove();
-};
-
-/**
- * Return the observation's marker to its recorded position, so that the note corrects no position.
- * @param {bioreportr.curationForm} that - The form
- */
-bioreportr.curationForm.resetPosition = function (that) {
-    that.correction = {recordId: that.model.recordId, cleared: true};
-};
+</script>

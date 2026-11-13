@@ -78,27 +78,26 @@ fluid.def("bioreportr.choroplethSlider", {
     reset: "$method:fluid.identity"
 });
 
-// A panel of iNaturalist's observations of a taxon in a place, rendered by the @imerss/inat-components library, which
-// the project loads - see the driver of its story page
+// A panel of iNaturalist's observations of a taxon in a place, or of a project, rendered by the @imerss/inat-components
+// library, which the project loads - see the driver of its story page
 fluid.def("bioreportr.iNatPanel", {
     $layers: "fluid.component",
     options: "$compute:bioreportr.iNatPanel.options({self}.panelOptions)",
-    containerId: "$compute:bioreportr.iNatPanel.containerId({dataPane}.pane.paneKey, {self}.index)",
     view: {
         $component: {
             $layers: "fluid.templateViewComponent",
-            template: "<div class=\"mxcw-inat-components\" id=\"@{containerId}\"></div>"
+            template: "<div class=\"mxcw-inat-components\"></div>"
         }
     },
     panel: {
         $bindable: {
-            bind: "bioreportr.iNatPanel.bind({self}, {self}.view.renderedContainer, {self}.containerId, {self}.options, {global}.inatComponents)",
+            bind: "bioreportr.iNatPanel.bind({self}, {self}.view.renderedContainer, {self}.options, {global}.inatComponents)",
+            unbind: "bioreportr.iNatPanel.unbind({boundValue})",
             onceOnly: true
         }
     }
 });
 
-bioreportr.iNatPanel.containerId = (paneKey, index) => "inat-components-" + paneKey + "-" + index;
 </script>
 
 <template>

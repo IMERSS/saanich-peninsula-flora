@@ -214,22 +214,19 @@ fluid.def("saanich.story", {
         },
         TopContributions: {
             iNatPanels: [{
-                taxon: {
-                    id: 211194,
-                    str: "Vascular plants"
-                },
-                place: {
-                    id: 81137,
-                    str: "saanich"
+                // The iNaturalist project "Lost" plants of the Saanich Peninsula, whose own rules choose its observations
+                project: {
+                    id: 303782,
+                    str: "lostplants"
                 },
                 features: [{ // recentObservations
-                    desc: "Recent vascular plant observations on the Saanich Peninsula"
+                    desc: "Recent observations of the Saanich Peninsula's \"lost\" plants"
                 }, { // commonTaxa
-                    desc: "Most commonly reported vascular plants on the Saanich Peninsula"
+                    desc: "The Saanich Peninsula's \"lost\" plants most often found again"
                 }, { // favourites
-                    desc: "Most favourited vascular plant observations on the Saanich Peninsula"
+                    desc: "The most favourited observations of the Saanich Peninsula's \"lost\" plants"
                 }, { // stats
-                    desc: "Observation statistics for vascular plants on the Saanich Peninsula"
+                    desc: "Statistics of the observations of the Saanich Peninsula's \"lost\" plants"
                 }]
             }]
         }

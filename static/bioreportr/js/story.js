@@ -591,7 +591,8 @@ fluid.registerNamespace("bioreportr.iNatPanel");
 // The options of an iNaturalist panel, as rendered by @imerss/inat-components, which a pane's settings refine
 bioreportr.iNatPanel.defaults = {
     dataSource: "autoLoad",
-    itemWidth: 180,
+    // The least width of each photo's card, matching the gallery of lost plants
+    itemWidth: 190,
     features: [
         {feature: "recentObservations", numResults: 40},
         {feature: "commonTaxa", numResults: 40, numYears: 10},
@@ -622,25 +623,32 @@ bioreportr.iNatPanel.options = function (options) {
 };
 
 /**
- * Render an iNaturalist panel into its container, which the library thereafter owns.
+ * Render an iNaturalist panel into its container, which the library thereafter owns until the panel is destroyed.
  * @param {fluid.component} that - The panel's component
  * @param {Element} container - The panel's rendered container
- * @param {String} containerId - The id of the container, by which the library finds it
  * @param {Object} options - The panel's options
  * @param {Object} [inatComponents] - The @imerss/inat-components library
- * @return {Boolean|Unavailable} `true` once rendered, or an unavailable value if the library is not loaded
+ * @return {Object|Unavailable} The panel, with methods `update` and `destroy`, or an unavailable value if the library
+ *     is not loaded
  */
-bioreportr.iNatPanel.bind = function (that, container, containerId, options, inatComponents) {
+bioreportr.iNatPanel.bind = function (that, container, options, inatComponents) {
     let togo;
     if (inatComponents) {
         fluid.disableRendering(that);
-        container.id = containerId;
-        inatComponents.initTaxonPanel(containerId, fluid.copy(options));
-        togo = true;
+        togo = inatComponents.initTaxonPanel(container, fluid.copy(options)) ||
+            fluid.unavailable({message: "The iNaturalist panel could not be rendered", variety: "config"});
     } else {
         togo = fluid.unavailable({message: "The inat-components library is not loaded", variety: "config"});
     }
     return togo;
+};
+
+/**
+ * Remove an iNaturalist panel, leaving its container empty.
+ * @param {Object} panel - The panel, as returned by `bioreportr.iNatPanel.bind`
+ */
+bioreportr.iNatPanel.unbind = function (panel) {
+    panel.destroy();
 };
 
 /** Records panels **/
@@ -801,36 +809,3 @@ bioreportr.storyPane.click = function (storyPage, event) {
 bioreportr.storyMap.untrackSize = function (observer) {
     observer.disconnect();
 };
-
-/** Tooltips on touch screens **/
-
-fluid.registerNamespace("bioreportr.touchTooltips");
-
-/**
- * Put away every tooltip when the screen is touched. A tooltip is shown by hovering, which a touch screen imitates by
- * moving its pointer to whatever is tapped - but a tap on anything which does nothing when tapped sends no movement at
- * all, so a tooltip once shown would never be hidden. Every component showing tooltips, i.e. holding `hoverAt` as
- * hortis.withTooltip does, is cleared as the touch begins; a tap on something with a tooltip shows it again at once,
- * by the movement the browser then sends to it.
- * @param {Window} window - The window holding the story page
- */
-bioreportr.touchTooltips.install = function (window) {
-    if (!window.bioreportrTouchTooltips) {
-        window.bioreportrTouchTooltips = true;
-        window.addEventListener("pointerdown", event => {
-            if (event.pointerType === "touch" && !event.target.closest?.(".imerss-tooltip-holder")) {
-                Object.values(fluid.globalInstantiator.pathToComponent).forEach(shadow => {
-                    const that = shadow?.that;
-                    if (that && !shadow.inert && typeof that.hoverAt === "function") {
-                        that.hoverAt(null);
-                    }
-                });
-            }
-        }, true);
-    }
-};
-
-// Only in a browser - the page is also rendered ahead of time by the build, see `npm run hydrate`
-if (typeof window !== "undefined" && window.addEventListener) {
-    bioreportr.touchTooltips.install(window);
-}

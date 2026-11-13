@@ -1734,7 +1734,7 @@ body {
     color: #a8c8d0;
 }
 
-/* ── Community curation - see notes/community-curation-design.md and static/bioreportr/js/curation.js ── */
+/* ── Community curation - see notes/community-curation-design.md and static/bioreportr/sfc/bioreportr-curation.vue ── */
 
 /* The speech bubble, outlined and filled, drawn as a mask so that it takes the colour of its background - beside each
    taxon of the checklist, here, and each record of the table of records, in bioreportr-curationPane.vue */

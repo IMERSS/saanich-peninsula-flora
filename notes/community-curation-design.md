@@ -14,10 +14,11 @@ There are three types of note:
 
 ## 1. What the user sees
 
-### 1.1 The Community Consensus pane
+### 1.1 The Community Curation pane
 
-* A new pane, **Community Consensus**, is the last tab of each story's menu. It is an ordinary R Markdown pane,
-  `content/story/Curation.Rmd`, whose front matter names the shared component `bioreportr.curationPane`.
+* A new pane, **Community Curation**, is the last tab of each story's menu, labelled **Living Data**. It is an
+  ordinary R Markdown pane, `content/story/Curation.Rmd`, whose front matter names the shared component
+  `bioreportr.curationPane`.
 * Beside it, as in the design, the map and the table of records show the records of the taxon being curated.
 * With no taxon chosen, the pane shows an invitation, written in its R Markdown, to click on a taxon in the checklist
   beneath, which is shown as on the other panes.
@@ -51,7 +52,7 @@ There are three types of note:
 ### 1.2 The speech bubble in every checklist
 
 * Hovering over any taxon in a checklist, on any pane, shows a small outlined speech bubble beside its name. Clicking
-  it opens the Community Consensus pane on that taxon.
+  it opens the Community Curation pane on that taxon.
 * A taxon with any notes, whether consolidated or the user's own pending submission, shows a filled bubble
   permanently. Hovering over the filled bubble shows a tooltip condensing its notes - the number of notes, the votes
   for each question and the latest comments - ending with **"Click to add your own curation note"**.
@@ -60,7 +61,7 @@ There are three types of note:
 
 The table of records beneath the map gives each record a speech bubble in its first column, shown on hovering over the
 record's row, and always, filled, once the record has notes. Its title gives the number of notes. Clicking it opens the
-Community Consensus pane on that record, from any pane - see §2.
+Community Curation pane on that record, from any pane - see §2.
 
 ### 1.4 Signing in
 
@@ -80,8 +81,8 @@ and clearing the selection, or **Back to the taxon**, returns it to the taxon. S
 * clicking a bubble selects the pane and the taxon together - for a record, the pane, the record and its taxon. A
   record selected on one pane is otherwise cleared on moving to another, but one selected together with the move is
   kept - see `bioreportr.storyPage.keepRecord`
-* selecting a record on the Community Consensus pane, in its table or on the map, chooses it for curation
-* clicking a taxon in the checklist of the Community Consensus pane chooses it
+* selecting a record on the Community Curation pane, in its table or on the map, chooses it for curation
+* clicking a taxon in the checklist of the Community Curation pane chooses it
 * the map and the table of records are filtered to the taxon by the filter itself, as the design shows
 * a link to a taxon's curation can be shared, and the browser's history moves between taxa
 
@@ -197,11 +198,12 @@ The story page reads `taxa.csv`, `observations.csv` and `claimStatus.json` as it
 
 | Part | Where |
 |---|---|
-| The curation state - configuration, notes, pending claims, sign-in, submission | `bioreportr.curation` in `static/bioreportr/js/curation.js`, a member `curation` of `bioreportr.storyPage` |
+| The curation state - configuration, notes, pending claims, sign-in, submission | `bioreportr.curation` in `static/bioreportr/sfc/bioreportr-curation.vue`, a member `curation` of `bioreportr.storyPage` |
+| The curation of the story page - its `curation` member, the taxon or record chosen, and the bubbles of its checklist and tables of records | The layer `bioreportr.storyPageCuration` in `static/bioreportr/sfc/bioreportr-storyPageCuration.vue`, among the `$layers` of `bioreportr.storyPage` |
 | The pane's section, rendering its R Markdown | `static/bioreportr/sfc/bioreportr-curationPane.vue` |
-| The form, its tabs and the draggable marker | `static/bioreportr/sfc/bioreportr-curationForm.vue`, placed by the R Markdown in a slot `<div @id="curationForm"></div>`, and `bioreportr.curationForm` in `curation.js` |
-| The bubbles and their tooltips in the checklist | `bioreportr.curation.renderChecklistTree` etc. in `curation.js`, rendering the story page's checklist |
-| The bubbles of the table of records | `bioreportr.curation.recordTableColumns` and `recordTableBody` in `curation.js`, configured onto the story page's `obsTable` |
+| The form, its tabs and the draggable marker | `static/bioreportr/sfc/bioreportr-curationForm.vue`, placed by the R Markdown in a slot `<div @id="curationForm"></div>` |
+| The bubbles and their tooltips in the checklist | `bioreportr.curation.renderChecklistTree` etc. in `bioreportr-curation.vue`, configured onto the story page's checklist by `bioreportr.storyPageCuration` |
+| The bubbles of the table of records | `bioreportr.curation.recordTableColumns` and `recordTableBody` in `bioreportr-curation.vue`, configured onto the story page's `obsTable` by `bioreportr.storyPageCuration` |
 | Storage of comments | `bioreportr.curation.backends.github`, and `bioreportr.curation.backends.memory`, for testing and local work without GitHub |
 | Token exchange | `src/curation/oauthWorker.mjs`, deployed by each project, or shared between them |
 | Consolidation | `src/js/consolidateCuration.js` and `.github/workflows/curation.yml` |

@@ -65,7 +65,7 @@ the 8-hour access token ever reaches the browser.
    refresh token, which the page keeps in place of the old.
 4. Signing out forgets both.
 
-That is perhaps 40 lines in the token exchange and 20 in `static/bioreportr/js/curation.js`, and the token exchange
+That is perhaps 40 lines in the token exchange and 20 in `static/bioreportr/sfc/bioreportr-curation.vue`, and the token exchange
 stays stateless.
 
 ### 4.3 What they buy - less than it seems

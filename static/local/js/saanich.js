@@ -505,8 +505,8 @@ saanich.recentre = function (map, mapData, activePane) {
 
 /** The species of the Community Science pane, which open on the Atlas **/
 
-// The iNaturalist place and taxon of the Community Science pane's panels - see paneOverrides in saanich-story.vue
-saanich.inatSpecies = {placeId: 81137, taxonId: 211194, lookup: null};
+// The iNaturalist project of the Community Science pane's panels - see paneOverrides in saanich-story.vue
+saanich.inatSpecies = {projectId: 303782, lookup: null};
 
 /**
  * Look up the iNaturalist taxa of the species shown by the Community Science pane's panels, which name each by its
@@ -516,8 +516,8 @@ saanich.inatSpecies = {placeId: 81137, taxonId: 211194, lookup: null};
  */
 saanich.inatSpecies.byName = function (window) {
     if (!saanich.inatSpecies.lookup) {
-        const {placeId, taxonId} = saanich.inatSpecies;
-        saanich.inatSpecies.lookup = window.fetch(`https://api.inaturalist.org/v1/observations/species_counts?verifiable=true&place_id=${placeId}&taxon_id=${taxonId}&per_page=500`)
+        const {projectId} = saanich.inatSpecies;
+        saanich.inatSpecies.lookup = window.fetch(`https://api.inaturalist.org/v1/observations/species_counts?verifiable=true&project_id=${projectId}&per_page=500`)
             .then(response => response.json())
             .then(data => new Map(data.results.filter(result => result.taxon.preferred_common_name)
                 .map(result => [result.taxon.preferred_common_name.toLowerCase(), {id: String(result.taxon.id), name: result.taxon.name}])));

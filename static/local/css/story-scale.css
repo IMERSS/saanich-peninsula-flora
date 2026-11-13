@@ -210,8 +210,3 @@
 #imerss-main-filters .saanich-time-range output {
     text-align: right;
 }
-
-/* The species of the Community Science pane open on the Atlas */
-.mxcw-inat-components article {
-    cursor: pointer;
-}

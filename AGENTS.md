@@ -4,6 +4,23 @@
 
 Do not commit or push any code. Leave all changes in the working tree for a human to review, commit and push.
 
+## Infusion
+
+Both projects, and imerss-bioinfo, are written with Infusion 6, the `infusion-6` dependency, vendored as
+`static/vendor/infusion`. Read its documentation before changing a component:
+
+* [The Fluid Integration Language](https://ponder.org.uk/docs/fluid-integration-language/) - how components are
+  defined, composed and wired together
+* [Fluid View](https://ponder.org.uk/docs/fluid-view/) - how components render templates and bind to the page
+
+An application is composed of declarative layers, each a `fluid.def` naming the layers it builds on in `$layers`. A
+component's layers are merged together in an order fixed by the C3 linearisation algorithm, as in Python's method
+resolution, so that a layer's definitions override those of the layers it builds on. Any design can therefore be
+adjusted from outside, without editing the code which defines it: by adding extra layer names along the configuration
+path to the component, as `paneOverrides` in each project's `<project>-story.vue` does, or, for a truly unanticipated
+modification, by a `$linkage`, which adds its output layers to every component bearing all of its input layers, or
+matching its selector, wherever that component is in the tree.
+
 ## Rubric for changes
 
 ### Navigation
@@ -69,7 +86,7 @@ raw HTML, e.g. `` `<span class="saanich-lost-count">@{count}</span>`{=html} ``, 
 
 ### Community curation
 
-Both projects end their story with a Community Consensus pane, `content/story/Curation.Rmd`, rendered by the shared
+Both projects end their story with a Community Curation pane, `content/story/Curation.Rmd`, rendered by the shared
 `bioreportr.curationPane`, through which the community adds notes on taxa - their provenance and taxonomy - and on
 individual records, chiefly correcting their positions, as comments on GitHub Discussions. Read
 `notes/community-curation-design.md` before changing it. Each project's own settings are in

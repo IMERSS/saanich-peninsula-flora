@@ -175,7 +175,7 @@ curl -i "$ENDPOINT/authorize?redirect_uri=https://imerss.github.io/saanich-penin
 curl -i "$ENDPOINT/authorize?redirect_uri=https://example.com/"
 ```
 
-Then sign in from a site's Community Consensus pane, once its repository is enrolled (§5). If something fails,
+Then sign in from a site's Community Curation pane, once its repository is enrolled (§5). If something fails,
 `npx wrangler tail` shows the Worker's requests and errors as they happen, as does the Worker's *Logs* tab in the
 dashboard. The common faults are:
 

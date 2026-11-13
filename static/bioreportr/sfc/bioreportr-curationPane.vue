@@ -1,60 +1,9 @@
+<fluid-import src="bioreportr-curation.vue"></fluid-import>
 <fluid-import src="bioreportr-curationForm.vue"></fluid-import>
 <script src="%imerss-bioinfo/src/client/js/i6/imerss-core.js"></script>
 <script src="../js/story.js"></script>
-<script src="../js/curation.js"></script>
 <script>
 "use strict";
-
-// Community curation of the taxa and records of a story - see notes/community-curation-design.md
-
-// The curation state of a story page, held as its member `curation`: the notes on taxa and on observations
-// consolidated from GitHub, those pending in local storage, the user signed in, and the submission of notes
-fluid.def("bioreportr.curation", {
-    $layers: "fluid.component",
-    // The files written by the consolidation job, src/js/consolidateCuration.js, relative to the story page
-    configFile: "../curation/config.json",
-    taxaFile: "../curation/taxa.csv",
-    observationsFile: "../curation/observations.csv",
-    claimStatusFile: "../curation/claimStatus.json",
-    config: "$compute:fluid.fetchJSON({self}.configFile)",
-    claimStatus: "$compute:fluid.fetchJSON({self}.claimStatusFile)",
-    taxonRecords: {
-        $component: {
-            $layers: "hortis.csvReader",
-            url: "{curation}.taxaFile"
-        }
-    },
-    observationRecords: {
-        $component: {
-            $layers: "hortis.csvReader",
-            url: "{curation}.observationsFile"
-        }
-    },
-    consolidated: "$compute:bioreportr.curation.consolidatedClaims({self}.claimStatus, {self}.taxonRecords.rows, {self}.observationRecords.rows)",
-    paneKey: "$compute:bioreportr.curation.paneKey({storyPage}.panes)",
-    storageKey: "$compute:bioreportr.curation.storageKey({self}.config)",
-    tokenKey: "bioreportr-curation-token",
-    // Advanced whenever the pending notes, or the token, are written to local storage, so that they are read again
-    pendingVersion: 0,
-    tokenVersion: 0,
-    pending: "$compute:bioreportr.curation.readPending({global}, {self}.storageKey, {self}.pendingVersion)",
-    byTaxon: "$compute:bioreportr.curation.byTaxon({self}.taxonRecords.rows, {self}.pending, {self}.consolidated)",
-    byObservation: "$compute:bioreportr.curation.byObservation({self}.observationRecords.rows, {self}.pending, {self}.consolidated)",
-    prune: "$effect:bioreportr.curation.prune({self}, {self}.pending, {self}.consolidated, {global})",
-    // Drops any pending note whose comment has been deleted from GitHub before it could be consolidated
-    verifyPending: "$effect:bioreportr.curation.verifyPending({self}, {self}.backend, {self}.token, {global})",
-    connected: "$compute:bioreportr.curation.isConnected({self}.config)",
-    backend: "$compute:bioreportr.curation.makeBackend({self}.config, {global})",
-    token: "$compute:bioreportr.curation.readToken({self}.tokenKey, {self}.tokenVersion, {global})",
-    takeSession: "$effect:bioreportr.curation.takeSession({self}, {self}.backend, {global})",
-    // The user signed in, with their `login`, or null if none is
-    viewer: null,
-    loadViewer: "$effect:bioreportr.curation.loadViewer({self}, {self}.backend, {self}.token)",
-    // A message on the progress of a submission
-    status: "",
-    submit: "$method:bioreportr.curation.submit({self}, {0}:type, {1}:subject, {2}:answers, {global})",
-    signOut: "$method:bioreportr.curation.signOut({self}, {global})"
-});
 
 // The section of the curation pane, rendering the pane's R Markdown, which places the form in <div @id="curationForm">
 fluid.def("bioreportr.curationPane", {

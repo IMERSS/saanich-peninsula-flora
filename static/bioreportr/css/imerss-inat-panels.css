@@ -15,7 +15,6 @@
     transition: outline-color 150ms;
     background: #0d3040;
     border-radius: var(--data-table-radius, 8px);
-    overflow: hidden;
     padding: 0 0 var(--story-gap, 8px);
     text-align: left;
 }
@@ -163,22 +162,11 @@
 /* ── Observations, as cards matching the gallery of lost plants ── */
 
 :is(.mxcw-inat-components, #mxcw-inat-weight) [class*="module_grid"] {
-    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)) !important;
     gap: var(--story-gap, 8px);
 }
 
 :is(.mxcw-inat-components, #mxcw-inat-weight) article > div:first-child {
-    width: 100% !important;
-    height: auto !important;
-    aspect-ratio: 1;
-    border-radius: 0 !important;
-    margin: 0 0 4px !important;
-}
-
-:is(.mxcw-inat-components, #mxcw-inat-weight) article > div:first-child img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    margin: 0 0 4px;
 }
 
 :is(.mxcw-inat-components, #mxcw-inat-weight) article [class*="obsLabel"] {
@@ -240,11 +228,6 @@
     box-sizing: border-box;
 }
 
-/* The chart's rotated month labels are drawn beyond its stated height */
-:is(.mxcw-inat-components, #mxcw-inat-weight) [class*="seasonalityBlock"] {
-    height: 500px;
-}
-
 :is(.mxcw-inat-components, #mxcw-inat-weight) [class*="observersBlock"] {
     min-height: 500px;
 }
@@ -270,11 +253,4 @@
     border: none;
     box-shadow: none;
     color: #123;
-}
-
-/* Phones: two photos across, rather than one filling the screen */
-@media (max-width: 767.98px) {
-    :is(.mxcw-inat-components, #mxcw-inat-weight) [class*="module_grid"] {
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
-    }
 }
