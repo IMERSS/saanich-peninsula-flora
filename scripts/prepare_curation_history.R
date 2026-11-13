@@ -40,6 +40,13 @@ expand_initials <- function (text) {
   text
 }
 
+# Name the reviewers of a taxon - a review recorded as "Automatic (EM)" is credited to Emma Menchions by name, as her
+# own reviews are, and each reviewer is named once, e.g. "EM, Automatic (EM)" being simply "Emma Menchions"
+name_reviewers <- function (text) {
+  named <- expand_initials(str_replace_all(text, "Automatic \\(EM\\)", "EM"))
+  vapply(str_split(named, ",\\s*"), function (names) paste(unique(names[names != ""]), collapse = ", "), character(1))
+}
+
 # A note's text, or "" if it has none
 clean <- function (text) {
   text <- ifelse(is.na(text) | text == "NA", "", text)
@@ -60,7 +67,7 @@ history <- rawList %>%
     harveyTranscribed = clean(HJ_comment),
     fpnw = clean(FPNW_comment),
     critical = expand_initials(clean(critical_comments)),
-    reviewedBy = expand_initials(clean(reviewed_by))
+    reviewedBy = name_reviewers(clean(reviewed_by))
   ) %>%
   # Harvey's transcribed account where his inscription is missing
   mutate(harvey = ifelse(harvey == "", harveyTranscribed, harvey)) %>%

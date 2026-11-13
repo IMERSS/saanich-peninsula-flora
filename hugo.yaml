@@ -94,6 +94,11 @@ params:
 
   description: Flora of the W̱SÁNEĆ/Saanich Peninsula
 
+  # The image shown when a page of the site is shared, e.g. on social media - a Licmophora diatom, as the site's icon.
+  # Given in full, since sites fetching it need an absolute address, which relativeUrls would otherwise not give
+  images:
+    - "https://imerss.github.io/saanich-peninsula-flora/local/images/social-preview.jpg"
+
   # Displays bizarrely on hextra once we change background colour
   toc: false
 
