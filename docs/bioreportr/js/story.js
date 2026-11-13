@@ -829,6 +829,8 @@ bioreportr.touchTooltips.install = function (window) {
     if (!window.bioreportrTouchTooltips) {
         window.bioreportrTouchTooltips = true;
         window.addEventListener("pointerdown", event => {
+            // Noted for those showing a tooltip on a tap, which may not say how they were pressed - see bioreportr.storyMap.tapTooltip
+            bioreportr.touchTooltips.lastPointerType = event.pointerType;
             if (event.pointerType === "touch" && !event.target.closest?.(".imerss-tooltip-holder")) {
                 Object.values(fluid.globalInstantiator.pathToComponent).forEach(shadow => {
                     const that = shadow?.that;
@@ -838,6 +840,42 @@ bioreportr.touchTooltips.install = function (window) {
                 });
             }
         }, true);
+    }
+};
+
+/**
+ * Whether the screen was last pressed by touch, or cannot hover at all - when a tooltip shown by hovering is shown
+ * instead by a tap.
+ * @param {Window} window - The window
+ * @return {Boolean} `true` if presses are touches
+ */
+bioreportr.touchTooltips.isTouch = window => bioreportr.touchTooltips.lastPointerType === "touch" ||
+    !!window.matchMedia?.("(hover: none)").matches;
+
+// The maps given the listener showing the tooltip of a cell of the grid on a tap
+bioreportr.storyMap.tapBound = new WeakSet();
+
+/**
+ * Show the tooltip of a cell of the map's grid when it is tapped, as hovering over it shows it with a mouse - a touch
+ * moves no pointer over the map, so that the grid's own listener, to "mousemove", never hears of it. A tap also selects
+ * the cell, as a click does. A population of the extirpation risk pane's layer, tapped, shows its own tooltip instead -
+ * see bioreportr.solowMapLayer.bindHover.
+ * @param {hortis.libreMap.gridSelector} gridSelector - The selector of the map's cells, which shows their tooltips
+ * @param {maplibregl.Map} map - The map, once it is ready
+ * @param {Window} window - The window holding it
+ */
+bioreportr.storyMap.tapTooltip = function (gridSelector, map, window) {
+    if (map && map.on && !bioreportr.storyMap.tapBound.has(map)) {
+        bioreportr.storyMap.tapBound.add(map);
+        map.on("click", e => {
+            const onPopulation = bioreportr.solowMapLayer?.clusterAt && hortis.isValue(bioreportr.solowMapLayer.clusterAt(map, e.point));
+            if (bioreportr.touchTooltips.isTouch(window) && !onPopulation) {
+                const cellId = hortis.libreMap.eventToProp(map, e, "cellId");
+                // Placed by where the cell was tapped, since a touch need not carry the pointer's position
+                const rect = map.getCanvas().getBoundingClientRect();
+                gridSelector.hoverAt(cellId || null, {clientX: rect.left + e.point.x, clientY: rect.top + e.point.y});
+            }
+        });
     }
 };
 

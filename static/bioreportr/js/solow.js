@@ -435,6 +435,9 @@ bioreportr.solowMapLayer.bindHover = function (that, map) {
     };
     map.on("mousemove", listener);
     map.on("mouseout", leave);
+    // A tap moves no pointer over the map, so the tooltip is also shown by a click or tap on a population, and put away
+    // by one elsewhere
+    map.on("click", listener);
     return {map, listener, leave};
 };
 
