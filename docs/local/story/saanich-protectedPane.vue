@@ -139,22 +139,26 @@ saanich.protectedAreas.uniqueByCategory = function (obsRows, native, indirection
 
 /**
  * Filter the records to the selection: to its region, as bioreportr.regionSelectionFilter does, or to all the
- * protected areas, or to the records of the native species outside them; and then to any subset of its species.
+ * protected areas, or to the records of the native species outside them; and then to any subset of its species. The
+ * Protected Areas pane assesses the native flora alone, so that while it is shown only the records of native species
+ * are kept, and its checklist agrees with the counts of its cards.
  * @param {Object[]} obsRows - The records to be filtered
  * @param {String|null} selectedRegion - The selection, if any
  * @param {Object[]} indirectionRows - The rows of the region index
  * @param {String[]} fieldNames - The fields of the records holding regions which may be selected
  * @param {Object<String, Set<String>>} taxonSets - The sets of taxa, see saanich.protectedAreas.taxonSets
+ * @param {String} activePaneKey - The pane shown
  * @return {Object[]} The records of the selection
  */
-saanich.protectedAreas.regionFilter = function (obsRows, selectedRegion, indirectionRows, fieldNames, taxonSets) {
+saanich.protectedAreas.regionFilter = function (obsRows, selectedRegion, indirectionRows, fieldNames, taxonSets, activePaneKey) {
     const {region, subset} = saanich.protectedAreas.parseSelection(selectedRegion);
     const inSet = (rows, set) => rows.filter(row => set.has(String(row.iNaturalistTaxonId)));
     const regionRows = region === saanich.protectedAreas.allAreas ? obsRows.filter(row => row.ProtectedArea) :
         region === saanich.protectedAreas.unprotected ? inSet(obsRows, taxonSets.unprotected) :
             bioreportr.regionSelectionFilter(obsRows, region, indirectionRows, fieldNames);
     const set = subset === "unique" ? taxonSets.unique[region] || new Set() : taxonSets[subset];
-    return subset ? inSet(regionRows, set) : regionRows;
+    const subsetRows = subset ? inSet(regionRows, set) : regionRows;
+    return activePaneKey === "Protected" ? inSet(subsetRows, taxonSets.native) : subsetRows;
 };
 
 // The map's grid of records, hidden on this pane, shows where the native species outside protected areas grow when
@@ -941,8 +945,7 @@ saanich.protectedAreas.showSelection = function (selectedRegion, baseRegion, act
      and nothing else in this file. The markup is a template, which may bind members of saanich.protectedPane with
      @{...} - written in the R Markdown as raw HTML, e.g. `<span>@{count}</span>`{=html}, which pandoc leaves as it is -->
 <template>
-<div id="vascular-plant-diversity-within-the-protected-areas-of-the-wsánećsaanich-peninsula" class="section level2 mxcw-paneKey-Protected"><h2>Vascular plant diversity within the protected areas of the
-W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw-sectionColumn">
+<div id="native-plant-diversity-within-protected-areas" class="section level2 mxcw-paneKey-Protected"><h2>Native plant diversity within protected areas</h2><div class="mxcw-sectionInner"><div class="mxcw-sectionColumn">
 
 
 

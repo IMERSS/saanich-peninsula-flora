@@ -46,7 +46,7 @@ fluid.def("saanich.story", {
     regionFilter: {
         $component: {
             doFilter: `$method:saanich.protectedAreas.regionFilter({0}:obsRows, {1}:filterState, {storyPage}.regionIndirection.rows,
-                {storyPage}.regionFilterFieldNames, {storyPage}.protectedAreas.taxonSets)`
+                {storyPage}.regionFilterFieldNames, {storyPage}.protectedAreas.taxonSets, {storyPage}.activePaneKey)`
         }
     },
     // The period of the records, over which the extirpation risk analysis always runs
