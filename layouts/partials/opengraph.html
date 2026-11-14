@@ -6,7 +6,7 @@
 <meta property="og:title" content="{{ .Params.shareTitle | default .Title | default .Site.Title }}" />
 {{- /* A page is described by its own description, or else its summary, or else the site's description */ -}}
 {{- $summary := "" -}}
-{{- if .IsPage }}{{ $summary = .Summary | plainify | strings.TrimSpace }}{{ end -}}
+{{- if .IsPage }}{{ $summary = trim (.Summary | plainify) " \t\r\n" }}{{ end -}}
 <meta property="og:description" content="{{ with .Description }}{{ . }}{{ else }}{{ with $summary }}{{ . }}{{ else }}{{ with .Site.Params.description }}{{ . }}{{ end }}{{ end }}{{ end }}" />
 <meta property="og:type" content="{{ if .IsPage }}article{{ else }}website{{ end }}" />
 <meta property="og:url" content="{{ with .Site.Params.siteURL }}{{ . }}{{ end }}{{ .RelPermalink }}" />

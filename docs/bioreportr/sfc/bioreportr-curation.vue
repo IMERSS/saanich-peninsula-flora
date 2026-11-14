@@ -659,7 +659,7 @@ bioreportr.curation.recordBubbleCell = function (value, row) {
     const context = bioreportr.curation.cellContext;
     const recordId = context?.recordIndex.ids.get(row);
     const count = recordId ? (context.byObservation[recordId] || []).length : 0;
-    const title = count > 0 ? bioreportr.cellTooltip.plural(count, "community note") + " on this record - click to see or add yours" :
+    const title = count > 0 ? bioreportr.cellTooltip.plural(count, "community note") + " on this record—click to see or add yours" :
         "Correct where this record was made, or add a note on it";
     return recordId ? `<button type="button" class="mxcw-curation-bubble mxcw-curation-record-bubble${count > 0 ? " mxcw-curation-noted" : ""}"` +
         ` data-curation-record="${hortis.dataTable.encode(recordId)}" title="${title}" aria-label="${title}"></button>` : "";
@@ -913,7 +913,7 @@ bioreportr.curation.backends.github = function (config, window) {
                 const created = await graphql(token, `mutation($input: CreateDiscussionInput!) {
                     createDiscussion(input: $input) { discussion { id } }
                 }`, {input: {repositoryId: config.repositoryId, categoryId: config.categoryId, title: threadTitle(note),
-                    body: `Community curation notes on *${note.taxonName}* - on its provenance, its taxonomy and its records. Each comment is one person's note, submitted from the site.`}});
+                    body: `Community curation notes on *${note.taxonName}*—on its provenance, its taxonomy and its records. Each comment is one person's note, submitted from the site.`}});
                 thread = created.createDiscussion.discussion;
             } else {
                 // Displace the user's earlier notes on the same subject - the same type of note on the taxon, or the same observation

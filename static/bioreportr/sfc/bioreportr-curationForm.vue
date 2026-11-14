@@ -333,7 +333,7 @@ bioreportr.curationForm.locationRecordsMarkup = function (taxon, recordIndex, by
                 ${flags.length ? `<span class="mxcw-curation-record-flags">${flags.join(" · ")}</span>` : ""}
             </button></li>`;
         }).join("");
-        const more = records.length > shown.length ? `<p class="mxcw-curation-none">and ${records.length - shown.length} more - choose them on the map or in the table of records</p>` : "";
+        const more = records.length > shown.length ? `<p class="mxcw-curation-none">and ${records.length - shown.length} more—choose them on the map or in the table of records</p>` : "";
         togo = records.length ? `<ul class="mxcw-curation-record-list">${items}</ul>${more}` : `<p class="mxcw-curation-none">This taxon has no records to correct.</p>`;
     }
     return togo;

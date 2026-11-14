@@ -31,7 +31,7 @@ fluid.def("bioreportr.solowRadius", {
 
 <template>
     <!-- A slim strip: its title, the slider with its scale beneath, and the radius chosen. The default is told on hovering -->
-    <div class="mxcw-solow-radius" title="Aggregates sightings into populations - the default radius is @{defaultRadius} m">
+    <div class="mxcw-solow-radius" title="Aggregates sightings into populations—the default radius is @{defaultRadius} m">
         <div class="mxcw-solow-radius-title">Population radius</div>
         <div class="mxcw-solow-radius-scale">
             <div class="mxcw-solow-radius-slider-wrap">
