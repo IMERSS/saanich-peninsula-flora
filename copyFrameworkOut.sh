@@ -43,6 +43,8 @@ fi
 FILES=(
     # Ourselves
     copyFrameworkOut.sh
+    # Guidance for agents, which covers both projects alike
+    AGENTS.md
     # The bioReportR story page - its build step, and its Single File Components, scripts and the
     # htmlwidgets runtime they load. Those it uses of imerss-bioinfo and Infusion 6 are copied into each project's
     # static/vendor by "npm run vendor" (Infusion 6's copyOut.js)

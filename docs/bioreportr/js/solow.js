@@ -135,23 +135,23 @@ bioreportr.haversineDistance = function (lat1, lon1, lat2, lon2) {
 };
 
 /**
- * The position of an observation, or null if it has none.
+ * The position of an observation, or null if it has none - the point parsed once for each observation by
+ * hortis.rowPoint, shared by every caller, which must not modify it.
  * @param {Object} row - The observation
  * @return {Number[]|null} Its longitude and latitude
  */
 bioreportr.obsPoint = function (row) {
-    const long = parseFloat(row.decimalLongitude), lat = parseFloat(row.decimalLatitude);
-    return bioreportr.hasCoordinates(row) ? [long, lat] : null;
+    return bioreportr.hasCoordinates(row) ? hortis.rowPoint(row) : null;
 };
 
 /**
- * Determine whether a record has coordinates and so can be mapped.
+ * Determine whether a record has coordinates and so can be mapped - neither of them zero.
  * @param {Object} row - The record
  * @return {Boolean} `true` if the record is georeferenced
  */
 bioreportr.hasCoordinates = function (row) {
-    const lat = parseFloat(row.decimalLatitude), long = parseFloat(row.decimalLongitude);
-    return Number.isFinite(lat) && Number.isFinite(long) && lat !== 0 && long !== 0;
+    const point = hortis.rowPoint(row);
+    return point !== null && point[0] !== 0 && point[1] !== 0;
 };
 
 /**

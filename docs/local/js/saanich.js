@@ -216,13 +216,14 @@ saanich.atlas.taxonRecords = function (obsRows, rowById, taxon) {
  * @param {TaxonRow|null} taxon - The chosen taxon
  * @param {Object[]} records - Its dated records
  * @param {Object<String, Object>} [historyById] - The history of the curatorial notes on each taxon, by id
+ * @param {Object[]} [sources] - The sources of that history, oldest first - see bioreportr.curationForm.historyMarkup
  * @param {Object<String, CurationNote[]>} [byTaxon] - The notes added through the site on each taxon, by id
  * @param {Object<String, Object>} [annotations] - The annotations of records, by occurrenceID
  * @param {String} [context] - "atlas", or "solow" for the extirpation risk pane - which also names the panel's tabs,
  * so that those of the two panes are chosen apart
  * @return {String} The panel's markup, empty if no taxon with records is chosen
  */
-saanich.atlas.panelMarkup = function (taxon, records, historyById, byTaxon, annotations, context = "atlas") {
+saanich.atlas.panelMarkup = function (taxon, records, historyById, sources, byTaxon, annotations, context = "atlas") {
     let togo = "";
     if (taxon && records.length > 0) {
         togo = `<div class="mxcw-solow-taxon-pane saanich-atlas-taxon-pane">
@@ -239,7 +240,7 @@ saanich.atlas.panelMarkup = function (taxon, records, historyById, byTaxon, anno
       </dl>
       ${bioreportr.georefNote(records)}
     </div>
-    ${saanich.atlas.historyMarkup(records, context + "-" + taxon.id, saanich.atlas.notesMarkup(taxon, records, historyById, byTaxon, annotations))}
+    ${saanich.atlas.historyMarkup(records, context + "-" + taxon.id, saanich.atlas.notesMarkup(taxon, records, historyById, sources, byTaxon, annotations))}
   </div>
 </div>`;
     }
@@ -329,13 +330,14 @@ saanich.atlas.historyMarkup = function (records, taxonId, notes = "") {
  * @param {TaxonRow} taxon - The plant
  * @param {Object[]} records - Its records
  * @param {Object<String, Object>} historyById - The history of the curatorial notes on each taxon, by id
+ * @param {Object[]} sources - The sources of that history, oldest first - see bioreportr.curationForm.historyMarkup
  * @param {Object<String, CurationNote[]>} byTaxon - The notes added through the site on each taxon, by id
  * @param {Object<String, Object>} annotations - The annotations of records, by occurrenceID
  * @return {String} The markup of the history
  */
-saanich.atlas.notesMarkup = function (taxon, records, historyById, byTaxon, annotations) {
+saanich.atlas.notesMarkup = function (taxon, records, historyById, sources, byTaxon, annotations) {
     const setAside = bioreportr.solowAnnotationNote(records, annotations);
-    const history = bioreportr.curationForm?.historyMarkup ? bioreportr.curationForm.historyMarkup(taxon, historyById || {}, byTaxon || {}) : "";
+    const history = bioreportr.curationForm?.historyMarkup ? bioreportr.curationForm.historyMarkup(taxon, historyById || {}, sources, byTaxon || {}) : "";
     return setAside + history;
 };
 

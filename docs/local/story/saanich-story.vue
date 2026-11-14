@@ -172,7 +172,7 @@ fluid.def("saanich.story", {
     taxonPanel: {
         $component: {
             markup: `$compute:saanich.atlas.panelMarkup({storyPage}.checklistTaxon, {storyPage}.atlasRecords,
-                {storyPage}.curation.historyById, {storyPage}.curation.byTaxon, {storyPage}.recordAnnotations)`
+                {storyPage}.curation.historyById, {storyPage}.curationHistorySources, {storyPage}.curation.byTaxon, {storyPage}.recordAnnotations)`
         }
     },
     taxonPanelVisible: "$compute:saanich.atlas.panelVisible({self}.taxonPanel.markup, {self}.activePaneKey, Status)",
@@ -180,7 +180,7 @@ fluid.def("saanich.story", {
     solowTaxonPanel: {
         $component: {
             markup: `$compute:saanich.atlas.panelMarkup({storyPage}.solowTaxa.selectedTaxon, {storyPage}.solowDatedObs,
-                {storyPage}.curation.historyById, {storyPage}.curation.byTaxon, {storyPage}.recordAnnotations, solow)`
+                {storyPage}.curation.historyById, {storyPage}.curationHistorySources, {storyPage}.curation.byTaxon, {storyPage}.recordAnnotations, solow)`
         }
     },
     solowDatedObs: "$compute:saanich.atlas.dated({self}.solowTaxonObs)",
