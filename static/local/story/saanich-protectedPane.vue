@@ -26,12 +26,141 @@ fluid.def("saanich.protectedAreas", {
     active: "$compute:bioreportr.storyPage.isActive({storyPage}.activePaneKey, Protected)",
     hover: "$effect:saanich.protectedAreas.bindCards({storyPage}, {storyPage}.map.readyMap, {storyPage}.mapData, {global})",
     selects: "$effect:saanich.protectedAreas.bindSelects({storyPage}, {global})",
-    shown: "$effect:saanich.protectedAreas.showSelection({storyPage}.selectedRegion, {self}.active, {global})",
+    shown: "$effect:saanich.protectedAreas.showSelection({storyPage}.selectedRegion, {self}.baseRegion, {self}.active, {global})",
     // The plant chosen in the checklist, with its records within the selected region, shown in a smaller panel beside
     // the chart, in place of the atlas's
     regionRecords: "$compute:saanich.atlas.taxonRecords({storyPage}.finalFilteredObs, {storyPage}.taxa.rowById, {storyPage}.checklistTaxon)",
-    panelMarkup: "$compute:saanich.protectedAreas.panelMarkup({storyPage}.checklistTaxon, {self}.regionRecords, {storyPage}.selectedRegion)"
+    panelMarkup: "$compute:saanich.protectedAreas.panelMarkup({storyPage}.checklistTaxon, {self}.regionRecords, {storyPage}.selectedRegion)",
+    // The native species reported in no protected area, and the ids of the native species, those of conservation
+    // concern and those reported within a KBA - see saanich.protectedAreas.regionFilter
+    taxonSets: "$compute:saanich.protectedAreas.taxonSets({storyPage}.obsRows, {storyPage}.taxa.rowById, {storyPage}.regionIndirection.rows)",
+    // The area, group or other region of the selection, without any subset of its species - outlined on the map, marked
+    // in the legend, and summarised by the card and chart shown
+    baseRegion: "$compute:saanich.protectedAreas.baseRegion({storyPage}.selectedRegion)",
+    // Whether the map's grid is shown - by the active pane, or while the unprotected diversity is selected here. Read
+    // by the map, which is configured by saanich-story.vue
+    gridVisible: "$compute:saanich.protectedAreas.gridVisible({storyPage}.activePane.visibleGrid, {storyPage}.activePaneKey, {self}.baseRegion)"
 });
+
+// The selection of the native species reported in no protected area, as the script names it in its card, chart and
+// tab, and of all the protected areas together, whose card is the overview - see scripts/Protected_map_mapbox.R
+saanich.protectedAreas.unprotected = "Unprotected native plant diversity";
+saanich.protectedAreas.allAreas = "Protected areas";
+
+// The subsets of the species of a region which a figure of its card may select, in a selection such as
+// "Regional park · species of conservation concern", by the set of taxa of saanich.protectedAreas.taxonSets they keep
+saanich.protectedAreas.subsets = {
+    "native species": "native",
+    "species of conservation concern": "concern",
+    "within Key Biodiversity Areas": "kba",
+    "found in no other category": "unique"
+};
+
+/**
+ * Parse a selection into its region and any subset of that region's species.
+ * @param {String|null} selectedRegion - The selection, e.g. "Mount Work Regional Park · native species"
+ * @return {{region: String|null, subset: String|undefined}} The region, and the key of the subset if any
+ */
+saanich.protectedAreas.parseSelection = function (selectedRegion) {
+    const parts = (selectedRegion || "").split(" \u00b7 ");
+    const subset = parts.length > 1 ? saanich.protectedAreas.subsets[fluid.peek(parts)] : undefined;
+    return subset ? {region: parts.slice(0, -1).join(" \u00b7 "), subset} : {region: selectedRegion || null};
+};
+
+// The region of a selection, by whose card and chart it is shown - all the protected areas being shown by the overview
+saanich.protectedAreas.baseRegion = function (selectedRegion) {
+    const region = saanich.protectedAreas.parseSelection(selectedRegion).region;
+    return region === saanich.protectedAreas.allAreas ? null : region;
+};
+
+/**
+ * The sets of taxa by which the selections of the pane filter the records - the native species of the summary which
+ * have no record within any protected area, as counted by scripts/Protected_map_mapbox.R, and the native species,
+ * those of conservation concern, and those with a record within a KBA; and, by category of protected area, the native
+ * species reported in it and in no other.
+ * @param {Object[]} obsRows - All the records
+ * @param {Object<String, TaxonRow>} rowById - The taxa, by id
+ * @param {Object[]} indirectionRows - The rows of the region index, which give each protected area its category
+ * @return {Object} Each set of ids - unprotected, native, concern and kba - and unique, the set of each category
+ */
+saanich.protectedAreas.taxonSets = function (obsRows, rowById, indirectionRows) {
+    const isNative = id => {
+        const taxon = rowById[id];
+        return !!taxon && taxon.introduction_status === "native" && String(taxon.inSummary) === "1";
+    };
+    const idsWhere = test => new Set(obsRows.filter(test).map(row => String(row.iNaturalistTaxonId)));
+    const protectedIds = idsWhere(row => row.ProtectedArea);
+    const native = [...idsWhere(() => true)].filter(isNative);
+    return {
+        unprotected: new Set(native.filter(id => !protectedIds.has(id))),
+        native: new Set(native),
+        concern: new Set(native.filter(id => rowById[id].provincial_concern === "concern")),
+        kba: idsWhere(row => row.KBA),
+        unique: saanich.protectedAreas.uniqueByCategory(obsRows, native, indirectionRows)
+    };
+};
+
+/**
+ * The native species reported in each category of protected area and in no other - as counted by
+ * scripts/Protected_map_mapbox.R. A record's area is labelled by its index among the rows of the region index for
+ * "ProtectedArea", whose rows for that index give the area's name and then its category, one of the labels of the rows
+ * for "Protected" - see GroupField in scripts/intersectShapes.R.
+ * @param {Object[]} obsRows - All the records
+ * @param {String[]} native - The ids of the native species
+ * @param {Object[]} indirectionRows - The rows of the region index
+ * @return {Object<String, Set<String>>} The ids of those species, by category
+ */
+saanich.protectedAreas.uniqueByCategory = function (obsRows, native, indirectionRows) {
+    const categories = new Set(indirectionRows.filter(row => row.regionField === "Protected").map(row => row.label));
+    const categoryById = {};
+    indirectionRows.forEach(row => {
+        if (row.regionField === "ProtectedArea" && categories.has(row.label)) {
+            categoryById[row.id] = row.label;
+        }
+    });
+    const isNative = new Set(native);
+    const categoriesOf = {};
+    obsRows.forEach(row => {
+        const category = row.ProtectedArea && categoryById[row.ProtectedArea];
+        const id = String(row.iNaturalistTaxonId);
+        if (category && isNative.has(id)) {
+            (categoriesOf[id] = categoriesOf[id] || new Set()).add(category);
+        }
+    });
+    const togo = {};
+    Object.entries(categoriesOf).forEach(([id, found]) => {
+        if (found.size === 1) {
+            const [category] = found;
+            (togo[category] = togo[category] || new Set()).add(id);
+        }
+    });
+    return togo;
+};
+
+/**
+ * Filter the records to the selection: to its region, as bioreportr.regionSelectionFilter does, or to all the
+ * protected areas, or to the records of the native species outside them; and then to any subset of its species.
+ * @param {Object[]} obsRows - The records to be filtered
+ * @param {String|null} selectedRegion - The selection, if any
+ * @param {Object[]} indirectionRows - The rows of the region index
+ * @param {String[]} fieldNames - The fields of the records holding regions which may be selected
+ * @param {Object<String, Set<String>>} taxonSets - The sets of taxa, see saanich.protectedAreas.taxonSets
+ * @return {Object[]} The records of the selection
+ */
+saanich.protectedAreas.regionFilter = function (obsRows, selectedRegion, indirectionRows, fieldNames, taxonSets) {
+    const {region, subset} = saanich.protectedAreas.parseSelection(selectedRegion);
+    const inSet = (rows, set) => rows.filter(row => set.has(String(row.iNaturalistTaxonId)));
+    const regionRows = region === saanich.protectedAreas.allAreas ? obsRows.filter(row => row.ProtectedArea) :
+        region === saanich.protectedAreas.unprotected ? inSet(obsRows, taxonSets.unprotected) :
+            bioreportr.regionSelectionFilter(obsRows, region, indirectionRows, fieldNames);
+    const set = subset === "unique" ? taxonSets.unique[region] || new Set() : taxonSets[subset];
+    return subset ? inSet(regionRows, set) : regionRows;
+};
+
+// The map's grid of records, hidden on this pane, shows where the native species outside protected areas grow when
+// they are selected
+saanich.protectedAreas.gridVisible = (visibleGrid, activePaneKey, baseRegion) =>
+    !!visibleGrid || activePaneKey === "Protected" && baseRegion === saanich.protectedAreas.unprotected;
 
 // The pane's section, rendered from the template below
 fluid.def("saanich.protectedPane", {
@@ -206,7 +335,10 @@ saanich.protectedAreas.bindSelects = function (storyPage, window) {
     const select = target => {
         const row = target.closest?.(".saanich-pa-row[data-region]");
         const link = target.closest?.("[data-select]");
-        if (row) {
+        if (link && link.matches(".saanich-pa-stat") && link.getAttribute("aria-pressed") === "true") {
+            // A selected figure returns to all the species of its region
+            bioreportr.storyPage.selectRegion(storyPage, saanich.protectedAreas.baseRegion(link.dataset.select));
+        } else if (row) {
             bioreportr.storyPage.selectRegion(storyPage, row.getAttribute("aria-pressed") === "true" ? null : row.dataset.region);
         } else if (link) {
             bioreportr.storyPage.selectRegion(storyPage, link.dataset.select || null);
@@ -236,18 +368,20 @@ saanich.protectedAreas.viewFor = function (views, selectedRegion) {
 
 /**
  * Show, in the summaries of the pane's text and the charts beneath the map, the view of the selection - see
- * saanich.protectedAreas.viewFor - bringing a newly shown summary into view, and mark the selected row of a chart.
+ * saanich.protectedAreas.viewFor - bringing a newly shown summary into view, and mark the selected row of a chart, tab
+ * and figure.
  * @param {String|null} selectedRegion - The selection, if any
+ * @param {String|null} baseRegion - Its region, without any subset of its species, whose views are shown
  * @param {Boolean} active - Whether the pane is shown, when its views are rendered
  * @param {Window} window - The window holding the page
  */
-saanich.protectedAreas.showSelection = function (selectedRegion, active, window) {
+saanich.protectedAreas.showSelection = function (selectedRegion, baseRegion, active, window) {
     if (active) {
         window.setTimeout(() => {
             const dokkument = window.document;
             dokkument.querySelectorAll(".saanich-pa-views").forEach(container => {
                 const views = [...container.children].filter(view => view.dataset.key !== undefined);
-                const shown = saanich.protectedAreas.viewFor(views, selectedRegion);
+                const shown = saanich.protectedAreas.viewFor(views, baseRegion);
                 const changed = shown && shown.hidden;
                 views.forEach(view => {
                     view.hidden = view !== shown;
@@ -257,7 +391,16 @@ saanich.protectedAreas.showSelection = function (selectedRegion, active, window)
                 }
             });
             dokkument.querySelectorAll(".saanich-pa-row[data-region]").forEach(row => {
-                row.setAttribute("aria-pressed", String(row.dataset.region === selectedRegion));
+                row.setAttribute("aria-pressed", String(row.dataset.region === baseRegion));
+            });
+            // The tab of the unprotected diversity while any of it is selected, and otherwise that of all the protected
+            // areas; and the selected figure of a card
+            const unprotected = baseRegion === saanich.protectedAreas.unprotected;
+            dokkument.querySelectorAll(".saanich-pa-stat[data-select]").forEach(stat => {
+                stat.setAttribute("aria-pressed", String(stat.dataset.select === selectedRegion));
+            });
+            dokkument.querySelectorAll(".saanich-pa-tab").forEach(tab => {
+                tab.setAttribute("aria-pressed", String(unprotected === (tab.dataset.select === saanich.protectedAreas.unprotected)));
             });
         }, 0);
     }
@@ -506,6 +649,37 @@ saanich.protectedAreas.showSelection = function (selectedRegion, active, window)
     display: none;
 }
 
+/* The tabs at the top right of the card, of all the protected areas and of the native plant diversity outside them,
+   the selected one joined to the card beneath */
+.saanich-pa-tabs {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
+}
+
+.saanich-pa-tab {
+    padding: 4px 10px;
+    font-size: var(--story-small);
+    color: #a8c8d0;
+    cursor: pointer;
+    background: rgba(13, 48, 64, 0.55);
+    border-radius: 6px 6px 0 0;
+}
+
+.saanich-pa-tab:hover,
+.saanich-pa-tab:focus-visible {
+    color: #eefaff;
+}
+
+.saanich-pa-tab[aria-pressed="true"] {
+    color: #eefaff;
+    background: #0d3040;
+}
+
+.saanich-pa-tabs ~ .saanich-pa-card-summary {
+    border-top-right-radius: 0;
+}
+
 .saanich-pa-crumbs {
     display: flex;
     flex-wrap: wrap;
@@ -598,6 +772,25 @@ saanich.protectedAreas.showSelection = function (selectedRegion, active, window)
 .saanich-pa-stat span {
     font-size: var(--story-small);
     color: #a8c8d0;
+}
+
+/* The figures of the unprotected diversity, each selecting its species, as the rows of a legend do */
+.saanich-pa-stat[data-select] {
+    padding: 4px 8px;
+    margin: -4px -8px;
+    cursor: pointer;
+    border-radius: 6px;
+    border: 1px solid transparent;
+}
+
+.saanich-pa-stat[data-select]:hover,
+.saanich-pa-stat[data-select]:focus-visible {
+    background: rgba(168, 200, 208, 0.1);
+}
+
+.saanich-pa-stat[data-select][aria-pressed="true"] {
+    background: rgba(224, 122, 95, 0.16);
+    border-color: var(--pa-colour);
 }
 
 .saanich-pa-richest-holder {
@@ -728,6 +921,18 @@ saanich.protectedAreas.showSelection = function (selectedRegion, active, window)
 .saanich-pa-kba .saanich-pa-bar {
     background: repeating-linear-gradient(135deg, #FDF2CE 0 4px, rgba(253, 242, 206, 0.55) 4px 7px);
 }
+
+/* The native species outside every protected area, the remainder of the flora, set apart as the KBAs are */
+.saanich-pa-unprotected .saanich-pa-name,
+.saanich-pa-unprotected .saanich-pa-track,
+.saanich-pa-unprotected .saanich-pa-count {
+    margin-top: 6px;
+}
+
+.saanich-pa-unprotected .saanich-pa-name {
+    color: #f2b8a6;
+}
+
 </style>
 
 <!-- The <template> block below is written by src/js/storyBuild.js and must not be edited here: it holds the section
@@ -742,6 +947,10 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 
 
 <div class="saanich-pa-summaries saanich-pa-views">
+<nav class="saanich-pa-tabs">
+<span class="saanich-pa-tab" data-select="" role="button" tabindex="0">All protected areas</span>
+<span class="saanich-pa-tab" data-select="Unprotected native plant diversity" role="button" tabindex="0">Unprotected native plant diversity</span>
+</nav>
 <section class="saanich-pa-card-summary" data-key="" style="--pa-colour: #eefaff">
 <h3 class="saanich-pa-summary-title">All protected and conserved areas</h3>
 <p class="saanich-pa-summary-text">Based on our current knowledge, 79 percent of the 674 native vascular plant species known to the peninsula have been reported within its protected and conserved areas, from national park reserve and ecological reserves to regional parks and lands held by conservancies. The other 144 have so far been recorded only outside them.</p>
@@ -754,33 +963,49 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 <b>8,610</b>
 <span>hectares</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Protected areas · native species" role="button" tabindex="0">
 <b>530</b>
 <span>native species · 79% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Protected areas · species of conservation concern" role="button" tabindex="0">
 <b>61</b>
 <span>of the 79 species of conservation concern</span>
 </div>
 </div>
 </section>
+<section class="saanich-pa-card-summary" data-key="Unprotected native plant diversity" hidden style="--pa-colour: #e07a5f">
+<h3 class="saanich-pa-summary-title">Unprotected native plant diversity</h3>
+<p class="saanich-pa-summary-subtitle">144 species · 907 records</p>
+<p class="saanich-pa-summary-text">144 native species, 21 percent of the native plant diversity known to the peninsula, have so far been reported only outside its protected and conserved areas. The map's grid shows where their records lie - the places where protection does not yet reach this part of the flora, or where it has yet to be looked for within the protected areas.</p>
+<div class="saanich-pa-stats">
+<div class="saanich-pa-stat" data-select="Unprotected native plant diversity" role="button" tabindex="0">
+<b>144</b>
+<span>native species · 21% of the native flora</span>
+</div>
+<div class="saanich-pa-stat" data-select="Unprotected native plant diversity · species of conservation concern" role="button" tabindex="0">
+<b>18</b>
+<span>species of conservation concern</span>
+</div>
+<div class="saanich-pa-stat" data-select="Unprotected native plant diversity · within Key Biodiversity Areas" role="button" tabindex="0">
+<b>18</b>
+<span>reported within a Key Biodiversity Area</span>
+</div>
+</div>
+</section>
 <section class="saanich-pa-card-summary" data-key="National park reserve" hidden style="--pa-colour: #5a96d2">
-<nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
-</nav>
 <h3 class="saanich-pa-summary-title">National park reserve</h3>
 <p class="saanich-pa-summary-subtitle">1 area · 1,296 hectares</p>
 <p class="saanich-pa-summary-text">The national park reserve holds 27 percent of the native plant diversity known to the peninsula: 183 of its 674 native vascular plant species have been reported within it.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="National park reserve · native species" role="button" tabindex="0">
 <b>183</b>
 <span>native species · 27% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="National park reserve · species of conservation concern" role="button" tabindex="0">
 <b>12</b>
 <span>species of conservation concern</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="National park reserve · found in no other category" role="button" tabindex="0">
 <b>3</b>
 <span>species reported in no other category</span>
 </div>
@@ -791,22 +1016,19 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </div>
 </section>
 <section class="saanich-pa-card-summary" data-key="Ecological reserve" hidden style="--pa-colour: #decb90">
-<nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
-</nav>
 <h3 class="saanich-pa-summary-title">Ecological reserves</h3>
 <p class="saanich-pa-summary-subtitle">4 areas · 445 hectares</p>
 <p class="saanich-pa-summary-text">Ecological reserves hold 24 percent of the native plant diversity known to the peninsula: 159 of its 674 native vascular plant species have been reported within them.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Ecological reserve · native species" role="button" tabindex="0">
 <b>159</b>
 <span>native species · 24% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Ecological reserve · species of conservation concern" role="button" tabindex="0">
 <b>22</b>
 <span>species of conservation concern</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Ecological reserve · found in no other category" role="button" tabindex="0">
 <b>6</b>
 <span>species reported in no other category</span>
 </div>
@@ -834,22 +1056,19 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </div>
 </section>
 <section class="saanich-pa-card-summary" data-key="Provincial park" hidden style="--pa-colour: #8cc084">
-<nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
-</nav>
 <h3 class="saanich-pa-summary-title">Provincial parks</h3>
 <p class="saanich-pa-summary-subtitle">4 areas · 1,810 hectares</p>
 <p class="saanich-pa-summary-text">Provincial parks hold 51 percent of the native plant diversity known to the peninsula: 346 of its 674 native vascular plant species have been reported within them.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Provincial park · native species" role="button" tabindex="0">
 <b>346</b>
 <span>native species · 51% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Provincial park · species of conservation concern" role="button" tabindex="0">
 <b>21</b>
 <span>species of conservation concern</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Provincial park · found in no other category" role="button" tabindex="0">
 <b>37</b>
 <span>species reported in no other category</span>
 </div>
@@ -877,22 +1096,19 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </div>
 </section>
 <section class="saanich-pa-card-summary" data-key="Migratory bird sanctuary" hidden style="--pa-colour: #9fd0e0">
-<nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
-</nav>
 <h3 class="saanich-pa-summary-title">Migratory bird sanctuaries</h3>
 <p class="saanich-pa-summary-subtitle">3 areas · 2,119 hectares</p>
 <p class="saanich-pa-summary-text">Migratory bird sanctuaries hold 40 percent of the native plant diversity known to the peninsula: 270 of its 674 native vascular plant species have been reported within them.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Migratory bird sanctuary · native species" role="button" tabindex="0">
 <b>270</b>
 <span>native species · 40% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Migratory bird sanctuary · species of conservation concern" role="button" tabindex="0">
 <b>33</b>
 <span>species of conservation concern</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Migratory bird sanctuary · found in no other category" role="button" tabindex="0">
 <b>22</b>
 <span>species reported in no other category</span>
 </div>
@@ -920,22 +1136,19 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </div>
 </section>
 <section class="saanich-pa-card-summary" data-key="Regional park" hidden style="--pa-colour: #4fae98">
-<nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
-</nav>
 <h3 class="saanich-pa-summary-title">Regional parks</h3>
 <p class="saanich-pa-summary-subtitle">16 areas · 2,633 hectares</p>
 <p class="saanich-pa-summary-text">Regional parks hold 62 percent of the native plant diversity known to the peninsula: 419 of its 674 native vascular plant species have been reported within them.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Regional park · native species" role="button" tabindex="0">
 <b>419</b>
 <span>native species · 62% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Regional park · species of conservation concern" role="button" tabindex="0">
 <b>33</b>
 <span>species of conservation concern</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Regional park · found in no other category" role="button" tabindex="0">
 <b>78</b>
 <span>species reported in no other category</span>
 </div>
@@ -963,22 +1176,19 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </div>
 </section>
 <section class="saanich-pa-card-summary" data-key="Private conservation land" hidden style="--pa-colour: #a593d8">
-<nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
-</nav>
 <h3 class="saanich-pa-summary-title">Private conservation lands</h3>
 <p class="saanich-pa-summary-subtitle">15 areas · 309 hectares</p>
 <p class="saanich-pa-summary-text">Private conservation lands hold 23 percent of the native plant diversity known to the peninsula: 153 of its 674 native vascular plant species have been reported within them.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Private conservation land · native species" role="button" tabindex="0">
 <b>153</b>
 <span>native species · 23% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Private conservation land · species of conservation concern" role="button" tabindex="0">
 <b>1</b>
 <span>species of conservation concern</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Private conservation land · found in no other category" role="button" tabindex="0">
 <b>2</b>
 <span>species reported in no other category</span>
 </div>
@@ -1007,18 +1217,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Albert Head Lagoon Regional Park" hidden style="--pa-colour: #4fae98">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Regional park" role="button" tabindex="0">↑ Regional parks</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Albert Head Lagoon Regional Park</h3>
 <p class="saanich-pa-summary-subtitle">Regional park · 7 hectares</p>
 <p class="saanich-pa-summary-text">14 native species, 2 percent of the native plant diversity known to the peninsula, have been reported within Albert Head Lagoon Regional Park, the 16th richest of its 16 regional parks.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Albert Head Lagoon Regional Park · native species" role="button" tabindex="0">
 <b>14</b>
 <span>native species · 2% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Albert Head Lagoon Regional Park · species of conservation concern" role="button" tabindex="0">
 <b>0</b>
 <span>species of conservation concern</span>
 </div>
@@ -1030,18 +1239,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Alston-Stewart" hidden style="--pa-colour: #a593d8">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Private conservation land" role="button" tabindex="0">↑ Private conservation lands</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Alston-Stewart</h3>
 <p class="saanich-pa-summary-subtitle">Private conservation land · The Land Conservancy of BC · 3 hectares</p>
 <p class="saanich-pa-summary-text">3 native species, 0 percent of the native plant diversity known to the peninsula, have been reported within Alston-Stewart, the 15th richest of its 15 private conservation lands.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Alston-Stewart · native species" role="button" tabindex="0">
 <b>3</b>
 <span>native species · 0% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Alston-Stewart · species of conservation concern" role="button" tabindex="0">
 <b>0</b>
 <span>species of conservation concern</span>
 </div>
@@ -1053,18 +1261,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Bear Hill" hidden style="--pa-colour: #a593d8">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Private conservation land" role="button" tabindex="0">↑ Private conservation lands</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Bear Hill</h3>
 <p class="saanich-pa-summary-subtitle">Private conservation land · Habitat Acquisition Trust · 2 hectares</p>
 <p class="saanich-pa-summary-text">4 native species, 1 percent of the native plant diversity known to the peninsula, have been reported within Bear Hill, the 13th richest of its 15 private conservation lands.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Bear Hill · native species" role="button" tabindex="0">
 <b>4</b>
 <span>native species · 1% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Bear Hill · species of conservation concern" role="button" tabindex="0">
 <b>0</b>
 <span>species of conservation concern</span>
 </div>
@@ -1076,18 +1283,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Bear Hill Regional Park" hidden style="--pa-colour: #4fae98">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Regional park" role="button" tabindex="0">↑ Regional parks</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Bear Hill Regional Park</h3>
 <p class="saanich-pa-summary-subtitle">Regional park · 49 hectares</p>
 <p class="saanich-pa-summary-text">86 native species, 13 percent of the native plant diversity known to the peninsula, have been reported within Bear Hill Regional Park, the 9th richest of its 16 regional parks.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Bear Hill Regional Park · native species" role="button" tabindex="0">
 <b>86</b>
 <span>native species · 13% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Bear Hill Regional Park · species of conservation concern" role="button" tabindex="0">
 <b>2</b>
 <span>species of conservation concern</span>
 </div>
@@ -1099,18 +1305,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Coles Bay Regional Park" hidden style="--pa-colour: #4fae98">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Regional park" role="button" tabindex="0">↑ Regional parks</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Coles Bay Regional Park</h3>
 <p class="saanich-pa-summary-subtitle">Regional park · 4 hectares</p>
 <p class="saanich-pa-summary-text">29 native species, 4 percent of the native plant diversity known to the peninsula, have been reported within Coles Bay Regional Park, the 14th richest of its 16 regional parks.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Coles Bay Regional Park · native species" role="button" tabindex="0">
 <b>29</b>
 <span>native species · 4% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Coles Bay Regional Park · species of conservation concern" role="button" tabindex="0">
 <b>0</b>
 <span>species of conservation concern</span>
 </div>
@@ -1122,18 +1327,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Devonian Regional Park" hidden style="--pa-colour: #4fae98">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Regional park" role="button" tabindex="0">↑ Regional parks</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Devonian Regional Park</h3>
 <p class="saanich-pa-summary-subtitle">Regional park · 14 hectares</p>
 <p class="saanich-pa-summary-text">81 native species, 12 percent of the native plant diversity known to the peninsula, have been reported within Devonian Regional Park, the 11th richest of its 16 regional parks.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Devonian Regional Park · native species" role="button" tabindex="0">
 <b>81</b>
 <span>native species · 12% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Devonian Regional Park · species of conservation concern" role="button" tabindex="0">
 <b>0</b>
 <span>species of conservation concern</span>
 </div>
@@ -1145,18 +1349,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Discovery Island Marine Park" hidden style="--pa-colour: #8cc084">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Provincial park" role="button" tabindex="0">↑ Provincial parks</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Discovery Island Marine Park</h3>
 <p class="saanich-pa-summary-subtitle">Provincial park · 68 hectares</p>
 <p class="saanich-pa-summary-text">87 native species, 13 percent of the native plant diversity known to the peninsula, have been reported within Discovery Island Marine Park, the 4th richest of its 4 provincial parks.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Discovery Island Marine Park · native species" role="button" tabindex="0">
 <b>87</b>
 <span>native species · 13% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Discovery Island Marine Park · species of conservation concern" role="button" tabindex="0">
 <b>6</b>
 <span>species of conservation concern</span>
 </div>
@@ -1168,18 +1371,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Earthspring" hidden style="--pa-colour: #a593d8">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Private conservation land" role="button" tabindex="0">↑ Private conservation lands</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Earthspring</h3>
 <p class="saanich-pa-summary-subtitle">Private conservation land · BC Parks Foundation · 14 hectares</p>
 <p class="saanich-pa-summary-text">8 native species, 1 percent of the native plant diversity known to the peninsula, have been reported within Earthspring, the 10th richest of its 15 private conservation lands.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Earthspring · native species" role="button" tabindex="0">
 <b>8</b>
 <span>native species · 1% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Earthspring · species of conservation concern" role="button" tabindex="0">
 <b>0</b>
 <span>species of conservation concern</span>
 </div>
@@ -1191,18 +1393,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Elk/Beaver Lake Regional Park" hidden style="--pa-colour: #4fae98">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Regional park" role="button" tabindex="0">↑ Regional parks</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Elk/Beaver Lake Regional Park</h3>
 <p class="saanich-pa-summary-subtitle">Regional park · 444 hectares</p>
 <p class="saanich-pa-summary-text">176 native species, 26 percent of the native plant diversity known to the peninsula, have been reported within Elk/Beaver Lake Regional Park, the 4th richest of its 16 regional parks.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Elk/Beaver Lake Regional Park · native species" role="button" tabindex="0">
 <b>176</b>
 <span>native species · 26% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Elk/Beaver Lake Regional Park · species of conservation concern" role="button" tabindex="0">
 <b>6</b>
 <span>species of conservation concern</span>
 </div>
@@ -1214,18 +1415,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Esquimalt Lagoon Migratory Bird Sanctuary" hidden style="--pa-colour: #9fd0e0">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Migratory bird sanctuary" role="button" tabindex="0">↑ Migratory bird sanctuaries</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Esquimalt Lagoon Migratory Bird Sanctuary</h3>
 <p class="saanich-pa-summary-subtitle">Migratory bird sanctuary · 134 hectares</p>
 <p class="saanich-pa-summary-text">113 native species, 17 percent of the native plant diversity known to the peninsula, have been reported within Esquimalt Lagoon Migratory Bird Sanctuary, the 2nd richest of its 3 migratory bird sanctuaries.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Esquimalt Lagoon Migratory Bird Sanctuary · native species" role="button" tabindex="0">
 <b>113</b>
 <span>native species · 17% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Esquimalt Lagoon Migratory Bird Sanctuary · species of conservation concern" role="button" tabindex="0">
 <b>3</b>
 <span>species of conservation concern</span>
 </div>
@@ -1237,18 +1437,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Francis/King Regional Park" hidden style="--pa-colour: #4fae98">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Regional park" role="button" tabindex="0">↑ Regional parks</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Francis/King Regional Park</h3>
 <p class="saanich-pa-summary-subtitle">Regional park · 109 hectares</p>
 <p class="saanich-pa-summary-text">128 native species, 19 percent of the native plant diversity known to the peninsula, have been reported within Francis/King Regional Park, the 6th richest of its 16 regional parks.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Francis/King Regional Park · native species" role="button" tabindex="0">
 <b>128</b>
 <span>native species · 19% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Francis/King Regional Park · species of conservation concern" role="button" tabindex="0">
 <b>1</b>
 <span>species of conservation concern</span>
 </div>
@@ -1260,18 +1459,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Ginns" hidden style="--pa-colour: #a593d8">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Private conservation land" role="button" tabindex="0">↑ Private conservation lands</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Ginns</h3>
 <p class="saanich-pa-summary-subtitle">Private conservation land · Habitat Acquisition Trust · 23 hectares</p>
 <p class="saanich-pa-summary-text">7 native species, 1 percent of the native plant diversity known to the peninsula, have been reported within Ginns, the 11th richest of its 15 private conservation lands.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Ginns · native species" role="button" tabindex="0">
 <b>7</b>
 <span>native species · 1% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Ginns · species of conservation concern" role="button" tabindex="0">
 <b>0</b>
 <span>species of conservation concern</span>
 </div>
@@ -1283,18 +1481,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Goldstream Park" hidden style="--pa-colour: #8cc084">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Provincial park" role="button" tabindex="0">↑ Provincial parks</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Goldstream Park</h3>
 <p class="saanich-pa-summary-subtitle">Provincial park · 293 hectares</p>
 <p class="saanich-pa-summary-text">238 native species, 35 percent of the native plant diversity known to the peninsula, have been reported within Goldstream Park, the 2nd richest of its 4 provincial parks.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Goldstream Park · native species" role="button" tabindex="0">
 <b>238</b>
 <span>native species · 35% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Goldstream Park · species of conservation concern" role="button" tabindex="0">
 <b>8</b>
 <span>species of conservation concern</span>
 </div>
@@ -1306,18 +1503,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Gonzales Hill Regional Park" hidden style="--pa-colour: #4fae98">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Regional park" role="button" tabindex="0">↑ Regional parks</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Gonzales Hill Regional Park</h3>
 <p class="saanich-pa-summary-subtitle">Regional park · 2 hectares</p>
 <p class="saanich-pa-summary-text">40 native species, 6 percent of the native plant diversity known to the peninsula, have been reported within Gonzales Hill Regional Park, the 13th richest of its 16 regional parks.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Gonzales Hill Regional Park · native species" role="button" tabindex="0">
 <b>40</b>
 <span>native species · 6% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Gonzales Hill Regional Park · species of conservation concern" role="button" tabindex="0">
 <b>2</b>
 <span>species of conservation concern</span>
 </div>
@@ -1329,18 +1525,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Gowlland Tod Park" hidden style="--pa-colour: #8cc084">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Provincial park" role="button" tabindex="0">↑ Provincial parks</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Gowlland Tod Park</h3>
 <p class="saanich-pa-summary-subtitle">Provincial park · 1,276 hectares</p>
 <p class="saanich-pa-summary-text">270 native species, 40 percent of the native plant diversity known to the peninsula, have been reported within Gowlland Tod Park, the richest of its 4 provincial parks.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Gowlland Tod Park · native species" role="button" tabindex="0">
 <b>270</b>
 <span>native species · 40% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Gowlland Tod Park · species of conservation concern" role="button" tabindex="0">
 <b>12</b>
 <span>species of conservation concern</span>
 </div>
@@ -1352,18 +1547,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Gulf Islands National Park Reserve of Canada" hidden style="--pa-colour: #5a96d2">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="National park reserve" role="button" tabindex="0">↑ National park reserve</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Gulf Islands National Park Reserve of Canada</h3>
 <p class="saanich-pa-summary-subtitle">National park reserve · 1,296 hectares</p>
 <p class="saanich-pa-summary-text">183 native species, 27 percent of the native plant diversity known to the peninsula, have been reported within Gulf Islands National Park Reserve of Canada.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Gulf Islands National Park Reserve of Canada · native species" role="button" tabindex="0">
 <b>183</b>
 <span>native species · 27% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Gulf Islands National Park Reserve of Canada · species of conservation concern" role="button" tabindex="0">
 <b>12</b>
 <span>species of conservation concern</span>
 </div>
@@ -1375,18 +1569,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Horth Hill Regional Park" hidden style="--pa-colour: #4fae98">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Regional park" role="button" tabindex="0">↑ Regional parks</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Horth Hill Regional Park</h3>
 <p class="saanich-pa-summary-subtitle">Regional park · 37 hectares</p>
 <p class="saanich-pa-summary-text">87 native species, 13 percent of the native plant diversity known to the peninsula, have been reported within Horth Hill Regional Park, the 8th richest of its 16 regional parks.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Horth Hill Regional Park · native species" role="button" tabindex="0">
 <b>87</b>
 <span>native species · 13% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Horth Hill Regional Park · species of conservation concern" role="button" tabindex="0">
 <b>0</b>
 <span>species of conservation concern</span>
 </div>
@@ -1398,18 +1591,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Island View Beach Regional Park" hidden style="--pa-colour: #4fae98">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Regional park" role="button" tabindex="0">↑ Regional parks</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Island View Beach Regional Park</h3>
 <p class="saanich-pa-summary-subtitle">Regional park · 53 hectares</p>
 <p class="saanich-pa-summary-text">97 native species, 14 percent of the native plant diversity known to the peninsula, have been reported within Island View Beach Regional Park, the 7th richest of its 16 regional parks.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Island View Beach Regional Park · native species" role="button" tabindex="0">
 <b>97</b>
 <span>native species · 14% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Island View Beach Regional Park · species of conservation concern" role="button" tabindex="0">
 <b>6</b>
 <span>species of conservation concern</span>
 </div>
@@ -1421,18 +1613,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Lone Tree Hill Regional Park" hidden style="--pa-colour: #4fae98">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Regional park" role="button" tabindex="0">↑ Regional parks</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Lone Tree Hill Regional Park</h3>
 <p class="saanich-pa-summary-subtitle">Regional park · 31 hectares</p>
 <p class="saanich-pa-summary-text">83 native species, 12 percent of the native plant diversity known to the peninsula, have been reported within Lone Tree Hill Regional Park, the 10th richest of its 16 regional parks.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Lone Tree Hill Regional Park · native species" role="button" tabindex="0">
 <b>83</b>
 <span>native species · 12% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Lone Tree Hill Regional Park · species of conservation concern" role="button" tabindex="0">
 <b>1</b>
 <span>species of conservation concern</span>
 </div>
@@ -1444,18 +1635,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Madrona Farm" hidden style="--pa-colour: #a593d8">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Private conservation land" role="button" tabindex="0">↑ Private conservation lands</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Madrona Farm</h3>
 <p class="saanich-pa-summary-subtitle">Private conservation land · The Land Conservancy of BC · 9 hectares</p>
 <p class="saanich-pa-summary-text">11 native species, 2 percent of the native plant diversity known to the peninsula, have been reported within Madrona Farm, the 8th richest of its 15 private conservation lands.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Madrona Farm · native species" role="button" tabindex="0">
 <b>11</b>
 <span>native species · 2% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Madrona Farm · species of conservation concern" role="button" tabindex="0">
 <b>0</b>
 <span>species of conservation concern</span>
 </div>
@@ -1467,18 +1657,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Maltby Lake" hidden style="--pa-colour: #a593d8">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Private conservation land" role="button" tabindex="0">↑ Private conservation lands</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Maltby Lake</h3>
 <p class="saanich-pa-summary-subtitle">Private conservation land · Friends of Maltby Lake Watershed Society · 77 hectares</p>
 <p class="saanich-pa-summary-text">50 native species, 7 percent of the native plant diversity known to the peninsula, have been reported within Maltby Lake, the 3rd richest of its 15 private conservation lands.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Maltby Lake · native species" role="button" tabindex="0">
 <b>50</b>
 <span>native species · 7% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Maltby Lake · species of conservation concern" role="button" tabindex="0">
 <b>0</b>
 <span>species of conservation concern</span>
 </div>
@@ -1490,18 +1679,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Mary Hill Connector" hidden style="--pa-colour: #a593d8">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Private conservation land" role="button" tabindex="0">↑ Private conservation lands</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Mary Hill Connector</h3>
 <p class="saanich-pa-summary-subtitle">Private conservation land · BC Parks Foundation · 6 hectares</p>
 <p class="saanich-pa-summary-text">4 native species, 1 percent of the native plant diversity known to the peninsula, have been reported within Mary Hill Connector, the 13th richest of its 15 private conservation lands.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Mary Hill Connector · native species" role="button" tabindex="0">
 <b>4</b>
 <span>native species · 1% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Mary Hill Connector · species of conservation concern" role="button" tabindex="0">
 <b>0</b>
 <span>species of conservation concern</span>
 </div>
@@ -1513,18 +1701,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Matson Conservation Area" hidden style="--pa-colour: #a593d8">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Private conservation land" role="button" tabindex="0">↑ Private conservation lands</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Matson Conservation Area</h3>
 <p class="saanich-pa-summary-subtitle">Private conservation land · Habitat Acquisition Trust · 1 hectares</p>
 <p class="saanich-pa-summary-text">48 native species, 7 percent of the native plant diversity known to the peninsula, have been reported within Matson Conservation Area, the 4th richest of its 15 private conservation lands.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Matson Conservation Area · native species" role="button" tabindex="0">
 <b>48</b>
 <span>native species · 7% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Matson Conservation Area · species of conservation concern" role="button" tabindex="0">
 <b>0</b>
 <span>species of conservation concern</span>
 </div>
@@ -1536,18 +1723,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Mill Hill Regional Park" hidden style="--pa-colour: #4fae98">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Regional park" role="button" tabindex="0">↑ Regional parks</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Mill Hill Regional Park</h3>
 <p class="saanich-pa-summary-subtitle">Regional park · 81 hectares</p>
 <p class="saanich-pa-summary-text">191 native species, 28 percent of the native plant diversity known to the peninsula, have been reported within Mill Hill Regional Park, the 2nd richest of its 16 regional parks.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Mill Hill Regional Park · native species" role="button" tabindex="0">
 <b>191</b>
 <span>native species · 28% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Mill Hill Regional Park · species of conservation concern" role="button" tabindex="0">
 <b>13</b>
 <span>species of conservation concern</span>
 </div>
@@ -1559,18 +1745,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Millstream Creek Watershed" hidden style="--pa-colour: #a593d8">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Private conservation land" role="button" tabindex="0">↑ Private conservation lands</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Millstream Creek Watershed</h3>
 <p class="saanich-pa-summary-subtitle">Private conservation land · The Land Conservancy of BC · 11 hectares</p>
 <p class="saanich-pa-summary-text">78 native species, 12 percent of the native plant diversity known to the peninsula, have been reported within Millstream Creek Watershed, the richest of its 15 private conservation lands.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Millstream Creek Watershed · native species" role="button" tabindex="0">
 <b>78</b>
 <span>native species · 12% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Millstream Creek Watershed · species of conservation concern" role="button" tabindex="0">
 <b>0</b>
 <span>species of conservation concern</span>
 </div>
@@ -1582,18 +1767,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Mount Wells Regional Park" hidden style="--pa-colour: #4fae98">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Regional park" role="button" tabindex="0">↑ Regional parks</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Mount Wells Regional Park</h3>
 <p class="saanich-pa-summary-subtitle">Regional park · 44 hectares</p>
 <p class="saanich-pa-summary-text">23 native species, 3 percent of the native plant diversity known to the peninsula, have been reported within Mount Wells Regional Park, the 15th richest of its 16 regional parks.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Mount Wells Regional Park · native species" role="button" tabindex="0">
 <b>23</b>
 <span>native species · 3% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Mount Wells Regional Park · species of conservation concern" role="button" tabindex="0">
 <b>1</b>
 <span>species of conservation concern</span>
 </div>
@@ -1605,18 +1789,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Mount Work Regional Park" hidden style="--pa-colour: #4fae98">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Regional park" role="button" tabindex="0">↑ Regional parks</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Mount Work Regional Park</h3>
 <p class="saanich-pa-summary-subtitle">Regional park · 755 hectares</p>
 <p class="saanich-pa-summary-text">178 native species, 26 percent of the native plant diversity known to the peninsula, have been reported within Mount Work Regional Park, the 3rd richest of its 16 regional parks.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Mount Work Regional Park · native species" role="button" tabindex="0">
 <b>178</b>
 <span>native species · 26% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Mount Work Regional Park · species of conservation concern" role="button" tabindex="0">
 <b>2</b>
 <span>species of conservation concern</span>
 </div>
@@ -1628,18 +1811,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Mountain Road Forest Regional Park" hidden style="--pa-colour: #4fae98">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Regional park" role="button" tabindex="0">↑ Regional parks</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Mountain Road Forest Regional Park</h3>
 <p class="saanich-pa-summary-subtitle">Regional park · 20 hectares</p>
 <p class="saanich-pa-summary-text">56 native species, 8 percent of the native plant diversity known to the peninsula, have been reported within Mountain Road Forest Regional Park, the 12th richest of its 16 regional parks.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Mountain Road Forest Regional Park · native species" role="button" tabindex="0">
 <b>56</b>
 <span>native species · 8% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Mountain Road Forest Regional Park · species of conservation concern" role="button" tabindex="0">
 <b>0</b>
 <span>species of conservation concern</span>
 </div>
@@ -1651,18 +1833,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Nature Conservancy of Canada protected area" hidden style="--pa-colour: #a593d8">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Private conservation land" role="button" tabindex="0">↑ Private conservation lands</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Nature Conservancy of Canada protected area</h3>
 <p class="saanich-pa-summary-subtitle">Private conservation land · Nature Conservancy of Canada · 60 hectares</p>
 <p class="saanich-pa-summary-text">55 native species, 8 percent of the native plant diversity known to the peninsula, have been reported within Nature Conservancy of Canada protected area, the 2nd richest of its 15 private conservation lands.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Nature Conservancy of Canada protected area · native species" role="button" tabindex="0">
 <b>55</b>
 <span>native species · 8% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Nature Conservancy of Canada protected area · species of conservation concern" role="button" tabindex="0">
 <b>0</b>
 <span>species of conservation concern</span>
 </div>
@@ -1674,18 +1855,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Oak Bay Islands Ecological Reserve" hidden style="--pa-colour: #decb90">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Ecological reserve" role="button" tabindex="0">↑ Ecological reserves</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Oak Bay Islands Ecological Reserve</h3>
 <p class="saanich-pa-summary-subtitle">Ecological reserve · 232 hectares</p>
 <p class="saanich-pa-summary-text">104 native species, 15 percent of the native plant diversity known to the peninsula, have been reported within Oak Bay Islands Ecological Reserve, the 2nd richest of its 4 ecological reserves.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Oak Bay Islands Ecological Reserve · native species" role="button" tabindex="0">
 <b>104</b>
 <span>native species · 15% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Oak Bay Islands Ecological Reserve · species of conservation concern" role="button" tabindex="0">
 <b>11</b>
 <span>species of conservation concern</span>
 </div>
@@ -1697,18 +1877,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Rae-Leigh Place" hidden style="--pa-colour: #a593d8">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Private conservation land" role="button" tabindex="0">↑ Private conservation lands</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Rae-Leigh Place</h3>
 <p class="saanich-pa-summary-subtitle">Private conservation land · BC Parks Foundation · 6 hectares</p>
 <p class="saanich-pa-summary-text">13 native species, 2 percent of the native plant diversity known to the peninsula, have been reported within Rae-Leigh Place, the 7th richest of its 15 private conservation lands.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Rae-Leigh Place · native species" role="button" tabindex="0">
 <b>13</b>
 <span>native species · 2% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Rae-Leigh Place · species of conservation concern" role="button" tabindex="0">
 <b>0</b>
 <span>species of conservation concern</span>
 </div>
@@ -1720,18 +1899,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="SISȻENEM (Halibut Island)" hidden style="--pa-colour: #a593d8">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Private conservation land" role="button" tabindex="0">↑ Private conservation lands</span>
 </nav>
 <h3 class="saanich-pa-summary-title">SISȻENEM (Halibut Island)</h3>
 <p class="saanich-pa-summary-subtitle">Private conservation land · The Land Conservancy of BC · 3 hectares</p>
 <p class="saanich-pa-summary-text">5 native species, 1 percent of the native plant diversity known to the peninsula, have been reported within SISȻENEM (Halibut Island), the 12th richest of its 15 private conservation lands.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="SISȻENEM (Halibut Island) · native species" role="button" tabindex="0">
 <b>5</b>
 <span>native species · 1% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="SISȻENEM (Halibut Island) · species of conservation concern" role="button" tabindex="0">
 <b>0</b>
 <span>species of conservation concern</span>
 </div>
@@ -1743,18 +1921,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Satellite Channel Ecological Reserve" hidden style="--pa-colour: #decb90">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Ecological reserve" role="button" tabindex="0">↑ Ecological reserves</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Satellite Channel Ecological Reserve</h3>
 <p class="saanich-pa-summary-subtitle">Ecological reserve · 190 hectares</p>
 <p class="saanich-pa-summary-text">3 native species, 0 percent of the native plant diversity known to the peninsula, have been reported within Satellite Channel Ecological Reserve, the 4th richest of its 4 ecological reserves.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Satellite Channel Ecological Reserve · native species" role="button" tabindex="0">
 <b>3</b>
 <span>native species · 0% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Satellite Channel Ecological Reserve · species of conservation concern" role="button" tabindex="0">
 <b>0</b>
 <span>species of conservation concern</span>
 </div>
@@ -1766,18 +1943,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Second Lake" hidden style="--pa-colour: #a593d8">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Private conservation land" role="button" tabindex="0">↑ Private conservation lands</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Second Lake</h3>
 <p class="saanich-pa-summary-subtitle">Private conservation land · The Land Conservancy of BC · 72 hectares</p>
 <p class="saanich-pa-summary-text">23 native species, 3 percent of the native plant diversity known to the peninsula, have been reported within Second Lake, the 6th richest of its 15 private conservation lands.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Second Lake · native species" role="button" tabindex="0">
 <b>23</b>
 <span>native species · 3% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Second Lake · species of conservation concern" role="button" tabindex="0">
 <b>0</b>
 <span>species of conservation concern</span>
 </div>
@@ -1789,18 +1965,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Shoal Harbour Migratory Bird Sanctuary" hidden style="--pa-colour: #9fd0e0">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Migratory bird sanctuary" role="button" tabindex="0">↑ Migratory bird sanctuaries</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Shoal Harbour Migratory Bird Sanctuary</h3>
 <p class="saanich-pa-summary-subtitle">Migratory bird sanctuary · 146 hectares</p>
 <p class="saanich-pa-summary-text">40 native species, 6 percent of the native plant diversity known to the peninsula, have been reported within Shoal Harbour Migratory Bird Sanctuary, the 3rd richest of its 3 migratory bird sanctuaries.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Shoal Harbour Migratory Bird Sanctuary · native species" role="button" tabindex="0">
 <b>40</b>
 <span>native species · 6% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Shoal Harbour Migratory Bird Sanctuary · species of conservation concern" role="button" tabindex="0">
 <b>2</b>
 <span>species of conservation concern</span>
 </div>
@@ -1812,18 +1987,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Swan Lake - Christmas Hill" hidden style="--pa-colour: #a593d8">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Private conservation land" role="button" tabindex="0">↑ Private conservation lands</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Swan Lake - Christmas Hill</h3>
 <p class="saanich-pa-summary-subtitle">Private conservation land · The Nature Trust of British Columbia · 2 hectares</p>
 <p class="saanich-pa-summary-text">29 native species, 4 percent of the native plant diversity known to the peninsula, have been reported within Swan Lake - Christmas Hill, the 5th richest of its 15 private conservation lands.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Swan Lake - Christmas Hill · native species" role="button" tabindex="0">
 <b>29</b>
 <span>native species · 4% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Swan Lake - Christmas Hill · species of conservation concern" role="button" tabindex="0">
 <b>0</b>
 <span>species of conservation concern</span>
 </div>
@@ -1835,18 +2009,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Ten Mile Point Ecological Reserve" hidden style="--pa-colour: #decb90">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Ecological reserve" role="button" tabindex="0">↑ Ecological reserves</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Ten Mile Point Ecological Reserve</h3>
 <p class="saanich-pa-summary-subtitle">Ecological reserve · 15 hectares</p>
 <p class="saanich-pa-summary-text">34 native species, 5 percent of the native plant diversity known to the peninsula, have been reported within Ten Mile Point Ecological Reserve, the 3rd richest of its 4 ecological reserves.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Ten Mile Point Ecological Reserve · native species" role="button" tabindex="0">
 <b>34</b>
 <span>native species · 5% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Ten Mile Point Ecological Reserve · species of conservation concern" role="button" tabindex="0">
 <b>3</b>
 <span>species of conservation concern</span>
 </div>
@@ -1858,18 +2031,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Thetis Lake Regional Park" hidden style="--pa-colour: #4fae98">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Regional park" role="button" tabindex="0">↑ Regional parks</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Thetis Lake Regional Park</h3>
 <p class="saanich-pa-summary-subtitle">Regional park · 925 hectares</p>
 <p class="saanich-pa-summary-text">274 native species, 41 percent of the native plant diversity known to the peninsula, have been reported within Thetis Lake Regional Park, the richest of its 16 regional parks.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Thetis Lake Regional Park · native species" role="button" tabindex="0">
 <b>274</b>
 <span>native species · 41% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Thetis Lake Regional Park · species of conservation concern" role="button" tabindex="0">
 <b>16</b>
 <span>species of conservation concern</span>
 </div>
@@ -1881,18 +2053,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Trial Islands Ecological Reserve" hidden style="--pa-colour: #decb90">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Ecological reserve" role="button" tabindex="0">↑ Ecological reserves</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Trial Islands Ecological Reserve</h3>
 <p class="saanich-pa-summary-subtitle">Ecological reserve · 8 hectares</p>
 <p class="saanich-pa-summary-text">108 native species, 16 percent of the native plant diversity known to the peninsula, have been reported within Trial Islands Ecological Reserve, the richest of its 4 ecological reserves.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Trial Islands Ecological Reserve · native species" role="button" tabindex="0">
 <b>108</b>
 <span>native species · 16% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Trial Islands Ecological Reserve · species of conservation concern" role="button" tabindex="0">
 <b>15</b>
 <span>species of conservation concern</span>
 </div>
@@ -1904,18 +2075,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Victoria Harbour Migratory Bird Sanctuary" hidden style="--pa-colour: #9fd0e0">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Migratory bird sanctuary" role="button" tabindex="0">↑ Migratory bird sanctuaries</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Victoria Harbour Migratory Bird Sanctuary</h3>
 <p class="saanich-pa-summary-subtitle">Migratory bird sanctuary · 1,838 hectares</p>
 <p class="saanich-pa-summary-text">239 native species, 35 percent of the native plant diversity known to the peninsula, have been reported within Victoria Harbour Migratory Bird Sanctuary, the richest of its 3 migratory bird sanctuaries.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Victoria Harbour Migratory Bird Sanctuary · native species" role="button" tabindex="0">
 <b>239</b>
 <span>native species · 35% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Victoria Harbour Migratory Bird Sanctuary · species of conservation concern" role="button" tabindex="0">
 <b>32</b>
 <span>species of conservation concern</span>
 </div>
@@ -1927,18 +2097,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Witty's Lagoon Regional Park" hidden style="--pa-colour: #4fae98">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Regional park" role="button" tabindex="0">↑ Regional parks</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Witty's Lagoon Regional Park</h3>
 <p class="saanich-pa-summary-subtitle">Regional park · 59 hectares</p>
 <p class="saanich-pa-summary-text">136 native species, 20 percent of the native plant diversity known to the peninsula, have been reported within Witty's Lagoon Regional Park, the 5th richest of its 16 regional parks.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Witty's Lagoon Regional Park · native species" role="button" tabindex="0">
 <b>136</b>
 <span>native species · 20% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Witty's Lagoon Regional Park · species of conservation concern" role="button" tabindex="0">
 <b>6</b>
 <span>species of conservation concern</span>
 </div>
@@ -1950,18 +2119,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="ȽÁU,WELṈEW̱/John Dean Park" hidden style="--pa-colour: #8cc084">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Provincial park" role="button" tabindex="0">↑ Provincial parks</span>
 </nav>
 <h3 class="saanich-pa-summary-title">ȽÁU,WELṈEW̱/John Dean Park</h3>
 <p class="saanich-pa-summary-subtitle">Provincial park · 174 hectares</p>
 <p class="saanich-pa-summary-text">134 native species, 20 percent of the native plant diversity known to the peninsula, have been reported within ȽÁU,WELṈEW̱/John Dean Park, the 3rd richest of its 4 provincial parks.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="ȽÁU,WELṈEW̱/John Dean Park · native species" role="button" tabindex="0">
 <b>134</b>
 <span>native species · 20% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="ȽÁU,WELṈEW̱/John Dean Park · species of conservation concern" role="button" tabindex="0">
 <b>1</b>
 <span>species of conservation concern</span>
 </div>
@@ -1973,18 +2141,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="ȾIKEL" hidden style="--pa-colour: #a593d8">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Private conservation land" role="button" tabindex="0">↑ Private conservation lands</span>
 </nav>
 <h3 class="saanich-pa-summary-title">ȾIKEL</h3>
 <p class="saanich-pa-summary-subtitle">Private conservation land · W̱SÁNEĆ Lands Trust Society · 19 hectares</p>
 <p class="saanich-pa-summary-text">9 native species, 1 percent of the native plant diversity known to the peninsula, have been reported within ȾIKEL, the 9th richest of its 15 private conservation lands.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="ȾIKEL · native species" role="button" tabindex="0">
 <b>9</b>
 <span>native species · 1% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="ȾIKEL · species of conservation concern" role="button" tabindex="0">
 <b>1</b>
 <span>species of conservation concern</span>
 </div>
@@ -1995,18 +2162,15 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </div>
 </section>
 <section class="saanich-pa-card-summary" data-key="Published Key Biodiversity Areas" hidden style="--pa-colour: #FDF2CE">
-<nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
-</nav>
 <h3 class="saanich-pa-summary-title">Key Biodiversity Areas</h3>
 <p class="saanich-pa-summary-subtitle">14 published, 8 of them globally significant · 11 proposed · 781 hectares</p>
 <p class="saanich-pa-summary-text">Key Biodiversity Areas mark the places that matter most for the persistence of species and ecosystems. The peninsula's Garry oak meadows, rocky headlands and islets hold 14 published Key Biodiversity Areas, most of them identified for their threatened plants, and 11 more are proposed. Together the published KBAs hold 52 percent of the native plant diversity known to the peninsula: 352 of its 674 native vascular plant species have been reported within them.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Published Key Biodiversity Areas · native species" role="button" tabindex="0">
 <b>352</b>
 <span>native species · 52% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Published Key Biodiversity Areas · species of conservation concern" role="button" tabindex="0">
 <b>43</b>
 <span>species of conservation concern</span>
 </div>
@@ -2035,18 +2199,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Christmas Hill" hidden style="--pa-colour: #FDF2CE">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Published Key Biodiversity Areas" role="button" tabindex="0">↑ Key Biodiversity Areas</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Christmas Hill</h3>
 <p class="saanich-pa-summary-subtitle">Key Biodiversity Area · Nationally significant for vascular plants · 14 hectares</p>
 <p class="saanich-pa-summary-text">78 native species, 12 percent of the native plant diversity known to the peninsula, have been reported within Christmas Hill.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Christmas Hill · native species" role="button" tabindex="0">
 <b>78</b>
 <span>native species · 12% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Christmas Hill · species of conservation concern" role="button" tabindex="0">
 <b>4</b>
 <span>species of conservation concern</span>
 </div>
@@ -2058,18 +2221,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Durrance Lake - Cole Hill" hidden style="--pa-colour: #FDF2CE">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Published Key Biodiversity Areas" role="button" tabindex="0">↑ Key Biodiversity Areas</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Durrance Lake - Cole Hill</h3>
 <p class="saanich-pa-summary-subtitle">Key Biodiversity Area · Nationally significant for amphibians and reptiles, invertebrates · 199 hectares</p>
 <p class="saanich-pa-summary-text">104 native species, 15 percent of the native plant diversity known to the peninsula, have been reported within Durrance Lake - Cole Hill.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Durrance Lake - Cole Hill · native species" role="button" tabindex="0">
 <b>104</b>
 <span>native species · 15% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Durrance Lake - Cole Hill · species of conservation concern" role="button" tabindex="0">
 <b>2</b>
 <span>species of conservation concern</span>
 </div>
@@ -2081,18 +2243,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Fort Rodd Hill" hidden style="--pa-colour: #FDF2CE">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Published Key Biodiversity Areas" role="button" tabindex="0">↑ Key Biodiversity Areas</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Fort Rodd Hill</h3>
 <p class="saanich-pa-summary-subtitle">Key Biodiversity Area · Globally significant for vascular plants · 28 hectares</p>
 <p class="saanich-pa-summary-text">175 native species, 26 percent of the native plant diversity known to the peninsula, have been reported within Fort Rodd Hill.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Fort Rodd Hill · native species" role="button" tabindex="0">
 <b>175</b>
 <span>native species · 26% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Fort Rodd Hill · species of conservation concern" role="button" tabindex="0">
 <b>22</b>
 <span>species of conservation concern</span>
 </div>
@@ -2104,18 +2265,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Gonzales Point" hidden style="--pa-colour: #FDF2CE">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Published Key Biodiversity Areas" role="button" tabindex="0">↑ Key Biodiversity Areas</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Gonzales Point</h3>
 <p class="saanich-pa-summary-subtitle">Key Biodiversity Area · Globally significant for vascular plants · 2 hectares</p>
 <p class="saanich-pa-summary-text">34 native species, 5 percent of the native plant diversity known to the peninsula, have been reported within Gonzales Point.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Gonzales Point · native species" role="button" tabindex="0">
 <b>34</b>
 <span>native species · 5% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Gonzales Point · species of conservation concern" role="button" tabindex="0">
 <b>5</b>
 <span>species of conservation concern</span>
 </div>
@@ -2127,18 +2287,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Harling Point" hidden style="--pa-colour: #FDF2CE">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Published Key Biodiversity Areas" role="button" tabindex="0">↑ Key Biodiversity Areas</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Harling Point</h3>
 <p class="saanich-pa-summary-subtitle">Key Biodiversity Area · Globally significant for vascular plants · 2 hectares</p>
 <p class="saanich-pa-summary-text">87 native species, 13 percent of the native plant diversity known to the peninsula, have been reported within Harling Point.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Harling Point · native species" role="button" tabindex="0">
 <b>87</b>
 <span>native species · 13% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Harling Point · species of conservation concern" role="button" tabindex="0">
 <b>8</b>
 <span>species of conservation concern</span>
 </div>
@@ -2150,18 +2309,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Kohweechela - Mary Tod Island" hidden style="--pa-colour: #FDF2CE">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Published Key Biodiversity Areas" role="button" tabindex="0">↑ Key Biodiversity Areas</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Kohweechela - Mary Tod Island</h3>
 <p class="saanich-pa-summary-subtitle">Key Biodiversity Area · Nationally significant for vascular plants · 3 hectares</p>
 <p class="saanich-pa-summary-text">50 native species, 7 percent of the native plant diversity known to the peninsula, have been reported within Kohweechela - Mary Tod Island.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Kohweechela - Mary Tod Island · native species" role="button" tabindex="0">
 <b>50</b>
 <span>native species · 7% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Kohweechela - Mary Tod Island · species of conservation concern" role="button" tabindex="0">
 <b>8</b>
 <span>species of conservation concern</span>
 </div>
@@ -2173,18 +2331,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Sidney Island - Wymond Point" hidden style="--pa-colour: #FDF2CE">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Published Key Biodiversity Areas" role="button" tabindex="0">↑ Key Biodiversity Areas</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Sidney Island - Wymond Point</h3>
 <p class="saanich-pa-summary-subtitle">Key Biodiversity Area · Nationally significant for nonvascular plants · 27 hectares</p>
 <p class="saanich-pa-summary-text">34 native species, 5 percent of the native plant diversity known to the peninsula, have been reported within Sidney Island - Wymond Point.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Sidney Island - Wymond Point · native species" role="button" tabindex="0">
 <b>34</b>
 <span>native species · 5% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Sidney Island - Wymond Point · species of conservation concern" role="button" tabindex="0">
 <b>1</b>
 <span>species of conservation concern</span>
 </div>
@@ -2196,18 +2353,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="SḰŦÁMEN - North Sidney Island" hidden style="--pa-colour: #FDF2CE">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Published Key Biodiversity Areas" role="button" tabindex="0">↑ Key Biodiversity Areas</span>
 </nav>
 <h3 class="saanich-pa-summary-title">SḰŦÁMEN - North Sidney Island</h3>
 <p class="saanich-pa-summary-subtitle">Key Biodiversity Area · Nationally significant for invertebrates, vascular plants · 144 hectares</p>
 <p class="saanich-pa-summary-text">81 native species, 12 percent of the native plant diversity known to the peninsula, have been reported within SḰŦÁMEN - North Sidney Island.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="SḰŦÁMEN - North Sidney Island · native species" role="button" tabindex="0">
 <b>81</b>
 <span>native species · 12% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="SḰŦÁMEN - North Sidney Island · species of conservation concern" role="button" tabindex="0">
 <b>6</b>
 <span>species of conservation concern</span>
 </div>
@@ -2219,18 +2375,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Trafalgar Park" hidden style="--pa-colour: #FDF2CE">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Published Key Biodiversity Areas" role="button" tabindex="0">↑ Key Biodiversity Areas</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Trafalgar Park</h3>
 <p class="saanich-pa-summary-subtitle">Key Biodiversity Area · Globally significant for vascular plants · 2 hectares</p>
 <p class="saanich-pa-summary-text">43 native species, 6 percent of the native plant diversity known to the peninsula, have been reported within Trafalgar Park.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Trafalgar Park · native species" role="button" tabindex="0">
 <b>43</b>
 <span>native species · 6% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Trafalgar Park · species of conservation concern" role="button" tabindex="0">
 <b>3</b>
 <span>species of conservation concern</span>
 </div>
@@ -2242,18 +2397,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Trial Islands" hidden style="--pa-colour: #FDF2CE">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Published Key Biodiversity Areas" role="button" tabindex="0">↑ Key Biodiversity Areas</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Trial Islands</h3>
 <p class="saanich-pa-summary-subtitle">Key Biodiversity Area · Globally significant for vascular plants · 19 hectares</p>
 <p class="saanich-pa-summary-text">132 native species, 20 percent of the native plant diversity known to the peninsula, have been reported within Trial Islands.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Trial Islands · native species" role="button" tabindex="0">
 <b>132</b>
 <span>native species · 20% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Trial Islands · species of conservation concern" role="button" tabindex="0">
 <b>17</b>
 <span>species of conservation concern</span>
 </div>
@@ -2265,18 +2419,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="T̸IX̱EṈ - Cordova Shore" hidden style="--pa-colour: #FDF2CE">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Published Key Biodiversity Areas" role="button" tabindex="0">↑ Key Biodiversity Areas</span>
 </nav>
 <h3 class="saanich-pa-summary-title">T̸IX̱EṈ - Cordova Shore</h3>
 <p class="saanich-pa-summary-subtitle">Key Biodiversity Area · Globally significant for invertebrates, vascular plants · 140 hectares</p>
 <p class="saanich-pa-summary-text">122 native species, 18 percent of the native plant diversity known to the peninsula, have been reported within T̸IX̱EṈ - Cordova Shore.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="T̸IX̱EṈ - Cordova Shore · native species" role="button" tabindex="0">
 <b>122</b>
 <span>native species · 18% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="T̸IX̱EṈ - Cordova Shore · species of conservation concern" role="button" tabindex="0">
 <b>7</b>
 <span>species of conservation concern</span>
 </div>
@@ -2288,18 +2441,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Uplands Park - Cattle Point" hidden style="--pa-colour: #FDF2CE">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Published Key Biodiversity Areas" role="button" tabindex="0">↑ Key Biodiversity Areas</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Uplands Park - Cattle Point</h3>
 <p class="saanich-pa-summary-subtitle">Key Biodiversity Area · Globally significant for vascular plants · 39 hectares</p>
 <p class="saanich-pa-summary-text">213 native species, 32 percent of the native plant diversity known to the peninsula, have been reported within Uplands Park - Cattle Point.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Uplands Park - Cattle Point · native species" role="button" tabindex="0">
 <b>213</b>
 <span>native species · 32% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Uplands Park - Cattle Point · species of conservation concern" role="button" tabindex="0">
 <b>24</b>
 <span>species of conservation concern</span>
 </div>
@@ -2311,18 +2463,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="Witty's Beach" hidden style="--pa-colour: #FDF2CE">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Published Key Biodiversity Areas" role="button" tabindex="0">↑ Key Biodiversity Areas</span>
 </nav>
 <h3 class="saanich-pa-summary-title">Witty's Beach</h3>
 <p class="saanich-pa-summary-subtitle">Key Biodiversity Area · Nationally significant for vascular plants · 3 hectares</p>
 <p class="saanich-pa-summary-text">35 native species, 5 percent of the native plant diversity known to the peninsula, have been reported within Witty's Beach.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Witty's Beach · native species" role="button" tabindex="0">
 <b>35</b>
 <span>native species · 5% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="Witty's Beach · species of conservation concern" role="button" tabindex="0">
 <b>2</b>
 <span>species of conservation concern</span>
 </div>
@@ -2334,18 +2485,17 @@ W̱SÁNEĆ/Saanich Peninsula</h2><div class="mxcw-sectionInner"><div class="mxcw
 </section>
 <section class="saanich-pa-card-summary" data-key="ȽEL,TOS - James Island" hidden style="--pa-colour: #FDF2CE">
 <nav class="saanich-pa-crumbs">
-<span class="saanich-pa-link" data-select="" role="button" tabindex="0">← All protected areas</span>
 <span class="saanich-pa-link" data-select="Published Key Biodiversity Areas" role="button" tabindex="0">↑ Key Biodiversity Areas</span>
 </nav>
 <h3 class="saanich-pa-summary-title">ȽEL,TOS - James Island</h3>
 <p class="saanich-pa-summary-subtitle">Key Biodiversity Area · Globally significant for invertebrates, vascular plants · 159 hectares</p>
 <p class="saanich-pa-summary-text">19 native species, 3 percent of the native plant diversity known to the peninsula, have been reported within ȽEL,TOS - James Island.</p>
 <div class="saanich-pa-stats">
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="ȽEL,TOS - James Island · native species" role="button" tabindex="0">
 <b>19</b>
 <span>native species · 3% of the native flora</span>
 </div>
-<div class="saanich-pa-stat">
+<div class="saanich-pa-stat" data-select="ȽEL,TOS - James Island · species of conservation concern" role="button" tabindex="0">
 <b>5</b>
 <span>species of conservation concern</span>
 </div>
@@ -2368,8 +2518,10 @@ Biodiversity Areas outlined in cream. Proposed Key Biodiversity Areas,
 whose boundaries are not yet public, are marked by rings. Click an area
 on the map, or in the chart below it, to show only the plants recorded
 there and its summary above, or a category in the map’s legend or the
-chart to show those recorded in all its areas. Protected areas are from
-the <a href="https://www.canada.ca/en/environment-climate-change/services/national-wildlife-areas/protected-conserved-areas-database.html">Canadian
+chart to show those recorded in all its areas. Choose <em>Unprotected
+native plant diversity</em> in the chart to show, as a grid on the map,
+where the native plants not yet reported in any protected area have been
+recorded. Protected areas are from the <a href="https://www.canada.ca/en/environment-climate-change/services/national-wildlife-areas/protected-conserved-areas-database.html">Canadian
 Protected and Conserved Areas Database</a> (Environment and Climate
 Change Canada), and Key Biodiversity Areas from <a href="https://kbacanada.org/">KBA Canada</a> (CC BY-NC-SA 4.0).</p>
 </div>

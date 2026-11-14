@@ -35,7 +35,9 @@ reporting your observations to the [“Lost” plants of the Saanich Peninsula i
 The map shows protected and conserved areas by category, with Key Biodiversity Areas outlined in cream. Proposed
 Key Biodiversity Areas, whose boundaries are not yet public, are marked by rings.
 Click an area on the map, or in the chart below it, to show only the plants recorded there and its summary above, or
-a category in the map's legend or the chart to show those recorded in all its areas.
+a category in the map's legend or the chart to show those recorded in all its areas. Choose *Unprotected native plant
+diversity* in the chart to show, as a grid on the map, where the native plants not yet reported in any protected
+area have been recorded.
 Protected areas are from the [Canadian Protected and Conserved Areas Database](https://www.canada.ca/en/environment-climate-change/services/national-wildlife-areas/protected-conserved-areas-database.html)
 (Environment and Climate Change Canada), and Key Biodiversity Areas from [KBA Canada](https://kbacanada.org/)
 (CC BY-NC-SA 4.0).

@@ -41,6 +41,14 @@ fluid.def("saanich.story", {
     // The regions which may filter the records - a category of protected area, or all the KBAs, is matched through rows
     // of the region index giving each area or KBA the label of its group, see GroupField in scripts/intersectShapes.R
     regionFilterFieldNames: ["BEC", "ProtectedArea", "KBA"],
+    // The Protected Areas pane may also select the native species reported in no protected area, and some of the
+    // species of a region - see saanich.protectedAreas.regionFilter
+    regionFilter: {
+        $component: {
+            doFilter: `$method:saanich.protectedAreas.regionFilter({0}:obsRows, {1}:filterState, {storyPage}.regionIndirection.rows,
+                {storyPage}.regionFilterFieldNames, {storyPage}.protectedAreas.taxonSets)`
+        }
+    },
     // The period of the records, over which the extirpation risk analysis always runs
     recordPeriod: "$compute:saanich.recordPeriod({self}.obsRows)",
     solowParams: "$compute:saanich.solowParams({self}.recordPeriod)",
@@ -268,6 +276,12 @@ fluid.def("saanich.story", {
         $component: {
             $layers: ["hortis.libreMap.withTiles", "hortis.libreMap.esriTiles"],
             countTransform: "saanich.weibullCount",
+            // The Protected Areas pane shows the grid of the native species outside protected areas when they are selected
+            gridVisible: "{storyPage}.protectedAreas.gridVisible",
+            // A selection of some of the species of a region, made by the figures of the Protected Areas pane, outlines
+            // and marks the region itself
+            highlightRegion: "$effect:bioreportr.storyMap.highlightRegion({self}.readyMap, {storyPage}.protectedAreas.baseRegion, {storyPage}.mapData)",
+            legendRowsMarkup: "$compute:bioreportr.storyMap.legendMarkup({self}.legendRows, {storyPage}.selectedStatus, {storyPage}.protectedAreas.baseRegion)",
             // A selected record hides the grid only while few enough records are in view - see saanich.showMarkers
             showMarkers: "$compute:saanich.showMarkers({self}.gridVisible, {self}.viewportObs.inView, {self}.markerThreshold, {self}.selectedRecord)",
             inverseCountTransform: "saanich.inverseWeibullCount",

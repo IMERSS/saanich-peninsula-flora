@@ -189,6 +189,9 @@ bar_row <- function (name, count, max, color, areas, extra = "", selects = TRUE)
   )
 }
 
+# The selection of the native species reported in no protected area - see saanich.protectedAreas.unprotected
+unprotected.key <- "Unprotected native plant diversity"
+
 plotted <- palette %>% filter(count > 0) %>% arrange(desc(count))
 bar.max <- max(plotted$count, protected.stats$kba)
 
@@ -199,7 +202,9 @@ overview.chart <- htmltools::tags$figure(class = "saanich-pa-chart", `data-key` 
     lapply(seq_len(nrow(plotted)), function (i) {
       bar_row(plotted$category[i], plotted$count[i], bar.max, plotted$color[i], plotted$areas[i])
     }),
-    bar_row(kba.all, protected.stats$kba, bar.max, "#FDF2CE", nrow(kbas), "saanich-pa-kba")
+    bar_row(kba.all, protected.stats$kba, bar.max, "#FDF2CE", nrow(kbas), "saanich-pa-kba"),
+    # The native species reported in no protected area, whose records the grid of the map then shows
+    bar_row(unprotected.key, protected.stats$unprotected, bar.max, "#e07a5f", NA, "saanich-pa-unprotected")
   )
 )
 
@@ -255,8 +260,19 @@ category.plural <- c("National park reserve" = "The national park reserve", "Eco
   "Private conservation land" = "Private conservation lands")
 ordinal <- function (n) paste0(n, `if`(n %% 100 %in% 11:13, "th", c("th", "st", "nd", "rd", rep("th", 6))[(n %% 10) + 1]))
 
-stat <- function (value, label) {
-  htmltools::tags$div(class = "saanich-pa-stat", htmltools::tags$b(value), htmltools::tags$span(label))
+# The selection of some of the species of a region - its native species, those of conservation concern, or for the
+# unprotected diversity those within a KBA - e.g. "Regional park · species of conservation concern", narrowing its
+# records and checklist to them, as parsed by saanich.protectedAreas.parseSelection. The overview's region is all the
+# protected areas together
+subset <- function (region, which) paste(region, "\u00b7", which)
+native.subset <- "native species"
+concern.subset <- "species of conservation concern"
+all.areas <- "Protected areas"
+
+# A figure, which may select the species it counts
+stat <- function (value, label, select = NULL) {
+  htmltools::tags$div(class = "saanich-pa-stat", `data-select` = select, role = if (!is.null(select)) "button",
+    tabindex = if (!is.null(select)) "0", htmltools::tags$b(value), htmltools::tags$span(label))
 }
 link <- function (region, text) {
   htmltools::tags$span(class = "saanich-pa-link", `data-select` = region, role = "button", tabindex = "0", text)
@@ -280,7 +296,12 @@ card <- function (key, color, title, subtitle = NULL, back = list(), summary, st
     htmltools::tags$div(class = "saanich-pa-stats", stats),
     list)
 }
-all.back <- link("", "← All protected areas")
+# The two tabs at the head of the summaries, which stay in view whatever is selected: all the protected areas, and the
+# native plant diversity outside them - the one selected is marked by saanich.protectedAreas.showSelection, the first
+# for any selection but the second
+tab <- function (region, text) {
+  htmltools::tags$span(class = "saanich-pa-tab", `data-select` = region, role = "button", tabindex = "0", text)
+}
 
 overview.card <- card("", "#eefaff", "All protected and conserved areas",
   summary = str_glue("Based on our current knowledge, {protected.stats$protected.percent} percent of the ",
@@ -290,8 +311,10 @@ overview.card <- card("", "#eefaff", "All protected and conserved areas",
   stats = list(
     stat(nrow(protected.areas), str_glue("areas in {nrow(palette)} categories")),
     stat(format_n(sum(area.ha)), "hectares"),
-    stat(protected.stats$protected, str_glue("native species · {protected.stats$protected.percent}% of the native flora")),
-    stat(protected.stats$concern.protected, str_glue("of the {protected.stats$concern} species of conservation concern"))
+    stat(protected.stats$protected, str_glue("native species · {protected.stats$protected.percent}% of the native flora"),
+         subset(all.areas, native.subset)),
+    stat(protected.stats$concern.protected, str_glue("of the {protected.stats$concern} species of conservation concern"),
+         subset(all.areas, concern.subset))
   ), hidden = FALSE)
 
 category.cards <- lapply(palette$category[palette$count > 0], function (category) {
@@ -301,14 +324,13 @@ category.cards <- lapply(palette$category[palette$count > 0], function (category
   n <- sum(in.category)
   card(category, palette$color[palette$category == category], category.plural[[category]] %>% str_remove("^The ") %>% str_to_sentence(),
     subtitle = str_glue("{n} {ifelse(n == 1, 'area', 'areas')} · {format_n(sum(area.ha[in.category]))} hectares"),
-    back = list(all.back),
     summary = str_glue("{category.plural[[category]]} {ifelse(n == 1, 'holds', 'hold')} {percent(length(ids))} percent ",
       "of the native plant diversity known to the peninsula: {length(ids)} of its {protected.stats$species} native ",
       "vascular plant species have been reported within {ifelse(n == 1, 'it', 'them')}."),
     stats = list(
-      stat(length(ids), str_glue("native species · {percent(length(ids))}% of the native flora")),
-      stat(sum(ids %in% concern.ids), "species of conservation concern"),
-      stat(sum(!ids %in% others), "species reported in no other category"),
+      stat(length(ids), str_glue("native species · {percent(length(ids))}% of the native flora"), subset(category, native.subset)),
+      stat(sum(ids %in% concern.ids), "species of conservation concern", subset(category, concern.subset)),
+      stat(sum(!ids %in% others), "species reported in no other category", subset(category, "found in no other category")),
       stat(format_n(sum(records$category %in% category)), "records of native species")
     ),
     list = `if`(n > 1, richest("Richest in native species",
@@ -326,13 +348,13 @@ area.cards <- lapply(seq_len(nrow(protected.areas)), function (i) {
     "{nrow(peers)} {tolower(category.plural[[area$category]])}"), "")
   card(area$name, area$color, area$name,
     subtitle = str_glue("{area$category}{owner} · {format_n(area.ha[i])} hectares"),
-    back = list(all.back, link(area$category, str_glue("↑ {category.plural[[area$category]] %>% str_remove('^The ') %>% str_to_sentence()}"))),
+    back = list(link(area$category, str_glue("↑ {category.plural[[area$category]] %>% str_remove('^The ') %>% str_to_sentence()}"))),
     summary = `if`(length(ids) == 0, str_glue("No native species have yet been reported within {area$name}."),
       str_glue("{length(ids)} native species, {percent(length(ids))} percent of the native plant diversity known to ",
         "the peninsula, have been reported within {area$name}{standing}.")),
     stats = list(
-      stat(length(ids), str_glue("native species · {percent(length(ids))}% of the native flora")),
-      stat(sum(ids %in% concern.ids), "species of conservation concern"),
+      stat(length(ids), str_glue("native species · {percent(length(ids))}% of the native flora"), subset(area$name, native.subset)),
+      stat(sum(ids %in% concern.ids), "species of conservation concern", subset(area$name, concern.subset)),
       stat(format_n(sum(records$area %in% area$name)), "records of native species")
     ))
 })
@@ -340,7 +362,6 @@ area.cards <- lapply(seq_len(nrow(protected.areas)), function (i) {
 kba.card <- card(kba.all, "#FDF2CE", "Key Biodiversity Areas",
   subtitle = str_glue("{nrow(kbas)} published, {sum(str_detect(kbas$criteria, 'GLOBAL'))} of them globally significant · ",
     "{nrow(proposed)} proposed · {format_n(sum(kba.ha))} hectares"),
-  back = list(all.back),
   summary = str_glue("Key Biodiversity Areas mark the places that matter most for the persistence of species and ",
     "ecosystems. The peninsula's Garry oak meadows, rocky headlands and islets hold {nrow(kbas)} published Key ",
     "Biodiversity Areas, most of them identified for their threatened plants, and {nrow(proposed)} more are proposed. ",
@@ -348,8 +369,9 @@ kba.card <- card(kba.all, "#FDF2CE", "Key Biodiversity Areas",
     "peninsula: {protected.stats$kba} of its {protected.stats$species} native vascular plant species have been ",
     "reported within them."),
   stats = list(
-    stat(protected.stats$kba, str_glue("native species · {percent(protected.stats$kba)}% of the native flora")),
-    stat(protected.stats$concern.kba, "species of conservation concern"),
+    stat(protected.stats$kba, str_glue("native species · {percent(protected.stats$kba)}% of the native flora"),
+         subset(kba.all, native.subset)),
+    stat(protected.stats$concern.kba, "species of conservation concern", subset(kba.all, concern.subset)),
     stat(format_n(sum(!is.na(records$kba))), "records of native species")
   ),
   list = richest("Richest in native species", st_drop_geometry(kba.shapes) %>% transmute(name, count)))
@@ -359,16 +381,38 @@ kba.cards <- lapply(seq_len(nrow(kba.shapes)), function (i) {
   ids <- ids_in(records$kba %in% kba$name)
   card(kba$name, "#FDF2CE", kba$name,
     subtitle = str_glue("Key Biodiversity Area · {kba.significance(kba$criteria)} · {format_n(kba.ha[i])} hectares"),
-    back = list(all.back, link(kba.all, "↑ Key Biodiversity Areas")),
+    back = list(link(kba.all, "↑ Key Biodiversity Areas")),
     summary = `if`(length(ids) == 0, str_glue("No native species have yet been reported within {kba$name}."),
       str_glue("{length(ids)} native species, {percent(length(ids))} percent of the native plant diversity known to ",
         "the peninsula, have been reported within {kba$name}.")),
     stats = list(
-      stat(length(ids), str_glue("native species · {percent(length(ids))}% of the native flora")),
-      stat(sum(ids %in% concern.ids), "species of conservation concern"),
+      stat(length(ids), str_glue("native species · {percent(length(ids))}% of the native flora"), subset(kba$name, native.subset)),
+      stat(sum(ids %in% concern.ids), "species of conservation concern", subset(kba$name, concern.subset)),
       stat(format_n(sum(records$kba %in% kba$name)), "records of native species")
     ))
 })
 
+# The native species reported in no protected area: how many, how many of them the KBAs hold, and those of conservation
+# concern by name, while the map's grid shows where their records lie
+unprotected.ids <- setdiff(plant.summary$id, protected.ids)
+unprotected.records <- records %>% filter(iNaturalistTaxonId %in% unprotected.ids)
+unprotected.concern <- sum(unprotected.ids %in% concern.ids)
+# The card's figures select those species - all of them, those of conservation concern, and those within a KBA
+unprotected.concern.key <- subset(unprotected.key, concern.subset)
+unprotected.kba.key <- subset(unprotected.key, "within Key Biodiversity Areas")
+unprotected.card <- card(unprotected.key, "#e07a5f", "Unprotected native plant diversity",
+  subtitle = str_glue("{protected.stats$unprotected} species · {format_n(nrow(unprotected.records))} records"),
+  summary = str_glue("{protected.stats$unprotected} native species, {percent(protected.stats$unprotected)} percent of ",
+    "the native plant diversity known to the peninsula, have so far been reported only outside its protected and ",
+    "conserved areas. The map's grid shows where their records lie - the places where protection does not yet reach ",
+    "this part of the flora, or where it has yet to be looked for within the protected areas."),
+  stats = list(
+    stat(protected.stats$unprotected, str_glue("native species · {percent(protected.stats$unprotected)}% of the native flora"),
+         unprotected.key),
+    stat(unprotected.concern, "species of conservation concern", unprotected.concern.key),
+    stat(sum(unprotected.ids %in% kba.ids), "reported within a Key Biodiversity Area", unprotected.kba.key)
+  ))
+
 protected.area.summaries <- htmltools::tags$div(class = "saanich-pa-summaries saanich-pa-views",
-  overview.card, category.cards, area.cards, kba.card, kba.cards)
+  htmltools::tags$nav(class = "saanich-pa-tabs", tab("", "All protected areas"), tab(unprotected.key, unprotected.key)),
+  overview.card, unprotected.card, category.cards, area.cards, kba.card, kba.cards)
