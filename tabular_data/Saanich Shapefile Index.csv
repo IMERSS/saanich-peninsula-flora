@@ -1,2 +1,4 @@
-File,Field,Example value 1,Example value 2,Comment,Label,SortNumeric,NullAs
-BEC/BEC.shp,MAP_LABEL,CWHvm2,CMAunp,,BEC,,
+File,Field,Example value 1,Example value 2,Comment,Label,SortNumeric,NullAs,GroupField,GroupLabel
+BEC/BEC.shp,MAP_LABEL,CWHvm2,CMAunp,,BEC,,,,
+KBA/KBA.geojson,name,Fort Rodd Hill,Christmas Hill,"Published Key Biodiversity Areas, KBA Canada",KBA,,,all,
+Protected_Areas/Protected_Areas.geojson,name,Thetis Lake Regional Park,Goldstream Park,"Individual protected and conserved areas, CPCAD",ProtectedArea,,,category,Protected

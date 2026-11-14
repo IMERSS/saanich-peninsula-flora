@@ -50,7 +50,7 @@ fluid.def("bioreportr.storyMap", {
             noRegion: null
         }
     },
-    highlightRegion: "$effect:bioreportr.storyMap.highlightRegion({self}.readyMap, {storyPage}.selectedRegion)",
+    highlightRegion: "$effect:bioreportr.storyMap.highlightRegion({self}.readyMap, {storyPage}.selectedRegion, {storyPage}.mapData)",
     legendRows: "$compute:bioreportr.storyMap.legendRows({storyPage}.activePane, {storyPage}.regionIndirection.rows, {storyPage}.mapData.style.layers)",
     legendRowsMarkup: "$compute:bioreportr.storyMap.legendMarkup({self}.legendRows, {storyPage}.selectedStatus, {storyPage}.selectedRegion)",
     regionLegend: {

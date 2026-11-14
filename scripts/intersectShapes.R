@@ -96,6 +96,21 @@ for(i in 1:nrow(shapeIndex)) {
     wg("About to index {row$Label}")
     indirectionRows <- data.frame(regionField = row$Label, id = 1:length(sortUniqueLabels), label = sortUniqueLabels)
     regionIndirection <- rbind(regionIndirection, indirectionRows)
+    # A row naming a GroupField also gives each region the label of its group, e.g. its category of protected area, in
+    # further rows of the same field and id - a selection of the group's label then matches the records of all its
+    # regions, with no column of its own. If it names a GroupLabel, the groups are also listed under that field, e.g.
+    # for the legend of a map whose regionField it is
+    groupField <- row[["GroupField"]]
+    if (!is.null(groupField) && !is.na(groupField) && groupField != "") {
+      groupValues <- shapecols[[groupField]][match(sortUniqueLabels, shapeFieldValues)]
+      regionIndirection <- rbind(regionIndirection,
+        data.frame(regionField = row$Label, id = 1:length(sortUniqueLabels), label = groupValues))
+      groupLabel <- row[["GroupLabel"]]
+      if (!is.null(groupLabel) && !is.na(groupLabel) && groupLabel != "") {
+        groups <- sort(unique(groupValues))
+        regionIndirection <- rbind(regionIndirection, data.frame(regionField = groupLabel, id = seq_along(groups), label = groups))
+      }
+    }
   } else {
     wg("Regions for column ${row$Label} did not match any observations")
   }

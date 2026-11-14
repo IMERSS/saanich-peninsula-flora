@@ -281,14 +281,20 @@ features_to_layers <- function (features, highlightedSources) {
       message("Layer ", feature, " opacity ", feature$fillOpacity, " outlineOpacity", feature$outlineOpacity)
       # Due to a limitation in WebGL we need to add separate layers for outline and fill
 
+      # A layer is named after its source unless it is given an id, e.g. when several layers draw parts of one source
+      # chosen by a filter - a MapLibre expression over the properties of its shapes
+      layerId <- feature$id %||% feature$source
       if (feature$fillOpacity != 0) {
         message("fillLayer ", feature$Layer)
-        fillLayer <- list(type="fill", id=feature$source, source=feature$source,
+        fillLayer <- list(type="fill", id=layerId, source=feature$source,
                           label=feature$label,
                           paint=list("fill-color"=feature$fillColor, "fill-opacity"=feature$fillOpacity),
                           metadata=list(sortKey=Z_Order, selectable=feature$selectable))
         if (!is.null(feature$FillPattern)) {
             fillLayer$paint["fill-pattern"] = feature$fillPattern
+        }
+        if (!is.null(feature$filter)) {
+          fillLayer$filter <- feature$filter
         }
         # Nutty syntax explained in https://stackoverflow.com/questions/14054120/adding-elements-to-a-list-in-r-in-nested-lists
         layers <- c(layers, list(fillLayer))
@@ -296,13 +302,16 @@ features_to_layers <- function (features, highlightedSources) {
       if (feature$outlineOpacity != 0) {
         if (feature$source %in% highlightedSources) {
           # ref: https://plotly.com/python/reference/layout/mapbox/
-          outlineLayer <- list(type="line", id=glue("{feature$source}-highlight"), source=feature$source,
+          outlineLayer <- list(type="line", id=glue("{layerId}-highlight"), source=feature$source,
                                paint=list("line-color"="yellow", "line-width"=feature$outlineWidth+2, "line-opacity"=feature$outlineOpacity),
                                metadata=list(sortKey=5))
         } else {
-          outlineLayer <- list(type="line", id=glue("{feature$source}-outline"), source=feature$source,
+          outlineLayer <- list(type="line", id=glue("{layerId}-outline"), source=feature$source,
                                paint=list("line-color"=feature$outlineColor, "line-width"=feature$outlineWidth, "line-opacity"=feature$outlineOpacity),
                                metadata=list(sortKey=Z_Order + 0.5))
+        }
+        if (!is.null(feature$filter)) {
+          outlineLayer$filter <- feature$filter
         }
         layers <- c(layers, list(outlineLayer))
       }

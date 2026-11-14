@@ -134,7 +134,14 @@ bioreportr.storyBuild.extractDataWidgets = function (container) {
         }
         return togo;
     }).join("\n");
-    return {markup, widgetIds};
+    // Markup of the pane's own, such as a chart written as HTML, marked by the class mxcw-data-pane-html, is shown in
+    // the data area below the map too
+    const htmlMarkup = [...container.querySelectorAll(".mxcw-data-pane-html")].map(element => {
+        const togo = element.outerHTML;
+        element.remove();
+        return togo;
+    }).join("\n");
+    return {markup: [markup, htmlMarkup].filter(part => part).join("\n"), widgetIds};
 };
 
 /**

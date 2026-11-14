@@ -67,6 +67,36 @@
     "layers": []
   },
   {
+    "title": "Vascular plant diversity within the protected areas of the W̱SÁNEĆ/Saanich Peninsula",
+    "shortTitle": "Protected Areas",
+    "weight": 5.5,
+    "regionField": "Protected",
+    "visibleGrid": false,
+    "paneComponent": "saanich.protectedPane",
+    "view": {
+      "type": "view",
+      "lon": -123.4015,
+      "lat": 48.51,
+      "zoom": 9
+    },
+    "selectableRegions": [
+      "National park reserve",
+      "Ecological reserve",
+      "Provincial park",
+      "Migratory bird sanctuary",
+      "Regional park",
+      "Private conservation land",
+      "Published Key Biodiversity Areas"
+    ],
+    "paneKey": "Protected",
+    "file": null,
+    "dataFile": "Protected-data.html",
+    "widgetIds": [],
+    "layers": [
+      "reknitr.obsMapPaneHandler"
+    ]
+  },
+  {
     "title": "Community Curation",
     "shortTitle": "Living Data",
     "weight": 6,

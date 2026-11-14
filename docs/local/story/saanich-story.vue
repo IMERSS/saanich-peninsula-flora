@@ -8,6 +8,7 @@
 <fluid-import src="saanich-tracesPane.vue"></fluid-import>
 <fluid-import src="saanich-lostPlantsPane.vue"></fluid-import>
 <fluid-import src="saanich-rememberingPane.vue"></fluid-import>
+<fluid-import src="saanich-protectedPane.vue"></fluid-import>
 <!-- The atlas's tiles, panel and tooltips and the rest particular to this story, which build on the story page's own
      summaries in story.js -->
 <script src="../../bioreportr/js/story.js"></script>
@@ -37,7 +38,9 @@ fluid.def("saanich.story", {
     regionIndirectionFile: "../local/data/tabular/Saanich_Tracheophyta_ultimate-catalogue_2026-08-20-selected-regionIndirection.csv",
     regionIndirectionPlaceholderFile: "../local/data/tabular/placeholder/Saanich_Tracheophyta_ultimate-catalogue_2026-08-20-selected-regionIndirection.csv",
     gridResolution: 1000,
-    regionFilterFieldNames: ["BEC"],
+    // The regions which may filter the records - a category of protected area, or all the KBAs, is matched through rows
+    // of the region index giving each area or KBA the label of its group, see GroupField in scripts/intersectShapes.R
+    regionFilterFieldNames: ["BEC", "ProtectedArea", "KBA"],
     // The period of the records, over which the extirpation risk analysis always runs
     recordPeriod: "$compute:saanich.recordPeriod({self}.obsRows)",
     solowParams: "$compute:saanich.solowParams({self}.recordPeriod)",
@@ -169,13 +172,16 @@ fluid.def("saanich.story", {
     // The atlas's panel of the plant or group chosen in the checklist
     checklistTaxon: "$compute:saanich.atlas.resolveTaxon({self}.taxa.rowById, {self}.checklist.search.filterState)",
     atlasRecords: "$compute:saanich.atlas.taxonRecords({self}.obsRows, {self}.taxa.rowById, {self}.checklistTaxon)",
+    atlasPanelMarkup: `$compute:saanich.atlas.panelMarkup({self}.checklistTaxon, {self}.atlasRecords,
+        {self}.curation.historyById, {self}.curationHistorySources, {self}.curation.byTaxon, {self}.recordAnnotations)`,
+    // The Protected Areas pane shows a smaller panel of the plant, giving its records within the selected region - see
+    // saanich-protectedPane.vue
     taxonPanel: {
         $component: {
-            markup: `$compute:saanich.atlas.panelMarkup({storyPage}.checklistTaxon, {storyPage}.atlasRecords,
-                {storyPage}.curation.historyById, {storyPage}.curationHistorySources, {storyPage}.curation.byTaxon, {storyPage}.recordAnnotations)`
+            markup: "$compute:saanich.protectedAreas.choosePanel({storyPage}.activePaneKey, {storyPage}.atlasPanelMarkup, {storyPage}.protectedAreas.panelMarkup)"
         }
     },
-    taxonPanelVisible: "$compute:saanich.atlas.panelVisible({self}.taxonPanel.markup, {self}.activePaneKey, Status)",
+    taxonPanelVisible: "$compute:saanich.protectedAreas.panelVisible({self}.taxonPanel.markup, {self}.activePaneKey)",
     // The extirpation risk pane shows the same panel of its chosen plant, with its regional EP
     solowTaxonPanel: {
         $component: {
@@ -215,6 +221,13 @@ fluid.def("saanich.story", {
     remembering: {
         $component: {
             $layers: "saanich.remembering"
+        }
+    },
+    // The Protected Areas pane selects categories from its chart and individual areas from the map, describing each
+    // area on hover - see saanich-protectedPane.vue
+    protectedAreas: {
+        $component: {
+            $layers: "saanich.protectedAreas"
         }
     },
     // A pane opened from one without a map is placed on its camera once the map has its size - see saanich.recentre

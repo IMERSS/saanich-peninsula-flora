@@ -291,12 +291,13 @@ bioreportr.regionSelectionFilter = function (obsRows, selectedRegion, indirectio
  * @param {maplibregl.Map} map - The map
  * @param {Object} event - A MapLibre mouse event
  * @param {String[]} selectableRegions - The ids of the layers of the active pane which may be selected
- * @return {String|null} The id of the region's layer, or null if there is none
+ * @return {String|null} The region - the id of its layer, or, for a layer holding many regions, the property `region`
+ * of the shape under the event - or null if there is none
  */
 bioreportr.storyMap.eventToRegion = function (map, event, selectableRegions) {
     const features = map.queryRenderedFeatures(event.point);
     const match = features.find(feature => feature.layer.paint?.["fill-opacity"] > 0 && selectableRegions.includes(feature.layer.id));
-    return match?.layer.id || null;
+    return match ? match.properties?.region || match.layer.id : null;
 };
 
 bioreportr.storyMap.handleRegionClick = function (storyPage, map, event, selectableRegions) {
@@ -310,14 +311,26 @@ bioreportr.storyMap.handleRegionClick = function (storyPage, map, event, selecta
 /**
  * Outline the selected region on the map.
  * @param {maplibregl.Map} map - The map, once its style has applied
- * @param {String|null} selectedRegion - The id of the selected region's layer, whose source is of the same name
+ * @param {String|null} selectedRegion - The selected region - the id of its layer, whose source is of the same name, or,
+ * in a source holding many regions, the property `region` of its shape, or `group` of the shapes of a group of regions
+ * @param {Object} [mapData] - The story's map data, as written by storyBuild.js, whose sources are searched for such
+ * shapes - rather than the map's style, which would copy every source to be read
  */
-bioreportr.storyMap.highlightRegion = function (map, selectedRegion) {
+bioreportr.storyMap.highlightRegion = function (map, selectedRegion, mapData) {
     if (map.getLayer("region-highlight")) {
         map.removeLayer("region-highlight");
     }
+    const paint = {"line-color": "yellow", "line-width": 3};
     if (selectedRegion && map.getSource(selectedRegion)) {
-        map.addLayer({id: "region-highlight", type: "line", source: selectedRegion, paint: {"line-color": "yellow", "line-width": 3}});
+        map.addLayer({id: "region-highlight", type: "line", source: selectedRegion, paint});
+    } else if (selectedRegion && mapData) {
+        const sources = mapData.style.sources;
+        const holds = feature => feature.properties?.region === selectedRegion || feature.properties?.group === selectedRegion;
+        const holding = Object.keys(sources).find(id => sources[id].data?.features?.some(holds));
+        if (holding && map.getSource(holding)) {
+            map.addLayer({id: "region-highlight", type: "line", source: holding, paint,
+                filter: ["any", ["==", ["get", "region"], selectedRegion], ["==", ["get", "group"], selectedRegion]]});
+        }
     }
 };
 
@@ -434,12 +447,16 @@ bioreportr.dataPane.fetch = function (storyBase, dataFile) {
  */
 bioreportr.dataPane.resize = function (widgets, active, resizeHeight, Plotly) {
     if (active && Plotly) {
-        setTimeout(() => widgets.forEach(widget => {
+        // A pane shown as the page loads is shown before htmlwidgets has drawn its plots, so wait a little for each
+        const fit = (widget, tries) => {
             const holder = widget.closest(".mxcw-data");
             if (holder && holder.clientWidth > 0 && widget.layout) {
                 Plotly.relayout(widget, resizeHeight ? {width: holder.clientWidth, height: holder.clientHeight} : {width: holder.clientWidth});
+            } else if (tries > 0) {
+                setTimeout(() => fit(widget, tries - 1), 100);
             }
-        }), 0);
+        };
+        setTimeout(() => widgets.forEach(widget => fit(widget, 50)), 0);
     }
 };
 

@@ -344,8 +344,8 @@ saanich.atlas.notesMarkup = function (taxon, records, historyById, sources, byTa
 // The dated records of a plant, as the panel charts them
 saanich.atlas.dated = records => records.filter(record => record.eventDate);
 
-// The panel is shown only on the atlas pane and only while a plant with records is selected
-saanich.atlas.panelVisible = (markup, activePaneKey, atlasPane) => !!markup && activePaneKey === atlasPane;
+// Whether the panel is shown, on the atlas and the Protected Areas pane, is decided by
+// saanich.protectedAreas.panelVisible - see saanich-protectedPane.vue
 
 /** Summaries of the groups of species, shown on hovering over a tile or a row of the map's legend **/
 

@@ -1,0 +1,42 @@
+---
+title: Vascular plant diversity within the protected areas of the W̱SÁNEĆ/Saanich Peninsula
+shortTitle: Protected Areas
+weight: 5.5
+knit: (function(input, ...) { source(here::here("R/knit_render.R"), local = TRUE)$value(input, ...) })
+paneHandlerLayers: ["reknitr.obsMapPaneHandler"]
+regionField: Protected
+visibleGrid: false
+# The component rendering this pane's section, into whose template npm run story writes it - see AGENTS.md
+paneComponent: saanich.protectedPane
+---
+
+## Vascular plant diversity within the protected areas of the W̱SÁNEĆ/Saanich Peninsula
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, out.width="1024px"}
+source("scripts/Protected_map_mapbox.R")
+
+protectedAreaMap
+```
+
+```{r, echo=FALSE}
+# A summary of the selection on the map - all the protected areas, a category, an area or the KBAs - see
+# saanich-protectedPane.vue
+protected.area.summaries
+# The chart of species by category, or by area within the selected category, shown beneath the map - see
+# mxcw-data-pane-html in src/js/storyBuild.js
+protected.area.bars
+```
+
+This preliminary evaluation is limited by biases in sampling effort and other gaps in the data, but it is a starting
+point for a more thorough assessment of progress toward conserving the region's plant diversity. Help improve it by
+reporting your observations to the [“Lost” plants of the Saanich Peninsula iNaturalist project](https://www.inaturalist.org/projects/lost-plants-of-the-saanich-peninsula).
+
+:::: {.saanich-howto}
+The map shows protected and conserved areas by category, with Key Biodiversity Areas outlined in cream. Proposed
+Key Biodiversity Areas, whose boundaries are not yet public, are marked by rings.
+Click an area on the map, or in the chart below it, to show only the plants recorded there and its summary above, or
+a category in the map's legend or the chart to show those recorded in all its areas.
+Protected areas are from the [Canadian Protected and Conserved Areas Database](https://www.canada.ca/en/environment-climate-change/services/national-wildlife-areas/protected-conserved-areas-database.html)
+(Environment and Climate Change Canada), and Key Biodiversity Areas from [KBA Canada](https://kbacanada.org/)
+(CC BY-NC-SA 4.0).
+::::

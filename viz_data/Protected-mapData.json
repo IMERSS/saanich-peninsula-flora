@@ -2,9 +2,9 @@
   "id": "Protected",
   "view": {
     "type": "view",
-    "lon": -123.2194,
-    "lat": 49.6608,
-    "zoom": 8.5
+    "lon": -123.4015,
+    "lat": 48.51,
+    "zoom": 9
   },
   "layers": [
     {
@@ -18,181 +18,315 @@
       }
     },
     {
-      "type": "raster",
-      "id": "Hillshade",
-      "source": "Hillshade",
-      "paint": {
-        "raster-opacity": 0.8
-      },
-      "metadata": {
-        "sortKey": 0.75
-      }
-    },
-    {
       "type": "fill",
-      "id": "A - Park",
-      "source": "A - Park",
-      "label": "Pinecone Burke Park : 26 species",
+      "id": "National park reserve",
+      "source": "Protected areas.cards",
+      "label": {},
       "paint": {
-        "fill-color": "#8b4513",
-        "fill-opacity": 0.8
-      },
-      "metadata": {
-        "sortKey": 3,
-        "selectable": true
-      }
-    },
-    {
-      "type": "fill",
-      "id": "Other Effective Area-Based Conservation Measure",
-      "source": "Other Effective Area-Based Conservation Measure",
-      "label": "Strait of Georgia and Howe Sound Glass Sponge Reef Closure (Dorman Point) : 6 species",
-      "paint": {
-        "fill-color": "#008000",
-        "fill-opacity": 0.8
-      },
-      "metadata": {
-        "sortKey": 4,
-        "selectable": true
-      }
-    },
-    {
-      "type": "fill",
-      "id": "Privately Owned Conservation Area",
-      "source": "Privately Owned Conservation Area",
-      "label": "Fairy Fen Nature Reserve : 18 species",
-      "paint": {
-        "fill-color": "#4682b4",
-        "fill-opacity": 0.8
-      },
-      "metadata": {
-        "sortKey": 5,
-        "selectable": true
-      }
-    },
-    {
-      "type": "fill",
-      "id": "Wildlife Habitat Areas",
-      "source": "Wildlife Habitat Areas",
-      "label": "Wildlife Habitat Areas : 12 species",
-      "paint": {
-        "fill-color": "#4b0082",
-        "fill-opacity": 0.8
-      },
-      "metadata": {
-        "sortKey": 6,
-        "selectable": true
-      }
-    },
-    {
-      "type": "fill",
-      "id": "Protected Area",
-      "source": "Protected Area",
-      "label": "Stawamus Chief Protected Area : 12 species",
-      "paint": {
-        "fill-color": "#ff0000",
-        "fill-opacity": 0.8
-      },
-      "metadata": {
-        "sortKey": 7,
-        "selectable": true
-      }
-    },
-    {
-      "type": "fill",
-      "id": "Sea To Sky Wildland Zones",
-      "source": "Sea To Sky Wildland Zones",
-      "label": "Sea To Sky Wildland Zones : 63 species",
-      "paint": {
-        "fill-color": "#00ff00",
-        "fill-opacity": 0.8
-      },
-      "metadata": {
-        "sortKey": 8,
-        "selectable": true
-      }
-    },
-    {
-      "type": "fill",
-      "id": "Migratory Bird Sanctuary",
-      "source": "Migratory Bird Sanctuary",
-      "label": "Christie Islet Migratory Bird Sanctuary : 1 species",
-      "paint": {
-        "fill-color": "#00ffff",
-        "fill-opacity": 0.8
-      },
-      "metadata": {
-        "sortKey": 9,
-        "selectable": true
-      }
-    },
-    {
-      "type": "fill",
-      "id": "Ecological Reserve",
-      "source": "Ecological Reserve",
-      "label": "Baynes Island Ecological Reserve : 0 species",
-      "paint": {
-        "fill-color": "#0000ff",
-        "fill-opacity": 0.8
+        "fill-color": "#5a96d2",
+        "fill-opacity": 0.5
       },
       "metadata": {
         "sortKey": 10,
         "selectable": true
-      }
+      },
+      "filter": [
+        "==",
+        [
+          "get",
+          "group"
+        ],
+        "National park reserve"
+      ]
+    },
+    {
+      "type": "line",
+      "id": "National park reserve-outline",
+      "source": "Protected areas.cards",
+      "paint": {
+        "line-color": "#5a96d2",
+        "line-width": 1,
+        "line-opacity": 0.9
+      },
+      "metadata": {
+        "sortKey": 10.5
+      },
+      "filter": [
+        "==",
+        [
+          "get",
+          "group"
+        ],
+        "National park reserve"
+      ]
     },
     {
       "type": "fill",
-      "id": "Conservancy",
-      "source": "Conservancy",
-      "label": "Este-Tiwilh/Sigurd Creek Conservancy : 21 species",
+      "id": "Ecological reserve",
+      "source": "Protected areas.cards",
+      "label": {},
       "paint": {
-        "fill-color": "#ffff54",
-        "fill-opacity": 0.8
+        "fill-color": "#decb90",
+        "fill-opacity": 0.5
       },
       "metadata": {
-        "sortKey": 11,
+        "sortKey": 10,
         "selectable": true
-      }
+      },
+      "filter": [
+        "==",
+        [
+          "get",
+          "group"
+        ],
+        "Ecological reserve"
+      ]
+    },
+    {
+      "type": "line",
+      "id": "Ecological reserve-outline",
+      "source": "Protected areas.cards",
+      "paint": {
+        "line-color": "#decb90",
+        "line-width": 1,
+        "line-opacity": 0.9
+      },
+      "metadata": {
+        "sortKey": 10.5
+      },
+      "filter": [
+        "==",
+        [
+          "get",
+          "group"
+        ],
+        "Ecological reserve"
+      ]
     },
     {
       "type": "fill",
-      "id": "Old Growth Management Areas (Mapped Legal)",
-      "source": "Old Growth Management Areas (Mapped Legal)",
-      "label": "Old Growth Management Areas (Mapped Legal) : 154 species",
+      "id": "Provincial park",
+      "source": "Protected areas.cards",
+      "label": {},
       "paint": {
-        "fill-color": "#ff69b4",
-        "fill-opacity": 0.8
+        "fill-color": "#8cc084",
+        "fill-opacity": 0.5
       },
       "metadata": {
-        "sortKey": 12,
+        "sortKey": 10,
         "selectable": true
-      }
+      },
+      "filter": [
+        "==",
+        [
+          "get",
+          "group"
+        ],
+        "Provincial park"
+      ]
+    },
+    {
+      "type": "line",
+      "id": "Provincial park-outline",
+      "source": "Protected areas.cards",
+      "paint": {
+        "line-color": "#8cc084",
+        "line-width": 1,
+        "line-opacity": 0.9
+      },
+      "metadata": {
+        "sortKey": 10.5
+      },
+      "filter": [
+        "==",
+        [
+          "get",
+          "group"
+        ],
+        "Provincial park"
+      ]
     },
     {
       "type": "fill",
-      "id": "Wildlife Management Area",
-      "source": "Wildlife Management Area",
-      "label": "Skwelwil'Em Squamish Estuary : 159 species",
+      "id": "Migratory bird sanctuary",
+      "source": "Protected areas.cards",
+      "label": {},
       "paint": {
-        "fill-color": "#ffe4c4",
-        "fill-opacity": 0.8
+        "fill-color": "#9fd0e0",
+        "fill-opacity": 0.5
       },
       "metadata": {
-        "sortKey": 13,
+        "sortKey": 10,
+        "selectable": true
+      },
+      "filter": [
+        "==",
+        [
+          "get",
+          "group"
+        ],
+        "Migratory bird sanctuary"
+      ]
+    },
+    {
+      "type": "line",
+      "id": "Migratory bird sanctuary-outline",
+      "source": "Protected areas.cards",
+      "paint": {
+        "line-color": "#9fd0e0",
+        "line-width": 1,
+        "line-opacity": 0.9
+      },
+      "metadata": {
+        "sortKey": 10.5
+      },
+      "filter": [
+        "==",
+        [
+          "get",
+          "group"
+        ],
+        "Migratory bird sanctuary"
+      ]
+    },
+    {
+      "type": "fill",
+      "id": "Regional park",
+      "source": "Protected areas.cards",
+      "label": {},
+      "paint": {
+        "fill-color": "#4fae98",
+        "fill-opacity": 0.5
+      },
+      "metadata": {
+        "sortKey": 10,
+        "selectable": true
+      },
+      "filter": [
+        "==",
+        [
+          "get",
+          "group"
+        ],
+        "Regional park"
+      ]
+    },
+    {
+      "type": "line",
+      "id": "Regional park-outline",
+      "source": "Protected areas.cards",
+      "paint": {
+        "line-color": "#4fae98",
+        "line-width": 1,
+        "line-opacity": 0.9
+      },
+      "metadata": {
+        "sortKey": 10.5
+      },
+      "filter": [
+        "==",
+        [
+          "get",
+          "group"
+        ],
+        "Regional park"
+      ]
+    },
+    {
+      "type": "fill",
+      "id": "Private conservation land",
+      "source": "Protected areas.cards",
+      "label": {},
+      "paint": {
+        "fill-color": "#a593d8",
+        "fill-opacity": 0.5
+      },
+      "metadata": {
+        "sortKey": 10,
+        "selectable": true
+      },
+      "filter": [
+        "==",
+        [
+          "get",
+          "group"
+        ],
+        "Private conservation land"
+      ]
+    },
+    {
+      "type": "line",
+      "id": "Private conservation land-outline",
+      "source": "Protected areas.cards",
+      "paint": {
+        "line-color": "#a593d8",
+        "line-width": 1,
+        "line-opacity": 0.9
+      },
+      "metadata": {
+        "sortKey": 10.5
+      },
+      "filter": [
+        "==",
+        [
+          "get",
+          "group"
+        ],
+        "Private conservation land"
+      ]
+    },
+    {
+      "type": "fill",
+      "id": "Published Key Biodiversity Areas",
+      "source": "KBA.cards",
+      "label": {},
+      "paint": {
+        "fill-color": "#FDF2CE",
+        "fill-opacity": 0.06
+      },
+      "metadata": {
+        "sortKey": 20,
         "selectable": true
       }
     },
     {
       "type": "line",
-      "id": "Coastline-outline",
-      "source": "Coastline",
+      "id": "Published Key Biodiversity Areas-outline",
+      "source": "KBA.cards",
       "paint": {
-        "line-color": "black",
+        "line-color": "#FDF2CE",
         "line-width": 1.5,
-        "line-opacity": 1
+        "line-opacity": 0.95
       },
       "metadata": {
-        "sortKey": 14.5
+        "sortKey": 20.5
+      }
+    },
+    {
+      "type": "fill",
+      "id": "Proposed KBA.cards",
+      "source": "Proposed KBA.cards",
+      "label": {},
+      "paint": {
+        "fill-color": "#FDF2CE",
+        "fill-opacity": 0.25
+      },
+      "metadata": {
+        "sortKey": 23,
+        "selectable": false
+      }
+    },
+    {
+      "type": "line",
+      "id": "Proposed KBA.cards-outline",
+      "source": "Proposed KBA.cards",
+      "paint": {
+        "line-color": "#FDF2CE",
+        "line-width": 1.5,
+        "line-opacity": 0.95
+      },
+      "metadata": {
+        "sortKey": 23.5
       }
     },
     {
@@ -200,12 +334,12 @@
       "id": "Watershed.Boundary-outline",
       "source": "Watershed.Boundary",
       "paint": {
-        "line-color": "black",
-        "line-width": 4,
-        "line-opacity": 1
+        "line-color": "#eefaff",
+        "line-width": 1,
+        "line-opacity": 0.3
       },
       "metadata": {
-        "sortKey": 15.5
+        "sortKey": 5.5
       }
     }
   ],

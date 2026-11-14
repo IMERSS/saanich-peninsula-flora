@@ -1,0 +1,18 @@
+{
+"type": "FeatureCollection",
+"name": "KBA_proposed",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "name": "Holland Point - Finlayson Point", "code": "BC373", "status": "Proposed", "stage": "Steering Committee Review", "criteria": null }, "geometry": { "type": "Point", "coordinates": [ -123.3742, 48.4096 ] } },
+{ "type": "Feature", "properties": { "name": "Mill Hill", "code": null, "status": "Proposed", "stage": "Proposal Preparation", "criteria": null }, "geometry": { "type": "Point", "coordinates": [ -123.4785, 48.457 ] } },
+{ "type": "Feature", "properties": { "name": "Mary Hill - Montreul Hill - William Head", "code": null, "status": "Proposed", "stage": "Proposal Preparation", "criteria": null }, "geometry": { "type": "Point", "coordinates": [ -123.5588, 48.3503 ] } },
+{ "type": "Feature", "properties": { "name": "Observatory Hill", "code": "BC374", "status": "Proposed", "stage": "Steering Committee Review", "criteria": null }, "geometry": { "type": "Point", "coordinates": [ -123.4194, 48.5213 ] } },
+{ "type": "Feature", "properties": { "name": "Eagles Lake", "code": null, "status": "Proposed", "stage": "Proposal Preparation", "criteria": null }, "geometry": { "type": "Point", "coordinates": [ -123.4629, 48.5089 ] } },
+{ "type": "Feature", "properties": { "name": "Oak Bay Archipelago", "code": "BC045", "status": "Proposed", "stage": "Proposal Preparation", "criteria": null }, "geometry": { "type": "Point", "coordinates": [ -123.2687, 48.4248 ] } },
+{ "type": "Feature", "properties": { "name": "X̱O ̧X̱DEȽ - Mandarte Island", "code": "BC046", "status": "Proposed", "stage": "In General Review", "criteria": null }, "geometry": { "type": "Point", "coordinates": [ -123.287, 48.6333 ] } },
+{ "type": "Feature", "properties": { "name": "Mukwuks - Macaulay Point", "code": null, "status": "Proposed", "stage": "WCSC Technical Review", "criteria": null }, "geometry": { "type": "Point", "coordinates": [ -123.4102, 48.4179 ] } },
+{ "type": "Feature", "properties": { "name": "Rocky Point", "code": null, "status": "Proposed", "stage": "Proposal Preparation", "criteria": null }, "geometry": { "type": "Point", "coordinates": [ -123.5871, 48.3115 ] } },
+{ "type": "Feature", "properties": { "name": "Swan Lake", "code": "BC376", "status": "Proposed", "stage": "Steering Committee Review", "criteria": null }, "geometry": { "type": "Point", "coordinates": [ -123.3733, 48.4635 ] } },
+{ "type": "Feature", "properties": { "name": "PKOLS (Mount Douglas Park)", "code": "BC375", "status": "Proposed", "stage": "Steering Committee Review", "criteria": null }, "geometry": { "type": "Point", "coordinates": [ -123.343, 48.4934 ] } }
+]
+}

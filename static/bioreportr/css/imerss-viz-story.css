@@ -183,7 +183,10 @@
     display: none;
 }
 
-.mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)):not(:has(.mxcw-atlas-has-taxon)) {
+/* With only the records' bar beneath the map, collapsed, the map takes the rest of the column and no resize bar is
+   shown - unless a taxon panel is shown there, or the active pane shows widgets of its own there, e.g. a chart, when
+   the map and the area beneath it keep heights which the resize bar may change */
+.mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)):not(:has(.mxcw-atlas-has-taxon)):not(:has(.mxcw-dataPane:not(.fl-hidden) .mxcw-dataPane-widgets)) {
     --mxcw-records-header-height: 40px;
 }
 
@@ -193,15 +196,15 @@
     margin-bottom: 0;
 }
 
-.mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)):not(:has(.mxcw-atlas-has-taxon)) .mxcw-map {
+.mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)):not(:has(.mxcw-atlas-has-taxon)):not(:has(.mxcw-dataPane:not(.fl-hidden) .mxcw-dataPane-widgets)) .mxcw-map {
     height: calc(100% - var(--mxcw-records-header-height)) !important;
 }
 
-.mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)):not(:has(.mxcw-atlas-has-taxon)) > .resize-bar {
+.mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)):not(:has(.mxcw-atlas-has-taxon)):not(:has(.mxcw-dataPane:not(.fl-hidden) .mxcw-dataPane-widgets)) > .resize-bar {
     display: none;
 }
 
-.mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)):not(:has(.mxcw-atlas-has-taxon)) > .mxcw-data {
+.mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)):not(:has(.mxcw-atlas-has-taxon)):not(:has(.mxcw-dataPane:not(.fl-hidden) .mxcw-dataPane-widgets)) > .mxcw-data {
     height: var(--mxcw-records-header-height) !important;
     min-height: 0;
     align-items: center;

@@ -1,3 +1,123 @@
 regionField,id,label
 BEC,1,CDFmm
 BEC,2,CWHxm1
+KBA,1,Christmas Hill
+KBA,2,Durrance Lake - Cole Hill
+KBA,3,Fort Rodd Hill
+KBA,4,Gonzales Point
+KBA,5,Harling Point
+KBA,6,Kohweechela - Mary Tod Island
+KBA,7,"ȽEL,TOS - James Island"
+KBA,8,Sidney Island - Wymond Point
+KBA,9,SḰŦÁMEN - North Sidney Island
+KBA,10,T̸IX̱EṈ - Cordova Shore
+KBA,11,Trafalgar Park
+KBA,12,Trial Islands
+KBA,13,Uplands Park - Cattle Point
+KBA,14,Witty's Beach
+KBA,1,Published Key Biodiversity Areas
+KBA,2,Published Key Biodiversity Areas
+KBA,3,Published Key Biodiversity Areas
+KBA,4,Published Key Biodiversity Areas
+KBA,5,Published Key Biodiversity Areas
+KBA,6,Published Key Biodiversity Areas
+KBA,7,Published Key Biodiversity Areas
+KBA,8,Published Key Biodiversity Areas
+KBA,9,Published Key Biodiversity Areas
+KBA,10,Published Key Biodiversity Areas
+KBA,11,Published Key Biodiversity Areas
+KBA,12,Published Key Biodiversity Areas
+KBA,13,Published Key Biodiversity Areas
+KBA,14,Published Key Biodiversity Areas
+ProtectedArea,1,Albert Head Lagoon Regional Park
+ProtectedArea,2,Alston-Stewart
+ProtectedArea,3,Bear Hill
+ProtectedArea,4,Bear Hill Regional Park
+ProtectedArea,5,Coles Bay Regional Park
+ProtectedArea,6,Devonian Regional Park
+ProtectedArea,7,Discovery Island Marine Park
+ProtectedArea,8,Earthspring
+ProtectedArea,9,Elk/Beaver Lake Regional Park
+ProtectedArea,10,Esquimalt Lagoon Migratory Bird Sanctuary
+ProtectedArea,11,Francis/King Regional Park
+ProtectedArea,12,Ginns
+ProtectedArea,13,Goldstream Park
+ProtectedArea,14,Gonzales Hill Regional Park
+ProtectedArea,15,Gowlland Tod Park
+ProtectedArea,16,Gulf Islands National Park Reserve of Canada
+ProtectedArea,17,Horth Hill Regional Park
+ProtectedArea,18,Island View Beach Regional Park
+ProtectedArea,19,Lone Tree Hill Regional Park
+ProtectedArea,20,"ȽÁU,WELṈEW̱/John Dean Park"
+ProtectedArea,21,Madrona Farm
+ProtectedArea,22,Maltby Lake
+ProtectedArea,23,Mary Hill Connector
+ProtectedArea,24,Matson Conservation Area
+ProtectedArea,25,Mill Hill Regional Park
+ProtectedArea,26,Millstream Creek Watershed
+ProtectedArea,27,Mount Wells Regional Park
+ProtectedArea,28,Mount Work Regional Park
+ProtectedArea,29,Mountain Road Forest Regional Park
+ProtectedArea,30,Nature Conservancy of Canada protected area
+ProtectedArea,31,Oak Bay Islands Ecological Reserve
+ProtectedArea,32,Rae-Leigh Place
+ProtectedArea,33,Satellite Channel Ecological Reserve
+ProtectedArea,34,Second Lake
+ProtectedArea,35,Shoal Harbour Migratory Bird Sanctuary
+ProtectedArea,36,SISȻENEM (Halibut Island)
+ProtectedArea,37,Swan Lake - Christmas Hill
+ProtectedArea,38,Ten Mile Point Ecological Reserve
+ProtectedArea,39,Thetis Lake Regional Park
+ProtectedArea,40,Trial Islands Ecological Reserve
+ProtectedArea,41,ȾIKEL
+ProtectedArea,42,Victoria Harbour Migratory Bird Sanctuary
+ProtectedArea,43,Witty's Lagoon Regional Park
+ProtectedArea,1,Regional park
+ProtectedArea,2,Private conservation land
+ProtectedArea,3,Private conservation land
+ProtectedArea,4,Regional park
+ProtectedArea,5,Regional park
+ProtectedArea,6,Regional park
+ProtectedArea,7,Provincial park
+ProtectedArea,8,Private conservation land
+ProtectedArea,9,Regional park
+ProtectedArea,10,Migratory bird sanctuary
+ProtectedArea,11,Regional park
+ProtectedArea,12,Private conservation land
+ProtectedArea,13,Provincial park
+ProtectedArea,14,Regional park
+ProtectedArea,15,Provincial park
+ProtectedArea,16,National park reserve
+ProtectedArea,17,Regional park
+ProtectedArea,18,Regional park
+ProtectedArea,19,Regional park
+ProtectedArea,20,Provincial park
+ProtectedArea,21,Private conservation land
+ProtectedArea,22,Private conservation land
+ProtectedArea,23,Private conservation land
+ProtectedArea,24,Private conservation land
+ProtectedArea,25,Regional park
+ProtectedArea,26,Private conservation land
+ProtectedArea,27,Regional park
+ProtectedArea,28,Regional park
+ProtectedArea,29,Regional park
+ProtectedArea,30,Private conservation land
+ProtectedArea,31,Ecological reserve
+ProtectedArea,32,Private conservation land
+ProtectedArea,33,Ecological reserve
+ProtectedArea,34,Private conservation land
+ProtectedArea,35,Migratory bird sanctuary
+ProtectedArea,36,Private conservation land
+ProtectedArea,37,Private conservation land
+ProtectedArea,38,Ecological reserve
+ProtectedArea,39,Regional park
+ProtectedArea,40,Ecological reserve
+ProtectedArea,41,Private conservation land
+ProtectedArea,42,Migratory bird sanctuary
+ProtectedArea,43,Regional park
+Protected,1,Ecological reserve
+Protected,2,Migratory bird sanctuary
+Protected,3,National park reserve
+Protected,4,Private conservation land
+Protected,5,Provincial park
+Protected,6,Regional park
