@@ -1,19 +1,16 @@
-# The project's own data files, named once here for every part of the project which reads them: its R scripts, through
-# scripts/project.R and R/build.R, and its story page, through the layer bioreportr.storyData, which
-# src/js/storyBuild.js ("npm run story") writes from this file into static/story/bioreportr-storyData.vue. Each is a file
-# of tabular_data, from which R/build.R publishes those the story page reads into static/local/data/tabular.
+# The data files which the project's story page reads at runtime, named once here: R/build.R publishes each from
+# tabular_data into static/local/data/tabular, and src/js/storyBuild.js ("npm run story") names them in the layer
+# bioreportr.storyData, written into static/story/bioreportr-storyData.vue. The files which only prepare these are
+# named in bioreportr-prep.yaml.
 # This file is the project's own, and is not copied by copyFrameworkOut.sh
 data:
-  # The catalogue as prepared, which scripts/intersectShapes.R labels with the regions its records fall in
-  catalogue: Saanich_Tracheophyta_ultimate-catalogue_2026-08-20-selected-orig.csv
-  # The catalogue so labelled, and the index of its regions, written by scripts/intersectShapes.R - both published
-  labels: Saanich_Tracheophyta_ultimate-catalogue_2026-08-20-selected-labels.csv
-  regionIndirection: Saanich_Tracheophyta_ultimate-catalogue_2026-08-20-selected-regionIndirection.csv
-  # The summary of the catalogue's taxa, published
-  summary: Saanich_Tracheophyta_ultimate-summary_2026-08-20-prepared-taxa.csv
-  # The index of the shapes the records are intersected with by scripts/intersectShapes.R - see spatial_data/vectors
-  shapeIndex: "Saanich Shapefile Index.csv"
-  # The history of the curatorial notes on each taxon, prepared by scripts/prepare_curation_history.R - published
-  curationHistory: Saanich_Tracheophyta_curation-history_2026-08-20.csv
-  # The annotations of records, e.g. of planted populations, applied by scripts/apply_record_annotations.R - published
-  recordAnnotations: Saanich_Tracheophyta_record-annotations_2026-08-20.csv
+  # The catalogue labelled with the regions its records fall in, and the index of its regions, written by
+  # scripts/intersectShapes.R
+  labels: Saanich_Tracheophyta_ultimate-catalogue_2026-11-15-selected-labels.csv
+  regionIndirection: Saanich_Tracheophyta_ultimate-catalogue_2026-11-15-selected-regionIndirection.csv
+  # The summary of the catalogue's taxa
+  summary: Saanich_Tracheophyta_ultimate-summary_2026-11-15-prepared-taxa.csv
+  # The history of the curatorial notes on each taxon, prepared by scripts/prepare_curation_history.R
+  curationHistory: Saanich_Tracheophyta_curation-history_2026-11-15.csv
+  # The annotations of records, e.g. of planted populations, applied by scripts/apply_record_annotations.R
+  recordAnnotations: Saanich_Tracheophyta_record-annotations_2026-11-15.csv

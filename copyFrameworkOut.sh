@@ -7,7 +7,7 @@
 # Deliberately NOT copied:
 #  - Project-local content and configuration: hugo.yaml, package.json, mapboxData.json, content/,
 #    layouts/partials/custom/head-end.html, layouts/partials/favicons.html, static/local/,
-#    bioreportr.yaml (names the project's data files), scripts/project.R (the settings of the shared R scripts),
+#    bioreportr.yaml (names the data files the story page reads), bioreportr-prep.yaml (those which prepare them), scripts/project.R (the settings of the shared R scripts),
 #    scripts/*.R map and analysis scripts
 #  - Experimental R parsing work: src/js/parseR.mjs, src/js/r-parser/
 #  - The story page's driver static/local/story/<project>-story.vue, its development page static/story/index-dev.html,

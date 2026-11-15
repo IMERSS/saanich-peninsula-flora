@@ -2,6 +2,7 @@ library(dplyr)
 library(stringr)
 
 source("scripts/utils.R")
+source("scripts/project.R")
 
 # Prepare the history of the curatorial notes on each taxon, shown by the History tab of the curation pane - from the
 # master checklist's accounts and comments, oldest first:
@@ -14,9 +15,9 @@ source("scripts/utils.R")
 # Each taxon is given the id by which the site knows it, matched on its scientific name in the prepared summary, which
 # must be prepared first - see scripts/prepare_summary.R. The output is copied into the site by R/build.R
 
-list_file <- "tabular_data/Saanich_Tracheophyta_ultimate-list_2026-08-20.csv"
-taxa_file <- "tabular_data/Saanich_Tracheophyta_ultimate-summary_2026-08-20-prepared-taxa.csv"
-history_file <- "tabular_data/Saanich_Tracheophyta_curation-history_2026-08-20.csv"
+list_file <- file.path("tabular_data", config$list)
+taxa_file <- project$summaryFile
+history_file <- file.path("tabular_data", config$curationHistory)
 
 # The reviewers who sign the notes with their initials. Other signatures, e.g. of a collection, are kept as written
 reviewers <- c(

@@ -15,10 +15,14 @@ drift apart.
 1. **The project's own definitions** - what is true of one story alone: its content and the settings of the shared
    framework for it.
    * `content/` - the story's R Markdown panes and their knitted output, and its other pages
-   * `bioreportr.yaml` - the project's data files, named once for every part of the project which reads them: its R
-     scripts, through `scripts/project.R` and `R/build.R`, and its story page, through the layer
-     `bioreportr.storyData`, which `npm run story` writes from it into `static/story/bioreportr-storyData.vue`. Never
-     name a data file anywhere else
+   * `bioreportr.yaml` - the data files which the story page reads at runtime, named once for every part of the project
+     which reads them: `R/build.R`, which publishes them, the R scripts, through `scripts/project.R`, and the story
+     page, through the layer `bioreportr.storyData`, which `npm run story` writes from it into
+     `static/story/bioreportr-storyData.vue`. Never name such a file anywhere else
+   * `bioreportr-prep.yaml` - optionally, the files read and written only by the data preparation scripts on the way to
+     those, e.g. the input checklist and catalogue and the intermediate files of `assignBNames.js`. The rule above
+     applies only to files consumed by the story page: a preparation script may name its own intermediate files
+     itself, though naming them here keeps the scripts free of dated filenames. `scripts/project.R` reads both files
    * `hugo.yaml`, `package.json`, `mapboxData.json`, `static/curation/config.json`
    * `static/local/story/<project>-story.vue` - the story page's driver, which names the shared layers the story is made
      of in its `$layers` and gives their settings, e.g. its data files, the columns of its tables, `recentYear`,

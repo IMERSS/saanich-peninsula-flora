@@ -1,0 +1,23 @@
+# The data files read and written by the project's data preparation scripts on the way to those its story page reads,
+# which are named in bioreportr.yaml. The R scripts read both through scripts/project.R. Each is a file of tabular_data
+# unless said otherwise. None is published.
+# This file is the project's own, and is not copied by copyFrameworkOut.sh
+data:
+  # The inputs, from checklist-catalogue-alignment-workflow's scripts/3_align.R
+  # The ultimate checklist, read by scripts/prepare_summary.R and scripts/prepare_curation_history.R
+  list: Saanich_Tracheophyta_ultimate-list_2026-11-15.csv
+  # The ultimate catalogue, a file of big_data (not checked in), read by scripts/prepare_obs.R
+  ultimateCatalogue: Saanich_Tracheophyta_ultimate-catalogue_2026-11-15.csv
+  # The summary of the list's taxa written by scripts/prepare_summary.R, and the files into which assignBNames.js assigns
+  # it to the iNaturalist taxonomy, named by it after the first:
+  #   node node_modules/imerss-bioinfo/src/assignBNames.js tabular_data/<summaryOrig> --DwCA --swaps tabular_data/taxon-swaps.csv
+  summaryOrig: Saanich_Tracheophyta_ultimate-summary_2026-11-15-orig.csv
+  summaryAssigned: Saanich_Tracheophyta_ultimate-summary_2026-11-15-assigned.csv
+  summaryAssignedTaxa: Saanich_Tracheophyta_ultimate-summary_2026-11-15-assigned-taxa.csv
+  # Any taxa assigned more than once in the summary, reported by scripts/prepare_summary_final.R
+  summaryAssignedDupes: Saanich_Tracheophyta_ultimate-summary_2026-11-15-assigned-dupes.csv
+  # The catalogue as prepared by scripts/prepare_obs.R, which scripts/intersectShapes.R labels with the regions its
+  # records fall in
+  catalogue: Saanich_Tracheophyta_ultimate-catalogue_2026-11-15-selected-orig.csv
+  # The index of the shapes the records are intersected with by scripts/intersectShapes.R - see spatial_data/vectors
+  shapeIndex: "Saanich Shapefile Index.csv"

@@ -80,7 +80,7 @@ fluid.def("saanich.story", {
         {key: "catalogNumber", label: "Catalogue no."},
         {key: "decimalLatitude", label: "Latitude"},
         {key: "decimalLongitude", label: "Longitude"},
-        {key: "coordinateUncertaintyInMetres", label: "Uncertainty (m)"},
+        {key: "coordinateUncertaintyInMeters", label: "Uncertainty (m)"},
         {key: "elevation", label: "Elevation"},
         {key: "individualCount", label: "Count"},
         {key: "establishmentMeans", label: "Establishment"},

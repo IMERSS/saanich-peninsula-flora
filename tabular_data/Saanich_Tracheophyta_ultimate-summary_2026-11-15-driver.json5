@@ -1,0 +1,13 @@
+{
+    strategy: 'DwCA',
+    input: 'Saanich_Tracheophyta_ultimate-summary_2026-11-15-orig.csv',
+    swaps: 'taxon-swaps.csv',
+    noRank: false,
+    overrides: {
+        phylumField: 'phylum',
+        rankField: 'taxonRank',
+    },
+    output: 'Saanich_Tracheophyta_ultimate-summary_2026-11-15-assigned.csv',
+    taxa: 'Saanich_Tracheophyta_ultimate-summary_2026-11-15-assigned-taxa.csv',
+    mismatches: 'Saanich_Tracheophyta_ultimate-summary_2026-11-15-mismatches.csv',
+}

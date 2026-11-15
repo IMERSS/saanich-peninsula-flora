@@ -2,16 +2,17 @@ library(dplyr)
 library(stringr)
 
 source("scripts/utils.R")
+source("scripts/project.R")
 
 # Apply the annotations of records kept in tabular_data/record-annotations.csv - each naming a taxon, the centre of a
 # site and a radius around it, the annotation given to the taxon's records within it, e.g. "planted", and whether they
 # are to be suspended from the calculation of the taxon's extirpation probability (EP).
 #
 # Writes:
-#   - tabular_data/Saanich_Tracheophyta_record-annotations_2026-08-20.csv, listing each record annotated, by its
+#   - tabular_data/<recordAnnotations of bioreportr.yaml>, listing each record annotated, by its
 #     occurrenceID - copied into the site by R/build.R, where Find the Plants leaves out of its populations those
 #     suspended from the EP calculation, and marks them in its table of records
-#   - the taxon's EP, solow_EP, in tabular_data/Saanich_Tracheophyta_ultimate-summary_2026-08-20-prepared-taxa.csv,
+#   - the taxon's EP, solow_EP, in tabular_data/<summary of bioreportr.yaml>,
 #     recalculated without the suspended records, and its reportingStatus, "unconfirmed" if only they found it again
 #     since 2000. Only these values on the taxon's own line are changed, so that the rest of the file, as written by
 #     assignBNames.js, is left as it was
@@ -21,9 +22,9 @@ source("scripts/utils.R")
 # scripts/prepare_obs.R and the preparation of the summary - see scripts/prepare_summary.R
 
 annotations_file <- "tabular_data/record-annotations.csv"
-obs_file <- "tabular_data/Saanich_Tracheophyta_ultimate-catalogue_2026-08-20-selected-labels.csv"
-taxa_file <- "tabular_data/Saanich_Tracheophyta_ultimate-summary_2026-08-20-prepared-taxa.csv"
-annotated_file <- "tabular_data/Saanich_Tracheophyta_record-annotations_2026-08-20.csv"
+obs_file <- file.path("tabular_data", config$labels)
+taxa_file <- project$summaryFile
+annotated_file <- file.path("tabular_data", config$recordAnnotations)
 
 # The distance in metres between points, by the haversine formula
 haversine <- function (lat1, lon1, lat2, lon2) {
