@@ -63,6 +63,12 @@ for(i in 1:nrow(shapeIndex)) {
   }
   read.end <- Sys.time()
   wg("Read {nrow(shape)} polygons in {format(read.end - read.start)}")
+  # A layer with no shapes, e.g. the published KBAs of a project which has none as yet, labels no records and gives no
+  # column - its file, written with no features, has no attributes to read
+  if (nrow(shape) == 0) {
+    wg("Skipping {row$Label}, which has no shapes")
+    next
+  }
   bench.start <- Sys.time()
   # Ignore message "although coordinates are longitude/latitude, st_intersects assumes that they are planar"
   suppressMessages(rawintersects <- st_intersects(filteredObs.sf, shape))

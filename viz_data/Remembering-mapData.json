@@ -23,8 +23,8 @@
       "source": "Checklist.Saanich",
       "label": "<div class=\"saanich-checklist-name\">Saanich Peninsula and surrounding islets<\/div>",
       "paint": {
-        "fill-color": "#FFD36B",
-        "fill-opacity": 0.45
+        "fill-color": "#E0A11B",
+        "fill-opacity": 0.55
       },
       "metadata": {
         "sortKey": 2,
@@ -36,7 +36,7 @@
       "id": "Checklist.Saanich-outline",
       "source": "Checklist.Saanich",
       "paint": {
-        "line-color": "#FFD36B",
+        "line-color": "#E0A11B",
         "line-width": 2.5,
         "line-opacity": 1
       },
@@ -50,8 +50,8 @@
       "source": "Checklist.Saltspring_Island",
       "label": "<div class=\"saanich-checklist-name\">Salt Spring Island<\/div>",
       "paint": {
-        "fill-color": "#A8C8D0",
-        "fill-opacity": 0.14
+        "fill-color": "#3F7590",
+        "fill-opacity": 0.3
       },
       "metadata": {
         "sortKey": 3,
@@ -63,9 +63,9 @@
       "id": "Checklist.Saltspring_Island-outline",
       "source": "Checklist.Saltspring_Island",
       "paint": {
-        "line-color": "#A8C8D0",
-        "line-width": 1,
-        "line-opacity": 0.7
+        "line-color": "#3F7590",
+        "line-width": 1.5,
+        "line-opacity": 0.9
       },
       "metadata": {
         "sortKey": 3.5
@@ -77,8 +77,8 @@
       "source": "Checklist.Outer_Gulf_Islands",
       "label": "<div class=\"saanich-checklist-name\">Outer Gulf Islands<\/div>",
       "paint": {
-        "fill-color": "#A8C8D0",
-        "fill-opacity": 0.14
+        "fill-color": "#3F7590",
+        "fill-opacity": 0.3
       },
       "metadata": {
         "sortKey": 4,
@@ -90,9 +90,9 @@
       "id": "Checklist.Outer_Gulf_Islands-outline",
       "source": "Checklist.Outer_Gulf_Islands",
       "paint": {
-        "line-color": "#A8C8D0",
-        "line-width": 1,
-        "line-opacity": 0.7
+        "line-color": "#3F7590",
+        "line-width": 1.5,
+        "line-opacity": 0.9
       },
       "metadata": {
         "sortKey": 4.5
@@ -104,8 +104,8 @@
       "source": "Checklist.San_Juan_Islands",
       "label": "<div class=\"saanich-checklist-name\">San Juan Islands<\/div>",
       "paint": {
-        "fill-color": "#A8C8D0",
-        "fill-opacity": 0.14
+        "fill-color": "#3F7590",
+        "fill-opacity": 0.3
       },
       "metadata": {
         "sortKey": 5,
@@ -117,9 +117,9 @@
       "id": "Checklist.San_Juan_Islands-outline",
       "source": "Checklist.San_Juan_Islands",
       "paint": {
-        "line-color": "#A8C8D0",
-        "line-width": 1,
-        "line-opacity": 0.7
+        "line-color": "#3F7590",
+        "line-width": 1.5,
+        "line-opacity": 0.9
       },
       "metadata": {
         "sortKey": 5.5

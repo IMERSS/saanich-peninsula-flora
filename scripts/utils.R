@@ -206,3 +206,10 @@ run_js <- function(js_file, args = character(), ...) {
   }
   return(status)
 }
+
+# The id by which the site knows a taxon of a checklist which didn't reach its ultimate list - its iNaturalist id, or
+# "name:" and its name where it has none - see scripts/prepare_curation_history.R and scripts/prepare_excluded_taxa.R
+set_aside_id <- function (link_taxon_id, taxon_name) {
+  id <- as.character(link_taxon_id)
+  ifelse(is.na(id) | id == "" | id == "NA", paste0("name:", taxon_name), id)
+}

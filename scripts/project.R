@@ -13,6 +13,13 @@ project <- list(
   shapeIndexFile = file.path("tabular_data", config$shapeIndex),
   # The summary of the catalogue's taxa
   summaryFile = file.path("tabular_data", config$summary),
+  # The settings of the map of Harvey Janszen's checklists in the pane in memory of him, read by
+  # scripts/Janszen_checklists_mapbox.R: the checklist area picked out as the project's own, and the class of the
+  # hover cards, styled by saanich-rememberingPane.vue
+  janszen = list(
+    highlight = "Saanich",
+    labelClass = "saanich-checklist-name"
+  ),
   # The settings of the Protected Areas pane's map and summaries, read by scripts/Protected_map_mapbox.R
   protected = list(
     # The categories of protected area, in order of precedence, coloured from the site's own: its blue, sand and

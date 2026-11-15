@@ -333,7 +333,8 @@ bioreportr.storyBuild.writeStoryData = function (projectDir, outDir) {
         regionIndirectionFile: file(data.regionIndirection),
         taxaFile: file(data.summary),
         curationHistoryFile: file(data.curationHistory),
-        recordAnnotationsFile: file(data.recordAnnotations)
+        recordAnnotationsFile: file(data.recordAnnotations),
+        excludedTaxaFile: file(data.excludedTaxa)
     };
     const text = `<script>
 "use strict";

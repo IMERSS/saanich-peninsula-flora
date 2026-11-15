@@ -231,15 +231,13 @@ bioreportr.atlas.sectionInserts = tiles => ({"mxcw-status-tiles": tiles});
  */
 bioreportr.atlas.paneClick = function (storyPage, event) {
     const tile = event.target.closest(".mxcw-status-link");
-    // A plant of the Lost Plants gallery, if the story has one, opens the extirpation risk pane on it - see
-    // bioreportr-lostPlantsPane.vue
-    const card = event.target.closest(".mxcw-lost-card");
+    // A click in the Lost Plants gallery, if the story has one, is its own - see bioreportr.lostPlants.click
+    const gallery = event.target.closest(".mxcw-lost-gallery-pane");
     if (tile) {
         const status = tile.dataset.status;
         storyPage.selectedStatus = storyPage.selectedStatus === status ? null : status;
-    } else if (card) {
-        const dokkument = event.target.ownerDocument;
-        bioreportr.atlas.showSolowTaxon(storyPage, card.dataset.taxonId, "Solow", dokkument, dokkument.defaultView);
+    } else if (gallery) {
+        bioreportr.lostPlants.click(storyPage, event);
     }
 };
 

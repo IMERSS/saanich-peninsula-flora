@@ -12,7 +12,7 @@ dir.create(dst_dir, recursive = TRUE, showWarnings = FALSE)
 # The files the published site uses, as bioreportr.yaml names them - see src/js/storyBuild.js, which names them to the
 # story page
 config <- yaml::read_yaml("bioreportr.yaml")$data
-files <- c(config$labels, config$regionIndirection, config$summary, config$curationHistory, config$recordAnnotations)
+files <- c(config$labels, config$regionIndirection, config$summary, config$curationHistory, config$recordAnnotations, config$excludedTaxa)
 
 for (f in files) {
   src <- file.path(src_dir, f)

@@ -5,15 +5,44 @@ weight: 2
 knit: (function(input, ...) { source(here::here("R/knit_render.R"), local = TRUE)$value(input, ...) })
 # The component rendering this pane's section, into whose template npm run story writes it - see AGENTS.md
 paneComponent: bioreportr.lostPlantsPane
+# Each div of class mxcw-lost-text below is the text of one tab of the gallery, named by its data-gallery - the key of
+# the gallery in bioreportr.lostPlants.galleries. Only the block of the tab chosen is shown, the "lost" block until
+# another is chosen; the others start hidden. Text outside the blocks is shown beneath whichever tab is chosen
 ---
 
 ## The lost plants of the W̱SÁNEĆ/Saanich Peninsula
 
+::: {.mxcw-lost-text data-gallery="lost"}
 This gallery shows `<span class="mxcw-lost-count">@{count}</span>`{=html} native species once reported for the Saanich Peninsula, which have not been seen in recent decades. Some may be lost *to us*—overlooked, forgotten, or waiting to be rediscovered. Others may be lost *because of us*, through impacts like habitat change or the introduction of invasive species.
 
-<span class="mxcw-callout">Pick a plant from the gallery</span> to see where and when it was last found, then join local naturalists and community members on a search for the
+<span class="mxcw-callout">Pick a plant from the gallery</span> to turn it over and read its curatorial notes, from the earliest accounts to the latest reviews. From there you can follow it to its records in the Atlas, or add your own notes in Living Data. Then join local naturalists and community members on a search for the
 [“Lost” Plants of the Saanich Peninsula](https://www.inaturalist.org/projects/lost-plants-of-the-saanich-peninsula)
 project on iNaturalist.
+:::
+
+::: {.mxcw-lost-text data-gallery="confirmed" hidden="hidden"}
+These native species were known to the peninsula's earlier botanists, and have been **seen again** since 2000. They are the enduring core of its native flora—though being found again is no promise of security, and some now survive in only one or two places.
+
+<span class="mxcw-callout">Pick a plant from the gallery</span> to turn it over and read its curatorial notes, then follow it to its records in the Atlas to see where it persists, or add your own notes in Living Data.
+:::
+
+::: {.mxcw-lost-text data-gallery="new" hidden="hidden"}
+These native species were **first reported** for the Saanich Peninsula since 2000. Some were surely here all along, overlooked by earlier botanists or confused with their relatives; others may be newly arrived, or newly told apart by taxonomists.
+
+<span class="mxcw-callout">Pick a plant from the gallery</span> to turn it over and read its curatorial notes, then follow it to its records in the Atlas, or add your own notes in Living Data.
+:::
+
+::: {.mxcw-lost-text data-gallery="excluded" hidden="hidden"}
+Not every plant reported for the peninsula belongs on its checklist. These taxa are **excluded** from it: curators have judged some to be doubtful records, others to be garden escapes that persist without establishing, or to have been planted.
+
+<span class="mxcw-callout">Pick a plant from the gallery</span> to turn it over and read the curators' reasoning. These notes show how the checklist was made, and where it remains open to question.
+:::
+
+::: {.mxcw-lost-text data-gallery="underReview" hidden="hidden"}
+These taxa are **under review**, and are not yet on the checklist. Curators are still weighing some of them; many more have never been reviewed at all, mostly names known from a single record, or unknown elsewhere in BC.
+
+<span class="mxcw-callout">Pick a plant from the gallery</span> to turn it over and read any notes the curators have made so far. If you know one of these plants here, your observations can help to settle its place.
+:::
 
 Szczawinski and Harrison’s (1972) *Flora of the Saanich Peninsula* provides the historical baseline for this atlas. Harvey Janszen devoted
 much of his life to revising this flora, but passed away in 2021, before completing this work. A community of naturalists has

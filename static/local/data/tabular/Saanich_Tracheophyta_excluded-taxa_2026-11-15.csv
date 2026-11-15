@@ -1,0 +1,1248 @@
+group,id,scientificName,commonName,family,introduction_status,reason,confidence,n_records,n_research_grade,first_record_date,last_record_date
+excluded,51606,Galanthus nivalis,Common Snowdrop,Amaryllidaceae,exotic,persisting or waif; planted,high,358,302,2011-02-13,2025-03-16
+excluded,127529,Prunus lusitanica,Portuguese Laurel,Rosaceae,exotic,persisting or waif,high,349,230,2006-02-13,2025-04-10
+excluded,57847,Muscari armeniacum,Garden Grape-Hyacinth,Asparagaceae,exotic,persisting or waif; planted,medium-high,264,46,2006-03-16,2025-04-22
+excluded,82666,Viburnum tinus,Laurustinus Viburnum,Viburnaceae,exotic,persisting or waif,high,165,81,2018-01-20,2025-03-22
+excluded,56134,Muscari botryoides,Common Grape Hyacinth,Asparagaceae,exotic,planted,medium-high,164,53,2018-04-10,2025-04-14
+excluded,126637,Hyacinthus orientalis,Hyacinth,Asparagaceae,unknown,planted,medium-low,160,115,2017-04-13,2025-03-31
+excluded,60957; 77224,Gamochaeta ustulata,Featherweed,Asteraceae,exotic,doubtful,medium-high,159,85,1981-07-13,2025-04-28
+excluded,244100,Scilla luciliae,Boissier's Glory-Of-The-Snow,Asparagaceae,exotic,persisting or waif,medium-low,130,17,2018-03-31,2024-03-27
+excluded,83072,Syringa vulgaris,Common Lilac,Oleaceae,exotic,planted,medium-high,115,55,2015-05-22,2025-04-26
+excluded,950617,Anemone blanda,Greek Anemone,Ranunculaceae,unknown,persisting or waif,medium-low,105,80,2019-04-08,2025-04-01
+excluded,1567961; 79461,Ulmus procera,Field Elm,Ulmaceae,exotic,planted,medium-low,96,11,2018-07-13,2025-04-26
+excluded,55809,Leucojum aestivum,Summer Snowflake,Amaryllidaceae,exotic,planted,medium-low,94,53,2019-04-13,2025-04-18
+excluded,56871,Eranthis hyemalis,Winter Aconite,Ranunculaceae,unknown,doubtful,medium-low,92,92,2019-03-13,2025-04-05
+excluded,863646,Hyacinthoides massartiana,Hybrid Bluebell,Asparagaceae,exotic,persisting or waif,medium-low,89,15,2002-05-06,2024-05-18
+excluded,56133,Quercus robur,English Oak,Fagaceae,exotic,planted,medium-high,89,54,2018-02-13,2024-11-05
+excluded,48258,Acer circinatum,Vine Maple,Sapindaceae,native,planted,medium-high,79,65,2016-02-24,2025-04-26
+excluded,47570,Populus alba,White Poplar,Salicaceae,exotic,persisting or waif,medium-high,79,44,1990-10-13,2024-09-30
+excluded,61481,Viola riviniana,Common Dog-Violet,Violaceae,exotic,persisting or waif,high,76,46,2014-04-13,2024-05-07
+excluded,56099,Ajuga reptans,Carpet Bugle,Lamiaceae,exotic,planted,medium-high,61,56,2015-08-13,2025-04-26
+excluded,337820,Cotoneaster salicifolius,Willow-Leaved Cotoneaster,Rosaceae,exotic,planted,medium-high,58,19,2020-06-09,2025-04-23
+excluded,78465,Petroselinum crispum,Garden Parsley,Apiaceae,exotic,persisting or waif,high,55,14,1987-07-13,2025-01-21
+excluded,48969,Antirrhinum majus,Snapdragon,Plantaginaceae,unknown,persisting or waif,medium-high,54,27,2006-02-13,2025-03-04
+excluded,51807,Aquilegia vulgaris,Common Columbine,Ranunculaceae,exotic,persisting or waif,medium-high,53,18,2020-04-28,2025-04-25
+excluded,336005,Campanula poscharskyana,Trailing Bellflower,Campanulaceae,exotic,planted,medium-low,50,15,2019-01-13,2024-12-07
+excluded,63951,Pyrus communis,Common Pear,Rosaceae,exotic,planted,medium-low,49,6,1966-07-26,2021-06-20
+excluded,77719,Leucanthemum maximum,Max Chrysanthemum,Asteraceae,exotic,planted,medium-low,48,6,2020-09-13,2022-09-16
+excluded,56193,Acer campestre,Field Maple,Sapindaceae,unknown,planted,medium-low,46,35,1946-07-13,2024-11-05
+excluded,1452907,Aphanes occidentalis,Western Lady's Mantle,Rosaceae,native,"reviewed, not carried to the list",medium-high,45,14,1885-04-26,2025-03-13
+excluded,77966,Matthiola incana,Hoary Stock,Brassicaceae,exotic,persisting or waif,high,44,15,1993-09-13,2023-11-09
+excluded,167829,Rhus typhina,Staghorn Sumac,Anacardiaceae,exotic,planted,medium-high,41,26,2019-07-09,2024-09-11
+excluded,124544,Anthriscus sylvestris,Cow Parsley,Apiaceae,exotic,doubtful,medium-high,40,25,2019-05-13,2024-05-16
+excluded,54404,Papaver rhoeas,Common Poppy,Papaveraceae,exotic,persisting or waif,medium-high,37,8,1974-05-12,2023-08-24
+excluded,78887,Rosa woodsii,Woods' Rose,Rosaceae,native,doubtful,medium-low,35,3,2019-05-31,2024-09-01
+excluded,862704,Scilla siberica,Siberian Squill,Asparagaceae,unknown,persisting or waif,medium-low,34,23,2020-03-13,2025-03-29
+excluded,79487,Verbena bonariensis,Purpletop Vervain,Verbenaceae,unknown,persisting or waif,medium-high,34,10,2015-10-10,2024-09-17
+excluded,77259,Geranium pyrenaicum ssp. pyrenaicum,Hedgerow Crane's-Bill,Geraniaceae,exotic,persisting or waif,medium-low,33,6,2019-02-13,2023-05-17
+excluded,57712,Plagiobothrys tener,,Boraginaceae,unknown,doubtful,medium-high,32,32,1894-07-13,1993-06-29
+excluded,55885,Lonicera periclymenum,Common Honeysuckle,Caprifoliaceae,exotic,persisting or waif,medium-low,31,6,2021-05-19,2022-07-23
+excluded,61039,Morella californica,Pacific Wax Myrtle,Myricaceae,native,planted,medium-high,31,9,2021-09-27,2024-10-12
+excluded,164948,Luzula multiflora,Heath Wood-Rush,Juncaceae,native,doubtful,high,26,21,1919-04-21,1996-05-24
+excluded,54838,Populus balsamifera,Balsam Poplar,Salicaceae,native,doubtful,medium-low,25,3,2024-02-06,2024-10-18
+excluded,56022,Alchemilla mollis,Garden Lady's-Mantle,Rosaceae,exotic,planted,medium-high,24,15,2022-03-13,2024-04-08
+excluded,47406,Spartium junceum,Spanish Broom,Fabaceae,exotic,persisting or waif,high,24,15,1993-03-13,2024-06-18
+excluded,54436,Rubus idaeus ssp. strigosus,Red Raspberry,Rosaceae,native,planted,medium-high,23,8,2020-09-24,2024-08-11
+excluded,125790,Spiraea japonica var. fortunei,Japanese Spirea,Rosaceae,exotic,planted,medium-low,23,2,2024-07-03,2024-07-03
+excluded,54763,Acer platanoides,Norway Maple,Sapindaceae,exotic,planted,high,22,10,1946-07-13,2023-05-18
+excluded,57511,Galanthus woronowii,Green Snowdrop,Amaryllidaceae,unknown,doubtful,medium-low,22,15,2022-01-13,2025-01-24
+excluded,77797,Lobelia erinus,Garden Lobelia,Campanulaceae,exotic,persisting or waif,medium-high,22,15,1968-07-22,2023-08-09
+excluded,62313,Nigella damascena,Love-In-A-Mist,Ranunculaceae,exotic,persisting or waif,medium-high,22,13,2007-06-13,2024-10-13
+excluded,820904,Callitropsis nootkatensis,Alaska Yellow Cedar,Cupressaceae,native,planted,medium-high,21,4,1953-04-09,2025-02-06
+excluded,60015,Dianthus barbatus ssp. barbatus,Sweet-William,Caryophyllaceae,exotic,planted,medium-high,20,17,2020-05-23,2023-08-08
+excluded,77965,Matricaria chamomilla,German Chamomile,Asteraceae,exotic,persisting or waif,medium-low,20,4,2024-09-06,2024-12-08
+excluded,129038,Petasites japonicus,Giant Butterbur,Asteraceae,exotic,planted,medium-high,20,17,2021-08-01,2025-04-13
+excluded,245731,Lobelia pedunculata,Matted Pratia,Campanulaceae,exotic,planted,medium-low,19,9,2019-08-13,2024-08-20
+excluded,133104,Berberis repens,Creeping Mahonia,Berberidaceae,unknown,planted,medium-high,18,11,2023-12-06,2025-03-29
+excluded,58185,Phacelia tanacetifolia,Lacy Phacelia,Boraginaceae,exotic,persisting or waif,medium-high,18,8,2006-06-13,2024-09-23
+excluded,59254,Allium schoenoprasum,Chives,Amaryllidaceae,native,planted,medium-high,17,5,2023-05-19,2025-03-10
+excluded,59778,Pastinaca sativa,Wild Parsnip,Apiaceae,exotic,persisting or waif,high,17,10,1913-06-13,2023-11-20
+excluded,163548,Hedera colchica,Persian Ivy,Araliaceae,unknown,persisting or waif,medium-low,16,,2007-10-13,2007-10-21
+excluded,55850,Petasites hybridus,Common Butterbur,Asteraceae,exotic,planted,medium-high,16,12,2020-04-06,2024-04-06
+excluded,54431,Ribes rubrum,Red Currant,Grossulariaceae,exotic,persisting or waif; planted,medium-low,16,4,2021-05-01,2022-10-31
+excluded,62741,Rudbeckia hirta var. pulcherrima,Black-Eyed Susan,Asteraceae,exotic,planted,medium-high,16,7,2022-08-12,2023-08-27
+excluded,57092,Erodium moschatum,Musk Stork's-Bill,Geraniaceae,exotic,persisting or waif,high,15,8,2018-09-13,2025-02-10
+excluded,50628,Erysimum capitatum var. purshii,Western Wallflower,Brassicaceae,native,doubtful,medium-low,15,0,No known research grade record,No known research grade record
+excluded,52287,Borago officinalis,Borage,Boraginaceae,exotic,planted,high,14,13,1920-05-09,2024-08-10
+excluded,347008,Corydalis flavula,Pale Corydalis,Papaveraceae,exotic,doubtful,medium-low,14,8,2020-04-13,2024-11-11
+excluded,55938,Crocus speciosus,Bieberstein's Crocus,Iridaceae,unknown,doubtful,medium-low,13,7,2019-09-26,2023-09-30
+excluded,55722,Geranium pratense,Meadow Crane's-Bill,Geraniaceae,unknown,doubtful,medium-low,13,6,2020-06-13,2022-06-26
+excluded,164763,Lonicera fragrantissima,Winter Honeysuckle,Caprifoliaceae,exotic,persisting or waif,medium-low,13,7,2020-01-13,2024-06-22
+excluded,50648,Nemophila menziesii,Menzies' Baby Blue Eyes,Boraginaceae,unknown,persisting or waif,medium-low,13,6,1915-08-02,2023-05-31
+excluded,950619,Anemone apennina,Blue Anemone,Ranunculaceae,exotic,planted,medium-low,12,6,2022-04-01,2025-04-07
+excluded,64697,Elaeagnus umbellata,Autumn Olive,Elaeagnaceae,exotic,planted,medium-high,12,11,2019-09-09,2024-10-31
+excluded,51336,Limnanthes douglasii,Douglas' Meadowfoam,Limnanthaceae,unknown,persisting or waif,medium-low,12,9,2020-05-13,2022-06-03
+excluded,60152,Plagiobothrys humistratus,,Boraginaceae,exotic,doubtful,high,12,12,1917-05-13,1992-04-23
+excluded,132527,Rosa acicularis ssp. sayi,Prickly Wild Rose,Rosaceae,native,doubtful; planted,medium-low,12,0,No known research grade record,No known research grade record
+excluded,name:Carex macloviana,Carex macloviana,,Cyperaceae,native,doubtful,high,11,11,1887-06-13,1987-06-05
+excluded,76444,Coreopsis lanceolata,Lance-Leaved Coreopsis,Asteraceae,exotic,persisting or waif,medium-high,11,8,2018-06-13,2022-10-19
+excluded,709635,Iris germanica,Bearded Iris,Iridaceae,unknown,persisting or waif,medium-high,11,7,2020-05-11,2024-04-20
+excluded,48622,Nepeta cataria,Catnip,Lamiaceae,exotic,planted,medium-high,11,7,1919-07-29,2023-11-17
+excluded,47726,Acer negundo,Box Elder,Sapindaceae,exotic,planted,medium-high,10,9,2021-04-13,2025-04-23
+excluded,58049,Amsinckia retrorsa,,Boraginaceae,native,doubtful,high,10,10,1887-05-13,1974-04-21
+excluded,62009,Nymphaea alba,European White Waterlily,Nymphaeaceae,exotic,planted,medium-high,10,5,2018-06-13,2021-08-02
+excluded,79159,Sorbus scopulina,Greene's Mountain Ash,Rosaceae,native,doubtful,medium-low,10,0,No known research grade record,No known research grade record
+excluded,159956; 76017,Carex aurea,Golden Sedge,Cyperaceae,native,doubtful,medium-high,9,9,1905-03-04,2024-06-11
+excluded,55801,Carpinus betulus,European Hornbeam,Betulaceae,exotic,planted,medium-low,9,5,2023-06-22,2024-05-28
+excluded,53403,Genista monspessulana,French Broom,Fabaceae,exotic,persisting or waif,medium-high,9,3,2012-04-13,2012-04-25
+excluded,77576,Juncus interior,,Juncaceae,native,doubtful,medium-high,9,9,1914-07-13,1991-09-15
+excluded,127079; 54411,Polypodium virginianum,,Polypodiaceae,unknown,doubtful,medium-low,8,8,1964-04-13,1967-06-01
+excluded,49005,Quercus rubra,Northern Red Oak,Fagaceae,unknown,planted,medium-low,8,4,1968-07-13,2023-10-18
+excluded,79191,Stachys mexicana,Mexican Hedgenettle,Lamiaceae,native,doubtful,medium-high,8,3,1883-07-01,1883-07-01
+excluded,79519,Vitis vinifera,Wine Grape,Vitaceae,exotic,doubtful,medium-low,8,3,2020-09-04,2023-09-30
+excluded,75377,Alnus incana ssp. tenuifolia,Grey Alder,Betulaceae,native,doubtful,medium-high,7,4,1989-09-13,2021-06-26
+excluded,75445,Anethum graveolens,Dill,Apiaceae,exotic,planted,medium-high,7,4,2007-06-13,2024-02-07
+excluded,76606,Dasiphora fruticosa,,Rosaceae,native,doubtful,medium-low,7,7,2020-06-13,2022-08-11
+excluded,164955,Lycium chinense,Chinese Teaplant,Solanaceae,exotic,persisting or waif; planted,medium-high,7,3,2007-07-13,2007-07-20
+excluded,62441,Lysimachia ciliata,,Primulaceae,native,persisting or waif,medium-low,7,7,2021-05-13,2022-07-13
+excluded,76596,Cytisus multiflorus,White Spanish Broom,Fabaceae,unknown,persisting or waif,medium-low,6,2,2017-06-15,2017-06-15
+excluded,57643,Geranium purpureum,Little-Robin,Geraniaceae,exotic,doubtful,low,6,0,No known research grade record,No known research grade record
+excluded,170884,Narcissus × incomparabilis,Nonesuch Daffodil,Amaryllidaceae,unknown,persisting or waif,medium-low,6,4,2014-04-13,2024-04-07
+excluded,78217,Nicandra physalodes,Apple-Of-Peru,Solanaceae,exotic,persisting or waif,medium-low,6,6,2022-08-13,2024-09-26
+excluded,79534,Woodsia scopulina ssp. laurentiana,Rocky Mountain Woodsia,Woodsiaceae,native,doubtful,medium-high,6,6,1894-09-16,2024-06-22
+excluded,60462,Butomus umbellatus,Flowering-Rush,Butomaceae,exotic,planted,medium-low,5,5,2022-08-13,2023-06-27
+excluded,119450,Calluna vulgaris,,Ericaceae,exotic,planted,medium-low,5,5,2021-03-13,2021-11-12
+excluded,547090,Catabrosella humilis,,Poaceae,exotic,doubtful,medium-high,5,5,1951-06-13,1969-08-14
+excluded,76647,Dianthus deltoides ssp. deltoides,Maiden Pink,Caryophyllaceae,exotic,planted,medium-low,5,4,2019-06-16,2023-06-05
+excluded,56171,Leonurus cardiaca,Common Motherwort,Lamiaceae,exotic,planted,medium-low,5,4,2019-06-13,2025-04-21
+excluded,51306,Linum usitatissimum,Common Flax,Linaceae,exotic,persisting or waif,medium-high,5,2,1992-04-28,1992-04-28
+excluded,name:Lupinus albicaulis,Lupinus albicaulis,,Fabaceae,native,doubtful,medium-low,5,5,1926-07-13,1927-06-22
+excluded,77902,Lycium barbarum,Matrimony Vine,Solanaceae,exotic,planted,medium-low,5,4,2020-08-13,2023-07-20
+excluded,57865,Oxalis exilis,Least Yellow-Sorrel,Oxalidaceae,unknown,persisting or waif,medium-low,5,4,2009-06-13,2010-05-02
+excluded,167373,Potentilla reptans,Creeping Cinquefoil,Rosaceae,exotic,persisting or waif,medium-high,5,3,2014-10-13,2014-10-13
+excluded,78782,Puccinellia lemmonii,,Poaceae,unknown,doubtful,medium-low,5,5,1887-06-13,1976-07-02
+excluded,48583,Sorbus sitchensis,Sitka Mountain-Ash,Rosaceae,native,planted,medium-high,5,2,1950-05-16,1950-05-16
+excluded,52740,Vaccinium corymbosum,Northern Highbush Blueberry,Ericaceae,exotic,doubtful; planted,low,5,1,2022-07-11,2022-07-11
+excluded,79526,Wolffia borealis,Dotted Watermeal,Araceae,native,doubtful,medium-low,5,3,2021-05-13,2021-05-13
+excluded,60214,Abutilon theophrasti,Velvetleaf,Malvaceae,exotic,persisting or waif,medium-low,4,4,2023-09-13,2023-09-17
+excluded,54762,Acer saccharinum,Silver Maple,Sapindaceae,unknown,planted,low,4,2,1946-07-13,1946-07-23
+excluded,75275,Acmispon micranthus,,Fabaceae,unknown,doubtful,medium-low,4,4,1923-07-13,1966-05-31
+excluded,75705,Atriplex gmelinii,Gmelin's Saltbush,Amaranthaceae,native,doubtful,low,4,1,2018-09-13,2018-09-13
+excluded,62340,Atriplex hortensis,,Amaranthaceae,exotic,doubtful,medium-low,4,4,2021-05-13,2024-04-17
+excluded,75758,Berberis vulgaris,European Barberry,Berberidaceae,exotic,doubtful; planted,medium-low,4,3,2023-07-13,2023-07-13
+excluded,135229,Buglossoides arvensis,Corn Gromwell,Boraginaceae,exotic,persisting or waif,medium-low,4,3,2024-04-13,2024-04-21
+excluded,64445,Caltha leptosepala,,Ranunculaceae,native,doubtful,medium-low,4,4,2019-07-13,2019-07-24
+excluded,name:Carex foenea,Carex foenea,,Cyperaceae,native,doubtful,medium-high,4,4,1969-06-14,2001-06-13
+excluded,234876,Carex inops ssp. heliophila,,Cyperaceae,native,doubtful,medium-high,4,4,1950-05-13,1967-05-31
+excluded,84281,Clinopodium vulgare,Wild Basil,Lamiaceae,exotic,planted,medium-low,4,4,2020-07-13,2022-07-22
+excluded,76416,Collomia linearis,,Polemoniaceae,native,doubtful,medium-high,4,4,1931-05-03,1973-05-01
+excluded,62020,Filipendula vulgaris,,Rosaceae,exotic,persisting or waif,medium-low,4,4,1976-07-13,2007-06-17
+excluded,122850,Phaseolus vulgaris,Common Bean,Fabaceae,unknown,doubtful,medium-low,4,3,2018-11-13,2018-11-13
+excluded,57506,Prosartes smithii,Largeflower Fairybells,Liliaceae,native,planted,medium-low,4,2,2021-05-13,2021-05-13
+excluded,553849,Rhododendron menziesii,Mock Azalea,Ericaceae,native,planted,medium-low,4,2,2025-04-26,2025-04-26
+excluded,78874,Rorippa austriaca,Austrian Field-Cress,Brassicaceae,unknown,persisting or waif,medium-low,4,3,2007-05-13,2007-05-13
+excluded,78934,Salix boothii,,Salicaceae,native,doubtful,medium-high,4,4,1908-04-13,1908-05-02
+excluded,59567,Sequoiadendron giganteum,,Cupressaceae,unknown,planted,medium-low,4,4,1968-08-13,1968-08-13
+excluded,1277895,Sorbus intermedia,Swedish Whitebeam,Rosaceae,exotic,doubtful,medium-high,4,3,1986-09-13,1986-09-15
+excluded,79295,Symphyotrichum bracteolatum,,Asteraceae,native,doubtful,medium-high,4,4,1966-08-23,1966-08-26
+excluded,71127,Artemisia ludoviciana,Silver Wormwood,Asteraceae,native,doubtful,medium-low,3,2,2023-05-13,2024-05-04
+excluded,75764,Betula occidentalis,Water Birch,Betulaceae,native,doubtful,medium-low,3,2,2024-07-05,2024-07-05
+excluded,name:Carex acutiformis,Carex acutiformis,,Cyperaceae,exotic,doubtful,medium-low,3,3,1965-08-13,1965-08-13
+excluded,1280108,Crataegus shuswapensis,,Rosaceae,native,doubtful,medium-high,3,3,2011-06-13,2011-06-13
+excluded,52671,Dryopteris arguta,,Dryopteridaceae,native,planted,medium-high,3,3,1979-02-13,1979-02-25
+excluded,162710,Eryngium planum,Blue Eryngo,Apiaceae,exotic,persisting or waif,medium-low,3,2,2023-06-14,2023-06-14
+excluded,130989,Euthamia graminifolia,,Asteraceae,exotic,doubtful,medium-low,3,3,2019-09-13,2020-07-16
+excluded,77290,Glyceria fluitans,,Poaceae,native,persisting or waif,medium-high,3,3,2005-07-13,2005-07-17
+excluded,140117,Glyceria septentrionalis,,Poaceae,unknown,doubtful,medium-low,3,3,1887-05-13,1887-05-31
+excluded,129018,Hordeum pusillum,,Poaceae,native,doubtful,low,3,3,1976-05-30,1981-05-22
+excluded,50612,Lupinus nanus,,Fabaceae,native,doubtful,medium-low,3,3,1990-05-13,1990-05-26
+excluded,866252,Schedonorus pratensis,Meadow Fescue,Poaceae,exotic,doubtful,medium-high,3,2,1997-06-12,1997-06-12
+excluded,80195,Setaria pumila ssp. pumila,,Poaceae,exotic,persisting or waif,medium-low,3,3,2007-11-01,2007-11-01
+excluded,487093,Sonchus glaucescens,,Asteraceae,unknown,doubtful,medium-low,3,3,1992-06-13,1992-06-13
+excluded,79385,Tragopogon pratensis,Meadow Salsify,Asteraceae,exotic,doubtful,low,3,0,No known research grade record,No known research grade record
+excluded,68089,Tsuga mertensiana,,Pinaceae,native,doubtful,medium-high,3,3,1948-08-13,2024-01-28
+excluded,82816,Viola sororia,Common Blue Violet,Violaceae,native,doubtful,low,3,0,No known research grade record,No known research grade record
+excluded,363448,Amelanchier cusickii,Cusick's Serviceberry,Rosaceae,native,doubtful,low,2,0,No known research grade record,No known research grade record
+excluded,158861,Astragalus collinus var. collinus,,Fabaceae,native,doubtful,medium-high,2,2,1991-01-01,1991-01-01
+excluded,159470,Bromus pacificus,,Poaceae,native,doubtful,medium-high,2,2,1981-05-22,1981-05-22
+excluded,76780,Eleocharis ovata,,Cyperaceae,native,doubtful,medium-high,2,2,1966-08-18,1966-08-18
+excluded,126700,Helianthus angustifolius,,Asteraceae,unknown,doubtful,low,2,2,2007-07-13,2007-07-29
+excluded,125787,Lathyrus pratensis,,Fabaceae,exotic,persisting or waif,medium-high,2,2,2005-07-16,2005-07-16
+excluded,209478,Linum narbonense,,Linaceae,exotic,persisting or waif,medium-low,2,2,2007-07-29,2007-07-29
+excluded,164712,Lolium temulentum,Darnel Ryegrass,Poaceae,exotic,doubtful,medium-low,2,2,2023-05-07,2023-05-07
+excluded,58202,Malva parviflora,Cheeseweed Mallow,Malvaceae,exotic,doubtful,medium-low,2,1,1940-04-27,1940-04-27
+excluded,242276,Plagiobothrys cusickii,Cusick's Popcornflower,Boraginaceae,native,doubtful,medium-low,2,1,1913-06-28,1913-06-28
+excluded,78623,Platanthera dilatata,,Orchidaceae,native,"reviewed, not carried to the list",medium-high,2,2,1912-05-19,1912-05-19
+excluded,167464,Prunus hortulana,,Rosaceae,unknown,doubtful; planted,low,2,2,1997-07-13,1997-07-13
+excluded,78923,Sagina saginoides,Alpine Pearlwort,Caryophyllaceae,native,doubtful,low,2,0,No known research grade record,No known research grade record
+excluded,168352,Salix pseudomonticola,,Salicaceae,native,doubtful,medium-high,2,2,1980-09-24,1980-09-24
+excluded,79033,Sedum stenopetalum,,Crassulaceae,native,doubtful,medium-high,2,2,1997-06-04,1997-06-04
+excluded,79112,Silene noctiflora,,Caryophyllaceae,exotic,persisting or waif,medium-high,2,2,1917-06-11,1917-06-11
+excluded,79125,Sisymbrium loeselii,,Brassicaceae,exotic,persisting or waif,medium-high,2,2,1970-07-24,1970-07-24
+excluded,79203,Stellaria longipes ssp. longipes,,Caryophyllaceae,native,doubtful,medium-high,2,2,1919-06-21,1919-06-21
+excluded,170025,Trisetum flavescens,,Poaceae,unknown,planted,medium-low,2,2,1939-08-06,1939-08-06
+excluded,79484,Veratrum viride var. eschscholzianum,,Melanthiaceae,native,"reviewed, not carried to the list",medium-high,2,2,1941-08-27,1941-08-27
+excluded,name:Achnatherum nelsonii ssp. nelsonii,Achnatherum nelsonii ssp. nelsonii,,Poaceae,native,"reviewed, not carried to the list",medium-low,1,1,1875-05-07,1875-05-07
+excluded,name:Aconitum columbianum ssp. columbianum,Aconitum columbianum ssp. columbianum,,Ranunculaceae,native,planted,medium-low,1,1,1953,1953
+excluded,name:Alopecurus saccatus,Alopecurus saccatus,,Poaceae,native,doubtful,low,1,1,1972,1972
+excluded,75569,Arnica cordifolia,Heartleaf Arnica,Asteraceae,native,doubtful,low,1,0,No known research grade record,No known research grade record
+excluded,75747,Beckmannia syzigachne,American Slough Grass,Poaceae,native,doubtful,low,1,0,2025-04-13,No known research grade record
+excluded,75855,Botrypus virginianus,,Ophioglossaceae,native,doubtful,medium-high,1,1,,No known research grade record
+excluded,name:Carex buxbaumii,Carex buxbaumii,,Cyperaceae,native,doubtful,medium-low,1,1,1970-08-03,1970-08-03
+excluded,name:Castilleja exserta var. exserta,Castilleja exserta var. exserta,,Orobanchaceae,unknown,doubtful,medium-low,1,1,1972,1972
+excluded,55713,Centaurea jacea,Brown Knapweed,Asteraceae,exotic,doubtful,low,1,0,No known research grade record,No known research grade record
+excluded,47192,Cornus canadensis,,Cornaceae,native,doubtful; planted,medium-low,1,1,2021-05-21,2021-05-21
+excluded,name:Corydalis scouleri,Corydalis scouleri,,Papaveraceae,native,doubtful,medium-low,1,1,1959,1959
+excluded,name:Cuscuta pentagona,Cuscuta pentagona,,Convolvulaceae,native,doubtful,low,1,1,1940-07-04,1940-07-04
+excluded,name:Eriophorum chamissonis,Eriophorum chamissonis,,Cyperaceae,native,doubtful,medium-low,1,1,1897-06-01,1897-06-01
+excluded,128770,Fritillaria camschatcensis,Rice Root,Liliaceae,native,planted,low,1,0,No known research grade record,No known research grade record
+excluded,77183,Gaillardia aristata,Great Blanketflower,Asteraceae,native,doubtful,low,1,0,No known research grade record,No known research grade record
+excluded,name:Gentianella amarella ssp. acuta,Gentianella amarella ssp. acuta,,Gentianaceae,native,doubtful,medium-low,1,1,1903-07-18,1903-07-18
+excluded,name:Heuchera chlorantha,Heuchera chlorantha,,Saxifragaceae,native,doubtful,medium-low,1,1,1960-06-28,1960-06-28
+excluded,77616,Lactuca biennis,Tall Blue Lettuce,Asteraceae,native,doubtful,low,1,0,No known research grade record,No known research grade record
+excluded,name:Mentha rotundifolia,Mentha rotundifolia,,Lamiaceae,exotic,planted,low,1,1,1993-09-24,1993-09-24
+excluded,name:Nuphar variegata,Nuphar variegata,,Nymphaeaceae,native,doubtful,medium-low,1,1,1969,1969
+excluded,78236,Nymphaea mexicana,Yellow Waterlily,Nymphaeaceae,exotic,doubtful; planted,low,1,0,No known research grade record,No known research grade record
+excluded,name:Pectiantia pentandra,Pectiantia pentandra,,Saxifragaceae,native,doubtful,medium-low,1,1,1972,1972
+excluded,name:Petrorhagia saxifraga,Petrorhagia saxifraga,,Caryophyllaceae,exotic,doubtful,medium-low,1,1,1999-07-14,1999-07-14
+excluded,57709,Plagiobothrys chorisianus,Artist's Popcornflower,Boraginaceae,unknown,doubtful,low,1,0,No known research grade record,No known research grade record
+excluded,name:Poa glauca ssp. glauca,Poa glauca ssp. glauca,,Poaceae,native,doubtful,medium-low,1,1,1916-01-01,1916-01-01
+excluded,name:Polemonium micranthum,Polemonium micranthum,,Polemoniaceae,native,doubtful,medium-low,1,1,1915,1915
+excluded,name:Pyrola chlorantha,Pyrola chlorantha,,Ericaceae,native,doubtful,medium-low,1,1,1919,1919
+excluded,name:Rubus nivalis,Rubus nivalis,,Rosaceae,native,doubtful,medium-low,1,1,1921,1921
+excluded,name:Saxifraga mertensiana,Saxifraga mertensiana,,Saxifragaceae,native,doubtful,medium-low,1,1,1901-05-25,1901-05-25
+excluded,name:Sonchus arvensis ssp. uliginosus,Sonchus arvensis ssp. uliginosus,,Asteraceae,exotic,doubtful,medium-low,1,1,1983-06-13,1983-06-13
+excluded,64239,Stuckenia pectinata,Fennel-Leaf Pondweed,Potamogetonaceae,native,doubtful,low,1,0,No known research grade record,No known research grade record
+excluded,name:Symphyotrichum lanceolatum var. hesperium,Symphyotrichum lanceolatum var. hesperium,,Asteraceae,native,doubtful,medium-low,1,1,1958-07-30,1958-07-30
+excluded,name:Symphyotrichum spathulatum,Symphyotrichum spathulatum,,Asteraceae,native,doubtful,medium-low,1,1,1905-08-03,1905-08-03
+excluded,79480,Vancouveria hexandra,White Inside-Out Flower,Berberidaceae,unknown,planted,low,1,0,No known research grade record,No known research grade record
+excluded,60251,Verbena hastata,Blue Vervain,Verbenaceae,native,doubtful,low,1,0,No known research grade record,No known research grade record
+excluded,name:Viola langsdorffii,Viola langsdorffii,,Violaceae,native,doubtful,medium-low,1,1,1968-05-08,1968-05-08
+excluded,name:Agoseris glauca var. glauca,Agoseris glauca var. glauca,,Asteraceae,native,doubtful,low,,,,
+excluded,name:Agrostis canina,Agrostis canina,,Poaceae,exotic,planted,low,,,,
+excluded,name:Agrostis humilis,Agrostis humilis,,Poaceae,native,doubtful,low,,,,
+excluded,name:Aira elegans,Aira elegans,,Poaceae,exotic,doubtful,low,,,,
+excluded,name:Alyssum alyssoides,Alyssum alyssoides,,Brassicaceae,exotic,doubtful,low,,,,
+excluded,name:Amsinckia lycopsoides,Amsinckia lycopsoides,,Boraginaceae,native,doubtful,low,,,,
+excluded,name:Boechera pendulocarpa,Boechera pendulocarpa,,Brassicaceae,native,doubtful,low,,,,
+excluded,name:Bromus japonicus,Bromus japonicus,,Poaceae,exotic,doubtful,low,,,,
+excluded,name:Bromus latiglumis,Bromus latiglumis,,Poaceae,unknown,doubtful,low,,,,
+excluded,name:Carex aperta,Carex aperta,,Cyperaceae,native,doubtful,low,,,,
+excluded,name:Carex diandra,Carex diandra,,Cyperaceae,native,doubtful,low,,,,
+excluded,name:Carex illota,Carex illota,,Cyperaceae,native,doubtful,low,,,,
+excluded,name:Carex kelloggii var. impressa,Carex kelloggii var. impressa,,Cyperaceae,native,doubtful,low,,,,
+excluded,name:Carex lacustris,Carex lacustris,,Cyperaceae,native,doubtful,low,,,,
+excluded,name:Carex pallescens,Carex pallescens,,Cyperaceae,exotic,doubtful,low,,,,
+excluded,name:Carex pauciflora,Carex pauciflora,,Cyperaceae,native,doubtful,low,,,,
+excluded,name:Carex petasata,Carex petasata,,Cyperaceae,native,doubtful,low,,,,
+excluded,name:Carex phaeocephala,Carex phaeocephala,,Cyperaceae,native,doubtful,low,,,,
+excluded,name:Carex scirpoidea ssp. stenochlaena,Carex scirpoidea ssp. stenochlaena,,Cyperaceae,native,doubtful,low,,,,
+excluded,name:Carex spectabilis,Carex spectabilis,,Cyperaceae,native,doubtful,low,,,,
+excluded,name:Carex tenera,Carex tenera,,Cyperaceae,native,doubtful,low,,,,
+excluded,name:Castilleja ambigua var. ambigua,Castilleja ambigua var. ambigua,,Orobanchaceae,native,doubtful,low,,,,
+excluded,name:Castilleja angustifolia,Castilleja angustifolia,,Orobanchaceae,unknown,doubtful,low,,,,
+excluded,name:Centaurea calcitrapa,Centaurea calcitrapa,,Asteraceae,exotic,persisting or waif,low,,,,
+excluded,name:Centaurea melitensis,Centaurea melitensis,,Asteraceae,exotic,doubtful,low,,,,
+excluded,name:Claytonia saxosa,Claytonia saxosa,,Montiaceae,unknown,doubtful,low,,,,
+excluded,name:Corallorhiza trifida,Corallorhiza trifida,,Orchidaceae,native,doubtful,low,,,,
+excluded,name:Crepis intermedia,Crepis intermedia,,Asteraceae,native,doubtful,low,,,,
+excluded,name:Crepis modocensis,Crepis modocensis,,Asteraceae,native,doubtful,low,,,,
+excluded,name:Crepis runcinata ssp. runcinata,Crepis runcinata ssp. runcinata,,Asteraceae,native,doubtful,low,,,,
+excluded,name:Cryptantha torreyana,Cryptantha torreyana,,Boraginaceae,native,doubtful,low,,,,
+excluded,name:Dactylorhiza viridis,Dactylorhiza viridis,,Orchidaceae,native,doubtful,low,,,,
+excluded,name:Deschampsia cespitosa ssp. beringensis,Deschampsia cespitosa ssp. beringensis,,Poaceae,native,doubtful,low,,,,
+excluded,name:Draba nemorosa,Draba nemorosa,,Brassicaceae,native,doubtful,low,,,,
+excluded,name:Equisetum laevigatum,Equisetum laevigatum,,Equisetaceae,native,doubtful,low,,,,
+excluded,name:Eremogone capillaris var. americana,Eremogone capillaris var. americana,,Caryophyllaceae,native,doubtful,low,,,,
+excluded,name:Erythranthe tilingii,Erythranthe tilingii,,Phrymaceae,native,doubtful,low,,,,
+excluded,name:Euphorbia serpyllifolia var. serpyllifolia,Euphorbia serpyllifolia var. serpyllifolia,,Euphorbiaceae,native,doubtful,low,,,,
+excluded,name:Festuca valesiaca,Festuca valesiaca,,Poaceae,exotic,doubtful,low,,,,
+excluded,name:Filipendula rubra,Filipendula rubra,,Rosaceae,unknown,doubtful,low,,,,
+excluded,name:Galium mollugo,Galium mollugo,,Rubiaceae,exotic,doubtful,low,,,,
+excluded,name:Gratiola virginiana,Gratiola virginiana,,Plantaginaceae,unknown,doubtful,low,,,,
+excluded,name:Hackelia diffusa var. diffusa,Hackelia diffusa var. diffusa,,Boraginaceae,native,doubtful,low,,,,
+excluded,name:Hesperostipa comata,Hesperostipa comata,,Poaceae,native,doubtful,low,,,,
+excluded,name:Heuchera cylindrica,Heuchera cylindrica,,Saxifragaceae,native,doubtful,low,,,,
+excluded,name:Hornungia procumbens,Hornungia procumbens,,Brassicaceae,native,doubtful,low,,,,
+excluded,name:Hosackia pinnata,Hosackia pinnata,,Fabaceae,native,doubtful,low,,,,
+excluded,name:Juncus longistylis,Juncus longistylis,,Juncaceae,native,doubtful,low,,,,
+excluded,name:Juncus oxymeris,Juncus oxymeris,,Juncaceae,native,doubtful,low,,,,
+excluded,name:Linum perenne,Linum perenne,,Linaceae,exotic,doubtful,low,,,,
+excluded,name:Madia elegans,Madia elegans,,Asteraceae,unknown,doubtful,low,,,,
+excluded,name:Myriophyllum hippuroides,Myriophyllum hippuroides,,Haloragaceae,native,doubtful,low,,,,
+excluded,name:Nassella viridula,Nassella viridula,,Poaceae,native,doubtful,low,,,,
+excluded,name:Onobrychis viciifolia,Onobrychis viciifolia,,Fabaceae,exotic,persisting or waif; planted,low,,,,
+excluded,name:Opuntia polyacantha,Opuntia polyacantha,,Cactaceae,native,doubtful,low,,,,
+excluded,name:Pascopyrum smithii,Pascopyrum smithii,,Poaceae,native,doubtful,low,,,,
+excluded,name:Persicaria wallichii var. wallichii,Persicaria wallichii var. wallichii,,Polygonaceae,exotic,doubtful,low,,,,
+excluded,name:Platanthera huronensis,Platanthera huronensis,,Orchidaceae,native,doubtful,low,,,,
+excluded,name:Podagrostis thurberiana,Podagrostis thurberiana,,Poaceae,native,doubtful,low,,,,
+excluded,name:Populus canescens,Populus canescens,,Salicaceae,unknown,doubtful; planted,low,,,,
+excluded,name:Prosartes trachycarpa,Prosartes trachycarpa,,Liliaceae,native,doubtful,low,,,,
+excluded,name:Psilocarphus oregonus,Psilocarphus oregonus,,Asteraceae,unknown,doubtful,low,,,,
+excluded,name:Pterostegia drymarioides,Pterostegia drymarioides,,Polygonaceae,unknown,doubtful,low,,,,
+excluded,name:Puccinellia maritima,Puccinellia maritima,,Poaceae,unknown,doubtful; persisting or waif,low,,,,
+excluded,name:Ranunculus × heimburgerae,Ranunculus × heimburgerae,,Ranunculaceae,unknown,doubtful,low,,,,
+excluded,name:Reseda alba,Reseda alba,,Resedaceae,exotic,persisting or waif,low,,,,
+excluded,name:Selaginella densa,Selaginella densa,,Selaginellaceae,native,doubtful,low,,,,
+excluded,name:Stellaria alsine,Stellaria alsine,,Caryophyllaceae,native,doubtful,low,,,,
+excluded,name:Symphyotrichum foliaceum,Symphyotrichum foliaceum,,Asteraceae,native,doubtful,low,,,,
+excluded,name:Trifolium aureum,Trifolium aureum,,Fabaceae,exotic,doubtful,low,,,,
+excluded,name:Trifolium gracilentum,Trifolium gracilentum,,Fabaceae,unknown,doubtful,low,,,,
+excluded,name:Ulmus alata,Ulmus alata,,Ulmaceae,unknown,doubtful; planted,low,,,,
+excluded,name:Viola canadensis var. rugulosa,Viola canadensis var. rugulosa,,Violaceae,native,doubtful,low,,,,
+excluded,name:Viola nephrophylla,Viola nephrophylla,,Violaceae,native,doubtful,low,,,,
+excluded,name:Zeltnera exaltata,Zeltnera exaltata,,Gentianaceae,native,doubtful,low,,,,
+underReview,84298,Aesculus hippocastanum,Horse-Chestnut,Sapindaceae,exotic,review in progress,medium-high,375,250,2017-04-10,2025-04-30
+underReview,124526,Grindelia integrifolia,Puget Sound Gumweed,Asteraceae,native,review in progress,medium-low,353,50,1915-07-18,2024-12-04
+underReview,75968,Calystegia silvatica ssp. silvatica,Large Bindweed,Convolvulaceae,exotic,review in progress,medium-high,351,111,2014-08-13,2024-12-11
+underReview,55769,Crocus vernus,Spring Crocus,Iridaceae,exotic,review remaining,medium-low,120,34,2019-03-13,2025-02-26
+underReview,47565,Populus nigra,Black Poplar,Salicaceae,exotic,review remaining,medium-low,80,13,2019-08-17,2023-09-30
+underReview,164232,Jasminum nudiflorum,Winter Jasmine,Oleaceae,exotic,review remaining,medium-low,76,50,2018-03-13,2025-03-12
+underReview,47553,Taxus baccata,Common Yew,Taxaceae,exotic,review in progress,medium-high,74,35,1991-09-13,2025-02-20
+underReview,64331,Iris foetidissima,Stinking Iris,Iridaceae,exotic,review remaining,medium-low,66,34,2020-01-20,2025-03-01
+underReview,956480,Potentilla anserina ssp. egedii,Arctic Silverweed,Rosaceae,unknown,review in progress,high,53,51,1901-05-13,1990-09-15
+underReview,807416,Papaver cambricum,Welsh Poppy,Papaveraceae,exotic,review remaining,medium-high,48,29,2019-09-28,2024-09-02
+underReview,411074,Cotoneaster lacteus,Late Cotoneaster,Rosaceae,exotic,review remaining,medium-low,46,3,2024-09-13,2024-09-24
+underReview,204380,Phedimus spurius,Caucasian Stonecrop,Crassulaceae,exotic,review remaining,medium-low,41,32,2019-03-20,2025-02-19
+underReview,55757,Chelidonium majus,Greater Celandine,Papaveraceae,exotic,review in progress,medium-high,31,24,2019-06-13,2025-04-19
+underReview,487126,Crocus stellaris,Dutch Yellow Crocus,Iridaceae,exotic,review remaining,medium-low,30,26,2019-02-13,2024-02-21
+underReview,166114,Papaver orientale,Oriental Poppy,Papaveraceae,exotic,review remaining,medium-low,29,9,2020-06-05,2024-05-30
+underReview,53547,Ulmus americana,American Elm,Ulmaceae,exotic,review remaining,medium-low,28,0,No known research grade record,No known research grade record
+underReview,51633,Digitaria sanguinalis,Hairy Crabgrass,Poaceae,exotic,review remaining,medium-low,26,3,1943-09-05,2021-10-23
+underReview,121763,Castanea sativa,Sweet Chestnut,Fagaceae,exotic,review in progress,medium-high,24,13,1989-07-13,2023-07-06
+underReview,60316,Typha angustifolia,Narrow-Leaved Cattail,Typhaceae,exotic,review remaining,medium-low,24,5,2020-04-15,2023-07-08
+underReview,169474,Symphyotrichum novi-belgii var. novi-belgii,New York Aster,Asteraceae,exotic,review remaining,medium-low,23,5,2018-10-13,2024-10-15
+underReview,130800,Corydalis lutea,Yellow Fumitory,Papaveraceae,exotic,review remaining,medium-low,22,12,2019-09-13,2024-06-23
+underReview,61167,Alisma triviale,Northern Water-Plantain,Alismataceae,native,review in progress,medium-low,20,4,2020-08-29,2023-07-07
+underReview,60739,Armeria maritima ssp. californica,California Thrift,Plumbaginaceae,native,review in progress,high,20,19,1896-05-09,1990-06-07
+underReview,56015,Tamarix ramosissima,Saltcedar,Tamaricaceae,exotic,review remaining,medium-low,20,5,2021-05-12,2022-07-31
+underReview,55766,Euphorbia cyparissias,Cypress Spurge,Euphorbiaceae,exotic,review remaining,medium-high,19,6,2019-06-23,2025-04-15
+underReview,64616,Aurinia saxatilis,Gold-Dust,Brassicaceae,exotic,review in progress,low,18,3,2020-11-22,2021-11-19
+underReview,59260,Calendula arvensis,Field Marigold,Asteraceae,exotic,review in progress,medium-high,17,5,2006-03-13,2021-03-15
+underReview,55847,Euonymus europaeus,Spindle,Celastraceae,exotic,review remaining,medium-low,17,8,2023-10-24,2024-11-11
+underReview,54841,Salix alba,White Willow,Salicaceae,exotic,review remaining,medium-high,17,5,2019-10-29,2020-11-10
+underReview,55505,Allium triquetrum,Three-Cornered Garlic,Amaryllidaceae,exotic,review in progress,medium-low,16,10,2021-04-13,2025-04-26
+underReview,60350,Artemisia absinthium,Absinthe Wormwood,Asteraceae,exotic,review in progress,medium-high,15,6,2019-04-23,2021-02-18
+underReview,208784,Galium spurium,False Cleavers,Rubiaceae,exotic,review in progress,high,15,4,2007-06-27,2024-02-22
+underReview,166162,Parthenocissus tricuspidata,Japanese Creeper,Vitaceae,exotic,review remaining,medium-low,15,7,2019-04-13,2023-08-10
+underReview,79150,Solidago elongata,West Coast Canada Goldenrod,Asteraceae,native,review in progress,medium-high,15,5,2022-10-13,2023-10-01
+underReview,1363874,Aphanes australis,Slender Parsley-Piert,Rosaceae,exotic,review in progress,high,14,6,1977-05-20,2022-04-29
+underReview,127196,Myosotis stricta,Blue Forget-Me-Not,Boraginaceae,exotic,review in progress,high,14,10,1908-05-01,1995-05-11
+underReview,75869,Brassica napus,Rapeseed,Brassicaceae,exotic,review in progress,medium-high,13,6,1976-05-13,2007-06-19
+underReview,1527029,Humulus lupulus var. neomexicanus,Western Hop,Cannabaceae,exotic,review remaining,medium-high,13,10,2019-09-30,2023-10-17
+underReview,54834,Prunus serotina var. serotina,Black Cherry,Rosaceae,exotic,review remaining,medium-low,13,2,2021-07-25,2021-07-25
+underReview,167973,Rorippa sylvestris,Creeping Yellowcress,Brassicaceae,exotic,review in progress,high,13,9,1937-07-03,1970-07-24
+underReview,78783,Puccinellia nutkaensis,Alaska Alkali Grass,Poaceae,native,review in progress,high,12,11,1912-07-13,1976-08-02
+underReview,406465,Teucrium hircanicum,,Lamiaceae,exotic,review remaining,medium-low,12,6,2018-07-04,2022-10-30
+underReview,76148,Castilleja miniata,Giant Red Indian Paintbrush,Orobanchaceae,native,review in progress,high,11,11,1921-05-13,2020-06-13
+underReview,60202,Myriophyllum aquaticum,Parrot's Feather,Haloragaceae,exotic,review in progress,medium-high,11,10,2022-08-13,2024-09-30
+underReview,51618,Myrrhis odorata,Sweet Cicely,Apiaceae,exotic,review in progress,medium-high,11,7,2020-05-13,2023-05-26
+underReview,56843,Scandix pecten-veneris,Shepherd's-Needle,Apiaceae,exotic,review in progress,high,11,11,1944-05-13,2025-04-15
+underReview,57182,Hordeum vulgare,Common Barley,Poaceae,exotic,review remaining,medium-high,10,8,2020-08-13,2025-04-26
+underReview,64241,Brassica juncea,Brown Mustard,Brassicaceae,exotic,review in progress,medium-low,9,6,1934-04-29,1966-06-29
+underReview,160946,Cotoneaster dammeri,Bearberry Cotoneaster,Rosaceae,exotic,review remaining,medium-high,9,9,1993-07-13,2023-01-16
+underReview,60972,Leontodon crispus,,Asteraceae,exotic,review in progress,medium-low,9,9,1938-07-13,1995-07-01
+underReview,123050,Vallisneria americana,American Eelgrass,Hydrocharitaceae,exotic,review in progress,medium-high,9,7,1971-08-13,2023-08-16
+underReview,1510826,Ammophila breviligulata ssp. breviligulata,American Marram Grass,Poaceae,exotic,review remaining,medium-low,8,4,2023-01-28,2025-02-06
+underReview,204362,Nasturtium microphyllum,,Brassicaceae,exotic,review in progress,medium-high,8,6,1947-06-05,1992-05-16
+underReview,55759,Silene dioica,Red Campion,Caryophyllaceae,exotic,review remaining,medium-low,8,8,2019-08-28,2022-06-26
+underReview,155848,Thinopyrum intermedium,Intermediate Wheatgrass,Poaceae,exotic,review remaining,medium-low,8,5,2019-08-14,2021-08-04
+underReview,160278,Centaurea paniculata,,Asteraceae,exotic,review remaining,medium-high,7,7,1894-07-13,1960-08-26
+underReview,61200,Festuca idahoensis,Idaho Fescue,Poaceae,native,review in progress,medium-high,7,6,1893-05-13,1941-05-27
+underReview,77293,Glyceria striata,Fowl Mannagrass,Poaceae,native,review in progress,medium-high,7,2,1988-06-30,1988-06-30
+underReview,320881,Juncus gerardii ssp. gerardii,Saltmeadow Rush,Juncaceae,exotic,review remaining,medium-high,7,4,1939-06-13,1991-10-18
+underReview,53183,Oxalis stricta,Upright Yellow Woodsorrel,Oxalidaceae,exotic,review remaining,medium-low,7,3,2022-09-20,2025-01-13
+underReview,127186,Securigera varia,Purple Crownvetch,Fabaceae,exotic,review remaining,medium-low,7,5,2021-06-13,2024-08-29
+underReview,53045,Epilobium ciliatum ssp. ciliatum,,Onagraceae,native,review in progress,medium-high,6,6,1908-06-13,2022-07-24
+underReview,77120,Euphorbia virgata,Slender Leafy Spurge,Euphorbiaceae,exotic,review remaining,medium-low,6,3,2006-06-11,2020-03-23
+underReview,77265,Geum aleppicum,Yellow Avens,Rosaceae,native,review in progress,medium-high,6,3,1924,1976-07-29
+underReview,55830,Glechoma hederacea,Ground-Ivy,Lamiaceae,exotic,review remaining,medium-low,6,6,2020-05-02,2025-04-05
+underReview,77427,Holcus mollis,Creeping Velvet Grass,Poaceae,exotic,review in progress,medium-high,6,5,1997-09-01,2012-06-26
+underReview,77429,Holosteum umbellatum ssp. umbellatum,,Caryophyllaceae,exotic,review remaining,medium-high,6,6,1939-04-18,1940-03-26
+underReview,77513,Isoetes tenella,,Isoetaceae,native,review remaining,medium-high,6,6,1887-08-10,1972-08-11
+underReview,61016,Lupinus polyphyllus var. polyphyllus,,Fabaceae,native,review in progress,medium-high,6,6,1908-06-13,1924-05-27
+underReview,78160,Najas flexilis,,Hydrocharitaceae,native,review in progress,medium-high,6,6,1963-07-27,1971-08-25
+underReview,57191,Phalaris canariensis,Canary Grass,Poaceae,exotic,review remaining,medium-high,6,3,1933-06-12,1963-08-20
+underReview,78649,Poa nemoralis,Wood Meadow-Grass,Poaceae,exotic,review in progress,medium-high,6,5,1908-07-18,1939-06-11
+underReview,56011,Tamarix parviflora,Small-Flowered Tamarisk,Tamaricaceae,exotic,review remaining,medium-low,6,4,1993-05-13,2024-05-13
+underReview,60318,Veronica peregrina var. peregrina,Common Purslane Speedwell,Plantaginaceae,exotic,review remaining,medium-low,6,6,2021-05-13,2022-05-13
+underReview,239373,Arrhenatherum elatius ssp. elatius,,Poaceae,exotic,review remaining,medium-high,5,5,1939-06-13,1996-08-12
+underReview,75909,Bromus racemosus,,Poaceae,exotic,review remaining,medium-high,5,5,1961-07-13,2007-06-19
+underReview,896902,Chenopodiastrum simplex,Eurasian Maple-Leaved Goosefoot,Amaranthaceae,exotic,review in progress,medium-high,5,4,1997-09-13,1997-09-13
+underReview,53366,Cornus occidentalis,Western Dogwood,Cornaceae,native,review in progress,medium-low,5,5,1941-07-25,2020-07-12
+underReview,59235,Descurainia pinnata ssp. brachycarpa,,Brassicaceae,native,review remaining,medium-high,5,4,1927-05-13,1939-08-05
+underReview,55976,Eupatorium cannabinum,Hemp Agrimony,Asteraceae,exotic,review remaining,medium-low,5,5,2021-07-13,2023-09-06
+underReview,157393,Galega officinalis,Common Milkpea,Fabaceae,exotic,review remaining,medium-low,5,4,2020-08-13,2022-07-21
+underReview,55967,Galeopsis bifida,Bifid Hemp-Nettle,Lamiaceae,exotic,review remaining,medium-low,5,5,2017-07-13,2022-08-04
+underReview,77291,Glyceria grandis var. grandis,American Manna Grass,Poaceae,native,review in progress,low,5,1,1945,1945
+underReview,137473,Isoetes maritima,,Isoetaceae,native,review in progress,medium-high,5,5,1914-07-13,1972-08-11
+underReview,63352,Lepidium draba,,Brassicaceae,exotic,review remaining,medium-high,5,5,1900-05-15,1956-06-12
+underReview,78158,Myriophyllum verticillatum,,Haloragaceae,native,review remaining,medium-high,5,5,1917-08-08,1987-05-07
+underReview,118453,Oxybasis macrosperma,,Amaranthaceae,exotic,review remaining,medium-high,5,5,1908-07-13,1913-09-12
+underReview,129107,Robinia hispida var. hispida,Bristly Locust,Fabaceae,exotic,review remaining,medium-low,5,4,2023-05-31,2023-09-07
+underReview,78876,Rorippa curvipes,,Brassicaceae,native,review remaining,medium-high,5,5,1922-06-03,1927-06-22
+underReview,169753,Thymus pulegioides,Large Thyme,Lamiaceae,exotic,review remaining,medium-low,5,3,2023-07-11,2023-07-11
+underReview,79387,Trautvetteria caroliniensis,Carolina Bugbane,Ranunculaceae,native,review in progress,medium-low,5,2,2018-06-13,2018-06-20
+underReview,56222,Tussilago farfara,Colt's-Foot,Asteraceae,exotic,review remaining,medium-low,5,5,2019-04-13,2024-03-19
+underReview,48935,Arceuthobium americanum,,Santalaceae,native,review in progress,medium-high,4,4,1990-04-29,1995-05-07
+underReview,61063,Calamagrostis nutkaensis,Pacific Small-Reedgrass,Poaceae,native,review in progress,medium-high,4,3,1913-06-15,1920-08-21
+underReview,159732,Camelina sativa,,Brassicaceae,exotic,review remaining,medium-high,4,4,1896-07-15,1930-07-01
+underReview,1091404,Carex kelloggii var. kelloggii,,Cyperaceae,native,review in progress,medium-high,4,4,1908-06-13,1966-08-18
+underReview,160070,Carex pluriflora,Several-Flowered Sedge,Cyperaceae,native,review in progress,medium-high,4,4,1991-07-13,2022-06-04
+underReview,76445,Coreopsis tinctoria,Plains Coreopsis,Asteraceae,native,review in progress,medium-high,4,3,2007-07-13,2007-07-29
+underReview,64240,Cortaderia selloana,Pampas Grass,Poaceae,exotic,review remaining,medium-low,4,4,2008-11-10,2023-09-16
+underReview,77287,Glyceria borealis,,Poaceae,native,review in progress,medium-high,4,4,1914-06-16,1999-08-04
+underReview,77367,Hemizonella minima,,Asteraceae,native,review in progress,medium-high,4,4,1952-05-16,1996-05-31
+underReview,84146,Juncus canadensis,Canada Rush,Juncaceae,exotic,review in progress,medium-high,4,3,1976-07-13,1976-07-15
+underReview,143688,Lupinus arcticus ssp. arcticus,,Fabaceae,native,review in progress,medium-high,4,4,2004-05-13,2004-05-13
+underReview,61034,Myriophyllum sibiricum,Siberian Water-Milfoil,Haloragaceae,native,review in progress,medium-low,4,3,2019-07-13,2019-07-27
+underReview,129855,Neslia paniculata,,Brassicaceae,exotic,review in progress,medium-high,4,4,1913-06-26,1932-07-14
+underReview,78337,Panicum capillare,Witch Grass,Poaceae,native,review in progress,medium-low,4,2,1976-07-29,1976-07-29
+underReview,58960,Plantago coronopus,Buck's-Horn Plantain,Plantaginaceae,exotic,review remaining,medium-low,4,3,2021-01-23,2024-04-21
+underReview,167223,Polygonum achoreum,,Polygonaceae,native,review remaining,medium-high,4,4,1953-07-13,1991-09-16
+underReview,143678,Polystichum andersonii,,Dryopteridaceae,native,review remaining,medium-high,4,4,1915-12-13,1917-10-07
+underReview,78707,Potamogeton crispus,Curly-Leaf Pondweed,Potamogetonaceae,exotic,review remaining,medium-low,4,4,2022-08-13,2023-07-01
+underReview,78785,Puccinellia pumila,,Poaceae,native,review remaining,medium-high,4,4,1939,1983
+underReview,517683,Ranunculus flammula var. reptans,,Ranunculaceae,native,review remaining,medium-high,4,4,1961-05-13,1992-05-16
+underReview,371533,Scilla sardensis,,Asparagaceae,exotic,review in progress,medium-low,4,4,2006-03-13,2011-03-31
+underReview,58389,Sorghum bicolor ssp. bicolor,Sorghums,Poaceae,exotic,review remaining,medium-low,4,4,2020-10-13,2021-09-13
+underReview,243049,Spiraea douglasii var. menziesii,,Rosaceae,native,review in progress,medium-high,4,4,1905-08-13,1973-06-22
+underReview,170140,Verbascum phlomoides,Orange Mullein,Scrophulariaceae,exotic,review remaining,medium-low,4,2,2023-07-15,2023-07-15
+underReview,53376,Cotoneaster spp.,,Rosaceae,exotic,review remaining,medium-high,3,3,2006-03-13,2006-03-18
+underReview,133034,Daphne mezereum,Mezereon,Thymelaeaceae,exotic,review remaining,medium-low,3,3,2021-04-13,2021-04-13
+underReview,161639,Datura innoxia,,Solanaceae,exotic,review remaining,medium-high,3,3,2009-09-06,2009-09-06
+underReview,161664,Delphinium elatum,,Ranunculaceae,exotic,review remaining,medium-low,3,3,2020-06-13,2020-07-12
+underReview,76658,Digitaria ischaemum,Smooth Crabgrass,Poaceae,exotic,review remaining,medium-low,3,1,1965,1965
+underReview,48618,Echinocystis lobata,,Cucurbitaceae,exotic,review remaining,medium-high,3,3,1922-01-01,1922-01-01
+underReview,162822,Euphorbia exigua,,Euphorbiaceae,exotic,review remaining,medium-high,3,3,1939-06-12,1945-09-05
+underReview,236440,Hordeum jubatum ssp. intermedium,,Poaceae,native,review in progress,medium-low,3,3,1965-08-13,1976-08-02
+underReview,164252,Juncus alpinoarticulatus,,Juncaceae,native,review remaining,medium-high,3,3,1961-06-03,1961-06-23
+underReview,873482,Juniperus communis var. kelleyi,,Cupressaceae,native,review remaining,medium-high,3,3,1920-07-24,1920-07-24
+underReview,164527,Lepidium sativum,,Brassicaceae,exotic,review in progress,medium-low,3,3,1913-07-22,1913-07-22
+underReview,78706,Potamogeton berchtoldii,,Potamogetonaceae,native,review remaining,medium-high,3,3,1980-06-11,1980-06-19
+underReview,167322,Potamogeton friesii,,Potamogetonaceae,native,review remaining,medium-high,3,3,1971-08-23,1977-06-20
+underReview,167326,Potamogeton obtusifolius,,Potamogetonaceae,native,review remaining,medium-high,3,3,1979-06-19,1979-06-20
+underReview,135408,Quercus cerris,,Fagaceae,exotic,review remaining,medium-low,3,3,1946-07-13,1946-07-15
+underReview,167957,Rorippa amphibia,Amphibious Yellowcress,Brassicaceae,exotic,review remaining,medium-low,3,2,2024-03-23,2024-03-23
+underReview,911385,Sedum thartii,,Crassulaceae,exotic,review remaining,medium-low,3,2,2024-10-17,2024-10-17
+underReview,79070,Setaria viridis,Green Bristle Grass,Poaceae,exotic,review remaining,medium-low,3,2,2019-11-01,2019-11-01
+underReview,333642,Solidago lepida var. lepida,,Asteraceae,native,review in progress,medium-high,3,3,1887-07-09,1967-08-10
+underReview,55739,Viola tricolor var. tricolor,Wild Pansy,Violaceae,exotic,review remaining,medium-low,3,2,2021-05-13,2021-05-30
+underReview,75309,Agropyron cristatum ssp. pectinatum,,Poaceae,exotic,review in progress,medium-low,2,2,1939-06-17,1939-06-17
+underReview,71045,Amsinckia spectabilis,Woolly Breeches,Boraginaceae,native,review in progress,medium-low,2,1,1913-06-12,1913-06-12
+underReview,75460,Antennaria dimorpha,,Asteraceae,native,review in progress,medium-high,2,2,1950-05-18,1950-05-18
+underReview,75824,Boechera stricta,,Brassicaceae,native,review in progress,medium-high,2,2,1934-03-01,1934-03-01
+underReview,75911,Bromus secalinus,,Poaceae,exotic,review remaining,medium-high,2,2,1913-07-22,1913-07-22
+underReview,76429,Conringia orientalis,,Brassicaceae,exotic,review remaining,medium-high,2,2,1913-06-14,1913-06-14
+underReview,76584,Cyperus esculentus var. leptostachyus,,Cyperaceae,exotic,review remaining,medium-high,2,2,2009-09-27,2009-09-27
+underReview,52655,Drosera anglica,,Droseraceae,native,review in progress,medium-high,2,2,1972-07-25,1972-07-25
+underReview,57020,Eleocharis acicularis,,Cyperaceae,native,review in progress,medium-high,2,2,1982-09-26,1982-09-26
+underReview,163222,Genista tinctoria,,Fabaceae,exotic,review remaining,medium-high,2,2,2008-11-10,2008-11-10
+underReview,163261,Geranium ibericum,,Geraniaceae,exotic,review remaining,medium-low,2,2,1896-06-22,1896-06-22
+underReview,77288,Glyceria declinata,,Poaceae,exotic,review remaining,medium-high,2,2,1972-06-20,1972-06-20
+underReview,77292,Glyceria leptostachya,,Poaceae,native,review in progress,medium-high,2,2,1971-08-19,1971-08-19
+underReview,77315,Gypsophila paniculata,,Caryophyllaceae,exotic,review remaining,medium-high,2,2,2007-07-29,2007-07-29
+underReview,130192,Helianthus maximiliani,,Asteraceae,native,review in progress,medium-low,2,2,1913,1913-07-23
+underReview,236312,Helianthus pauciflorus ssp. subrhomboideus,,Asteraceae,exotic,review remaining,medium-high,2,2,1914-07-16,1914-07-16
+underReview,55909,Hieracium umbellatum ssp. umbellatum,Canada Hawkweed,Asteraceae,exotic,review remaining,medium-high,2,1,1953,1953
+underReview,61204,Hordeum murinum ssp. glaucum,,Poaceae,exotic,review remaining,medium-low,2,2,2007-06-13,2007-06-18
+underReview,77517,Isolepis setacea,,Cyperaceae,exotic,review remaining,medium-high,2,2,1961-06-21,1961-06-21
+underReview,77594,Juncus supiniformis,,Juncaceae,native,review remaining,medium-high,2,2,1917-06-20,1917-06-20
+underReview,164526,Lepidium ruderale,,Brassicaceae,exotic,review remaining,medium-low,2,2,1966-05-25,1966-05-25
+underReview,896905,Oxybasis chenopodioides,,Amaranthaceae,native,review remaining,medium-low,2,2,1991-11-13,1991-11-13
+underReview,78452,Persicaria hydropiper,,Polygonaceae,exotic,review remaining,medium-high,2,2,1997-09-01,1997-09-01
+underReview,166761,Phyllospadix serrulatus,,Zosteraceae,native,review remaining,medium-high,2,2,1967-06-11,1992-04-08
+underReview,59099,Polypogon interruptus,,Poaceae,exotic,review remaining,medium-high,2,2,1914-06-12,1914-06-12
+underReview,78710,Potamogeton gramineus,,Potamogetonaceae,native,review remaining,medium-high,2,2,1971-08-03,1976-10-08
+underReview,78780,Puccinellia distans,European Alkali Grass,Poaceae,exotic,review in progress,medium-high,2,1,1917,1917
+underReview,name:Pyrola dentata,Pyrola dentata,,Ericaceae,native,review in progress,medium-low,2,2,1968-04-07,1968-04-07
+underReview,486980,Ranunculus aquatilis var. diffusus,,Ranunculaceae,native,review remaining,medium-high,2,2,1985-07-13,1985-07-13
+underReview,167724,Ranunculus gmelinii,,Ranunculaceae,native,review remaining,medium-high,2,2,1991-05-26,1991-05-26
+underReview,1047010,Rhinanthus minor ssp. groenlandicus,Little Yellow Rattle,Orobanchaceae,native,review in progress,medium-low,2,1,2023-06-13,2023-06-13
+underReview,168322,Salix candida,,Salicaceae,native,review in progress,medium-high,2,2,1971-08-19,1971-08-19
+underReview,495238,Salix fragilis,Hybrid Crack Willow,Salicaceae,unknown,review in progress,medium-low,2,1,1981-07-11,1981-07-11
+underReview,79161,Sparganium angustifolium,,Typhaceae,native,review in progress,medium-high,2,2,1979-05-31,1979-05-31
+underReview,name:Agrostis idahoensis,Agrostis idahoensis,,Poaceae,native,review in progress,medium-low,1,1,1921,1921
+underReview,name:Antennaria anaphaloides,Antennaria anaphaloides,,Asteraceae,native,review in progress,medium-low,1,1,1972,1972
+underReview,name:Carex flava,Carex flava,,Cyperaceae,native,review in progress,medium-low,1,1,1887-07-01,1887-07-01
+underReview,name:Carex vesicaria,Carex vesicaria,,Cyperaceae,native,review in progress,medium-low,1,1,1895-08-10,1895-08-10
+underReview,name:Carex vulpinoidea,Carex vulpinoidea,,Cyperaceae,native,review in progress,medium-low,1,1,1920-06-01,1920-06-01
+underReview,name:Cerastium brachypodum,Cerastium brachypodum,,Caryophyllaceae,unknown,review in progress,low,1,1,1992-04-18,1992-04-18
+underReview,name:Cinna latifolia,Cinna latifolia,,Poaceae,native,review in progress,medium-low,1,1,1900-08-18,1900-08-18
+underReview,name:Cynodon dactylon var. dactylon,Cynodon dactylon var. dactylon,,Poaceae,exotic,review in progress,medium-low,1,1,1898-07-24,1898-07-24
+underReview,name:Danthonia intermedia ssp. intermedia,Danthonia intermedia ssp. intermedia,,Poaceae,native,review in progress,medium-low,1,1,1996-06-20,1996-06-20
+underReview,name:Eucephalus engelmannii,Eucephalus engelmannii,,Asteraceae,native,review in progress,medium-low,1,1,1915,1915
+underReview,name:Hordeum jubatum ssp. jubatum,Hordeum jubatum ssp. jubatum,,Poaceae,native,review in progress,medium-low,1,1,1972,1972
+underReview,name:Isatis tinctoria,Isatis tinctoria,,Brassicaceae,exotic,review remaining,medium-low,1,1,1928-07-01,1928-07-01
+underReview,name:Juncus filiformis,Juncus filiformis,,Juncaceae,native,review in progress,medium-low,1,1,1955-06-08,1955-06-08
+underReview,name:Lathyrus palustris,Lathyrus palustris,,Fabaceae,native,review in progress,medium-low,1,1,1972,1972
+underReview,name:Lepidium strictum,Lepidium strictum,,Brassicaceae,unknown,review in progress,low,1,1,1921,1921
+underReview,name:Linum lewisii,Linum lewisii,,Linaceae,native,review in progress,low,1,1,2006-05-17,2006-05-17
+underReview,name:Mentha gracilis,Mentha gracilis,,Lamiaceae,exotic,review in progress,medium-low,1,1,1989-09-02,1989-09-02
+underReview,name:Phalaris aquatica,Phalaris aquatica,,Poaceae,exotic,review remaining,low,1,1,1939-06-20,1939-06-20
+underReview,name:Potamogeton foliosus,Potamogeton foliosus,,Potamogetonaceae,native,review in progress,medium-low,1,1,1992-08-03,1992-08-03
+underReview,name:Potamogeton pusillus,Potamogeton pusillus,,Potamogetonaceae,native,review in progress,medium-low,1,1,1988-08-14,1988-08-14
+underReview,78715,Potamogeton richardsonii,Richardson's Pondweed,Potamogetonaceae,native,review remaining,low,1,0,No known research grade record,No known research grade record
+underReview,name:Potamogeton zosteriformis,Potamogeton zosteriformis,,Potamogetonaceae,native,review in progress,medium-low,1,1,1988-08-13,1988-08-13
+underReview,name:Solanum triflorum,Solanum triflorum,,Solanaceae,exotic,review in progress,medium-low,1,1,1972,1972
+underReview,name:Spinulum annotinum,Spinulum annotinum,,Lycopodiaceae,native,review in progress,medium-low,1,1,1972,1972
+underReview,name:Triglochin scilloides,Triglochin scilloides,,Juncaginaceae,native,review in progress,medium-low,1,1,1905-04-03,1905-04-03
+underReview,name:Utricularia minor,Utricularia minor,,Lentibulariaceae,native,review in progress,medium-low,1,1,1947,1947
+underReview,name:Vulpia octoflora,Vulpia octoflora,,Poaceae,native,review in progress,medium-low,1,1,1938-06-23,1938-06-23
+underReview,name:Epilobium hornemannii ssp. hornemannii,Epilobium hornemannii ssp. hornemannii,,Onagraceae,native,review in progress,low,,,,
+unlisted,68357,Scilla forbesii,Forbes' Glory-of-the-snow,Asparagaceae,,not yet reviewed,,315,35,2019-03-19,2025-04-25
+unlisted,55875,Crocus tommasinianus,Woodland crocus,Iridaceae,,not yet reviewed,,231,39,2019-01-20,2025-03-22
+unlisted,181594,Euphorbia characias,Mediterranean spurge,Euphorbiaceae,,not yet reviewed,,161,38,2018-07-30,2025-05-02
+unlisted,64113,Hedera canariensis,Canary Islands Ivy,Araliaceae,,not yet reviewed,,134,8,2019-03-17,2025-04-27
+unlisted,163058,Forsythia suspensa,Golden-bell,Oleaceae,,not yet reviewed,,65,3,2023-03-22,2025-04-27
+unlisted,125348,Crocus chrysanthus,Snow Crocus,Iridaceae,,not yet reviewed,,63,9,2019-02-27,2025-03-03
+unlisted,55852,Brunnera macrophylla,Siberian bugloss,Boraginaceae,,not yet reviewed,,61,15,2019-04-01,2025-04-27
+unlisted,63735,Prunus domestica,Plum,Rosaceae,,not yet reviewed,,61,8,2019-03-12,2025-04-15
+unlisted,131586,Colchicum autumnale,Autumn Crocus,Colchicaceae,,not yet reviewed,,57,14,2020-03-30,2025-02-21
+unlisted,411276,Forsythia × intermedia,Border Forsythia,Oleaceae,,not yet reviewed,,56,6,2016-03-27,2024-03-05
+unlisted,320685,Geranium macrorrhizum,Rock Crane's-bill,Geraniaceae,,not yet reviewed,,55,5,2020-03-25,2025-04-26
+unlisted,929050,Crocus neapolitanus,spring crocus,Iridaceae,,not yet reviewed,,47,7,2012-03-10,2025-03-26
+unlisted,162726,Escallonia rubra,redclaws,Escalloniaceae,,not yet reviewed,,44,9,2019-09-15,2025-04-12
+unlisted,777468,Lonicera ligustrina,Boxleaf Honeysuckle,Caprifoliaceae,,not yet reviewed,,40,9,2019-02-23,2025-04-26
+unlisted,164028,Iberis sempervirens,Perennial Candytuft,Brassicaceae,,not yet reviewed,,34,3,2019-04-08,2025-04-27
+unlisted,425378,Glandora prostrata,creeping gromwell,Boraginaceae,,not yet reviewed,,32,0,2019-03-31,2025-04-30
+unlisted,77741,Ligustrum ovalifolium,garden privet,Oleaceae,,not yet reviewed,,30,0,2020-04-09,2025-04-26
+unlisted,167599,Pulmonaria officinalis,Lungwort,Boraginaceae,,not yet reviewed,,30,4,2018-05-10,2025-04-28
+unlisted,52468,Philadelphus coronarius,Sweet Mock Orange,Hydrangeaceae,,not yet reviewed,,27,0,2020-05-11,2025-04-27
+unlisted,78563,Phyllostachys aurea,fishpole bamboo,Poaceae,,not yet reviewed,,27,0,2019-04-02,2025-04-25
+unlisted,57805,Oxalis articulata,pink-sorrel,Oxalidaceae,,not yet reviewed,,26,2,2021-04-01,2025-04-25
+unlisted,170056,Ulmus glabra,Wych Elm,Ulmaceae,,not yet reviewed,,26,0,2020-11-07,2025-04-27
+unlisted,790747,Cotoneaster × suecicus,Swedish Cotoneaster,Rosaceae,,not yet reviewed,,24,6,2021-05-06,2025-04-24
+unlisted,160369,Chaenomeles speciosa,Chinese quince,Rosaceae,,not yet reviewed,,21,4,2020-04-04,2025-04-26
+unlisted,51779,Sempervivum tectorum,Houseleek,Crassulaceae,,not yet reviewed,,20,5,2021-02-25,2025-04-25
+unlisted,118873,Tripleurospermum maritimum,Sea Mayweed,Asteraceae,,not yet reviewed,,20,1,2019-11-25,2025-01-21
+unlisted,61223,Malus sylvestris,European Wild Apple,Rosaceae,,not yet reviewed,,18,0,2017-10-06,2023-11-08
+unlisted,57662,Euphorbia amygdaloides,wood spurge,Euphorbiaceae,,not yet reviewed,,16,1,2019-04-07,2025-04-26
+unlisted,129853,Geranium sanguineum,Bloody Crane's-bill,Geraniaceae,,not yet reviewed,,15,0,2020-06-11,2025-04-30
+unlisted,181681,Photinia × fraseri,Red Tip Photinia,Rosaceae,,not yet reviewed,,15,0,2020-02-15,2024-04-27
+unlisted,56027,Narcissus tazetta,Bunch-flowered Daffodil,Amaryllidaceae,,not yet reviewed,,14,1,2019-03-24,2025-04-23
+unlisted,803436,Rosa glabrifolia,Russian rose,Rosaceae,,not yet reviewed,,13,0,2020-10-13,2022-12-03
+unlisted,125791,Spiraea thunbergii,Thunberg's meadowsweet,Rosaceae,,not yet reviewed,,13,0,2021-04-16,2025-04-21
+unlisted,199324,Agapanthus praecox,blue lily,Amaryllidaceae,,not yet reviewed,,12,0,2020-02-11,2025-04-24
+unlisted,117433,Euonymus alatus,winged euonymus,Celastraceae,,not yet reviewed,,12,3,2020-12-09,2025-04-28
+unlisted,77261,Geranium rotundifolium,Round-leaved Crane's-bill,Geraniaceae,,not yet reviewed,,12,3,2019-09-13,2024-04-23
+unlisted,58859,Berberis pinnata,California barberry,Berberidaceae,,not yet reviewed,,11,0,2024-02-15,2025-04-26
+unlisted,349786,Euonymus japonicus,Japanese spindle tree,Celastraceae,,not yet reviewed,,11,1,2019-10-25,2025-04-23
+unlisted,59432,Levisticum officinale,Lovage,Apiaceae,,not yet reviewed,,11,2,2021-05-08,2025-04-23
+unlisted,168441,Sasa palmata,Broad-leaved Bamboo,Poaceae,,not yet reviewed,,11,0,2023-04-08,2025-04-27
+unlisted,522953,Epimedium × versicolor,Hybrid Barrenwort,Berberidaceae,,not yet reviewed,,10,1,2023-11-22,2025-04-27
+unlisted,54504,Juglans nigra,eastern black walnut,Juglandaceae,,not yet reviewed,,10,1,2019-10-29,2025-02-28
+unlisted,57413,Narcissus bulbocodium,hoop-petticoat daffodil,Amaryllidaceae,,not yet reviewed,,10,0,2022-03-08,2025-03-28
+unlisted,48206,Convallaria majalis,European lily of the valley,Asparagaceae,,not yet reviewed,,9,5,2019-09-20,2025-04-27
+unlisted,55858,Cornus mas,Cornelian cherry,Cornaceae,,not yet reviewed,,9,2,2021-01-27,2025-03-13
+unlisted,77253,Geranium columbinum,Long-stalked Crane's-bill,Geraniaceae,,not yet reviewed,,9,1,2020-05-25,2025-04-22
+unlisted,163812,Hippophae rhamnoides,Sea-buckthorn,Elaeagnaceae,,not yet reviewed,,9,5,2019-10-22,2024-11-01
+unlisted,410578,Hydrangea petiolaris,Climbing Hydrangea,Hydrangeaceae,,not yet reviewed,,9,0,2024-06-12,2025-04-24
+unlisted,857006,Iris × hybrida,,Iridaceae,,not yet reviewed,,9,2,2020-05-30,2024-05-16
+unlisted,59773,Lonicera morrowii,Morrow's honeysuckle,Caprifoliaceae,,not yet reviewed,,9,0,2019-04-03,2022-04-02
+unlisted,165104,Malus baccata,Siberian crabapple,Rosaceae,,not yet reviewed,,9,1,2021-09-13,2025-04-27
+unlisted,404400,Osmanthus heterophyllus,holly olive,Oleaceae,,not yet reviewed,,9,1,2021-04-07,2025-04-17
+unlisted,49662,Platanus occidentalis,American sycamore,Platanaceae,,not yet reviewed,,9,2,2020-07-08,2023-08-16
+unlisted,424048,Sasa veitchii,Veitch's Bamboo,Poaceae,,not yet reviewed,,9,1,2022-04-30,2023-10-19
+unlisted,79463,Ulmus pumila,Siberian elm,Ulmaceae,,not yet reviewed,,9,1,2019-10-08,2023-11-16
+unlisted,416548,Epimedium pinnatum,Caucasian Barrenwort,Berberidaceae,,not yet reviewed,,8,0,2024-03-26,2025-04-26
+unlisted,77128,Fallopia baldschuanica,Bukhara Fleeceflower,Polygonaceae,,not yet reviewed,,8,0,2019-10-01,2024-08-17
+unlisted,133951,Inula helenium,Elecampane,Asteraceae,,not yet reviewed,,8,1,2020-04-23,2024-09-23
+unlisted,55828,Lamium maculatum,Spotted deadnettle,Lamiaceae,,not yet reviewed,,8,7,2019-10-08,2025-04-25
+unlisted,164834,Lotus pedunculatus,greater bird's-foot-trefoil,Fabaceae,,not yet reviewed,,8,1,1994-05-19,2025-04-04
+unlisted,51251,Rheum rhabarbarum,Rhubarb,Polygonaceae,,not yet reviewed,,8,0,2021-09-01,2025-04-26
+unlisted,54430,Ribes nigrum,Blackcurrant,Grossulariaceae,,not yet reviewed,,8,0,2020-03-25,2025-04-27
+unlisted,129061,Rubus rolfei,creeping Taiwan bramble,Rosaceae,,not yet reviewed,,8,6,2020-08-11,2025-04-15
+unlisted,55917,Rubus vestitus,European Blackberry,Rosaceae,,not yet reviewed,,8,2,2022-09-27,2025-02-03
+unlisted,53778,Santolina chamaecyparissus,Lavender-cotton,Asteraceae,,not yet reviewed,,8,0,2020-04-11,2025-04-14
+unlisted,158480,Arabis caucasica,Garden Arabis,Brassicaceae,,not yet reviewed,,7,0,2023-11-22,2025-04-24
+unlisted,54498,Beta vulgaris,Beet,Amaranthaceae,,not yet reviewed,,7,0,2020-09-28,2023-09-11
+unlisted,967218,Campanula alaskana,Alaskan bellflower,Campanulaceae,,not yet reviewed,,7,0,2018-07-01,2024-06-10
+unlisted,124879,Cornus alba,Tatarian dogwood,Cornaceae,,not yet reviewed,,7,1,2020-09-13,2025-04-27
+unlisted,77305,Grindelia squarrosa,Curlycup Gumweed,Asteraceae,,not yet reviewed,,7,0,2019-07-09,2025-01-05
+unlisted,126583,Hemerocallis fulva,orange day-lily,Asphodelaceae,,not yet reviewed,,7,0,2023-03-21,2025-04-23
+unlisted,77739,Ligustrum japonicum,wax-leaf ligustrum,Oleaceae,,not yet reviewed,,7,0,2019-09-11,2025-04-23
+unlisted,165474,Miscanthus sinensis,Chinese silver grass,Poaceae,,not yet reviewed,,7,0,2019-09-28,2025-04-08
+unlisted,166766,Phyllostachys nigra,Black Bamboo,Poaceae,,not yet reviewed,,7,1,2023-03-06,2025-04-26
+unlisted,143793,Prunus padus,bird cherry,Rosaceae,,not yet reviewed,,7,0,2020-04-25,2021-10-02
+unlisted,765394,Sambucus nigra,European black elderberry,Viburnaceae,,not yet reviewed,,7,0,2022-06-12,2025-04-23
+unlisted,53858,Solanum tuberosum,potato,Solanaceae,,not yet reviewed,,7,4,2021-05-03,2024-07-20
+unlisted,169761,Tilia platyphyllos,Bigleaf Linden,Malvaceae,,not yet reviewed,,7,0,2022-10-17,2025-04-27
+unlisted,170388,Yucca gloriosa,moundlily yucca,Asparagaceae,,not yet reviewed,,7,0,2025-03-16,2025-04-27
+unlisted,48098,Acer rubrum,red maple,Sapindaceae,,not yet reviewed,,6,0,2016-08-13,2025-04-19
+unlisted,75262,Achlys californica,Deer's-foot,Berberidaceae,,not yet reviewed,,6,4,2022-05-13,2025-04-17
+unlisted,49226,Amelanchier arborea,common serviceberry,Rosaceae,,not yet reviewed,,6,0,2022-06-11,2025-04-01
+unlisted,128798,Aronia melanocarpa,black chokeberry,Rosaceae,,not yet reviewed,,6,1,2021-08-29,2025-04-26
+unlisted,54516,Brassica oleracea,"cabbage, broccoli, and allies",Brassicaceae,,not yet reviewed,,6,0,2022-10-10,2023-08-21
+unlisted,501464,Chaenostoma cordatum,Bacopa,Scrophulariaceae,,not yet reviewed,,6,0,2022-10-23,2025-04-22
+unlisted,155124,Cornus sanguinea,common dogwood,Cornaceae,,not yet reviewed,,6,1,2022-10-11,2024-06-22
+unlisted,53375,Cotoneaster pannosus,silverleaf cotoneaster,Rosaceae,,not yet reviewed,,6,0,2019-09-12,2023-11-22
+unlisted,59055,Cyperus eragrostis,tall flatsedge,Cyperaceae,,not yet reviewed,,6,1,2020-03-15,2023-07-20
+unlisted,130893,Euonymus fortunei,fortune's spindle,Celastraceae,,not yet reviewed,,6,1,2020-12-08,2023-03-09
+unlisted,126735,Fatsia japonica,Japanese aralia,Araliaceae,,not yet reviewed,,6,5,2020-12-03,2024-02-15
+unlisted,163184,Galium palustre,Common Marsh-bedstraw,Rubiaceae,,not yet reviewed,,6,0,2021-03-06,2025-04-16
+unlisted,60360,Geranium yeoi,Greater Herb Robert,Geraniaceae,,not yet reviewed,,6,0,2023-05-03,2025-04-09
+unlisted,55891,Geum urbanum,Wood Avens,Rosaceae,,not yet reviewed,,6,0,2023-05-19,2025-03-29
+unlisted,367209,Hesperantha coccinea,Scarlet River Lily,Iridaceae,,not yet reviewed,,6,0,2020-07-12,2024-07-23
+unlisted,164133,Iris sanguinea,Japanese Iris,Iridaceae,,not yet reviewed,,6,2,2020-05-19,2024-05-26
+unlisted,61068,Lagurus ovatus,Hare's Tail Grass,Poaceae,,not yet reviewed,,6,6,2021-08-08,2023-08-25
+unlisted,1369716,Lamium hybridum,cutleaf deadnettle,Lamiaceae,,not yet reviewed,,6,6,2015-08-23,2025-04-27
+unlisted,164671,Leymus arenarius,lyme grass,Poaceae,,not yet reviewed,,6,0,1939-06-08,2025-04-28
+unlisted,146876,Malva alcea,Greater Musk-mallow,Malvaceae,,not yet reviewed,,6,0,2021-08-27,2022-08-13
+unlisted,59936,Nemophila maculata,fivespot,Boraginaceae,,not yet reviewed,,6,6,2022-05-22,2024-05-19
+unlisted,165840,Omphalodes verna,Blue-eyed-Mary,Boraginaceae,,not yet reviewed,,6,0,2023-03-21,2025-04-18
+unlisted,50278,Parthenocissus quinquefolia,Virginia creeper,Vitaceae,,not yet reviewed,,6,2,2022-07-29,2024-12-11
+unlisted,711086,Pilosella caespitosa,meadow hawkweed,Asteraceae,,not yet reviewed,,6,0,2020-05-21,2024-08-03
+unlisted,78591,Pittosporum tenuifolium,Kōhūhū,Pittosporaceae,,not yet reviewed,,6,0,2019-09-28,2025-04-15
+unlisted,47571,Populus tremula,European aspen,Salicaceae,,not yet reviewed,,6,1,2022-04-20,2025-04-27
+unlisted,68763,Prunus cerasus,Sour Cherry,Rosaceae,,not yet reviewed,,6,0,2020-04-26,2024-05-22
+unlisted,54053,Pyracantha angustifolia,Narrowleaf Firethorn,Rosaceae,,not yet reviewed,,6,0,2020-04-27,2022-09-13
+unlisted,168750,Sedum sexangulare,Tasteless Stonecrop,Crassulaceae,,not yet reviewed,,6,5,2022-10-23,2024-06-23
+unlisted,126892,Senecio viscosus,Sticky Groundsel,Asteraceae,,not yet reviewed,,6,1,2021-04-14,2025-04-14
+unlisted,169252,Spiraea prunifolia,Bridal-wreath,Rosaceae,,not yet reviewed,,6,0,2022-04-07,2025-04-27
+unlisted,169752,Thymus praecox,Mother of Thyme,Lamiaceae,,not yet reviewed,,6,0,1963-08-12,2025-04-27
+unlisted,79486,Verbascum speciosum,showy mullein,Scrophulariaceae,,not yet reviewed,,6,2,2019-07-01,2025-04-23
+unlisted,1446403,Viola × williamsii,Horned pansy,Violaceae,,not yet reviewed,,6,5,2020-05-04,2024-05-01
+unlisted,71065,Alisma lanceolatum,lance-leaved water-plantain,Alismataceae,,not yet reviewed,,5,0,2021-05-24,2023-06-07
+unlisted,59781,Allium unifolium,oneleaf onion,Amaryllidaceae,,not yet reviewed,,5,1,2018-06-12,2024-06-23
+unlisted,244745,Anemone coronaria,poppy anemone,Ranunculaceae,,not yet reviewed,,5,1,2021-05-15,2025-04-19
+unlisted,75463,Antennaria howellii,Small Pussytoes,Asteraceae,,not yet reviewed,,5,1,2020-06-27,2025-04-25
+unlisted,52854,Artemisia douglasiana,California mugwort,Asteraceae,,not yet reviewed,,5,0,2023-05-01,2025-04-17
+unlisted,61236,Chaenomeles japonica,Japanese Quince,Rosaceae,,not yet reviewed,,5,0,2024-01-11,2025-04-26
+unlisted,482783,Crocus nivalis,,Iridaceae,,not yet reviewed,,5,0,2023-03-01,2025-02-27
+unlisted,337821,Deutzia crenata,,Hydrangeaceae,,not yet reviewed,,5,0,2022-07-06,2025-04-22
+unlisted,82461,Dracunculus vulgaris,dragon arum,Araceae,,not yet reviewed,,5,2,2021-05-05,2023-05-25
+unlisted,119602,Epilobium parviflorum,Hoary Willowherb,Onagraceae,,not yet reviewed,,5,0,2023-09-25,2024-11-05
+unlisted,47745,Equisetum fluviatile,water horsetail,Equisetaceae,,not yet reviewed,,5,0,2024-04-18,2025-04-26
+unlisted,128728,Iris reticulata,Netted Iris,Iridaceae,,not yet reviewed,,5,3,2023-03-04,2025-02-26
+unlisted,165660,Nassella tenuissima,Mexican feathergrass,Poaceae,,not yet reviewed,,5,0,2009-06-12,2025-04-27
+unlisted,141623,Platycodon grandiflorus,balloon flower,Campanulaceae,,not yet reviewed,,5,3,2019-07-28,2025-04-25
+unlisted,55819,Primula veris,Cowslip,Primulaceae,,not yet reviewed,,5,2,2016-04-10,2025-04-26
+unlisted,54265,Sorbus americana,American mountain ash,Rosaceae,,not yet reviewed,,5,0,2020-05-21,2022-10-17
+unlisted,245578,Symphytum grandiflorum,Creeping Comfrey,Boraginaceae,,not yet reviewed,,5,0,2023-04-30,2025-04-14
+unlisted,56013,Tamarix chinensis,Five-stamen Tamarisk,Tamaricaceae,,not yet reviewed,,5,0,2024-06-01,2025-04-24
+unlisted,54329,Tropaeolum majus,garden nasturtium,Tropaeolaceae,,not yet reviewed,,5,3,2020-10-04,2025-04-23
+unlisted,63820,Vaccinium ovalifolium,Oval-leaf Blueberry,Ericaceae,,not yet reviewed,,5,0,2025-03-24,2025-04-26
+unlisted,63510,Acer japonicum,Downy Japanese Maple,Sapindaceae,,not yet reviewed,,4,0,2025-04-23,2025-04-27
+unlisted,126249,Akebia quinata,Five-leaf akebia,Lardizabalaceae,,not yet reviewed,,4,2,2022-05-11,2025-04-24
+unlisted,75363,Allium sativum,Garlic,Amaryllidaceae,,not yet reviewed,,4,0,2020-07-15,2025-04-14
+unlisted,410471,Alstroemeria aurea,Peruvian Lily,Alstroemeriaceae,,not yet reviewed,,4,0,2024-04-07,2024-07-23
+unlisted,159194,Bassia scoparia,summer-cypress,Amaranthaceae,,not yet reviewed,,4,0,2006-08-14,2024-08-23
+unlisted,83928,Betula utilis,Himalayan Birch,Betulaceae,,not yet reviewed,,4,0,2024-04-08,2025-04-26
+unlisted,84349,Campanula glomerata,clustered bellflower,Campanulaceae,,not yet reviewed,,4,3,2022-09-19,2024-06-28
+unlisted,67759,Coriandrum sativum,coriander,Apiaceae,,not yet reviewed,,4,4,2019-06-04,2022-07-25
+unlisted,54770,Corylus americana,American hazelnut,Betulaceae,,not yet reviewed,,4,0,2020-09-05,2022-09-12
+unlisted,160927,Corynephorus canescens,Gray Hairgrass,Poaceae,,not yet reviewed,,4,4,2022-05-02,2024-05-19
+unlisted,160945,Cotoneaster bullatus,Hollyberry Cotoneaster,Rosaceae,,not yet reviewed,,4,0,2022-04-24,2025-04-15
+unlisted,771876,Erythranthe grandis,magnificent seep monkeyflower,Phrymaceae,,not yet reviewed,,4,0,2024-04-12,2025-04-26
+unlisted,431011,Festuca glauca,Blue Fescue,Poaceae,,not yet reviewed,,4,0,2024-05-07,2024-12-08
+unlisted,51768,Gaillardia pulchella,Indian blanket,Asteraceae,,not yet reviewed,,4,0,2022-07-28,2024-12-06
+unlisted,55756,Geranium phaeum,Dusky Crane's-bill,Geraniaceae,,not yet reviewed,,4,1,2021-05-26,2025-04-26
+unlisted,450392,Geranium × oxonianum,Druce's Crane's-bill,Geraniaceae,,not yet reviewed,,4,4,2020-05-18,2021-08-01
+unlisted,50832,Gilia tricolor,bird's-eye gilia,Polemoniaceae,,not yet reviewed,,4,3,2020-05-13,2025-03-18
+unlisted,53097,Hirschfeldia incana,Shortpod Mustard,Brassicaceae,,not yet reviewed,,4,0,2023-06-22,2024-09-12
+unlisted,1538791,Koeleria spicata,spike trisetum,Poaceae,,not yet reviewed,,4,0,1917-07-01,2022-09-15
+unlisted,77656,Lemna turionifera,turion duckweed,Araceae,,not yet reviewed,,4,1,2022-06-11,2025-04-27
+unlisted,77835,Lonicera japonica,Japanese honeysuckle,Caprifoliaceae,,not yet reviewed,,4,0,2024-02-25,2025-04-24
+unlisted,57054,Lupinus formosus,,Fabaceae,,not yet reviewed,,4,0,1926-07-10,1927-06-22
+unlisted,77950,Malva arborea,Tree Mallow,Malvaceae,,not yet reviewed,,4,0,2020-07-10,2023-02-10
+unlisted,491202,Medicago × varia,Sand Lucerne,Fabaceae,,not yet reviewed,,4,1,2019-08-10,2023-08-27
+unlisted,48599,Phytolacca americana,American pokeweed,Phytolaccaceae,,not yet reviewed,,4,4,2020-06-25,2022-08-01
+unlisted,135773,Picea omorika,Serbian spruce,Pinaceae,,not yet reviewed,,4,0,2025-03-22,2025-04-27
+unlisted,52599,Pontederia cordata,pickerelweed,Pontederiaceae,,not yet reviewed,,4,4,2020-08-03,2024-08-03
+unlisted,78839,Reseda luteola,Weld,Resedaceae,,not yet reviewed,,4,2,2023-06-02,2025-02-02
+unlisted,78932,Salicornia perennis,Perennial Glasswort,Amaranthaceae,,not yet reviewed,,4,0,2022-03-28,2024-06-10
+unlisted,60980,Senecio minimus,coastal burnweed,Asteraceae,,not yet reviewed,,4,2,2021-05-02,2022-05-25
+unlisted,413224,Sinapis alba alba,,Brassicaceae,,not yet reviewed,,4,0,1968-03-16,1968-07-08
+unlisted,79147,Soleirolia soleirolii,Baby's tears,Urticaceae,,not yet reviewed,,4,0,2009-06-10,2025-03-07
+unlisted,56164,Verbascum nigrum,Dark Mullein,Scrophulariaceae,,not yet reviewed,,4,2,2023-07-20,2025-04-28
+unlisted,57858,Veronica anagallis-aquatica,blue water-speedwell,Plantaginaceae,,not yet reviewed,,4,1,2020-03-28,2024-04-01
+unlisted,75256,Acaena novae-zelandiae,Biddy-biddy,Rosaceae,,not yet reviewed,,3,0,2024-08-16,2025-04-23
+unlisted,327370,Acorus gramineus,Grassleaf Sweet-Flag,Acoraceae,,not yet reviewed,,3,0,2024-05-14,2025-04-23
+unlisted,575102,Alkekengi officinarum,Japanese-lantern,Solanaceae,,not yet reviewed,,3,3,2020-06-17,2023-09-09
+unlisted,122912,Allium ampeloprasum,Wild Leek,Amaryllidaceae,,not yet reviewed,,3,1,2023-07-22,2025-04-23
+unlisted,122343,Allium tuberosum,Garlic Chives,Amaryllidaceae,,not yet reviewed,,3,0,2022-04-29,2023-12-03
+unlisted,82685,Anthyllis vulneraria,Common Kidney-Vetch,Fabaceae,,not yet reviewed,,3,3,2022-06-01,2022-06-01
+unlisted,198888,Aquilegia atrata,Dark Columbine,Ranunculaceae,,not yet reviewed,,3,0,2024-05-24,2025-04-26
+unlisted,437555,Berberis julianae,wintergreen barberry,Berberidaceae,,not yet reviewed,,3,1,2021-03-09,2025-02-11
+unlisted,49884,Betula populifolia,gray birch,Betulaceae,,not yet reviewed,,3,0,2019-04-08,2023-09-20
+unlisted,160162,Carum carvi,Caraway,Apiaceae,,not yet reviewed,,3,0,2020-10-18,2023-01-17
+unlisted,76422,Colutea arborescens,Bladder-senna,Fabaceae,,not yet reviewed,,3,0,2021-08-04,2024-07-16
+unlisted,50191,Cordyline australis,New Zealand cabbage tree,Asparagaceae,,not yet reviewed,,3,0,2024-03-15,2025-04-27
+unlisted,498832,Cotoneaster hjelmqvistii,Hjelmqvist's Cotoneaster,Rosaceae,,not yet reviewed,,3,0,2023-12-06,2025-04-27
+unlisted,127900,Equisetum pratense,meadow horsetail,Equisetaceae,,not yet reviewed,,3,0,2022-03-26,2022-04-13
+unlisted,76897,Erigeron annuus,annual fleabane,Asteraceae,,not yet reviewed,,3,0,2021-09-10,2025-03-25
+unlisted,145601,Fagopyrum esculentum,Common Buckwheat,Polygonaceae,,not yet reviewed,,3,0,2019-04-06,2024-08-31
+unlisted,57517,Galanthus plicatus,Pleated Snowdrop,Amaryllidaceae,,not yet reviewed,,3,3,2022-04-29,2025-01-28
+unlisted,343495,Hedera algeriensis,Algerian ivy,Araliaceae,,not yet reviewed,,3,0,2024-03-12,2025-04-10
+unlisted,157642,Houttuynia cordata,Chameleon Plant,Saururaceae,,not yet reviewed,,3,3,2019-09-13,2022-07-28
+unlisted,133390,Hydrangea paniculata,Panicle Hydrangea,Hydrangeaceae,,not yet reviewed,,3,0,2024-09-08,2025-04-27
+unlisted,133240,Ilex crenata,Japanese holly,Aquifoliaceae,,not yet reviewed,,3,0,1947-07-16,2025-04-03
+unlisted,77493,Ipheion uniflorum,Spring starflower,Amaryllidaceae,,not yet reviewed,,3,1,2023-04-13,2025-04-13
+unlisted,244525,Iris × hollandica,Dutch iris,Iridaceae,,not yet reviewed,,3,2,2021-05-02,2024-03-24
+unlisted,135925,Juniperus chinensis,Chinese juniper,Cupressaceae,,not yet reviewed,,3,0,2025-04-25,2025-04-27
+unlisted,125788,Kerria japonica,Japanese Kerria,Rosaceae,,not yet reviewed,,3,2,2021-03-07,2025-04-18
+unlisted,53108,Lactuca virosa,bitter lettuce,Asteraceae,,not yet reviewed,,3,0,2023-04-04,2025-04-23
+unlisted,59076,Lemna minuta,Least Duckweed,Araceae,,not yet reviewed,,3,0,2023-01-27,2024-11-28
+unlisted,128769,Ligustrum sinense,Chinese privet,Oleaceae,,not yet reviewed,,3,0,2019-03-23,2021-01-23
+unlisted,59016,Limosella aquatica,water mudwort,Scrophulariaceae,,not yet reviewed,,3,0,2024-04-25,2025-04-15
+unlisted,77781,Linum grandiflorum,Scarlet Flax,Linaceae,,not yet reviewed,,3,3,2019-08-28,2020-07-08
+unlisted,778358,Lonicera ligustrina yunnanensis,Hedge Honeysuckle,Caprifoliaceae,,not yet reviewed,,3,3,2020-01-24,2020-03-18
+unlisted,124548,Lonicera xylosteum,Fly Honeysuckle,Caprifoliaceae,,not yet reviewed,,3,0,2019-05-05,2025-04-25
+unlisted,186063,Loropetalum chinense,Chinese fringe flower,Hamamelidaceae,,not yet reviewed,,3,1,2023-04-03,2025-01-30
+unlisted,125423,Magnolia denudata,Yulan magnolia,Magnoliaceae,,not yet reviewed,,3,0,2025-04-14,2025-04-27
+unlisted,165103,Malus angustifolia,southern crabapple,Rosaceae,,not yet reviewed,,3,0,2025-04-26,2025-04-30
+unlisted,49132,Myosotis latifolia,broadleaf forget-me-not,Boraginaceae,,not yet reviewed,,3,0,2019-03-24,2024-05-04
+unlisted,165681,Nepeta racemosa,Eastern Cat-mint,Lamiaceae,,not yet reviewed,,3,0,2024-06-08,2024-06-17
+unlisted,269941,Ophiopogon planiscapus,Black mondo grass,Asparagaceae,,not yet reviewed,,3,0,2021-01-21,2023-04-07
+unlisted,82303,Osmunda regalis,European royal fern,Osmundaceae,,not yet reviewed,,3,3,2023-08-18,2024-12-25
+unlisted,61776,Oxalis incarnata,Pale pink-sorrel,Oxalidaceae,,not yet reviewed,,3,0,2021-02-03,2024-11-03
+unlisted,1181693,Phedimus ellacombeanus,yellow stonecrop,Crassulaceae,,not yet reviewed,,3,0,2024-03-30,2025-04-25
+unlisted,60786,Pulsatilla vulgaris,European Pasqueflower,Ranunculaceae,,not yet reviewed,,3,1,2023-04-30,2025-04-26
+unlisted,58300,Punica granatum,pomegranate,Lythraceae,,not yet reviewed,,3,0,2025-04-16,2025-04-26
+unlisted,54784,Quercus coccinea,scarlet oak,Fagaceae,,not yet reviewed,,3,0,2023-10-15,2025-04-26
+unlisted,60232,Rumex pulcher,fiddle dock,Polygonaceae,,not yet reviewed,,3,1,2021-06-28,2024-08-26
+unlisted,1477357,Sanicula epipactis,Dwarf Masterwort,Apiaceae,,not yet reviewed,,3,3,2023-04-01,2023-04-08
+unlisted,169144,Sorbaria sorbifolia,Sorbaria,Rosaceae,,not yet reviewed,,3,0,2021-04-21,2023-04-24
+unlisted,125789,Spiraea cantoniensis,Reeve's Spirea,Rosaceae,,not yet reviewed,,3,0,2025-04-15,2025-04-26
+unlisted,61948,Stellaria graminea,lesser stitchwort,Caryophyllaceae,,not yet reviewed,,3,0,2006-06-20,2022-05-21
+unlisted,169448,Symphoricarpos occidentalis,Western Snowberry,Caprifoliaceae,,not yet reviewed,,3,0,2024-03-02,2025-04-17
+unlisted,747090,Taraxacum fasciatum,dense-bracted dandelion,Asteraceae,,not yet reviewed,,3,1,2023-04-23,2025-04-26
+unlisted,181666,Teucrium fruticans,Tree Germander,Lamiaceae,,not yet reviewed,,3,0,2025-04-17,2025-04-24
+unlisted,133918,Torilis japonica,upright hedge-parsley,Apiaceae,,not yet reviewed,,3,0,2020-06-23,2023-05-20
+unlisted,859269,Veronica umbrosa,Creeping Speedwell,Plantaginaceae,,not yet reviewed,,3,2,2022-04-30,2024-03-29
+unlisted,493742,Viburnum carlcephalum,fragrant snowball viburnum,Viburnaceae,,not yet reviewed,,3,0,2025-04-12,2025-04-26
+unlisted,124741,Viburnum lantana,Wayfaring-tree,Viburnaceae,,not yet reviewed,,3,1,2020-03-29,2024-03-31
+unlisted,71112,Viola orbiculata,western roundleaf violet,Violaceae,,not yet reviewed,,3,0,2024-04-16,2025-04-19
+unlisted,123638,Acer ginnala,Amur Maple,Sapindaceae,,not yet reviewed,,2,0,2020-12-09,2022-11-24
+unlisted,61475,Allium neapolitanum,Naples garlic,Amaryllidaceae,,not yet reviewed,,2,1,2022-05-02,2022-05-19
+unlisted,53351,Alnus rhombifolia,white alder,Betulaceae,,not yet reviewed,,2,0,2025-04-05,2025-04-27
+unlisted,52328,Amaranthus cruentus,Red amaranth,Amaranthaceae,,not yet reviewed,,2,0,2022-08-29,2022-09-20
+unlisted,75395,Amaranthus hybridus,Smooth Pigweed,Amaranthaceae,,not yet reviewed,,2,0,2024-08-02,2024-09-01
+unlisted,58788,Apium graveolens,Celery,Apiaceae,,not yet reviewed,,2,0,2021-02-03,2021-03-04
+unlisted,75751,Berberis darwinii,Darwin's Barberry,Berberidaceae,,not yet reviewed,,2,0,2020-03-26,2023-07-15
+unlisted,857208,Berberis japonica,Japanese Mahonia,Berberidaceae,,not yet reviewed,,2,0,2025-04-26,2025-04-26
+unlisted,924029,Berberis oiwakensis,Mountain Grape,Berberidaceae,,not yet reviewed,,2,0,2025-01-25,2025-03-10
+unlisted,706550,Berberis × stenophylla,Hedge Barberry,Berberidaceae,,not yet reviewed,,2,1,2023-12-27,2024-07-20
+unlisted,117429,Betula nigra,river birch,Betulaceae,,not yet reviewed,,2,0,2023-10-11,2025-01-26
+unlisted,739454,Brassica oleracea sabellica,Kale,Brassicaceae,,not yet reviewed,,2,2,2023-03-26,2024-07-06
+unlisted,204260,Calamagrostis epigejos,Bushgrass,Poaceae,,not yet reviewed,,2,0,2021-10-06,2022-07-17
+unlisted,336201,Campanula lactiflora,Milky Bellflower,Campanulaceae,,not yet reviewed,,2,0,2024-04-07,2024-04-07
+unlisted,336220,Campanula portenschlagiana,Dalmatian bellflower,Campanulaceae,,not yet reviewed,,2,0,2023-03-19,2023-03-22
+unlisted,76177,Ceanothus gloriosus,Point Reyes Ceanothus,Rhamnaceae,,not yet reviewed,,2,0,2024-05-17,2025-03-30
+unlisted,55733,Chaerophyllum temulum,Rough chervil,Apiaceae,,not yet reviewed,,2,1,2023-06-27,2025-03-23
+unlisted,58879,Chenopodium berlandieri,pitseed goosefoot,Amaranthaceae,,not yet reviewed,,2,0,2022-10-22,2023-08-29
+unlisted,47325,Collinsia heterophylla,Purple Chinese Houses,Plantaginaceae,,not yet reviewed,,2,1,2020-05-20,2023-06-12
+unlisted,129322,Coreopsis verticillata,Whorled Coreopsis,Asteraceae,,not yet reviewed,,2,0,2024-04-25,2024-08-08
+unlisted,143781,Cotinus obovatus,American smoketree,Anacardiaceae,,not yet reviewed,,2,0,2020-06-07,2022-11-26
+unlisted,204128,Cotoneaster glaucophyllus,Bright bead cotoneaster,Rosaceae,,not yet reviewed,,2,0,2020-11-30,2022-10-17
+unlisted,786554,Cotoneaster × watereri,Waterer's Cotoneaster,Rosaceae,,not yet reviewed,,2,1,2023-01-10,2023-01-10
+unlisted,123694,Crataegus mexicana,tejocote,Rosaceae,,not yet reviewed,,2,0,2022-11-23,2024-10-17
+unlisted,141714,Crataegus phaenopyrum,Washington hawthorn,Rosaceae,,not yet reviewed,,2,0,2024-12-06,2025-02-09
+unlisted,482782,Crocus atticus,,Iridaceae,,not yet reviewed,,2,1,2019-01-20,2022-02-10
+unlisted,367206,Crocus kotschyanus,Kotschy's Crocus,Iridaceae,,not yet reviewed,,2,1,2019-10-06,2022-11-12
+unlisted,55859,Cyclamen coum,Eastern Sowbread,Primulaceae,,not yet reviewed,,2,2,2022-02-10,2022-03-21
+unlisted,59293,Cyclamen repandum,Spring Sowbread,Primulaceae,,not yet reviewed,,2,2,2022-04-06,2022-04-16
+unlisted,76603,Danthonia decumbens,mountain heath grass,Poaceae,,not yet reviewed,,2,0,2024-02-07,2024-04-18
+unlisted,128506,Davidia involucrata,Dove tree,Nyssaceae,,not yet reviewed,,2,0,2018-11-12,2024-04-22
+unlisted,1445438,Delphinium consolida,Forking Larkspur,Ranunculaceae,,not yet reviewed,,2,0,2024-06-09,2024-06-13
+unlisted,133126,Edgeworthia chrysantha,oriental paperbush,Thymelaeaceae,,not yet reviewed,,2,0,2025-03-05,2025-03-16
+unlisted,162364,Epilobium montanum,Broad-leaved Willowherb,Onagraceae,,not yet reviewed,,2,0,2024-06-29,2025-04-15
+unlisted,76846,Equisetum palustre,marsh horsetail,Equisetaceae,,not yet reviewed,,2,0,2021-05-21,2024-11-17
+unlisted,118784,Equisetum variegatum,variegated horsetail,Equisetaceae,,not yet reviewed,,2,0,2021-11-29,2022-03-18
+unlisted,76949,Eriobotrya japonica,Loquat,Rosaceae,,not yet reviewed,,2,1,2025-01-28,2025-04-14
+unlisted,515316,Erysimum linifolium,,Brassicaceae,,not yet reviewed,,2,0,2023-07-11,2025-04-02
+unlisted,323288,Eucalyptus gunnii,Cider Gum,Myrtaceae,,not yet reviewed,,2,0,2025-01-16,2025-04-23
+unlisted,162820,Euphorbia epithymoides,Cushion Spurge,Euphorbiaceae,,not yet reviewed,,2,0,2024-04-27,2025-04-26
+unlisted,401789,Euphorbia glauca,Shore Spurge,Euphorbiaceae,,not yet reviewed,,2,0,2025-01-11,2025-04-26
+unlisted,118893,Euphrasia nemorosa,Common Eyebright,Orobanchaceae,,not yet reviewed,,2,0,2024-09-05,2024-09-26
+unlisted,56793,Fritillaria biflora,Chocolate Lily,Liliaceae,,not yet reviewed,,2,0,2025-04-26,2025-04-26
+unlisted,77228,Gaultheria ovatifolia,slender wintergreen,Ericaceae,,not yet reviewed,,2,0,2022-10-17,2022-11-08
+unlisted,450391,Geranium endressii,French Crane's-bill,Geraniaceae,,not yet reviewed,,2,1,2019-07-01,2025-03-16
+unlisted,464936,Geum coccineum,Scarlet Avens,Rosaceae,,not yet reviewed,,2,0,2024-07-23,2025-04-26
+unlisted,491074,Grevillea victoriae,royal grevillea,Proteaceae,,not yet reviewed,,2,0,2025-04-15,2025-04-23
+unlisted,163663,Hemerocallis lilioasphodelus,yellow daylily,Asphodelaceae,,not yet reviewed,,2,1,2022-07-01,2025-04-09
+unlisted,163793,Hieracium murorum,Wall hawkweed,Asteraceae,,not yet reviewed,,2,0,2021-12-05,2022-07-29
+unlisted,208964,Hippocrepis emerus,Scorpion Senna,Fabaceae,,not yet reviewed,,2,1,2023-05-13,2025-04-26
+unlisted,145718,Hosta plantaginea,Scented hosta,Asparagaceae,,not yet reviewed,,2,0,2025-04-23,2025-04-27
+unlisted,163908,Hylotelephium spectabile,Butterfly Stonecrop,Crassulaceae,,not yet reviewed,,2,0,2024-04-29,2025-04-04
+unlisted,68185,Impatiens walleriana,Busy Lizzie,Balsaminaceae,,not yet reviewed,,2,1,2024-08-20,2025-04-23
+unlisted,164130,Iris orientalis,Turkish Iris,Iridaceae,,not yet reviewed,,2,1,2023-06-08,2023-09-14
+unlisted,54792,Juglans cinerea,Butternut,Juglandaceae,,not yet reviewed,,2,0,2023-01-27,2023-09-04
+unlisted,204335,Juncus conglomeratus,Compact Rush,Juncaceae,,not yet reviewed,,2,0,2024-05-27,2024-06-18
+unlisted,52798,Juncus patens,Spreading Rush,Juncaceae,,not yet reviewed,,2,0,2019-09-15,2025-03-10
+unlisted,170837,Leucanthemum × superbum,Shasta Daisy,Asteraceae,,not yet reviewed,,2,0,2019-01-25,2024-10-07
+unlisted,204160,Ligustrum obtusifolium,border privet,Oleaceae,,not yet reviewed,,2,0,2023-07-04,2023-09-30
+unlisted,49524,Lilium lancifolium,tiger lily,Liliaceae,,not yet reviewed,,2,0,2025-04-26,2025-04-27
+unlisted,52405,Linaria maroccana,Annual Toadflax,Plantaginaceae,,not yet reviewed,,2,1,2022-10-16,2024-09-29
+unlisted,77836,Lonicera tatarica,Tatarian honeysuckle,Caprifoliaceae,,not yet reviewed,,2,0,2019-11-02,2023-08-23
+unlisted,446794,Lycoris squamigera,Surprise Lily,Amaryllidaceae,,not yet reviewed,,2,1,2020-10-08,2020-10-13
+unlisted,77918,Lythrum portula,Water-purslane,Lythraceae,,not yet reviewed,,2,0,2021-05-25,2023-02-09
+unlisted,77977,Melaleuca viminalis,weeping bottlebrush,Myrtaceae,,not yet reviewed,,2,0,2024-07-18,2025-04-14
+unlisted,59094,Muhlenbergia rigens,deergrass,Poaceae,,not yet reviewed,,2,0,2019-01-27,2023-09-01
+unlisted,123159,Narcissus papyraceus,Paperwhite,Amaryllidaceae,,not yet reviewed,,2,1,2024-03-29,2024-04-28
+unlisted,57140,Olea europaea,Olive,Oleaceae,,not yet reviewed,,2,0,2024-03-26,2025-04-25
+unlisted,127065,Ornithogalum nutans,Drooping Star-of-Bethlehem,Asparagaceae,,not yet reviewed,,2,1,2020-05-03,2025-04-25
+unlisted,371906,Pachyphragma macrophyllum,Caucasian Penny-cress,Brassicaceae,,not yet reviewed,,2,1,2022-03-02,2025-03-13
+unlisted,127857,Paeonia lactiflora,Chinese peony,Paeoniaceae,,not yet reviewed,,2,0,2024-09-29,2025-04-26
+unlisted,135327,Phlomis fruticosa,Jerusalem Lampwick,Lamiaceae,,not yet reviewed,,2,0,2025-04-24,2025-04-27
+unlisted,166736,Photinia davidiana,David's photinia,Rosaceae,,not yet reviewed,,2,0,2024-05-14,2025-03-09
+unlisted,166740,Photinia serratifolia,Chinese Photinia,Rosaceae,,not yet reviewed,,2,0,2024-03-10,2025-04-11
+unlisted,78560,Phyllodoce empetriformis,pink mountainheath,Ericaceae,,not yet reviewed,,2,0,2024-07-14,2024-08-19
+unlisted,181682,Platanus orientalis,Oriental Plane,Platanaceae,,not yet reviewed,,2,0,2024-06-09,2024-10-11
+unlisted,167309,Portulaca grandiflora,moss rose,Portulacaceae,,not yet reviewed,,2,2,2021-08-18,2024-07-03
+unlisted,56136,Primula vulgaris,Primrose,Primulaceae,,not yet reviewed,,2,1,2021-05-04,2022-02-19
+unlisted,128724,Puschkinia scilloides,striped squill,Asparagaceae,,not yet reviewed,,2,0,2024-02-20,2025-04-26
+unlisted,78860,Ribes laxiflorum,Trailing Blackcurrant,Grossulariaceae,,not yet reviewed,,2,0,2023-03-28,2024-07-27
+unlisted,54429,Ribes uva-crispa,European gooseberry,Grossulariaceae,,not yet reviewed,,2,0,2020-05-27,2025-03-15
+unlisted,405763,Rubus nemoralis,,Rosaceae,,not yet reviewed,,2,0,2021-04-27,2023-08-09
+unlisted,371574,Rumex hydrolapathum,Water Dock,Polygonaceae,,not yet reviewed,,2,0,2020-10-31,2022-05-01
+unlisted,58316,Salix babylonica,weeping willow,Salicaceae,,not yet reviewed,,2,0,2024-05-25,2024-10-04
+unlisted,55846,Salix caprea,goat willow,Salicaceae,,not yet reviewed,,2,0,2022-02-14,2024-11-18
+unlisted,59008,Salix exigua,Narrowleaf Willow,Salicaceae,,not yet reviewed,,2,0,2025-04-23,2025-04-23
+unlisted,60978,Solidago spathulata,coast goldenrod,Asteraceae,,not yet reviewed,,2,0,2024-09-20,2025-04-19
+unlisted,133373,Stewartia pseudocamellia,Japanese stewartia,Theaceae,,not yet reviewed,,2,0,2025-04-03,2025-04-11
+unlisted,429454,Syringa meyeri,korean lilac,Oleaceae,,not yet reviewed,,2,0,2024-05-24,2025-04-27
+unlisted,54854,Tilia americana,basswood,Malvaceae,,not yet reviewed,,2,0,2025-04-26,2025-04-27
+unlisted,79389,Triantha occidentalis,western false asphodel,Tofieldiaceae,,not yet reviewed,,2,0,2022-07-23,2022-09-11
+unlisted,52742,Vaccinium virgatum,,Ericaceae,,not yet reviewed,,2,0,1966-05-12,1967-07-18
+unlisted,56160,Valeriana officinalis,common valerian,Caprifoliaceae,,not yet reviewed,,2,0,2022-04-20,2022-06-26
+unlisted,170203,Viburnum plicatum,Japanese snowball,Viburnaceae,,not yet reviewed,,2,1,2022-04-16,2022-07-30
+unlisted,170303,Weigela florida,Old Fashioned Weigela,Caprifoliaceae,,not yet reviewed,,2,0,2023-10-06,2024-05-11
+unlisted,129055,Zelkova serrata,Japanese zelkova,Ulmaceae,,not yet reviewed,,2,0,2021-01-12,2024-10-29
+unlisted,136888,Abies durangensis,Durango fir,Pinaceae,,not yet reviewed,,1,0,2025-04-25,2025-04-25
+unlisted,399290,Acaena microphylla,scarlet bidibid,Rosaceae,,not yet reviewed,,1,0,2022-10-17,2022-10-17
+unlisted,337792,Acer buergerianum,,Sapindaceae,,not yet reviewed,,1,0,1946-07-15,1946-07-15
+unlisted,469023,Acer heldreichii,,Sapindaceae,,not yet reviewed,,1,0,1947-08-28,1947-08-28
+unlisted,515965,Acer hyrcanum,,Sapindaceae,,not yet reviewed,,1,0,1947-08-28,1947-08-28
+unlisted,82598,Acer monspessulanum,,Sapindaceae,,not yet reviewed,,1,0,1946-07-15,1946-07-15
+unlisted,143780,Acer tataricum,Tatarian Maple,Sapindaceae,,not yet reviewed,,1,0,2025-04-27,2025-04-27
+unlisted,552309,Acer velutinum,,Sapindaceae,,not yet reviewed,,1,0,1947-08-28,1947-08-28
+unlisted,1457579,Acmispon plebeius,common birdsfoot trefoil,Fabaceae,,not yet reviewed,,1,0,2024-08-19,2024-08-19
+unlisted,131201,Aconitum napellus,Monk's-hood,Ranunculaceae,,not yet reviewed,,1,0,2025-04-24,2025-04-24
+unlisted,82306,Acorus calamus,Eurasian Sweet-Flag,Acoraceae,,not yet reviewed,,1,0,2025-04-16,2025-04-16
+unlisted,158005,Actinidia arguta,Hardy kiwifruit,Actinidiaceae,,not yet reviewed,,1,0,2023-10-17,2023-10-17
+unlisted,55149,Actinidia chinensis,Chinese gooseberry,Actinidiaceae,,not yet reviewed,,1,0,2023-07-12,2023-07-12
+unlisted,411901,Actinidia chinensis deliciosa,Kiwifruit,Actinidiaceae,,not yet reviewed,,1,0,2024-05-30,2024-05-30
+unlisted,333938,Adenocarpus telonensis,,Fabaceae,,not yet reviewed,,1,0,2025-04-20,2025-04-20
+unlisted,1599668,Afropapaver aculeatum,Bristle Poppy,Papaveraceae,,not yet reviewed,,1,0,2025-04-24,2025-04-24
+unlisted,158088,Agave decipiens,False Sisal,Asparagaceae,,not yet reviewed,,1,0,2025-04-24,2025-04-24
+unlisted,80329,Agoseris aurantiaca aurantiaca,,Asteraceae,,not yet reviewed,,1,0,1887-05-03,1887-05-03
+unlisted,158128,Agropyron desertorum,,Poaceae,,not yet reviewed,,1,0,1939-06-17,1939-06-17
+unlisted,130756,Alisma subcordatum,american water-plantain,Alismataceae,,not yet reviewed,,1,0,2023-08-14,2023-08-14
+unlisted,320578,Allium moly,Yellow onion,Amaryllidaceae,,not yet reviewed,,1,0,2025-03-25,2025-03-25
+unlisted,244033,Allium paradoxum,Few-flowered Leek,Amaryllidaceae,,not yet reviewed,,1,0,2025-04-15,2025-04-15
+unlisted,431364,Allium siculum,Honey Garlic,Amaryllidaceae,,not yet reviewed,,1,0,2025-04-23,2025-04-23
+unlisted,1277852,Alniaria alnifolia,Alder-leaved Whitebeam,Rosaceae,,not yet reviewed,,1,0,2023-11-19,2023-11-19
+unlisted,966205,Alnus glutinosa,common alder,Betulaceae,,not yet reviewed,,1,0,2025-01-29,2025-01-29
+unlisted,75383,Alopecurus myosuroides,,Poaceae,,not yet reviewed,,1,0,1939-06-01,1939-06-01
+unlisted,52565,Althaea officinalis,marsh mallow,Malvaceae,,not yet reviewed,,1,1,2024-08-28,2024-08-28
+unlisted,52329,Amaranthus blitum,purple amaranth,Amaranthaceae,,not yet reviewed,,1,0,2024-07-13,2024-07-13
+unlisted,75394,Amaranthus fimbriatus,Fringed Amaranth,Amaranthaceae,,not yet reviewed,,1,0,2024-03-15,2024-03-15
+unlisted,359289,Amaranthus graecizans,,Amaranthaceae,,not yet reviewed,,1,0,1963-07-07,1963-07-07
+unlisted,234242,Amaranthus hybridus hybridus,,Amaranthaceae,,not yet reviewed,,1,0,1997-09-01,1997-09-01
+unlisted,53587,Ambrosia artemisiifolia,common ragweed,Asteraceae,,not yet reviewed,,1,0,2022-09-06,2022-09-06
+unlisted,119892,Andromeda polifolia,,Ericaceae,,not yet reviewed,,1,0,2021-04-27,2021-04-27
+unlisted,75442,Anemone multifida,,Ranunculaceae,,not yet reviewed,,1,0,1984-09-18,1984-09-18
+unlisted,950591,Anemonoides sylvestris,Snowdrop Anemone,Ranunculaceae,,not yet reviewed,,1,0,2025-04-23,2025-04-23
+unlisted,62336,Angelica archangelica,Garden angelica,Apiaceae,,not yet reviewed,,1,0,2025-04-25,2025-04-25
+unlisted,79571,Antennaria howellii howellii,,Asteraceae,,not yet reviewed,,1,0,1913-05-15,1913-05-15
+unlisted,158434,Anthriscus cerefolium,,Apiaceae,,not yet reviewed,,1,0,2017-05-14,2017-05-14
+unlisted,209193,Anticlea elegans glauca,White Camas,Melanthiaceae,,not yet reviewed,,1,0,2025-04-26,2025-04-26
+unlisted,170490,Apocynum × floribundum,intermediate dogbane,Apocynaceae,,not yet reviewed,,1,1,2015-06-21,2015-06-21
+unlisted,53380,Arctostaphylos tomentosa,,Ericaceae,,not yet reviewed,,1,0,17-Jul,17-Jul
+unlisted,181635,Argyranthemum frutescens,Marguerite daisy,Asteraceae,,not yet reviewed,,1,0,2020-05-20,2020-05-20
+unlisted,900799,Aria edulis,Whitebeam,Rosaceae,,not yet reviewed,,1,0,2024-04-25,2024-04-25
+unlisted,75566,Armoracia rusticana,,Brassicaceae,,not yet reviewed,,1,0,2022-05-11,2022-05-11
+unlisted,75572,Arnica lanceolata,lanceleaf arnica,Asteraceae,,not yet reviewed,,1,0,2023-02-16,2023-02-16
+unlisted,75573,Arnica latifolia,broadleaf arnica,Asteraceae,,not yet reviewed,,1,0,2022-08-22,2022-08-22
+unlisted,75587,Artemisia borealis,,Asteraceae,,not yet reviewed,,1,0,1977-05-17,1977-05-17
+unlisted,57912,Artemisia dracunculus,Tarragon,Asteraceae,,not yet reviewed,,1,0,2025-04-03,2025-04-03
+unlisted,62295,Asclepias linaria,pineneedle milkweed,Apocynaceae,,not yet reviewed,,1,0,2025-04-02,2025-04-02
+unlisted,62292,Asclepias speciosa,showy milkweed,Apocynaceae,,not yet reviewed,,1,1,2023-08-31,2023-08-31
+unlisted,129105,Asplenium scolopendrium,Hart's-tongue fern,Aspleniaceae,,not yet reviewed,,1,1,2024-09-23,2024-09-23
+unlisted,159077,Atriplex littoralis,Grass-leaved Orache,Amaranthaceae,,not yet reviewed,,1,0,2023-09-13,2023-09-13
+unlisted,75709,Atriplex micrantha,Russian atriplex,Amaranthaceae,,not yet reviewed,,1,0,2020-09-13,2020-09-13
+unlisted,380714,Azara microphylla,Vanilla tree,Salicaceae,,not yet reviewed,,1,0,2025-04-24,2025-04-24
+unlisted,474363,Barnardia japonica,Japanese jacinth,Asparagaceae,,not yet reviewed,,1,0,2024-08-07,2024-08-07
+unlisted,399994,Berberis glaucocarpa,Great barberry,Berberidaceae,,not yet reviewed,,1,0,2025-04-27,2025-04-27
+unlisted,281596,Berberis gracilis,,Berberidaceae,,not yet reviewed,,1,0,2025-04-08,2025-04-08
+unlisted,58727,Berberis thunbergii,Japanese barberry,Berberidaceae,,not yet reviewed,,1,0,2023-09-22,2023-09-22
+unlisted,127230,Bergenia ciliata,,Saxifragaceae,,not yet reviewed,,1,0,2025-04-26,2025-04-26
+unlisted,127228,Bergenia crassifolia,Elephant's-ears,Saxifragaceae,,not yet reviewed,,1,0,2025-04-28,2025-04-28
+unlisted,159230,Betula platyphylla,Siberian Birch,Betulaceae,,not yet reviewed,,1,0,2023-06-04,2023-06-04
+unlisted,133487,Bistorta officinalis,common bistort,Polygonaceae,,not yet reviewed,,1,1,2025-04-26,2025-04-26
+unlisted,334619,Boechera collinsii,,Brassicaceae,,not yet reviewed,,1,0,1917,1917
+unlisted,135343,Brachychiton rupestris,Queensland Bottle Tree,Malvaceae,,not yet reviewed,,1,0,2025-04-14,2025-04-14
+unlisted,371829,Brassica oleracea gemmifera,Brussels Sprouts,Brassicaceae,,not yet reviewed,,1,0,2019-10-12,2019-10-12
+unlisted,239654,Brassica oleracea oleracea,Wild Cabbage,Brassicaceae,,not yet reviewed,,1,1,2024-02-18,2024-02-18
+unlisted,132932,Bridelia micrantha,Coastal Goldenleaf,Phyllanthaceae,,not yet reviewed,,1,0,2025-04-14,2025-04-14
+unlisted,51752,Brodiaea elegans,harvest brodiaea,Asparagaceae,,not yet reviewed,,1,1,2018-06-27,2018-06-27
+unlisted,159458,Bromus erectus,,Poaceae,,not yet reviewed,,1,0,1887-06-25,1887-06-25
+unlisted,75913,Bromus squarrosus,corn brome,Poaceae,,not yet reviewed,,1,0,2011-07-25,2011-07-25
+unlisted,126914,Brugmansia arborea,Angel's Trumpet,Solanaceae,,not yet reviewed,,1,0,2023-10-10,2023-10-10
+unlisted,208757,Buxus microphylla,Small-leaved Box,Buxaceae,,not yet reviewed,,1,0,2025-04-24,2025-04-24
+unlisted,75921,Cabomba caroliniana,Carolina Fanwort,Cabombaceae,,not yet reviewed,,1,0,2025-04-23,2025-04-23
+unlisted,467380,Calamagrostis purpurea,,Poaceae,,not yet reviewed,,1,0,1933-06-28,1933-06-28
+unlisted,48588,Campanula trachelium,Nettle-leaved Bellflower,Campanulaceae,,not yet reviewed,,1,0,2025-04-19,2025-04-19
+unlisted,75997,Cannabis sativa,Cannabis,Cannabaceae,,not yet reviewed,,1,1,2019-08-01,2019-08-01
+unlisted,135230,Cardamine parviflora,,Brassicaceae,,not yet reviewed,,1,0,1919-05-19,1919-05-19
+unlisted,76006,Carduus acanthoides,Broad-winged Thistle,Asteraceae,,not yet reviewed,,1,0,2023-05-04,2023-05-04
+unlisted,76018,Carex bolanderi,,Cyperaceae,,not yet reviewed,,1,0,1964-07-10,1964-07-10
+unlisted,1023196,Carex decidua,,Cyperaceae,,not yet reviewed,,1,0,1893-06-01,1893-06-01
+unlisted,159951,Carex flacca,blue sedge,Cyperaceae,,not yet reviewed,,1,0,2023-07-13,2023-07-13
+unlisted,159973,Carex hirta,,Cyperaceae,,not yet reviewed,,1,0,2017-05-11,2017-05-11
+unlisted,76051,Carex hoodii,hood's sedge,Cyperaceae,,not yet reviewed,,1,0,2024-05-31,2024-05-31
+unlisted,76063,Carex lasiocarpa,woolly-fruited sedge,Cyperaceae,,not yet reviewed,,1,0,2024-09-18,2024-09-18
+unlisted,154157,Carex lasiocarpa americana,,Cyperaceae,,not yet reviewed,,1,0,1976-05-27,1976-05-27
+unlisted,76066,Carex lenticularis,,Cyperaceae,,not yet reviewed,,1,0,1966-06-14,1966-06-14
+unlisted,69640,Carex sylvatica,European Woodland Sedge,Cyperaceae,,not yet reviewed,,1,1,2023-05-19,2023-05-19
+unlisted,400449,Carex tenuiculmis,,Cyperaceae,,not yet reviewed,,1,0,2015-10-10,2015-10-10
+unlisted,61164,Carpenteria californica,tree-anemone,Hydrangeaceae,,not yet reviewed,,1,0,2025-04-23,2025-04-23
+unlisted,782209,Carpinus turczaninovii,Turczaninow's Hornbeam,Betulaceae,,not yet reviewed,,1,0,2025-04-26,2025-04-26
+unlisted,49186,Castanea dentata,American chestnut,Fagaceae,,not yet reviewed,,1,0,2024-10-02,2024-10-02
+unlisted,76157,Castilleja tenuis,,Orobanchaceae,,not yet reviewed,,1,0,1978-05-12,1978-05-12
+unlisted,76158,Catalpa speciosa,northern catalpa,Bignoniaceae,,not yet reviewed,,1,0,2023-06-20,2023-06-20
+unlisted,129315,Ceanothus americanus,,Rhamnaceae,,not yet reviewed,,1,0,1941-07-03,1941-07-03
+unlisted,64043,Ceanothus velutinus,Snowbrush Ceanothus,Rhamnaceae,,not yet reviewed,,1,0,2025-04-24,2025-04-24
+unlisted,69820,Cedrus deodara,Deodar cedar,Pinaceae,,not yet reviewed,,1,0,2023-02-18,2023-02-18
+unlisted,84344,Centaurea scabiosa,Greater Knapweed,Asteraceae,,not yet reviewed,,1,0,2025-03-14,2025-03-14
+unlisted,76218,Cerastium beeringianum,bering mouse-ear chickweed,Caryophyllaceae,,not yet reviewed,,1,0,2025-04-26,2025-04-26
+unlisted,53308,Cerastium nutans,,Caryophyllaceae,,not yet reviewed,,1,0,1992-04-18,1992-04-18
+unlisted,937677,Cercidiphyllum magnificum,,Cercidiphyllaceae,,not yet reviewed,,1,0,2024-08-10,2024-08-10
+unlisted,59265,Cerinthe major,Greater honeywort,Boraginaceae,,not yet reviewed,,1,0,2025-04-30,2025-04-30
+unlisted,784685,Chenopodium betaceum,Striped Goosefoot,Amaranthaceae,,not yet reviewed,,1,0,2024-08-23,2024-08-23
+unlisted,208769,Chenopodium giganteum,Tree spinach,Amaranthaceae,,not yet reviewed,,1,0,2023-11-25,2023-11-25
+unlisted,582270,Cineraria lyratiformis,Parsley Cineraria,Asteraceae,,not yet reviewed,,1,0,2025-04-24,2025-04-24
+unlisted,160623,Cirsium palustre,Marsh Thistle,Asteraceae,,not yet reviewed,,1,0,2025-02-23,2025-02-23
+unlisted,51735,Clarkia unguiculata,Elegant Clarkia,Onagraceae,,not yet reviewed,,1,0,2024-06-28,2024-06-28
+unlisted,58996,Clematis ligusticifolia,Western White Clematis,Ranunculaceae,,not yet reviewed,,1,0,2024-11-29,2024-11-29
+unlisted,160695,Clematis tangutica,,Ranunculaceae,,not yet reviewed,,1,0,2022-05-20,2022-05-20
+unlisted,55838,Cochlearia officinalis,,Brassicaceae,,not yet reviewed,,1,0,1948-07-16,1948-07-16
+unlisted,48865,Cocos nucifera,coconut palm,Arecaceae,,not yet reviewed,,1,1,2024-02-17,2024-02-17
+unlisted,287259,Consolida ambigua,,Ranunculaceae,,not yet reviewed,,1,0,1968-07-23,1968-07-23
+unlisted,76435,Coprosma repens,Taupata,Rubiaceae,,not yet reviewed,,1,0,2025-04-10,2025-04-10
+unlisted,337814,Cornus capitata,Strawberry dogwood,Cornaceae,,not yet reviewed,,1,0,2024-04-26,2024-04-26
+unlisted,450254,Cornus officinalis,Korean cornel dogwood,Cornaceae,,not yet reviewed,,1,0,2025-04-08,2025-04-08
+unlisted,1096279,Cornus unalaschkensis,Western Bunchberry,Cornaceae,,not yet reviewed,,1,1,2023-05-09,2023-05-09
+unlisted,491320,Corydalis fumariifolia,,Papaveraceae,,not yet reviewed,,1,0,2025-04-12,2025-04-12
+unlisted,55814,Corydalis solida,Bird-in-a-bush,Papaveraceae,,not yet reviewed,,1,0,2025-03-31,2025-03-31
+unlisted,68562,Cosmos bipinnatus,garden cosmos,Asteraceae,,not yet reviewed,,1,1,2020-11-19,2020-11-19
+unlisted,48651,Cosmos sulphureus,Yellow Cosmos,Asteraceae,,not yet reviewed,,1,1,2023-11-03,2023-11-03
+unlisted,133366,Cotinus coggygria,Smokebush,Anacardiaceae,,not yet reviewed,,1,0,2024-06-30,2024-06-30
+unlisted,160949,Cotoneaster lucidus,Shiny Cotoneaster,Rosaceae,,not yet reviewed,,1,0,2025-04-02,2025-04-02
+unlisted,791246,Cotoneaster mairei,Maire's Cotoneaster,Rosaceae,,not yet reviewed,,1,0,2007-10-21,2007-10-21
+unlisted,209325,Cotoneaster microphyllus,Rockspray Cotoneaster,Rosaceae,,not yet reviewed,,1,0,2024-05-16,2024-05-16
+unlisted,54824,Crataegus crus-galli,cockspur hawthorn,Rosaceae,,not yet reviewed,,1,0,2025-04-15,2025-04-15
+unlisted,161119,Crepis nicaeensis,French Hawk's-beard,Asteraceae,,not yet reviewed,,1,0,2023-06-21,2023-06-21
+unlisted,460587,Crepis sancta,Sacred Hawksbeard,Asteraceae,,not yet reviewed,,1,0,2025-03-19,2025-03-19
+unlisted,181465,Crocosmia × crocosmiiflora,Garden Montbretia,Iridaceae,,not yet reviewed,,1,1,2023-07-15,2023-07-15
+unlisted,334892,Crocus biflorus,Silvery Crocus,Iridaceae,,not yet reviewed,,1,0,2022-02-06,2022-02-06
+unlisted,76541,Cucurbita pepo,American pumpkin,Cucurbitaceae,,not yet reviewed,,1,1,2020-07-08,2020-07-08
+unlisted,64261,Cupressus sempervirens,Mediterranean cypress,Cupressaceae,,not yet reviewed,,1,0,2025-04-25,2025-04-25
+unlisted,341141,Cyclamen persicum,Persian Cyclamen,Primulaceae,,not yet reviewed,,1,0,2025-04-26,2025-04-26
+unlisted,82853,Cydonia oblonga,Quince,Rosaceae,,not yet reviewed,,1,0,2024-09-10,2024-09-10
+unlisted,123728,Cymbopogon citratus,Lemon Grass,Poaceae,,not yet reviewed,,1,0,2023-12-05,2023-12-05
+unlisted,371651,Daboecia cantabrica,,Ericaceae,,not yet reviewed,,1,0,1976-07-11,1976-07-11
+unlisted,527644,Desfontainia fulgens,Chilean Holly,Columelliaceae,,not yet reviewed,,1,0,2025-04-24,2025-04-24
+unlisted,63696,Dicentra eximia,Fringed Bleeding Heart,Papaveraceae,,not yet reviewed,,1,0,2025-04-05,2025-04-05
+unlisted,161821,Dichondra argentea,silver ponysfoot,Convolvulaceae,,not yet reviewed,,1,1,2025-04-15,2025-04-15
+unlisted,131003,Diodia virginiana,buttonweed,Rubiaceae,,not yet reviewed,,1,0,2025-04-25,2025-04-25
+unlisted,76664,Diplotaxis muralis,annual wall-rocket,Brassicaceae,,not yet reviewed,,1,0,2024-06-30,2024-06-30
+unlisted,162069,Draba stenoloba,,Brassicaceae,,not yet reviewed,,1,0,1976-04-17,1976-04-17
+unlisted,126510,Dracaena reflexa,Song of India,Asparagaceae,,not yet reviewed,,1,0,2025-04-14,2025-04-14
+unlisted,321106,Dracophyllum secundum,necklace heath,Ericaceae,,not yet reviewed,,1,0,2025-04-24,2025-04-24
+unlisted,525554,Dracunculus canariensis,Canary Dragon Arum,Araceae,,not yet reviewed,,1,0,2024-05-06,2024-05-06
+unlisted,278781,Drimys winteri,Winter's Bark,Winteraceae,,not yet reviewed,,1,0,2025-04-25,2025-04-25
+unlisted,559043,Dryopoa dives,giant mountain grass,Poaceae,,not yet reviewed,,1,0,2025-04-27,2025-04-27
+unlisted,82563,Dryopteris campyloptera,,Dryopteridaceae,,not yet reviewed,,1,0,1967-05-16,1967-05-16
+unlisted,359752,Dryopteris dilatata,,Dryopteridaceae,,not yet reviewed,,1,0,1905-08-03,1905-08-03
+unlisted,336266,Echinops bannaticus,Blue Globe-thistle,Asteraceae,,not yet reviewed,,1,0,2024-08-17,2024-08-17
+unlisted,162201,Echinops exaltatus,Tall Globe-thistle,Asteraceae,,not yet reviewed,,1,0,2025-04-24,2025-04-24
+unlisted,76763,Echium pininana,Giant Viper's-bugloss,Boraginaceae,,not yet reviewed,,1,0,2025-04-26,2025-04-26
+unlisted,76764,Echium plantagineum,purple viper's-bugloss,Boraginaceae,,not yet reviewed,,1,1,2022-07-19,2022-07-19
+unlisted,64694,Elaeagnus angustifolia,Russian olive,Elaeagnaceae,,not yet reviewed,,1,1,2020-06-07,2020-06-07
+unlisted,162212,Elaeagnus commutata,,Elaeagnaceae,,not yet reviewed,,1,0,2019-06-11,2019-06-11
+unlisted,57623,Elodea nuttallii,Nuttall's Waterweed,Hydrocharitaceae,,not yet reviewed,,1,1,2024-07-05,2024-07-05
+unlisted,129000,Elymus canadensis,,Poaceae,,not yet reviewed,,1,0,1949-07-16,1949-07-16
+unlisted,235782,Elymus lanceolatus psammophilus,sand-dune wheatgrass,Poaceae,,not yet reviewed,,1,0,2016-08-13,2016-08-13
+unlisted,162293,Elymus wiegandii,Wiegand's wild rye,Poaceae,,not yet reviewed,,1,0,2025-04-27,2025-04-27
+unlisted,359884,Epimedium alpinum,Alpine Barrenwort,Berberidaceae,,not yet reviewed,,1,0,2025-04-07,2025-04-07
+unlisted,76857,Eragrostis pilosa,Jersey Love-grass,Poaceae,,not yet reviewed,,1,0,2024-07-14,2024-07-14
+unlisted,288306,Eragrostis tenuifolia,,Poaceae,,not yet reviewed,,1,0,1883,1883
+unlisted,56306,Erica carnea,Spring Heath,Ericaceae,,not yet reviewed,,1,0,2024-03-15,2024-03-15
+unlisted,162431,Erica tetralix,Cross-leaved Heath,Ericaceae,,not yet reviewed,,1,0,2025-04-24,2025-04-24
+unlisted,76923,Erigeron karvinskianus,,Asteraceae,,not yet reviewed,,1,0,2009-06-12,2009-06-12
+unlisted,950313,Eriocapitella japonica,Japanese anemone,Ranunculaceae,,not yet reviewed,,1,0,2025-04-27,2025-04-27
+unlisted,765338,Erythranthe dentata,Coastal Monkeyflower,Phrymaceae,,not yet reviewed,,1,0,2025-04-25,2025-04-25
+unlisted,64542,Euonymus occidentalis,,Celastraceae,,not yet reviewed,,1,0,1990-05-28,1990-05-28
+unlisted,131154,Eupatorium capillifolium,dogfennel,Asteraceae,,not yet reviewed,,1,0,2024-05-22,2024-05-22
+unlisted,338386,Euphorbia dulcis,Sweet Spurge,Euphorbiaceae,,not yet reviewed,,1,0,2025-04-26,2025-04-26
+unlisted,162826,Euphorbia graminea,Grassleaf Spurge,Euphorbiaceae,,not yet reviewed,,1,0,2024-06-08,2024-06-08
+unlisted,464595,Euphorbia griffithii,Fireglow Spurge,Euphorbiaceae,,not yet reviewed,,1,0,2025-04-22,2025-04-22
+unlisted,162851,Euphorbia serrata,serrated spurge,Euphorbiaceae,,not yet reviewed,,1,0,2025-04-16,2025-04-16
+unlisted,77119,Euphorbia terracina,carnation spurge,Euphorbiaceae,,not yet reviewed,,1,0,2020-07-25,2020-07-25
+unlisted,77123,Eurybia integrifolia,thickstem aster,Asteraceae,,not yet reviewed,,1,0,2025-04-24,2025-04-24
+unlisted,162922,Exochorda racemosa,Pearl Bush,Rosaceae,,not yet reviewed,,1,0,2025-04-20,2025-04-20
+unlisted,54227,Fagus sylvatica,European beech,Fagaceae,,not yet reviewed,,1,1,2019-03-23,2019-03-23
+unlisted,1143516,Fargesia rufa,,Poaceae,,not yet reviewed,,1,0,2025-04-16,2025-04-16
+unlisted,401849,Festuca megalura,,Poaceae,,not yet reviewed,,1,0,1963-05-11,1963-05-11
+unlisted,452363,Forsythia koreana,Korean goldenbell tree,Oleaceae,,not yet reviewed,,1,0,2025-04-08,2025-04-08
+unlisted,163057,Forsythia ovata,Korean Forsythia,Oleaceae,,not yet reviewed,,1,0,2023-03-21,2023-03-21
+unlisted,163059,Forsythia viridissima,Greenstem Forsythia,Oleaceae,,not yet reviewed,,1,0,2023-03-28,2023-03-28
+unlisted,82881,Fraxinus angustifolia,Narrow-leaved Ash,Oleaceae,,not yet reviewed,,1,0,2024-05-19,2024-05-19
+unlisted,77171,Fritillaria atropurpurea,,Liliaceae,,not yet reviewed,,1,0,1982-04-26,1982-04-26
+unlisted,498028,Fuchsia triphylla,honeysuckle fuchsia,Onagraceae,,not yet reviewed,,1,1,2024-11-16,2024-11-16
+unlisted,56170,Galinsoga quadriradiata,,Asteraceae,,not yet reviewed,,1,0,1978-10-08,1978-10-08
+unlisted,77193,Galium divaricatum,Lamarck's bedstraw,Rubiaceae,,not yet reviewed,,1,0,2022-06-16,2022-06-16
+unlisted,708878,Galium echinocarpum,,Rubiaceae,,not yet reviewed,,1,0,2025-04-24,2025-04-24
+unlisted,77264,Geranium viscosissimum,sticky geranium,Geraniaceae,,not yet reviewed,,1,0,2025-04-30,2025-04-30
+unlisted,602541,Geranium wallichianum,Purple-vein geranium,Geraniaceae,,not yet reviewed,,1,0,2024-12-27,2024-12-27
+unlisted,51101,Gilia achilleifolia achilleifolia,,Polemoniaceae,,not yet reviewed,,1,0,1991-07-10,1991-07-10
+unlisted,59904,Glebionis coronaria,,Asteraceae,,not yet reviewed,,1,0,2007-07-29,2007-07-29
+unlisted,129859,Gleditsia aquatica,Water locust,Fabaceae,,not yet reviewed,,1,0,2025-04-27,2025-04-27
+unlisted,54797,Gleditsia triacanthos,honey locust,Fabaceae,,not yet reviewed,,1,1,2022-09-20,2022-09-20
+unlisted,323821,Goodenia ovata,hop goodenia,Goodeniaceae,,not yet reviewed,,1,0,2025-04-24,2025-04-24
+unlisted,629026,Greigia sphacelata,Hardy Pineapple,Bromeliaceae,,not yet reviewed,,1,0,2025-04-24,2025-04-24
+unlisted,82271,Gunnera manicata,giant rhubarb,Gunneraceae,,not yet reviewed,,1,1,2021-12-24,2021-12-24
+unlisted,77314,Gypsophila elegans,showy baby's-breath,Caryophyllaceae,,not yet reviewed,,1,0,2024-07-05,2024-07-05
+unlisted,559593,Hablitzia tamnoides,,Amaranthaceae,,not yet reviewed,,1,0,2025-04-20,2025-04-20
+unlisted,410828,Hamamelis mollis,Chinese witch-hazel,Hamamelidaceae,,not yet reviewed,,1,0,2024-11-12,2024-11-12
+unlisted,130382,Heliopsis helianthoides,false sunflower,Asteraceae,,not yet reviewed,,1,0,2019-07-03,2019-07-03
+unlisted,77365,Heliotropium europaeum,,Boraginaceae,,not yet reviewed,,1,0,1994-08-08,1994-08-08
+unlisted,55841,Helleborus niger,Christmas-rose,Ranunculaceae,,not yet reviewed,,1,0,2025-04-25,2025-04-25
+unlisted,163661,Helleborus viridis,Green Hellebore,Ranunculaceae,,not yet reviewed,,1,0,2025-04-10,2025-04-10
+unlisted,54663,Hemitomes congestum,,Ericaceae,,not yet reviewed,,1,0,2019-07-07,2019-07-07
+unlisted,635420,Hesperomeles obtusifolia,,Rosaceae,,not yet reviewed,,1,0,2025-04-27,2025-04-27
+unlisted,48384,Heuchera sanguinea,coralbells,Saxifragaceae,,not yet reviewed,,1,0,2025-04-24,2025-04-24
+unlisted,1190131,Hieracium cruentifolium,,Asteraceae,,not yet reviewed,,1,0,2006-06-11,2006-06-11
+unlisted,411038,Hosta sieboldiana,Siebold's Plantain Lily,Asparagaceae,,not yet reviewed,,1,0,2025-04-24,2025-04-24
+unlisted,426065,Hosta sieboldii,Small-leaved Plantain Lily,Asparagaceae,,not yet reviewed,,1,0,2024-08-08,2024-08-08
+unlisted,60951,Hydrocotyle ranunculoides,floating marsh pennywort,Araliaceae,,not yet reviewed,,1,0,2025-03-28,2025-03-28
+unlisted,775404,Hylotelephium maximum,Great Stonecrop,Crassulaceae,,not yet reviewed,,1,0,2025-03-21,2025-03-21
+unlisted,84031,Hylotelephium telephium,Orpine,Crassulaceae,,not yet reviewed,,1,0,2022-05-01,2022-05-01
+unlisted,163951,Hyoscyamus niger,black henbane,Solanaceae,,not yet reviewed,,1,0,2024-04-27,2024-04-27
+unlisted,163978,Hypericum maculatum,Imperforate St John's-wort,Hypericaceae,,not yet reviewed,,1,0,2025-02-08,2025-02-08
+unlisted,164026,Hyssopus officinalis,Hyssop,Lamiaceae,,not yet reviewed,,1,0,2025-04-27,2025-04-27
+unlisted,77485,Iberis umbellata,globe candytuft,Brassicaceae,,not yet reviewed,,1,0,2023-10-12,2023-10-12
+unlisted,164032,Ibicella lutea,Yellow Unicorn-plant,Martyniaceae,,not yet reviewed,,1,0,2025-04-24,2025-04-24
+unlisted,359300,Ilex integra,,Aquifoliaceae,,not yet reviewed,,1,0,1947-07-16,1947-07-16
+unlisted,62941,Ipomoea batatas,sweet potato,Convolvulaceae,,not yet reviewed,,1,0,2022-06-12,2022-06-12
+unlisted,135262,Ipomoea lacunosa,White Morning-glory,Convolvulaceae,,not yet reviewed,,1,0,2022-11-15,2022-11-15
+unlisted,130870,Iresine diffusa,Juba's Bush,Amaranthaceae,,not yet reviewed,,1,0,2021-08-20,2021-08-20
+unlisted,82812,Iris cristata,dwarf crested iris,Iridaceae,,not yet reviewed,,1,0,2025-04-26,2025-04-26
+unlisted,164131,Iris pallida,Sweet Iris,Iridaceae,,not yet reviewed,,1,0,2020-05-27,2020-05-27
+unlisted,59943,Iris sibirica,,Iridaceae,,not yet reviewed,,1,0,2022-06-14,2022-06-14
+unlisted,367208,Iris unguicularis,Algerian Iris,Iridaceae,,not yet reviewed,,1,1,2025-04-06,2025-04-06
+unlisted,210163,Isotoma fluviatilis,Blue Star Creeper,Campanulaceae,,not yet reviewed,,1,0,2020-07-23,2020-07-23
+unlisted,342641,Jasminum polyanthum,Pink jasmine,Oleaceae,,not yet reviewed,,1,0,2019-12-12,2019-12-12
+unlisted,148937,Juncus arcticus,Arctic Rush,Juncaceae,,not yet reviewed,,1,0,2016-08-13,2016-08-13
+unlisted,77555,Juncus breweri,salt rush,Juncaceae,,not yet reviewed,,1,0,2024-04-18,2024-04-18
+unlisted,77574,Juncus hesperius,,Juncaceae,,not yet reviewed,,1,0,1924-07-17,1924-07-17
+unlisted,164278,Juncus repens,Creeping Rush,Juncaceae,,not yet reviewed,,1,0,2024-12-08,2024-12-08
+unlisted,58320,Koelreuteria paniculata,golden rain tree,Sapindaceae,,not yet reviewed,,1,1,2024-02-19,2024-02-19
+unlisted,768203,Koenigia polystachya,Himalayan knotweed,Polygonaceae,,not yet reviewed,,1,0,2024-08-07,2024-08-07
+unlisted,135394,Lagerstroemia indica,Crape-myrtle,Lythraceae,,not yet reviewed,,1,0,2025-04-26,2025-04-26
+unlisted,59747,Larix decidua,,Pinaceae,,not yet reviewed,,1,0,1971-09-24,1971-09-24
+unlisted,143786,Larix kaempferi,Japanese larch,Pinaceae,,not yet reviewed,,1,0,2025-04-26,2025-04-26
+unlisted,135893,Larix sibirica,Siberian larch,Pinaceae,,not yet reviewed,,1,0,2025-04-24,2025-04-24
+unlisted,77643,Lathyrus polyphyllus,Leafy Pea,Fabaceae,,not yet reviewed,,1,0,2025-04-26,2025-04-26
+unlisted,54759,Laurus nobilis,Bay laurel,Lauraceae,,not yet reviewed,,1,0,2021-11-17,2021-11-17
+unlisted,60153,Lepidium latifolium,broadleaved pepperweed,Brassicaceae,,not yet reviewed,,1,0,2022-06-03,2022-06-03
+unlisted,164673,Leymus condensatus,giant wild rye,Poaceae,,not yet reviewed,,1,0,2024-12-08,2024-12-08
+unlisted,287345,Linaria canadensis,,Plantaginaceae,,not yet reviewed,,1,0,1898-05-01,1898-05-01
+unlisted,55679,Linum bienne,Pale flax,Linaceae,,not yet reviewed,,1,0,2024-05-25,2024-05-25
+unlisted,495216,Linum monogynum,New Zealand linen flax,Linaceae,,not yet reviewed,,1,0,2024-07-24,2024-07-24
+unlisted,53582,Liriodendron tulipifera,tulip tree,Magnoliaceae,,not yet reviewed,,1,1,2024-05-25,2024-05-25
+unlisted,77833,Lonicera conjugialis,purpleflower honeysuckle,Caprifoliaceae,,not yet reviewed,,1,0,2025-04-26,2025-04-26
+unlisted,170851,Lonicera × bella,Bell's honeysuckle,Caprifoliaceae,,not yet reviewed,,1,0,2022-04-07,2022-04-07
+unlisted,77842,Luetkea pectinata,Partridgefoot,Rosaceae,,not yet reviewed,,1,1,2024-07-14,2024-07-14
+unlisted,138900,Lupinus nootkatensis,,Fabaceae,,not yet reviewed,,1,0,1889-05,1889-05
+unlisted,69613,Luzula pilosa,Hairy Woodrush,Juncaceae,,not yet reviewed,,1,0,2025-03-26,2025-03-26
+unlisted,77899,Luzula spicata,,Juncaceae,,not yet reviewed,,1,0,1992-05-16,1992-05-16
+unlisted,82390,Lycopodium lagopus,,Lycopodiaceae,,not yet reviewed,,1,0,1905-08-03,1905-08-03
+unlisted,48062,Lysimachia terrestris,swamp candles,Primulaceae,,not yet reviewed,,1,0,2024-07-14,2024-07-14
+unlisted,58934,Lythrum hyssopifolia,Hyssop Loosestrife,Lythraceae,,not yet reviewed,,1,0,2023-12-16,2023-12-16
+unlisted,143787,Magnolia kobus,Kobus magnolia,Magnoliaceae,,not yet reviewed,,1,0,2024-10-03,2024-10-03
+unlisted,133352,Malus hupehensis,Hupeh Crabapple,Rosaceae,,not yet reviewed,,1,0,2025-04-23,2025-04-23
+unlisted,425883,Malus sieversii,,Rosaceae,,not yet reviewed,,1,0,2025-04-27,2025-04-27
+unlisted,545061,Malva olbia,tree lavatera,Malvaceae,,not yet reviewed,,1,0,2025-02-02,2025-02-02
+unlisted,418222,Malva pusilla,Small Mallow,Malvaceae,,not yet reviewed,,1,0,2023-03-31,2023-03-31
+unlisted,490380,Malva setigera,Rough Marsh-mallow,Malvaceae,,not yet reviewed,,1,0,2023-10-21,2023-10-21
+unlisted,702805,Malva trimestris,Royal Mallow,Malvaceae,,not yet reviewed,,1,0,2023-07-02,2023-07-02
+unlisted,77971,Medicago minima,,Fabaceae,,not yet reviewed,,1,0,1914-04-02,1914-04-02
+unlisted,366618,Melicytus lanceolatus,Māhoe Wao,Violaceae,,not yet reviewed,,1,0,2025-04-02,2025-04-02
+unlisted,58188,Mentha arvensis,,Lamiaceae,,not yet reviewed,,1,0,1989-09-02,1989-09-02
+unlisted,77992,Mentha longifolia,Horse Mint,Lamiaceae,,not yet reviewed,,1,0,2020-08-05,2020-08-05
+unlisted,126757,Mercurialis perennis,Dog's Mercury,Euphorbiaceae,,not yet reviewed,,1,0,2025-04-24,2025-04-24
+unlisted,241711,Mertensia paniculata paniculata,,Boraginaceae,,not yet reviewed,,1,0,1958-05-20,1958-05-20
+unlisted,589815,Mesembryanthemum cordifolium,,Aizoaceae,,not yet reviewed,,1,0,1992-09-10,1992-09-10
+unlisted,359468,Meum athamanticum,Spignel,Apiaceae,,not yet reviewed,,1,0,2025-03-21,2025-03-21
+unlisted,78031,Micranthes oregana,Oregon Saxifrage,Saxifragaceae,,not yet reviewed,,1,0,2024-05-05,2024-05-05
+unlisted,78084,Mirabilis nyctaginea,,Nyctaginaceae,,not yet reviewed,,1,0,2019-06-17,2019-06-17
+unlisted,165493,Moehringia lateriflora,,Caryophyllaceae,,not yet reviewed,,1,0,1992-04-18,1992-04-18
+unlisted,85320,Monarda fistulosa,,Lamiaceae,,not yet reviewed,,1,0,2022-08-03,2022-08-03
+unlisted,48789,Montia chamissoi,toadlily,Montiaceae,,not yet reviewed,,1,1,2011-05-20,2011-05-20
+unlisted,701186,Muscari aucheri,,Asparagaceae,,not yet reviewed,,1,0,2019-03-25,2019-03-25
+unlisted,83081,Myosotis alpestris,,Boraginaceae,,not yet reviewed,,1,0,1908-04-23,1908-04-23
+unlisted,1552744,Myosotis dubia,,Boraginaceae,,not yet reviewed,,1,0,2021-04-28,2021-04-28
+unlisted,508209,Narcissus dubius,,Amaryllidaceae,,not yet reviewed,,1,0,2025-04-14,2025-04-14
+unlisted,243514,Narcissus hispanicus,Spanish Daffodil,Amaryllidaceae,,not yet reviewed,,1,1,2018-03-16,2018-03-16
+unlisted,1062301,Narcissus × cyclazetta,Head-to-head Daffodil,Amaryllidaceae,,not yet reviewed,,1,1,2020-03-28,2020-03-28
+unlisted,78221,Nicotiana sylvestris,Woodland Tobacco,Solanaceae,,not yet reviewed,,1,1,2023-09-03,2023-09-03
+unlisted,196966,Nymphaea candida,white water lily,Nymphaeaceae,,not yet reviewed,,1,0,2024-06-30,2024-06-30
+unlisted,54802,Nyssa sylvatica,Black Tupelo,Nyssaceae,,not yet reviewed,,1,0,2025-04-25,2025-04-25
+unlisted,51813,Oenothera elata,tall evening primrose,Onagraceae,,not yet reviewed,,1,0,2024-09-02,2024-09-02
+unlisted,590726,Oenothera lindheimeri,clockweed,Onagraceae,,not yet reviewed,,1,0,2023-08-25,2023-08-25
+unlisted,78251,Oenothera villosa,,Onagraceae,,not yet reviewed,,1,0,2007-10-15,2007-10-15
+unlisted,336338,Olearia paniculata,Akiraho,Asteraceae,,not yet reviewed,,1,0,2025-04-25,2025-04-25
+unlisted,165838,Omalotheca sylvatica,Woodland Cudweed,Asteraceae,,not yet reviewed,,1,0,2024-12-08,2024-12-08
+unlisted,483101,Ornithogalum divergens,Divergent Star-of-Bethlehem,Asparagaceae,,not yet reviewed,,1,0,2024-04-14,2024-04-14
+unlisted,341115,Ornithogalum orthophyllum,Straight-leaved Star of Bethlehem,Asparagaceae,,not yet reviewed,,1,0,2023-05-07,2023-05-07
+unlisted,371103,Osmanthus fragrans,Sweet olive,Oleaceae,,not yet reviewed,,1,0,2024-03-10,2024-03-10
+unlisted,518532,Osmanthus × burkwoodii,Burkwood osmanthus,Oleaceae,,not yet reviewed,,1,0,2025-04-09,2025-04-09
+unlisted,210186,Ottelia ovalifolia,Swamp lily,Hydrocharitaceae,,not yet reviewed,,1,0,2025-03-23,2025-03-23
+unlisted,1464017,Oxalis smalliana,Redwood Sorrel,Oxalidaceae,,not yet reviewed,,1,0,2025-04-25,2025-04-25
+unlisted,78302,Oxalis suksdorfii,Suksdorf's woodsorrel,Oxalidaceae,,not yet reviewed,,1,0,2025-04-20,2025-04-20
+unlisted,291533,Oxalis tetraphylla,fourleaf pink-sorrel,Oxalidaceae,,not yet reviewed,,1,0,2025-03-28,2025-03-28
+unlisted,931646,Oxybasis glauca,oak-leaved goosefoot,Amaranthaceae,,not yet reviewed,,1,0,2024-07-24,2024-07-24
+unlisted,133354,Oxydendrum arboreum,sourwood,Ericaceae,,not yet reviewed,,1,0,2025-04-25,2025-04-25
+unlisted,70023,Pandanus odorifer,Screw-pine,Pandanaceae,,not yet reviewed,,1,0,2025-04-24,2025-04-24
+unlisted,858786,Paris incompleta,,Melanthiaceae,,not yet reviewed,,1,0,2025-04-26,2025-04-26
+unlisted,181927,Parthenocissus inserta,thicket creeper,Vitaceae,,not yet reviewed,,1,1,2021-07-16,2021-07-16
+unlisted,60297,Paspalum distichum,knot grass,Poaceae,,not yet reviewed,,1,0,2025-04-26,2025-04-26
+unlisted,78399,Penstemon davidsonii,Davidson's Penstemon,Plantaginaceae,,not yet reviewed,,1,0,2025-04-26,2025-04-26
+unlisted,78455,Persicaria pensylvanica,pinkweed,Polygonaceae,,not yet reviewed,,1,0,2023-08-24,2023-08-24
+unlisted,1019125,Petasites pyrenaicus,Winter Heliotrope,Asteraceae,,not yet reviewed,,1,1,2021-01-06,2021-01-06
+unlisted,181815,Petunia integrifolia,violetflower petunia,Solanaceae,,not yet reviewed,,1,0,2025-04-26,2025-04-26
+unlisted,50171,Phacelia campanularia,desert bluebells,Boraginaceae,,not yet reviewed,,1,1,2023-06-30,2023-06-30
+unlisted,78543,Phlox caespitosa,,Polemoniaceae,,not yet reviewed,,1,0,1923-04-15,1923-04-15
+unlisted,78544,Phlox diffusa,spreading phlox,Polemoniaceae,,not yet reviewed,,1,1,2021-09-16,2021-09-16
+unlisted,166724,Phlox stolonifera,creeping phlox,Polemoniaceae,,not yet reviewed,,1,0,2025-04-26,2025-04-26
+unlisted,320270,Phygelius capensis,Southern Shadewort,Scrophulariaceae,,not yet reviewed,,1,0,2025-02-26,2025-02-26
+unlisted,166762,Phyllostachys aureosulcata,Yellow groove bamboo,Poaceae,,not yet reviewed,,1,0,2025-04-27,2025-04-27
+unlisted,51734,Physalis philadelphica,,Solanaceae,,not yet reviewed,,1,0,2007-07-21,2007-07-21
+unlisted,237931,Picris hieracioides hieracioides,,Asteraceae,,not yet reviewed,,1,0,1887-06-25,1887-06-25
+unlisted,127181,Pieris japonica,Japanese andromeda,Ericaceae,,not yet reviewed,,1,0,2024-03-05,2024-03-05
+unlisted,402509,Pilosella officinarum,mouse-eared hawkweed,Asteraceae,,not yet reviewed,,1,0,2023-11-23,2023-11-23
+unlisted,135790,Pinus nigra,black pine,Pinaceae,,not yet reviewed,,1,0,2025-04-23,2025-04-23
+unlisted,48461,Pinus ponderosa,Western Ponderosa Pine,Pinaceae,,not yet reviewed,,1,0,2025-02-10,2025-02-10
+unlisted,58722,Pinus sylvestris,Scots pine,Pinaceae,,not yet reviewed,,1,0,2022-05-17,2022-05-17
+unlisted,122975,Pistacia vera,Pistachio,Anacardiaceae,,not yet reviewed,,1,1,2025-04-18,2025-04-18
+unlisted,78658,Poa wheeleri,,Poaceae,,not yet reviewed,,1,0,1875-05-10,1875-05-10
+unlisted,53039,Pogonia ophioglossoides,,Orchidaceae,,not yet reviewed,,1,0,1949-07-04,1949-07-04
+unlisted,863670,Polygonatum × hybridum,Garden Solomon's-seal,Asparagaceae,,not yet reviewed,,1,1,2023-04-30,2023-04-30
+unlisted,167232,Polygonum buxiforme,,Polygonaceae,,not yet reviewed,,1,0,2007-06-19,2007-06-19
+unlisted,78697,Polystichum lonchitis,,Dryopteridaceae,,not yet reviewed,,1,0,1967-06-01,1967-06-01
+unlisted,962637,Pontederia crassipes,common water hyacinth,Pontederiaceae,,not yet reviewed,,1,1,2024-08-29,2024-08-29
+unlisted,133294,Portulaca pilosa,shaggy portulaca,Portulacaceae,,not yet reviewed,,1,0,2019-12-13,2019-12-13
+unlisted,78711,Potamogeton illinoensis,shining pondweed,Potamogetonaceae,,not yet reviewed,,1,0,2024-07-09,2024-07-09
+unlisted,124552,Potentilla argentea,Silvery Cinquefoil,Rosaceae,,not yet reviewed,,1,0,2024-03-23,2024-03-23
+unlisted,243824,Potentilla indica,mock strawberry,Rosaceae,,not yet reviewed,,1,1,2024-12-06,2024-12-06
+unlisted,361653,Potentilla supina,Carpet Cinquefoil,Rosaceae,,not yet reviewed,,1,0,2024-07-17,2024-07-17
+unlisted,167389,Potentilla villosa,Northern Cinquefoil,Rosaceae,,not yet reviewed,,1,0,2023-03-31,2023-03-31
+unlisted,62694,Primula suffrutescens,Sierra primrose,Primulaceae,,not yet reviewed,,1,0,2025-04-20,2025-04-20
+unlisted,54833,Prunus pensylvanica,fire cherry,Rosaceae,,not yet reviewed,,1,0,2023-03-21,2023-03-21
+unlisted,707998,Prunus pseudocerasus,Chinese sour cherry,Rosaceae,,not yet reviewed,,1,0,2025-03-18,2025-03-18
+unlisted,125742,Prunus serrulata,Japanese Cherry,Rosaceae,,not yet reviewed,,1,0,2024-04-09,2024-04-09
+unlisted,371700,Pterocarya fraxinifolia,Caucasian Wingnut,Juglandaceae,,not yet reviewed,,1,0,2025-04-27,2025-04-27
+unlisted,167586,Puccinellia lucida,,Poaceae,,not yet reviewed,,1,0,1976-08-02,1976-08-02
+unlisted,129488,Pulmonaria saccharata,Bethlehem-sage,Boraginaceae,,not yet reviewed,,1,0,2025-04-27,2025-04-27
+unlisted,78791,Pyracantha fortuneana,Chinese firethorn,Rosaceae,,not yet reviewed,,1,0,2024-08-16,2024-08-16
+unlisted,82515,Pyrola elliptica,shinleaf,Ericaceae,,not yet reviewed,,1,1,2022-07-26,2022-07-26
+unlisted,119793,Pyrus calleryana,Callery pear,Rosaceae,,not yet reviewed,,1,0,2022-05-16,2022-05-16
+unlisted,506415,Quercus macranthera,,Fagaceae,,not yet reviewed,,1,0,2007-10-17,2007-10-17
+unlisted,54785,Quercus palustris,pin oak,Fagaceae,,not yet reviewed,,1,0,2024-04-03,2024-04-03
+unlisted,977882,Quercus phillyreoides,,Fagaceae,,not yet reviewed,,1,0,1947-07-09,1947-07-09
+unlisted,244877,Ranunculus septentrionalis,,Ranunculaceae,,not yet reviewed,,1,0,1934-08-27,1934-08-27
+unlisted,78835,Rapistrum rugosum,annual bastard cabbage,Brassicaceae,,not yet reviewed,,1,0,2020-02-21,2020-02-21
+unlisted,991846,Rhodiola pachyclados,,Crassulaceae,,not yet reviewed,,1,1,2021-04-29,2021-04-29
+unlisted,167817,Rhododendron lapponicum,,Ericaceae,,not yet reviewed,,1,0,2025-04-02,2025-04-02
+unlisted,708692,Rhododendron ledebourii,Daurian Rhododendron,Ericaceae,,not yet reviewed,,1,0,2025-04-12,2025-04-12
+unlisted,57360,Rhododendron macrophyllum,,Ericaceae,,not yet reviewed,,1,0,2022-12-31,2022-12-31
+unlisted,60527,Rhododendron occidentale,western azalea,Ericaceae,,not yet reviewed,,1,0,2025-04-18,2025-04-18
+unlisted,736591,Rhododendron ovatum,,Ericaceae,,not yet reviewed,,1,0,2025-03-14,2025-03-14
+unlisted,55544,Ribes aureum,golden currant,Grossulariaceae,,not yet reviewed,,1,0,2025-03-16,2025-03-16
+unlisted,78856,Ribes indecorum,White-flowering Currant,Grossulariaceae,,not yet reviewed,,1,0,2025-04-15,2025-04-15
+unlisted,906050,Rosa amblyotis,Jakutian rose,Rosaceae,,not yet reviewed,,1,0,2025-04-27,2025-04-27
+unlisted,83065,Rosa arkansana,prairie rose,Rosaceae,,not yet reviewed,,1,0,2025-04-14,2025-04-14
+unlisted,209505,Rosa banksiae,Lady Banks' Rose,Rosaceae,,not yet reviewed,,1,0,2025-04-23,2025-04-23
+unlisted,83062,Rosa blanda,smooth rose,Rosaceae,,not yet reviewed,,1,0,2025-04-27,2025-04-27
+unlisted,53437,Rosa californica,California Wild Rose,Rosaceae,,not yet reviewed,,1,0,2025-03-19,2025-03-19
+unlisted,82302,Rosa palustris,swamp rose,Rosaceae,,not yet reviewed,,1,0,2022-05-31,2022-05-31
+unlisted,82110,Rubus allegheniensis,Allegheny blackberry,Rosaceae,,not yet reviewed,,1,1,2024-08-13,2024-08-13
+unlisted,448109,Rubus crataegifolius,Korean Raspberry,Rosaceae,,not yet reviewed,,1,0,2025-04-27,2025-04-27
+unlisted,953648,Rubus incurvatus,,Rosaceae,,not yet reviewed,,1,0,1991-10-05,1991-10-05
+unlisted,544428,Rubus lineatus,Silky-leaved Berry,Rosaceae,,not yet reviewed,,1,0,2025-04-24,2025-04-24
+unlisted,1340663,Rubus procerus,,Rosaceae,,not yet reviewed,,1,0,1966-08-12,1966-08-12
+unlisted,78895,Rubus ulmifolius,elmleaf blackberry,Rosaceae,,not yet reviewed,,1,0,2024-11-14,2024-11-14
+unlisted,168241,Rumex longifolius,Northern Dock,Polygonaceae,,not yet reviewed,,1,0,2024-06-24,2024-06-24
+unlisted,168248,Rumex patientia,Patience Dock,Polygonaceae,,not yet reviewed,,1,0,2024-09-21,2024-09-21
+unlisted,78908,Rumex persicarioides,,Polygonaceae,,not yet reviewed,,1,0,2018-09-21,2018-09-21
+unlisted,168249,Rumex pseudonatronatus,Field Dock,Polygonaceae,,not yet reviewed,,1,0,2023-08-29,2023-08-29
+unlisted,705161,Sabulina howellii,,Caryophyllaceae,,not yet reviewed,,1,0,1976-07-20,1976-07-20
+unlisted,836882,Sabulina michauxii,,Caryophyllaceae,,not yet reviewed,,1,0,1977-05-28,1977-05-28
+unlisted,168319,Salix barclayi,,Salicaceae,,not yet reviewed,,1,0,1908-06-18,1908-06-18
+unlisted,168326,Salix cinerea,Grey Willow,Salicaceae,,not yet reviewed,,1,0,2024-04-21,2024-04-21
+unlisted,553036,Salix integra,dappled willow,Salicaceae,,not yet reviewed,,1,0,2025-04-26,2025-04-26
+unlisted,168349,Salix pentandra,,Salicaceae,,not yet reviewed,,1,0,2021-05-19,2021-05-19
+unlisted,181862,Salix × pendulina,weeping crack willow,Salicaceae,,not yet reviewed,,1,0,2019-03-16,2019-03-16
+unlisted,78954,Salpichroa origanifolia,,Solanaceae,,not yet reviewed,,1,0,1916-10-16,1916-10-16
+unlisted,168386,Salvia microphylla,Baby Sage,Lamiaceae,,not yet reviewed,,1,0,2024-11-12,2024-11-12
+unlisted,168387,Salvia nemorosa,Purple Wood Sage,Lamiaceae,,not yet reviewed,,1,1,2022-06-14,2022-06-14
+unlisted,135546,Saxegothaea conspicua,Prince Albert's yew,Podocarpaceae,,not yet reviewed,,1,0,2025-04-27,2025-04-27
+unlisted,207679,Saxifraga umbrosa,,Saxifragaceae,,not yet reviewed,,1,0,1936-06-15,1936-06-15
+unlisted,168481,Scabiosa ochroleuca,,Caprifoliaceae,,not yet reviewed,,1,0,1908-07-18,1908-07-18
+unlisted,129497,Schizachne purpurascens,purple oat,Poaceae,,not yet reviewed,,1,0,2019-05-11,2019-05-11
+unlisted,59072,Schoenoplectus pungens,three-square bulrush,Cyperaceae,,not yet reviewed,,1,0,2022-07-15,2022-07-15
+unlisted,129057,Sciadopitys verticillata,,Sciadopityaceae,,not yet reviewed,,1,0,1987-12-12,1987-12-12
+unlisted,56934,Scilla bifolia,Alpine Squill,Asparagaceae,,not yet reviewed,,1,0,2022-03-19,2022-03-19
+unlisted,874286,Scilla forbesii × luciliae,,Asparagaceae,,not yet reviewed,,1,0,2023-03-06,2023-03-06
+unlisted,244096,Scilla peruviana,Portuguese squill,Asparagaceae,,not yet reviewed,,1,0,2020-03-29,2020-03-29
+unlisted,50812,Scrophularia californica,California beeplant,Scrophulariaceae,,not yet reviewed,,1,0,2023-07-30,2023-07-30
+unlisted,124485,Scrophularia nodosa,Common Figwort,Scrophulariaceae,,not yet reviewed,,1,0,2020-08-28,2020-08-28
+unlisted,79017,Scutellaria lateriflora,side-flowering skullcap,Lamiaceae,,not yet reviewed,,1,0,2024-11-12,2024-11-12
+unlisted,118473,Sedum sarmentosum,Stringy Stonecrop,Crassulaceae,,not yet reviewed,,1,0,2024-06-09,2024-06-09
+unlisted,58085,Sisymbrium irio,London rocket,Brassicaceae,,not yet reviewed,,1,0,2025-04-29,2025-04-29
+unlisted,79148,Solidago altissima,tall goldenrod,Asteraceae,,not yet reviewed,,1,0,2022-07-29,2022-07-29
+unlisted,169115,Solidago mollis,,Asteraceae,,not yet reviewed,,1,0,1907-09-03,1907-09-03
+unlisted,126653,Solidago simplex,Sticky Goldenrod,Asteraceae,,not yet reviewed,,1,0,2025-03-27,2025-03-27
+unlisted,1148360,Sorbus sibirica,Siberian mountain ash,Rosaceae,,not yet reviewed,,1,0,2025-04-27,2025-04-27
+unlisted,50843,Sparaxis tricolor,Harlequin flower,Iridaceae,,not yet reviewed,,1,0,2025-04-27,2025-04-27
+unlisted,772983,Sporobolus anglicus,common cordgrass,Poaceae,,not yet reviewed,,1,0,2025-04-24,2025-04-24
+unlisted,120557,Sporobolus heterolepis,prairie dropseed,Poaceae,,not yet reviewed,,1,0,2025-04-15,2025-04-15
+unlisted,69612,Symphytum orientale,Soft Comfrey,Boraginaceae,,not yet reviewed,,1,0,2025-04-26,2025-04-26
+unlisted,557041,Symplocos sumuntia,,Symplocaceae,,not yet reviewed,,1,0,2023-03-21,2023-03-21
+unlisted,135416,Syringa reticulata,Japanese Tree Lilac,Oleaceae,,not yet reviewed,,1,0,2022-05-20,2022-05-20
+unlisted,153954,Tagetes lunulata,Red-crescent marigold,Asteraceae,,not yet reviewed,,1,0,2023-08-14,2023-08-14
+unlisted,777243,Tagetes patula,French marigold,Asteraceae,,not yet reviewed,,1,1,2024-09-08,2024-09-08
+unlisted,747262,Taraxacum lacistophyllum,Cut-leaved dandelion,Asteraceae,,not yet reviewed,,1,0,2023-03-21,2023-03-21
+unlisted,358060,Telekia speciosa,Yellow Oxeye,Asteraceae,,not yet reviewed,,1,0,2025-04-22,2025-04-22
+unlisted,418653,Tetragonia tetragonoides,New Zealand Spinach,Aizoaceae,,not yet reviewed,,1,1,2023-08-18,2023-08-18
+unlisted,487736,Teucrium flavum,Yellow Germander,Lamiaceae,,not yet reviewed,,1,0,2025-04-24,2025-04-24
+unlisted,54037,Thuja occidentalis,,Cupressaceae,,not yet reviewed,,1,0,1968-08-02,1968-08-02
+unlisted,85469,Thymus vulgaris,common thyme,Lamiaceae,,not yet reviewed,,1,0,2024-05-22,2024-05-22
+unlisted,132600,Tilia cordata,Small-leaved Lime,Malvaceae,,not yet reviewed,,1,0,2019-10-23,2019-10-23
+unlisted,349229,Trachelospermum asiaticum,Asiatic jasmine,Apocynaceae,,not yet reviewed,,1,0,2023-01-28,2023-01-28
+unlisted,64323,Trachycarpus fortunei,Chusan Palm,Arecaceae,,not yet reviewed,,1,0,2023-08-29,2023-08-29
+unlisted,169862,Tradescantia crassula,succulent spiderwort,Commelinaceae,,not yet reviewed,,1,0,2025-04-30,2025-04-30
+unlisted,204169,Trichophorum cespitosum,Tufted Bulrush,Cyperaceae,,not yet reviewed,,1,0,2021-04-21,2021-04-21
+unlisted,452309,Tricyrtis formosana,toad lily,Liliaceae,,not yet reviewed,,1,0,2025-04-26,2025-04-26
+unlisted,79436,Triglochin palustris,marsh arrowgrass,Juncaginaceae,,not yet reviewed,,1,0,2025-04-23,2025-04-23
+unlisted,55697,Trillium albidum,giant white wakerobin,Melanthiaceae,,not yet reviewed,,1,1,2025-04-17,2025-04-17
+unlisted,118736,Triplasis purpurea,Purple Sandgrass,Poaceae,,not yet reviewed,,1,0,2025-02-25,2025-02-25
+unlisted,51085,Triteleia laxa,Ithuriel's Spear,Asparagaceae,,not yet reviewed,,1,0,2024-07-01,2024-07-01
+unlisted,179304,Tulbaghia violacea,Society Garlic,Amaryllidaceae,,not yet reviewed,,1,0,2021-04-15,2021-04-15
+unlisted,79459,Tulipa clusiana,Lady Tulip,Liliaceae,,not yet reviewed,,1,0,2025-04-27,2025-04-27
+unlisted,507836,Tulipa fosteriana,,Liliaceae,,not yet reviewed,,1,0,2006-03-18,2006-03-18
+unlisted,344752,Tulipa saxatilis,Cretan tulip,Liliaceae,,not yet reviewed,,1,0,2025-04-15,2025-04-15
+unlisted,55798,Tulipa sylvestris,Wild Tulip,Liliaceae,,not yet reviewed,,1,0,2025-04-26,2025-04-26
+unlisted,381111,Ugni molinae,Chilean Guava,Myrtaceae,,not yet reviewed,,1,0,2025-04-26,2025-04-26
+unlisted,54860,Ulmus rubra,slippery elm,Ulmaceae,,not yet reviewed,,1,0,2019-10-06,2019-10-06
+unlisted,48807,Umbellularia californica,California bay,Lauraceae,,not yet reviewed,,1,0,2025-04-23,2025-04-23
+unlisted,57859,Utricularia intermedia,,Lentibulariaceae,,not yet reviewed,,1,0,1970-08-03,1970-08-03
+unlisted,59028,Verbascum blattaria,moth mullein,Scrophulariaceae,,not yet reviewed,,1,1,2023-07-13,2023-07-13
+unlisted,79485,Verbascum bombyciferum,Broussa Mullein,Scrophulariaceae,,not yet reviewed,,1,1,2021-07-26,2021-07-26
+unlisted,170141,Verbascum phoeniceum,Purple Mullein,Scrophulariaceae,,not yet reviewed,,1,1,2021-06-22,2021-06-22
+unlisted,64130,Verbascum virgatum,Wand Mullein,Scrophulariaceae,,not yet reviewed,,1,1,2022-07-28,2022-07-28
+unlisted,56163,Verbena officinalis,Common vervain,Verbenaceae,,not yet reviewed,,1,0,2024-07-14,2024-07-14
+unlisted,170192,Veronica longifolia,Long-leaved Speedwell,Plantaginaceae,,not yet reviewed,,1,1,2019-08-09,2019-08-09
+unlisted,738756,Veronica odora,Boxleaf Hebe,Plantaginaceae,,not yet reviewed,,1,0,2025-04-26,2025-04-26
+unlisted,126708,Viburnum carlesii,Korean Spice Viburnum,Viburnaceae,,not yet reviewed,,1,0,2025-01-19,2025-01-19
+unlisted,604293,Viburnum luzonicum,Luzon viburnum,Viburnaceae,,not yet reviewed,,1,0,2025-04-24,2025-04-24
+unlisted,632667,Vincetoxicum rossicum,,Apocynaceae,,not yet reviewed,,1,0,1885,1885
+unlisted,170262,Viola septentrionalis,Northern Woodland Violet,Violaceae,,not yet reviewed,,1,0,2025-04-01,2025-04-01
+unlisted,119936,Vitis riparia,riverbank grape,Vitaceae,,not yet reviewed,,1,0,2021-05-23,2021-05-23
+unlisted,201452,Yucca gigantea,Spineless Yucca,Asparagaceae,,not yet reviewed,,1,0,2025-04-15,2025-04-15
+unlisted,79546,Zannichellia palustris,Horned Pondweed,Potamogetonaceae,,not yet reviewed,,1,0,2023-12-16,2023-12-16

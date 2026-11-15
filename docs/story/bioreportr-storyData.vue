@@ -10,6 +10,7 @@ fluid.def("bioreportr.storyData", {
     regionIndirectionFile: "../local/data/tabular/Saanich_Tracheophyta_ultimate-catalogue_2026-11-15-selected-regionIndirection.csv",
     taxaFile: "../local/data/tabular/Saanich_Tracheophyta_ultimate-summary_2026-11-15-prepared-taxa.csv",
     curationHistoryFile: "../local/data/tabular/Saanich_Tracheophyta_curation-history_2026-11-15.csv",
-    recordAnnotationsFile: "../local/data/tabular/Saanich_Tracheophyta_record-annotations_2026-11-15.csv"
+    recordAnnotationsFile: "../local/data/tabular/Saanich_Tracheophyta_record-annotations_2026-11-15.csv",
+    excludedTaxaFile: "../local/data/tabular/Saanich_Tracheophyta_excluded-taxa_2026-11-15.csv"
 });
 </script>

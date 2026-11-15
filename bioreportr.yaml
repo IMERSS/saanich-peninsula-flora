@@ -14,3 +14,6 @@ data:
   curationHistory: Saanich_Tracheophyta_curation-history_2026-11-15.csv
   # The annotations of records, e.g. of planted populations, applied by scripts/apply_record_annotations.R
   recordAnnotations: Saanich_Tracheophyta_record-annotations_2026-11-15.csv
+  # The taxa kept off the list - those set aside on the working list, and those of the penultimate catalogue never
+  # listed - prepared by scripts/prepare_excluded_taxa.R
+  excludedTaxa: Saanich_Tracheophyta_excluded-taxa_2026-11-15.csv

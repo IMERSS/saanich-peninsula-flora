@@ -247,6 +247,8 @@ fluid.def("bioreportr.storyPage", {
     // The annotations of records the project keeps, e.g. of planted populations, as a CSV file relative to the story page,
     // if it has any - records they suspend from the calculation of extirpation probability are left out of the populations
     recordAnnotationsFile: null,
+    // The taxa kept off the list by the curation workflow, shown by the Lost Plants gallery - see bioreportr-lostPlantsPane.vue
+    excludedTaxaFile: null,
     recordAnnotations: "$compute:bioreportr.loadRecordAnnotations({self}.recordAnnotationsFile)",
     solowEPObs: "$compute:bioreportr.solowObsForEP({self}.solowTaxonObs, {self}.recordAnnotations)",
     solowTaxonInfo: {

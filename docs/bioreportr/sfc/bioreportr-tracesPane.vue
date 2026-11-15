@@ -20,8 +20,10 @@ fluid.def("bioreportr.traces", {
     $layers: "fluid.component",
     paused: false,
     scrubbing: false,
+    // The settings of the timeline's pacing which a story gives for its own record, over bioreportr.traces.pacingDefaults
+    pacing: {},
     active: "$compute:bioreportr.storyPage.isActive({storyPage}.activePaneKey, Traces)",
-    events: "$compute:bioreportr.traces.buildEvents({storyPage}.taxa.allRows, {storyPage}.byTaxon, {storyPage}.statusById, {storyPage}.recentYear)",
+    events: "$compute:bioreportr.traces.buildEvents({storyPage}.taxa.allRows, {storyPage}.byTaxon, {storyPage}.statusById, {storyPage}.recentYear, {storyPage}.recordAnnotations)",
     // The classes of the story's left pane while the timeline shows - see bioreportr.traces.leftPaneClass
     leftPaneClass: "$compute:bioreportr.traces.leftPaneClass({self}.active, {self}.paused, {self}.scrubbing)",
     control: "$effect:bioreportr.traces.control({self}, {storyPage}, {storyPage}.map.readyMap, {self}.events, {self}.active, {storyPage}.loaded, {global})",
@@ -35,8 +37,8 @@ fluid.def("bioreportr.tracesPane", {
 
 /** The opening timeline, in memory of plants **/
 
-// The opening pane of the story: plants' key moments appear across the landscape as a timeline plays, starting from a
-// random year on each visit. Everything is derived from the site's data whenever it loads
+// The opening pane of the story: plants' key moments appear across the landscape as a timeline plays, paced by year and
+// starting from the year the story's pacing names, else a random year, on each visit. Everything is derived from the site's data whenever it loads
 fluid.registerNamespace("bioreportr.traces");
 
 // The map is a dim blue, so orange, its complement, is kept for the plants last seen alone: the others stay cool or neutral.
@@ -50,7 +52,7 @@ bioreportr.traces.kinds = {
     },
     found: {
         label: "Seen again",
-        significance: "The first record since 2000 of a plant known from earlier reports.",
+        significance: "The first record since %recentYear of a plant known from earlier reports.",
         icon: `<path transform="scale(0.09375)" fill="#35c2a0" d="M247.63,47.89a8,8,0,0,0-7.52-7.52c-51.76-3-93.32,12.74-111.18,42.22-11.8,19.49-11.78,43.16-.16,65.74a71.34,71.34,0,0,0-14.17,27L98.33,159c7.82-16.33,7.52-33.35-1-47.49-13.2-21.79-43.67-33.47-81.5-31.25a8,8,0,0,0-7.52,7.52c-2.23,37.83,9.46,68.3,31.25,81.5A45.82,45.82,0,0,0,63.44,176,54.58,54.58,0,0,0,87,170.33l25,25V224a8,8,0,0,0,16,0V194.51a55.61,55.61,0,0,1,12.27-35,73.91,73.91,0,0,0,33.31,8.4,60.9,60.9,0,0,0,31.83-8.86C234.89,141.21,250.67,99.65,247.63,47.89ZM47.81,155.6C32.47,146.31,23.79,124.32,24,96c28.32-.24,50.31,8.47,59.6,23.81,4.85,8,5.64,17.33,2.46,26.94L61.65,122.34a8,8,0,0,0-11.31,11.31l24.41,24.41C65.14,161.24,55.82,160.45,47.81,155.6Zm149.31-10.22c-13.4,8.11-29.15,8.73-45.15,2l53.69-53.7a8,8,0,0,0-11.31-11.31L140.65,136c-6.76-16-6.15-31.76,2-45.15,13.94-23,47-35.82,89.33-34.83C232.94,98.34,220.14,131.44,197.12,145.38Z"/>`
     },
     last: {
@@ -91,9 +93,12 @@ bioreportr.traces.playIcons = {
  * @param {Map<String, Object[]>} byTaxon - Dated records indexed by taxon id
  * @param {Object<String, String>} statusById - The reporting status of each taxon, by id - see hortis.reportingStatusById
  * @param {Number} recentYear - The year from which a record counts as recent
+ * @param {Object<String, Object>} [annotations] - The annotations of records, by occurrenceID - those suspended from the
+ * calculation of extirpation probability, e.g. of a planted population, mark no moment in the plant's wild record, as
+ * in the Lost Plants gallery and the extirpation risk analysis
  * @return {TraceEvent[]} The events, in date order
  */
-bioreportr.traces.buildEvents = function (taxaRows, byTaxon, statusById, recentYear) {
+bioreportr.traces.buildEvents = function (taxaRows, byTaxon, statusById, recentYear, annotations) {
     const events = [];
     const add = (taxon, kind, record) => {
         if (record && bioreportr.hasCoordinates(record)) {
@@ -102,7 +107,7 @@ bioreportr.traces.buildEvents = function (taxaRows, byTaxon, statusById, recentY
     };
     const statusOf = taxon => statusById[taxon.id];
     taxaRows.filter(taxon => taxon.inSummary).forEach(taxon => {
-        const records = (byTaxon.get(taxon.id) || []).slice().sort(bioreportr.obsDateComparator);
+        const records = (byTaxon.get(taxon.id) || []).filter(record => !annotations?.[record.occurrenceID]?.excludeFromEP).sort(bioreportr.obsDateComparator);
         if (records.length > 0) {
             const first = records[0], last = fluid.peek(records);
             if (statusOf(taxon) === "unconfirmed") {
@@ -134,9 +139,11 @@ bioreportr.traces.formatDate = function (eventDate) {
 /**
  * Render the card shown on hovering over a marker, with a space for its photo.
  * @param {TraceEvent} event - The event of the marker
+ * @param {Number} recentYear - The year from which a record counts as recent - the story's own, see
+ * bioreportr-atlasPanel.vue
  * @return {String} The markup of the card
  */
-bioreportr.traces.renderCard = function (event) {
+bioreportr.traces.renderCard = function (event, recentYear) {
     const {taxon, kind, record} = event;
     const encode = hortis.dataTable.encode;
     const recorder = (record.recordedBy || "").split(";")[0].trim();
@@ -145,7 +152,7 @@ bioreportr.traces.renderCard = function (event) {
     return `<div class="mxcw-trace-photo"></div><div class="mxcw-trace-kind" data-kind="${kind}">${bioreportr.traces.icon(kind)}${bioreportr.traces.kinds[kind].label}</div>
         <div class="mxcw-trace-name">${encode(taxon.scientificName)}</div>${common}
         <div>${bioreportr.traces.formatDate(record.eventDate)}${recorder ? ", " + encode(recorder) : ""}</div>${place}
-        <div class="mxcw-trace-significance">${bioreportr.traces.kinds[kind].significance}</div>
+        <div class="mxcw-trace-significance">${bioreportr.traces.kinds[kind].significance.replace("%recentYear", recentYear)}</div>
         <div class="mxcw-trace-action">Find this plant &rarr;</div>`;
 };
 
@@ -180,6 +187,8 @@ bioreportr.traces.leftPaneClass = function (active, paused, scrubbing) {
  * @property {Number} index - The index of the next event to be shown
  * @property {Set<maplibregl.Marker>} markers - The markers on the map
  * @property {Number} holding - The number of markers, or the card, on which the pointer rests, which holds the timeline while positive
+ * @property {Object} pacing - The settings of the pacing in full, see bioreportr.traces.pacingSettings
+ * @property {Number[]} delays - The time in milliseconds after each event before the next - see bioreportr.traces.pace
  * @property {Number|null} timer - The timer of the next step
  * @property {TraceEvent|null} cardEvent - The event whose card is shown
  * @property {Number|null} hideTimer - The timer hiding the card once the pointer has left it and its marker
@@ -281,7 +290,7 @@ bioreportr.traces.showCard = function (state, event, element) {
     const {card} = state.overlay, {innerWidth, innerHeight} = state.window;
     bioreportr.traces.cancelHide(state);
     bioreportr.traces.holdMarker(state, element);
-    card.innerHTML = bioreportr.traces.renderCard(event);
+    card.innerHTML = bioreportr.traces.renderCard(event, state.storyPage.recentYear);
     card.classList.add("mxcw-trace-card-visible");
     const anchor = element.getBoundingClientRect(), box = card.getBoundingClientRect();
     // Close beside the marker, so that the pointer can cross to the card before it hides
@@ -515,6 +524,7 @@ bioreportr.traces.addMarker = function (state, event, age = 0) {
     element.innerHTML = `<div class="mxcw-trace-mark" style="animation-duration: ${bioreportr.traces.life(event.kind)}s; animation-delay: ${-age}s">${bioreportr.traces.icon(event.kind)}</div>`;
     const marker = new maplibregl.Marker({element}).setLngLat(bioreportr.obsPoint(event.record)).addTo(state.map);
     state.markers.add(marker);
+    bioreportr.traces.trimMarkers(state);
     // A touch also sends these, which would show and then schedule the hiding of the card a tap is about to show
     element.addEventListener("mouseenter", () => {
         if (state.pointerType !== "touch") {
@@ -548,9 +558,81 @@ bioreportr.traces.clearMarkers = function (state) {
     bioreportr.traces.hideCard(state);
 };
 
-// The time in milliseconds before the next event: the quiet stretches of the record pass more slowly than the busy ones,
-// though never for long
-bioreportr.traces.delayAfter = (event, next) => Math.min(1600, 600 + Math.max(0, next.year - event.year) * 200);
+/** The pacing of the timeline **/
+
+// Time is given to each year rather than to each key moment, so that a record crowded into a few years, as many are once
+// community science begins, neither holds the timeline on one year for a minute nor races through the quiet decades
+// before it. Each year with moments is given a slot of time growing with the square root of its number of moments,
+// between `minYearMs` and `maxYearMs`, scaled so that a full pass takes about `targetMs`; its moments are spread evenly
+// through its slot; and each year without moments between them passes in `emptyYearMs`, a stretch of them never taking
+// more than `maxGapMs`. A story gives the settings fitting its own record as the member `pacing` of its timeline, over
+// these defaults
+bioreportr.traces.pacingDefaults = {
+    targetMs: 180000,
+    minYearMs: 1000,
+    maxYearMs: 12000,
+    emptyYearMs: 150,
+    maxGapMs: 1500,
+    // The year a visit opens on, or null for a random year
+    startYear: null,
+    // The most markers left on the map at once, the oldest giving way first, so that a busy year does not bury the map
+    maxMarkers: 40
+};
+
+/**
+ * The settings of a timeline's pacing: those a story gives, over the defaults.
+ * @param {Object} [pacing] - The settings the story gives
+ * @return {Object} The settings in full
+ */
+bioreportr.traces.pacingSettings = pacing => ({...bioreportr.traces.pacingDefaults, ...pacing});
+
+/**
+ * Compute the time in milliseconds after each event of a timeline before the next, by the pacing described above.
+ * @param {TraceEvent[]} events - The events, in date order
+ * @param {Object} pacing - The settings of the pacing in full, see bioreportr.traces.pacingSettings
+ * @return {Number[]} The delay after each event, the last being that before the timeline begins again
+ */
+bioreportr.traces.pace = function (events, pacing) {
+    const counts = new Map();
+    events.forEach(event => counts.set(event.year, (counts.get(event.year) || 0) + 1));
+    const years = [...counts.keys()].sort((a, b) => a - b);
+    const gapMs = (from, to) => Math.min(pacing.maxGapMs, Math.max(0, to - from - 1) * pacing.emptyYearMs);
+    const gaps = years.slice(1).reduce((total, year, i) => total + gapMs(years[i], year), 0);
+    const slot = (count, scale) => Math.min(pacing.maxYearMs, Math.max(pacing.minYearMs, scale * Math.sqrt(count)));
+    const total = scale => years.reduce((sum, year) => sum + slot(counts.get(year), scale), 0) + gaps;
+    // The scale bringing a full pass nearest its target, found by bisection since the slots are clamped
+    let low = 0, high = pacing.maxYearMs;
+    for (let i = 0; i < 40; ++i) {
+        const mid = (low + high) / 2;
+        if (total(mid) < pacing.targetMs) {
+            low = mid;
+        } else {
+            high = mid;
+        }
+    }
+    const slots = new Map(years.map(year => [year, slot(counts.get(year), low)]));
+    return events.map((event, i) => {
+        const next = events[(i + 1) % events.length];
+        const within = slots.get(event.year) / counts.get(event.year);
+        return within + (next.year > event.year ? gapMs(event.year, next.year) : 0);
+    });
+};
+
+/**
+ * Remove the oldest markers beyond the most the pacing leaves on the map, unless the pointer rests on one.
+ * @param {TraceState} state - The state of the playback
+ */
+bioreportr.traces.trimMarkers = function (state) {
+    if (state.holding === 0) {
+        for (const old of state.markers) {
+            if (state.markers.size <= state.pacing.maxMarkers) {
+                break;
+            }
+            old.remove();
+            state.markers.delete(old);
+        }
+    }
+};
 
 // The time in milliseconds before trying again to show an event, while the timeline is held
 bioreportr.traces.retryDelay = 300;
@@ -566,14 +648,12 @@ bioreportr.traces.step = function (that, state) {
         const event = state.events[state.index];
         bioreportr.traces.addMarker(state, event);
         bioreportr.traces.showYear(state, event.year);
+        delay = state.delays[state.index];
         state.index = (state.index + 1) % state.events.length;
-        delay = bioreportr.traces.delayAfter(event, state.events[state.index]);
     }
     state.timer = state.window.setTimeout(() => bioreportr.traces.step(that, state), delay);
 };
 
-// As many markers as playback could have left on the map, at its quickest and with the longest fade
-bioreportr.traces.trailLength = 30;
 // Far enough into its fade that a marker has finished appearing, so that it shows even while the timeline is frozen
 bioreportr.traces.trailStartAge = 1.2;
 
@@ -586,12 +666,12 @@ bioreportr.traces.trailStartAge = 1.2;
 bioreportr.traces.placeTrail = function (state, end) {
     const {events} = state;
     let age = bioreportr.traces.trailStartAge;
-    for (let i = end - 1; i >= Math.max(0, end - bioreportr.traces.trailLength); --i) {
+    for (let i = end - 1; i >= Math.max(0, end - state.pacing.maxMarkers); --i) {
         if (age < bioreportr.traces.life(events[i].kind)) {
             bioreportr.traces.addMarker(state, events[i], age);
         }
         if (i > 0) {
-            age += bioreportr.traces.delayAfter(events[i - 1], events[i]) / 1000;
+            age += state.delays[i - 1] / 1000;
         }
     }
 };
@@ -611,7 +691,8 @@ bioreportr.traces.seek = function (state, year) {
 };
 
 /**
- * Create the state of a timeline once its map and events are ready, starting from a random year.
+ * Create the state of a timeline once its map and events are ready, starting from the year its pacing names, or else a
+ * random one.
  * @param {fluid.component} that - The timeline
  * @param {bioreportr.storyPage} storyPage - The story page
  * @param {maplibregl.Map} map - The story's map
@@ -621,8 +702,10 @@ bioreportr.traces.seek = function (state, year) {
  */
 bioreportr.traces.createState = function (that, storyPage, map, events, window) {
     const firstYear = events[0].year, lastYear = fluid.peek(events).year;
-    const startYear = firstYear + Math.floor(Math.random() * (lastYear - firstYear + 1));
-    const state = {storyPage, map, window, events, firstYear, lastYear, markers: new Set(), holding: 0, timer: null, cardEvent: null,
+    const pacing = bioreportr.traces.pacingSettings(that.pacing);
+    const startYear = pacing.startYear ?? firstYear + Math.floor(Math.random() * (lastYear - firstYear + 1));
+    const state = {storyPage, map, window, events, firstYear, lastYear, pacing, delays: bioreportr.traces.pace(events, pacing),
+        markers: new Set(), holding: 0, timer: null, cardEvent: null,
         hideTimer: null, heldMarker: null,
         index: Math.max(0, events.findIndex(event => event.year >= startYear)),
         overlay: bioreportr.traces.createOverlay(map.getContainer(), firstYear, lastYear)};
@@ -677,8 +760,10 @@ bioreportr.traces.control = function (that, storyPage, map, events, active, load
 .mxcw-leftPane.mxcw-traces-active > .resize-bar {
     display: none !important;
 }
+/* How far the map is dimmed suits the landscape a story shows - a story whose imagery is dark already, e.g. Galiano
+   Island's forest and sea, lightens it by setting these properties in its own stylesheet */
 .mxcw-leftPane.mxcw-traces-active .maplibregl-canvas {
-    filter: brightness(0.45) saturate(0.6);
+    filter: brightness(var(--mxcw-traces-brightness, 0.45)) saturate(var(--mxcw-traces-saturation, 0.6));
 }
 .mxcw-leftPane:not(.mxcw-traces-active) .mxcw-traces-overlay {
     display: none;

@@ -13,9 +13,14 @@ source("scripts/project.R")
 #   critical_comments      - the critical notes of reviewers, each signed with their initials, which are spelled out
 #   reviewed_by            - who has reviewed the taxon
 # Each taxon is given the id by which the site knows it, matched on its scientific name in the prepared summary, which
-# must be prepared first - see scripts/prepare_summary.R. The output is copied into the site by R/build.R
+# must be prepared first - see scripts/prepare_summary.R. The taxa which the workflow's working list holds but which
+# didn't reach the ultimate list - flagged doubtful, persisting or planted, or still under review - are given their
+# history from the same columns of the working list, keyed by their iNaturalist id, or by "name:" and their name where
+# they have none, so that the Lost Plants gallery's "Set aside" tab shows their notes from this one file - see
+# scripts/prepare_excluded_taxa.R. The output is copied into the site by R/build.R
 
 list_file <- file.path("tabular_data", config$list)
+working_list_file <- file.path("tabular_data", config$workingList)
 taxa_file <- project$summaryFile
 history_file <- file.path("tabular_data", config$curationHistory)
 
@@ -60,8 +65,9 @@ taxa <- timedFread(taxa_file) %>%
   select(id, scientificName) %>%
   distinct(scientificName, .keep_all = TRUE)
 
-history <- rawList %>%
-  transmute(
+# The notes of a list's rows, each with its scientificName
+notes_of <- function (rows) {
+  rows %>% transmute(
     scientificName = taxon_name,
     original = clean(original_comment),
     harvey = clean(revised_comment),
@@ -71,9 +77,28 @@ history <- rawList %>%
     reviewedBy = name_reviewers(clean(reviewed_by))
   ) %>%
   # Harvey's transcribed account where his inscription is missing
-  mutate(harvey = ifelse(harvey == "", harveyTranscribed, harvey)) %>%
+  mutate(harvey = ifelse(harvey == "", harveyTranscribed, harvey))
+}
+
+has_notes <- function (history) {
+  history %>% filter(original != "" | harvey != "" | fpnw != "" | critical != "")
+}
+
+listed <- notes_of(rawList) %>%
   inner_join(taxa, by = "scientificName") %>%
-  filter(original != "" | harvey != "" | fpnw != "" | critical != "") %>%
+  mutate(id = as.character(id)) %>%
+  has_notes()
+
+# The rows of the working list which didn't reach the ultimate list
+workingList <- timedFread(working_list_file)
+setAside <- workingList %>%
+  filter(!(taxon_name %in% rawList$taxon_name))
+setAsideHistory <- notes_of(setAside) %>%
+  mutate(id = set_aside_id(setAside$link_taxon_id, setAside$taxon_name)) %>%
+  has_notes()
+
+history <- bind_rows(listed, setAsideHistory) %>%
+  distinct(id, .keep_all = TRUE) %>%
   select(id, scientificName, original, harvey, fpnw, critical, reviewedBy)
 
 timedWrite(history, history_file)

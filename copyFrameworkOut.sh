@@ -139,6 +139,8 @@ FILES=(
     scripts/intersectShapes.R
     # The map and summaries of the Protected Areas pane, whose project's settings are in scripts/project.R
     scripts/Protected_map_mapbox.R
+    # The map of Harvey Janszen's checklists, for a project's pane in memory of him, whose settings are in project.R
+    scripts/Janszen_checklists_mapbox.R
 
     # Lint configuration
     .eslintrc.json

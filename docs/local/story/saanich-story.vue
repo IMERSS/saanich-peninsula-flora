@@ -69,30 +69,26 @@ fluid.def("saanich.story", {
         {filterName: "Graminoid", fieldName: "graminoid", fieldValues: ["graminoid", "non-graminoid"], valueOf: "hortis.graminoidValue",
             fieldLabels: ["Graminoid", "Other"]}
     ],
-    // Ordered to bring forward what helps in assessing a record and in targeting the plant
+    // The columns of the table of records, ordered to bring forward what helps in finding the plant again and in assessing
+    // the record - the rest of each record's fields, e.g. its licence or GBIF id, are in the download of the records
     recordColumns: [
         {key: "eventDate", label: "Date", formatter: "saanich.formatDate"},
         {key: "taxon_name", label: "Taxon"},
+        // Where to look: the place named, its position and how far from it the plant may be, and the elevation
         {key: "locality", label: "Locality"},
-        {key: "recordedBy", label: "Recorder"},
-        {key: "basisOfRecord", label: "Record type"},
-        {key: "institutionCode", label: "Institution"},
-        {key: "catalogNumber", label: "Catalogue no."},
         {key: "decimalLatitude", label: "Latitude"},
         {key: "decimalLongitude", label: "Longitude"},
         {key: "coordinateUncertaintyInMeters", label: "Uncertainty (m)"},
         {key: "elevation", label: "Elevation"},
-        {key: "individualCount", label: "Count"},
+        // Who found it, and the evidence for it - a specimen, an observation or a list - by which it may be checked
+        {key: "recordedBy", label: "Recorder"},
+        {key: "basisOfRecord", label: "Record type"},
+        {key: "collectionCode", label: "Source"},
+        {key: "institutionCode", label: "Institution"},
+        {key: "catalogNumber", label: "Catalogue no."},
+        // Whether it was planted or escaped, by which a find may be weighed
         {key: "establishmentMeans", label: "Establishment"},
-        {key: "identifiedBy", label: "Identified by"},
-        {key: "dateIdentified", label: "Date identified"},
-        {key: "typeStatus", label: "Type status"},
-        {key: "collectionCode", label: "Collection"},
-        {key: "recordNumber", label: "Record no."},
-        {key: "license", label: "Licence"},
-        {key: "rightsHolder", label: "Rights holder"},
-        {key: "occurrenceID", label: "Occurrence ID"},
-        {key: "gbifID", label: "GBIF ID"}
+        {key: "occurrenceID", label: "Occurrence ID"}
     ],
     // The taxa of the summary with their counts of records with and without coordinates
     summaryTaxa: "$compute:bioreportr.summaryTaxaRows({self}.taxa.allRows)",
@@ -131,6 +127,15 @@ fluid.def("saanich.story", {
         $component: {
             $layers: "saanich.timePeriodFilter",
             isActive: "{storyPage}.activePane.visibleFilters"
+        }
+    },
+    // The Saanich Peninsula's record spans more than 160 years, so the opening timeline's pass is unhurried, and opens on
+    // a random year - see bioreportr.traces.pacingDefaults in bioreportr-tracesPane.vue
+    traces: {
+        $component: {
+            pacing: {
+                targetMs: 240000
+            }
         }
     },
     // Populations are aggregated at 1000 m by default, the third of the radius slider's snap values

@@ -6,6 +6,13 @@ data:
   # The inputs, from checklist-catalogue-alignment-workflow's scripts/3_align.R
   # The ultimate checklist, read by scripts/prepare_summary.R and scripts/prepare_curation_history.R
   list: Saanich_Tracheophyta_ultimate-list_2026-11-15.csv
+  # The working list of the workflow, holding every row under review with its flags - doubtful, persisting or planted -
+  # read by scripts/prepare_curation_history.R and scripts/prepare_excluded_taxa.R for the taxa which didn't reach the
+  # ultimate list
+  workingList: Saanich_Tracheophyta_working-list_2026-08-20.csv
+  # The penultimate catalogue, the last stage before the list is reviewed, a file of big_data (not checked in), read by
+  # scripts/prepare_excluded_taxa.R
+  penultimateCatalogue: Saanich_Tracheophyta_penultimate-catalogue_2026-04-07.csv
   # The ultimate catalogue, a file of big_data (not checked in), read by scripts/prepare_obs.R
   ultimateCatalogue: Saanich_Tracheophyta_ultimate-catalogue_2026-11-15.csv
   # The summary of the list's taxa written by scripts/prepare_summary.R, and the files into which assignBNames.js assigns

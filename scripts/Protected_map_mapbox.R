@@ -36,6 +36,13 @@ regions <- timedFread(str_glue("{prefix}-regionIndirection.csv"))
 # The assessment is of the native flora, whose conservation the protected areas and KBAs serve
 plant.summary <- timedFread(project$summaryFile) %>%
   filter(inSummary == 1, introduction_status == "native")
+# A project whose story keeps only the records which can be mapped on this pane - see mappedOnly in
+# bioreportr-protectedPane.vue - leaves out of the assessment the native species known only from records without a
+# position, e.g. those of lists, so that its summaries agree with the pane's checklist
+if (isTRUE(settings$mappedOnly)) {
+  plants <- plants %>% filter(!is.na(decimalLatitude), !is.na(decimalLongitude))
+  plant.summary <- plant.summary %>% filter(id %in% plants$iNaturalistTaxonId)
+}
 
 # A record's region label, from its index in the region indirection file - the first row of the field for that index,
 # the region's own label, rather than those of any groups it belongs to, which follow it
@@ -49,7 +56,9 @@ protected.areas <- mx_read("spatial_data/vectors/Protected_Areas/Protected_Areas
 # Each record's area and KBA, and its area's category of protected area
 records <- plants %>%
   filter(iNaturalistTaxonId %in% plant.summary$id) %>%
-  mutate(area = region_label("ProtectedArea", ProtectedArea), kba = region_label("KBA", KBA),
+  # A project with no published KBA as yet, e.g. Galiano Island, has no column of them - see scripts/intersectShapes.R
+  mutate(area = region_label("ProtectedArea", ProtectedArea),
+         kba = `if`("KBA" %in% names(plants), region_label("KBA", KBA), NA_character_),
          category = protected.areas$category[match(area, protected.areas$name)])
 
 species.count <- function (ids) length(unique(ids))
@@ -132,6 +141,12 @@ kba.significance <- function (criteria) {
 }
 
 kbas <- mx_read("spatial_data/vectors/KBA/KBA.geojson")
+# A project may have no published KBA as yet, e.g. Galiano Island, whose KBAs are only proposed - the published KBAs'
+# layer, row of the chart, chart and summaries are then left out
+has.kbas <- nrow(kbas) > 0
+if (!has.kbas) {
+  kbas <- st_sf(name = character(), criteria = character(), geometry = st_sfc(crs = 4326))
+}
 kba.all <- "Published Key Biodiversity Areas"
 kba.counts <- records %>% filter(!is.na(kba)) %>% group_by(kba) %>% summarise(count = n_distinct(iNaturalistTaxonId))
 
@@ -143,9 +158,9 @@ kba.shapes <- kbas %>% mutate(
   count = coalesce(kba.counts$count[match(name, kba.counts$kba)], 0L),
   card = as.character(str_glue("<span class=\"mxcw-pa-card-name\">{name}</span>",
     "<span class=\"mxcw-pa-card-category mxcw-pa-card-kba\">Key Biodiversity Area</span>",
-    "<span class=\"mxcw-pa-card-owner\">{vapply(criteria, kba.significance, character(1))}</span>",
+    "<span class=\"mxcw-pa-card-owner\">{vapply(criteria, kba.significance, character(1), USE.NAMES = FALSE)}</span>",
     "<span class=\"mxcw-pa-card-count\"><b>{count}</b> native species reported</span>")))
-kba.source <- regions_to_mapbox_source(kba.shapes, "KBA.cards")
+kba.source <- `if`(has.kbas, regions_to_mapbox_source(kba.shapes, "KBA.cards"), list())
 kba.feature <- list(type = "vector", id = kba.all, source = "KBA.cards", outlineColor = "#FDF2CE", outlineWidth = 1.5,
                     outlineOpacity = 0.95, fillColor = "#FDF2CE", fillOpacity = 0.06, selectable = TRUE, Z_Order = 20)
 
@@ -177,7 +192,7 @@ allSources <- merge_lists(area.source, kba.source, proposed.source, watershed.so
 
 view.feature <- c(list(type = "view"), settings$view)
 
-allFeatures <- c(list(view.feature), protected.features, list(kba.feature), proposed.features, list(watershed.feature))
+allFeatures <- c(list(view.feature), protected.features, `if`(has.kbas, list(kba.feature)), proposed.features, list(watershed.feature))
 
 protectedAreaMap <- plot_mapbox_map("Protected", allSources, allFeatures, "Protected")
 
@@ -213,7 +228,7 @@ overview.chart <- htmltools::tags$figure(class = "mxcw-pa-chart", `data-key` = "
       bar_row(plotted$category[i], plotted$count[i], bar.max, plotted$color[i], plotted$areas[i])
     }),
     # The native species reported in no protected area, whose records the grid of the map then shows
-    bar_row(kba.all, protected.stats$kba, bar.max, "#FDF2CE", nrow(kbas), "mxcw-pa-kba"),
+    if (has.kbas) bar_row(kba.all, protected.stats$kba, bar.max, "#FDF2CE", nrow(kbas), "mxcw-pa-kba"),
     bar_row(unprotected.key, protected.stats$unprotected, bar.max, "#e07a5f", NA, "mxcw-pa-unprotected")
   )
 )
@@ -243,8 +258,8 @@ group.charts <- c(
                 st_drop_geometry(protected.areas) %>% filter(category == !!category) %>% transmute(name, count),
                 plotted$color[plotted$category == category])
   }),
-  list(group_chart(kba.all, "Native species reported in each Key Biodiversity Area",
-                   st_drop_geometry(kba.shapes) %>% transmute(name, count), "#FDF2CE", "mxcw-pa-kba"))
+  `if`(has.kbas, list(group_chart(kba.all, "Native species reported in each Key Biodiversity Area",
+                   st_drop_geometry(kba.shapes) %>% transmute(name, count), "#FDF2CE", "mxcw-pa-kba")))
 )
 
 # All the charts, shown beneath the map, one at a time as the selection picks it - see bioreportr-protectedPane.vue
@@ -322,7 +337,7 @@ tab <- function (region, text) {
 default.text <- list(
   overview = function (v) str_glue("Of the {v$stats$species} native vascular plants known from the region, ",
     "{v$stats$protected} ({v$stats$protected.percent}%) have been recorded in at least one protected or ",
-    "conserved area. The remaining {v$stats$unprotected} are so far known only from outside them."),
+    "conserved area. The remaining {v$stats$unprotected} are so far known only from outside protected areas."),
   category = function (v) str_glue("{length(v$ids)} of the region's {v$stats$species} native vascular plants ",
     "({v$percent(length(v$ids))}%) have been recorded in {v$in_phrase(v$category)}."),
   # Its rank among the areas of its category, e.g. "—the most of the 14 provincial parks", "—3rd among the 14 provincial parks"
@@ -412,10 +427,10 @@ unprotected.card <- card(unprotected.key, "#e07a5f", "Unprotected native plant d
     stat(protected.stats$unprotected, str_glue("native species · {percent(protected.stats$unprotected)}% of the native flora"),
          unprotected.key),
     stat(unprotected.concern, "species of conservation concern", unprotected.concern.key),
-    stat(sum(unprotected.ids %in% kba.ids), text$unprotectedKba, unprotected.kba.key)
+    if (has.kbas) stat(sum(unprotected.ids %in% kba.ids), text$unprotectedKba, unprotected.kba.key)
   ))
 
-kba.card <- card(kba.all, "#FDF2CE", "Key Biodiversity Areas",
+kba.card <- if (has.kbas) card(kba.all, "#FDF2CE", "Key Biodiversity Areas",
   subtitle = str_glue("{nrow(kbas)} published, {sum(str_detect(kbas$criteria, 'GLOBAL'))} of them globally significant · ",
     "{nrow(proposed)} proposed · {format_n(sum(kba.ha))} hectares"),
   summary = text$kbas(c(helpers, list(published = nrow(kbas), proposed = nrow(proposed)))),
