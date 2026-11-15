@@ -4,7 +4,7 @@ shortTitle: In Memoriam
 weight: 1
 knit: (function(input, ...) { source(here::here("R/knit_render.R"), local = TRUE)$value(input, ...) })
 # The component rendering this pane's section, into whose template npm run story writes it - see AGENTS.md
-paneComponent: saanich.tracesPane
+paneComponent: bioreportr.tracesPane
 ---
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
@@ -20,4 +20,4 @@ The memory preserved here is much more limited: collected specimens, names writt
 
 Each record is a moment when someone stopped to take note of a plant.
 
-Some plants have long been recorded, while others have appeared only in more recent years. Still others have gone unseen for decades, [quietly disappearing from the record.](#pane:LostPlants){.saanich-traces-next}
+Some plants have long been recorded, while others have appeared only in more recent years. Still others have gone unseen for decades, [quietly disappearing from the record.](#pane:LostPlants){.mxcw-traces-next}

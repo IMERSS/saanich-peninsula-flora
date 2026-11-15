@@ -9,15 +9,10 @@ dst_dir <- "static/local/data/tabular"
 # Create destination directory if it doesn't exist
 dir.create(dst_dir, recursive = TRUE, showWarnings = FALSE)
 
-files <- c(
-  "Saanich_Tracheophyta_ultimate-catalogue_2026-08-20-selected-labels.csv",
-  "Saanich_Tracheophyta_ultimate-catalogue_2026-08-20-selected-regionIndirection.csv",
-  "Saanich_Tracheophyta_ultimate-summary_2026-08-20-prepared-taxa.csv",
-  # The history of the curatorial notes on each taxon - see scripts/prepare_curation_history.R
-  "Saanich_Tracheophyta_curation-history_2026-08-20.csv",
-  # The annotations of records, e.g. of planted populations - see scripts/apply_record_annotations.R
-  "Saanich_Tracheophyta_record-annotations_2026-08-20.csv"
-)
+# The files the published site uses, as bioreportr.yaml names them - see src/js/storyBuild.js, which names them to the
+# story page
+config <- yaml::read_yaml("bioreportr.yaml")$data
+files <- c(config$labels, config$regionIndirection, config$summary, config$curationHistory, config$recordAnnotations)
 
 for (f in files) {
   src <- file.path(src_dir, f)

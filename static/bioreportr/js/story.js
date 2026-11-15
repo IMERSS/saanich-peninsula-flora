@@ -334,6 +334,47 @@ bioreportr.storyMap.highlightRegion = function (map, selectedRegion, mapData) {
     }
 };
 
+// Whether the map was shown by the previous pane, by map
+bioreportr.storyMap.mapWasShown = new WeakMap();
+
+/**
+ * Place the map on the active pane's camera again once it has its full size, when the previous pane hid it - e.g. on
+ * moving from Lost Plants to the atlas. The story page moves the camera as the pane opens, when the map is still without
+ * size, which leaves it centred in the wrong place once the map has grown. A pane whose settings have `framesItself`,
+ * which places the map by a camera of its own, is left alone.
+ * @param {maplibregl.Map} map - The story's map, once ready
+ * @param {Object} mapData - The story's map data, with each pane's camera
+ * @param {Object} activePane - The active pane's settings, with its `paneKey`, `visibleMap` and any `framesItself`
+ */
+bioreportr.storyMap.recentre = function (map, mapData, activePane) {
+    if (map && activePane) {
+        const wasShown = bioreportr.storyMap.mapWasShown.get(map);
+        bioreportr.storyMap.mapWasShown.set(map, !!activePane.visibleMap);
+        const camera = mapData?.panes?.[activePane.paneKey];
+        if (wasShown === false && activePane.visibleMap && camera?.center && !activePane.framesItself) {
+            hortis.libreMap.afterLayout(map, () => {
+                map.resize();
+                map.jumpTo({center: camera.center, zoom: camera.zoom});
+            });
+        }
+    }
+};
+
+/**
+ * On a phone, where the map spans the screen and the page scrolls past it, let one finger scroll the page and two move
+ * the map, as MapLibre's cooperative gestures do, so that the map can't trap the reader. Larger screens are unchanged.
+ * @param {maplibregl.Map} map - The story's map, once ready
+ * @param {Window} window - The window holding the story page
+ */
+bioreportr.storyMap.phoneGestures = function (map, window) {
+    if (map && map.cooperativeGestures) {
+        const phone = window.matchMedia("(max-width: 767.98px)");
+        const apply = () => phone.matches ? map.cooperativeGestures.enable() : map.cooperativeGestures.disable();
+        apply();
+        phone.addEventListener("change", apply);
+    }
+};
+
 /** Legend of regions or statuses **/
 
 /**
@@ -786,7 +827,7 @@ bioreportr.storyMap.homeCamera = function (mapData, activePaneKey) {
 
 bioreportr.storyPage.noRecordSelected = filterState => !hortis.isValue(filterState);
 
-// The pane last shown by each story page, so that a record selected in it is cleared on moving to another
+// The pane last shown by each story page, so that a record or plant chosen in it is cleared on moving to another
 bioreportr.storyPage.lastPaneKey = new WeakMap();
 
 // The id of a record selected together with a move to another pane, which is kept as the pane changes, e.g. on opening
@@ -799,9 +840,12 @@ bioreportr.storyPage.keepRecord = new WeakMap();
 bioreportr.storyPage.keepTaxon = new WeakSet();
 
 /**
- * Clear the selected record when the story page moves from one pane to another - but not as it first shows a pane,
- * so that a record held in the URL survives the page's loading, nor a record selected together with the move. A move to
- * the curation pane also clears the taxon chosen, unless it was chosen together with the move.
+ * Clear the selected record, and the plant chosen in the checklist, when the story page moves from one pane to another
+ * - but not as it first shows a pane, so that a record or plant held in the URL survives the page's loading, nor a
+ * record or plant chosen together with the move, e.g. by the speech bubble of the curation pane, or a species of the
+ * Community Science pane opening on the atlas - see bioreportr.storyPage.keepTaxon. A plant carried into another pane
+ * may have no records within that pane's selection - e.g. in the History pane's years before it was first recorded, or
+ * in a protected area where it has not been found - leaving the map nothing to show.
  * @param {bioreportr.storyPage} storyPage - The story page
  * @param {String} activePaneKey - The key of the active pane
  */
@@ -818,7 +862,7 @@ bioreportr.storyPage.clearRecordOnPaneChange = function (storyPage, activePaneKe
             }
             const keepTaxon = bioreportr.storyPage.keepTaxon.has(storyPage);
             bioreportr.storyPage.keepTaxon.delete(storyPage);
-            if (!keepTaxon && bioreportr.curation?.paneKey && activePaneKey === bioreportr.curation.paneKey(storyPage.panes)) {
+            if (!keepTaxon) {
                 storyPage.checklist.search.reset();
             }
         });

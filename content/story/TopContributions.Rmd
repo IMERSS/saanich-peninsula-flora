@@ -27,11 +27,11 @@ community has now documented a total of `r nrow(plant.summary)` vascular plant s
 of the historically reported plant diversity has been confirmed and `r nrow(new)` new species reports added to the
 list.
 
-<span class="saanich-callout">Community members have now documented `r inat.percent` percent of the total plant diversity known to the region on iNaturalist.</span>
+<span class="mxcw-callout">Community members have now documented `r inat.percent` percent of the total plant diversity known to the region on iNaturalist.</span>
 
 Contribute to this growing record by submitting your observations to the [“Lost” plants of the Saanich Peninsula iNaturalist project](https://www.inaturalist.org/projects/lost-plants-of-the-saanich-peninsula).
 
-:::: {.saanich-howto}
+:::: {.mxcw-howto}
 Here, you can browse photos of some of the most commonly documented plants, as well as recent observations and
 top observers across the region, based on [iNaturalist](http://inaturalist.org/) data.
 Visualisation code courtesy of [Ben Keen](https://github.com/benkeen).

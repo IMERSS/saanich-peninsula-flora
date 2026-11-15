@@ -1,34 +1,35 @@
-<script src="../../bioreportr/js/story.js"></script>
-<script src="../js/saanich.js"></script>
+<fluid-import src="bioreportr-atlasPanel.vue"></fluid-import>
+<script src="../js/story.js"></script>
 <script>
 "use strict";
 
 /* global maplibregl */
 
-// The opening pane of the Saanich story, In Memory of Plants - its section, knitted from content/story/Traces.Rmd, and
-// the timeline of plants' key moments which plays across the map beside it. The timeline is configured onto the
-// story page by saanich-story.vue as its member traces
+// The opening pane of a story, In Memory of Plants - its section, knitted from content/story/Traces.Rmd, and the
+// timeline of plants' key moments which plays across the map beside it. The timeline is configured onto the story
+// page, as its member traces, by the layer bioreportr.storyPageTraces, defined in bioreportr-storyPageTraces.vue,
+// which a project names in the $layers of its <project>-story.vue, together with bioreportr.atlasPanel
 
-// noinspection ES6ConvertVarToLetConst // otherwise this is a duplicate on minifying
-var saanich = fluid.registerNamespace("saanich");
 // noinspection ES6ConvertVarToLetConst // otherwise this is a duplicate on minifying
 var hortis = fluid.registerNamespace("hortis");
 // noinspection ES6ConvertVarToLetConst // otherwise this is a duplicate on minifying
 var bioreportr = fluid.registerNamespace("bioreportr");
 
 // The timeline of the opening pane: its key moments appear across the map as it plays
-fluid.def("saanich.traces", {
+fluid.def("bioreportr.traces", {
     $layers: "fluid.component",
     paused: false,
     scrubbing: false,
     active: "$compute:bioreportr.storyPage.isActive({storyPage}.activePaneKey, Traces)",
-    events: "$compute:saanich.traces.buildEvents({storyPage}.taxa.allRows, {storyPage}.byTaxon)",
-    control: "$effect:saanich.traces.control({self}, {storyPage}, {storyPage}.map.readyMap, {self}.events, {self}.active, {storyPage}.loaded, {global})",
-    showPlayback: "$effect:saanich.traces.showPlayback({self}, {self}.paused)"
+    events: "$compute:bioreportr.traces.buildEvents({storyPage}.taxa.allRows, {storyPage}.byTaxon, {storyPage}.statusById, {storyPage}.recentYear)",
+    // The classes of the story's left pane while the timeline shows - see bioreportr.traces.leftPaneClass
+    leftPaneClass: "$compute:bioreportr.traces.leftPaneClass({self}.active, {self}.paused, {self}.scrubbing)",
+    control: "$effect:bioreportr.traces.control({self}, {storyPage}, {storyPage}.map.readyMap, {self}.events, {self}.active, {storyPage}.loaded, {global})",
+    showPlayback: "$effect:bioreportr.traces.showPlayback({self}, {self}.paused)"
 });
 
 // The pane's section, rendered from the template below
-fluid.def("saanich.tracesPane", {
+fluid.def("bioreportr.tracesPane", {
     $layers: "fluid.component"
 });
 
@@ -36,12 +37,12 @@ fluid.def("saanich.tracesPane", {
 
 // The opening pane of the story: plants' key moments appear across the landscape as a timeline plays, starting from a
 // random year on each visit. Everything is derived from the site's data whenever it loads
-fluid.registerNamespace("saanich.traces");
+fluid.registerNamespace("bioreportr.traces");
 
 // The map is a dim blue, so orange, its complement, is kept for the plants last seen alone: the others stay cool or neutral.
 // Marker icons, recoloured. From https://game-icons.net, CC BY 3.0: Newly noticed, "Dandelion flower" by Delapouite; First noted, "Acorn"
 // and Last seen, "Leaf skeleton", by Lorc. Seen again: "Plant" from Phosphor Icons, MIT licence, Copyright (c) 2023 Phosphor Icons.
-saanich.traces.kinds = {
+bioreportr.traces.kinds = {
     first: {
         label: "First noted",
         significance: "The earliest record of this plant in the atlas.",
@@ -64,12 +65,12 @@ saanich.traces.kinds = {
     }
 };
 
-saanich.traces.icon = kind => `<svg viewBox="0 0 24 24" aria-hidden="true">${saanich.traces.kinds[kind].icon}</svg>`;
+bioreportr.traces.icon = kind => `<svg viewBox="0 0 24 24" aria-hidden="true">${bioreportr.traces.kinds[kind].icon}</svg>`;
 
 // How many seconds a marker takes to fade away: the last record of a plant lingers
-saanich.traces.life = kind => kind === "last" ? 18 : 12;
+bioreportr.traces.life = kind => kind === "last" ? 18 : 12;
 
-saanich.traces.playIcons = {
+bioreportr.traces.playIcons = {
     play: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z" fill="currentColor"/></svg>`,
     pause: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"/></svg>`
 };
@@ -78,7 +79,7 @@ saanich.traces.playIcons = {
  * One key moment in the record of a species, shown as a marker on the map.
  * @typedef {Object} TraceEvent
  * @property {TaxonRow} taxon - The species
- * @property {String} kind - The kind of moment, a key of `saanich.traces.kinds`
+ * @property {String} kind - The kind of moment, a key of `bioreportr.traces.kinds`
  * @property {Object} record - The record of the moment
  * @property {Number} year - The year of the record
  */
@@ -88,32 +89,35 @@ saanich.traces.playIcons = {
  * concerned can be mapped. A record which is both the first and last of a lost plant appears once, as its last.
  * @param {TaxonRow[]} taxaRows - All taxa
  * @param {Map<String, Object[]>} byTaxon - Dated records indexed by taxon id
+ * @param {Object<String, String>} statusById - The reporting status of each taxon, by id - see hortis.reportingStatusById
+ * @param {Number} recentYear - The year from which a record counts as recent
  * @return {TraceEvent[]} The events, in date order
  */
-saanich.traces.buildEvents = function (taxaRows, byTaxon) {
+bioreportr.traces.buildEvents = function (taxaRows, byTaxon, statusById, recentYear) {
     const events = [];
     const add = (taxon, kind, record) => {
         if (record && bioreportr.hasCoordinates(record)) {
             events.push({taxon, kind, record, year: parseInt(record.eventDate, 10)});
         }
     };
+    const statusOf = taxon => statusById[taxon.id];
     taxaRows.filter(taxon => taxon.inSummary).forEach(taxon => {
-        const records = (byTaxon.get(taxon.id) || []).slice().sort(saanich.obsDateComparator);
+        const records = (byTaxon.get(taxon.id) || []).slice().sort(bioreportr.obsDateComparator);
         if (records.length > 0) {
             const first = records[0], last = fluid.peek(records);
-            if (taxon.reportingStatus === "unconfirmed") {
+            if (statusOf(taxon) === "unconfirmed") {
                 add(taxon, "last", last);
                 add(taxon, "first", first === last ? null : first);
-            } else if (taxon.reportingStatus === "confirmed") {
-                const found = records.find(record => parseInt(record.eventDate, 10) >= 2000);
+            } else if (statusOf(taxon) === "confirmed") {
+                const found = records.find(record => parseInt(record.eventDate, 10) >= recentYear);
                 add(taxon, "found", found);
                 add(taxon, "first", first === found ? null : first);
-            } else if (taxon.reportingStatus === "new") {
+            } else if (statusOf(taxon) === "new") {
                 add(taxon, "fresh", first);
             }
         }
     });
-    return events.filter(event => Number.isFinite(event.year)).sort((a, b) => saanich.obsDateComparator(a.record, b.record));
+    return events.filter(event => Number.isFinite(event.year)).sort((a, b) => bioreportr.obsDateComparator(a.record, b.record));
 };
 
 /**
@@ -121,9 +125,9 @@ saanich.traces.buildEvents = function (taxaRows, byTaxon) {
  * @param {String} eventDate - The date of the record
  * @return {String} The formatted date
  */
-saanich.traces.formatDate = function (eventDate) {
+bioreportr.traces.formatDate = function (eventDate) {
     const [year, month, day] = eventDate.substring(0, 10).split("-").map(Number);
-    return day ? new Date(Date.UTC(year, month - 1, day)).toLocaleDateString(saanich.locale, {year: "numeric", month: "long", day: "numeric", timeZone: "UTC"}) :
+    return day ? new Date(Date.UTC(year, month - 1, day)).toLocaleDateString("en-CA", {year: "numeric", month: "long", day: "numeric", timeZone: "UTC"}) :
         String(year);
 };
 
@@ -132,17 +136,17 @@ saanich.traces.formatDate = function (eventDate) {
  * @param {TraceEvent} event - The event of the marker
  * @return {String} The markup of the card
  */
-saanich.traces.renderCard = function (event) {
+bioreportr.traces.renderCard = function (event) {
     const {taxon, kind, record} = event;
     const encode = hortis.dataTable.encode;
     const recorder = (record.recordedBy || "").split(";")[0].trim();
-    const common = taxon.commonName ? `<div class="saanich-trace-common">${encode(taxon.commonName)}</div>` : "";
+    const common = taxon.commonName ? `<div class="mxcw-trace-common">${encode(taxon.commonName)}</div>` : "";
     const place = record.locality ? `<div>${encode(record.locality)}</div>` : "";
-    return `<div class="saanich-trace-photo"></div><div class="saanich-trace-kind" data-kind="${kind}">${saanich.traces.icon(kind)}${saanich.traces.kinds[kind].label}</div>
-        <div class="saanich-trace-name">${encode(taxon.scientificName)}</div>${common}
-        <div>${saanich.traces.formatDate(record.eventDate)}${recorder ? ", " + encode(recorder) : ""}</div>${place}
-        <div class="saanich-trace-significance">${saanich.traces.kinds[kind].significance}</div>
-        <div class="saanich-trace-action">Find this plant &rarr;</div>`;
+    return `<div class="mxcw-trace-photo"></div><div class="mxcw-trace-kind" data-kind="${kind}">${bioreportr.traces.icon(kind)}${bioreportr.traces.kinds[kind].label}</div>
+        <div class="mxcw-trace-name">${encode(taxon.scientificName)}</div>${common}
+        <div>${bioreportr.traces.formatDate(record.eventDate)}${recorder ? ", " + encode(recorder) : ""}</div>${place}
+        <div class="mxcw-trace-significance">${bioreportr.traces.kinds[kind].significance}</div>
+        <div class="mxcw-trace-action">Find this plant &rarr;</div>`;
 };
 
 /**
@@ -151,16 +155,15 @@ saanich.traces.renderCard = function (event) {
  * @param {Boolean} active - Whether the timeline's pane is showing
  * @param {Boolean} paused - Whether the timeline is paused
  * @param {Boolean} scrubbing - Whether the timeline's slider is being dragged
- * @param {Boolean} rememberingActive - Whether the pane in memory of Harvey Janszen is shown
  * @return {String} The classes
  */
-saanich.traces.leftPaneClass = function (active, paused, scrubbing, rememberingActive) {
-    const classes = rememberingActive ? ["saanich-remembering-active"] : [];
+bioreportr.traces.leftPaneClass = function (active, paused, scrubbing) {
+    const classes = [];
     if (active) {
-        classes.push("saanich-traces-active");
+        classes.push("mxcw-traces-active");
     }
     if (active && (paused || scrubbing)) {
-        classes.push("saanich-traces-still");
+        classes.push("mxcw-traces-still");
     }
     return classes.join(" ");
 };
@@ -185,7 +188,7 @@ saanich.traces.leftPaneClass = function (active, paused, scrubbing, rememberingA
  */
 
 // The state of each timeline, by its component
-saanich.traces.states = new WeakMap();
+bioreportr.traces.states = new WeakMap();
 
 /**
  * Create the elements laid over the map: the year, the controls of the timeline, the key and the card shown on hover.
@@ -194,24 +197,24 @@ saanich.traces.states = new WeakMap();
  * @param {Number} lastYear - The year of the latest event
  * @return {Object} The elements which change during playback
  */
-saanich.traces.createOverlay = function (mapElement, firstYear, lastYear) {
+bioreportr.traces.createOverlay = function (mapElement, firstYear, lastYear) {
     const dokkument = mapElement.ownerDocument;
     const overlay = dokkument.createElement("div");
-    overlay.className = "saanich-traces-overlay";
-    overlay.innerHTML = `<div class="saanich-traces-year"></div>
-        <div class="saanich-traces-controls">
-            <button type="button" class="saanich-traces-play"></button>
-            <input type="range" class="saanich-traces-slider" min="${firstYear}" max="${lastYear}" step="1" aria-label="Year">
+    overlay.className = "mxcw-traces-overlay";
+    overlay.innerHTML = `<div class="mxcw-traces-year"></div>
+        <div class="mxcw-traces-controls">
+            <button type="button" class="mxcw-traces-play"></button>
+            <input type="range" class="mxcw-traces-slider" min="${firstYear}" max="${lastYear}" step="1" aria-label="Year">
         </div>
-        <div class="saanich-traces-key">${["last", "first", "found", "fresh"].map(kind =>
-        `<span data-kind="${kind}">${saanich.traces.icon(kind)}${saanich.traces.kinds[kind].label}</span>`).join("")}</div>`;
+        <div class="mxcw-traces-key">${["last", "first", "found", "fresh"].map(kind =>
+        `<span data-kind="${kind}">${bioreportr.traces.icon(kind)}${bioreportr.traces.kinds[kind].label}</span>`).join("")}</div>`;
     mapElement.appendChild(overlay);
     const card = dokkument.createElement("div");
-    card.className = "saanich-trace-card";
+    card.className = "mxcw-trace-card";
     card.setAttribute("role", "tooltip");
     dokkument.body.appendChild(card);
-    return {year: overlay.querySelector(".saanich-traces-year"), play: overlay.querySelector(".saanich-traces-play"),
-        slider: overlay.querySelector(".saanich-traces-slider"), card};
+    return {year: overlay.querySelector(".mxcw-traces-year"), play: overlay.querySelector(".mxcw-traces-play"),
+        slider: overlay.querySelector(".mxcw-traces-slider"), card};
 };
 
 /**
@@ -219,11 +222,11 @@ saanich.traces.createOverlay = function (mapElement, firstYear, lastYear) {
  * @param {fluid.component} that - The timeline
  * @param {Boolean} paused - Whether the timeline is paused
  */
-saanich.traces.showPlayback = function (that, paused) {
-    const state = saanich.traces.states.get(that);
+bioreportr.traces.showPlayback = function (that, paused) {
+    const state = bioreportr.traces.states.get(that);
     if (state) {
         const {play} = state.overlay, action = paused ? "Play" : "Pause";
-        play.innerHTML = saanich.traces.playIcons[action.toLowerCase()];
+        play.innerHTML = bioreportr.traces.playIcons[action.toLowerCase()];
         play.setAttribute("aria-label", action);
         play.title = action;
     }
@@ -235,7 +238,7 @@ saanich.traces.showPlayback = function (that, paused) {
  * @param {fluid.component} that - The timeline, whose `paused` and `scrubbing` are written
  * @param {TraceState} state - The state of the playback
  */
-saanich.traces.bindControls = function (that, state) {
+bioreportr.traces.bindControls = function (that, state) {
     const {play, slider} = state.overlay;
     const release = () => {
         that.scrubbing = false;
@@ -248,7 +251,7 @@ saanich.traces.bindControls = function (that, state) {
     });
     slider.addEventListener("input", () => {
         that.scrubbing = true;
-        saanich.traces.seek(state, Number(slider.value));
+        bioreportr.traces.seek(state, Number(slider.value));
     });
     slider.addEventListener("change", release);
     // Not on the slider, since the pointer may be let go anywhere and a click which moves nothing fires no change
@@ -261,11 +264,11 @@ saanich.traces.bindControls = function (that, state) {
  * @param {TraceState} state - The state of the playback
  * @param {Number} year - The year
  */
-saanich.traces.showYear = function (state, year) {
+bioreportr.traces.showYear = function (state, year) {
     const {year: label, slider} = state.overlay;
     label.textContent = year;
     slider.value = year;
-    slider.style.setProperty("--saanich-progress", ((year - state.firstYear) / Math.max(1, state.lastYear - state.firstYear) * 100) + "%");
+    slider.style.setProperty("--mxcw-progress", ((year - state.firstYear) / Math.max(1, state.lastYear - state.firstYear) * 100) + "%");
 };
 
 /**
@@ -274,25 +277,25 @@ saanich.traces.showYear = function (state, year) {
  * @param {TraceEvent} event - The event of the marker
  * @param {HTMLElement} element - The element of the marker
  */
-saanich.traces.showCard = function (state, event, element) {
+bioreportr.traces.showCard = function (state, event, element) {
     const {card} = state.overlay, {innerWidth, innerHeight} = state.window;
-    saanich.traces.cancelHide(state);
-    saanich.traces.holdMarker(state, element);
-    card.innerHTML = saanich.traces.renderCard(event);
-    card.classList.add("saanich-trace-card-visible");
+    bioreportr.traces.cancelHide(state);
+    bioreportr.traces.holdMarker(state, element);
+    card.innerHTML = bioreportr.traces.renderCard(event);
+    card.classList.add("mxcw-trace-card-visible");
     const anchor = element.getBoundingClientRect(), box = card.getBoundingClientRect();
     // Close beside the marker, so that the pointer can cross to the card before it hides
-    const gap = saanich.traces.cardGap;
+    const gap = bioreportr.traces.cardGap;
     const fitsRight = anchor.right + gap + box.width <= innerWidth - 8;
     const left = fitsRight ? anchor.right + gap : anchor.left - box.width - gap;
     // Within the screen however narrow - on a phone the card may sit over its marker
     card.style.left = Math.max(8, Math.min(left, innerWidth - box.width - 8)) + "px";
     card.style.top = Math.min(Math.max(8, anchor.top - 16), innerHeight - box.height - 8) + "px";
-    saanich.traces.loadPhoto(state, event);
+    bioreportr.traces.loadPhoto(state, event);
 };
 
 // The lookups of each taxon's photo, by taxon id
-saanich.traces.photos = new Map();
+bioreportr.traces.photos = new Map();
 
 /**
  * Look up an openly licensed photo of a taxon on iNaturalist, once only for each taxon.
@@ -300,14 +303,14 @@ saanich.traces.photos = new Map();
  * @param {Function} fetch - The window's `fetch`
  * @return {Promise<Object|undefined>} Resolves to the photo record, or undefined if there is none or it cannot be fetched
  */
-saanich.traces.photoFor = function (taxonId, fetch) {
-    if (!saanich.traces.photos.has(taxonId)) {
-        saanich.traces.photos.set(taxonId, fetch(`https://api.inaturalist.org/v1/taxa/${taxonId}`)
+bioreportr.traces.photoFor = function (taxonId, fetch) {
+    if (!bioreportr.traces.photos.has(taxonId)) {
+        bioreportr.traces.photos.set(taxonId, fetch(`https://api.inaturalist.org/v1/taxa/${taxonId}`)
             .then(response => response.json())
-            .then(body => saanich.lostPlants.licensedPhoto(body.results[0]))
+            .then(body => bioreportr.atlas.licensedPhoto(body.results[0]))
             .catch(() => undefined));
     }
-    return saanich.traces.photos.get(taxonId);
+    return bioreportr.traces.photos.get(taxonId);
 };
 
 /**
@@ -315,11 +318,11 @@ saanich.traces.photoFor = function (taxonId, fetch) {
  * @param {TraceState} state - The state of the playback
  * @param {TraceEvent} event - The event shown on the card
  */
-saanich.traces.loadPhoto = function (state, event) {
+bioreportr.traces.loadPhoto = function (state, event) {
     const encode = hortis.dataTable.encode;
     state.cardEvent = event;
-    saanich.traces.photoFor(event.taxon.id, state.window.fetch.bind(state.window)).then(photo => {
-        const holder = state.overlay.card.querySelector(".saanich-trace-photo");
+    bioreportr.traces.photoFor(event.taxon.id, state.window.fetch.bind(state.window)).then(photo => {
+        const holder = state.overlay.card.querySelector(".mxcw-trace-photo");
         if (state.cardEvent === event && holder) {
             if (photo) {
                 const credit = photo.attribution.replace(/, uploaded by .*$/, "").replace(", some rights reserved", "");
@@ -332,18 +335,18 @@ saanich.traces.loadPhoto = function (state, event) {
 };
 
 // The distance in pixels between a marker and its card
-saanich.traces.cardGap = 4;
+bioreportr.traces.cardGap = 4;
 
 // The time in milliseconds for which a card stays once the pointer has left its marker, so that it may be reached
-saanich.traces.hideDelay = 350;
+bioreportr.traces.hideDelay = 350;
 
-saanich.traces.hideCard = function (state) {
-    saanich.traces.cancelHide(state);
-    saanich.traces.holdMarker(state, null);
-    state.overlay.card.classList.remove("saanich-trace-card-visible");
+bioreportr.traces.hideCard = function (state) {
+    bioreportr.traces.cancelHide(state);
+    bioreportr.traces.holdMarker(state, null);
+    state.overlay.card.classList.remove("mxcw-trace-card-visible");
 };
 
-saanich.traces.cancelHide = function (state) {
+bioreportr.traces.cancelHide = function (state) {
     state.window.clearTimeout(state.hideTimer);
     state.hideTimer = null;
 };
@@ -352,9 +355,9 @@ saanich.traces.cancelHide = function (state) {
  * Hide the card once the pointer has stayed away from both it and its marker for a moment.
  * @param {TraceState} state - The state of the playback
  */
-saanich.traces.scheduleHide = function (state) {
-    saanich.traces.cancelHide(state);
-    state.hideTimer = state.window.setTimeout(() => saanich.traces.hideCard(state), saanich.traces.hideDelay);
+bioreportr.traces.scheduleHide = function (state) {
+    bioreportr.traces.cancelHide(state);
+    state.hideTimer = state.window.setTimeout(() => bioreportr.traces.hideCard(state), bioreportr.traces.hideDelay);
 };
 
 /**
@@ -362,13 +365,13 @@ saanich.traces.scheduleHide = function (state) {
  * @param {TraceState} state - The state of the playback
  * @param {HTMLElement|null} element - The marker's element, or null if no card is shown
  */
-saanich.traces.holdMarker = function (state, element) {
+bioreportr.traces.holdMarker = function (state, element) {
     if (state.heldMarker && state.heldMarker !== element) {
-        state.heldMarker.classList.remove("saanich-trace-held");
+        state.heldMarker.classList.remove("mxcw-trace-held");
     }
     state.heldMarker = element;
     if (element) {
-        element.classList.add("saanich-trace-held");
+        element.classList.add("mxcw-trace-held");
     }
 };
 
@@ -378,22 +381,22 @@ saanich.traces.holdMarker = function (state, element) {
  * @param {TraceState} state - The state of the playback
  * @return {Boolean} `true` if presses are touches
  */
-saanich.traces.isTouch = state => state.pointerType === "touch" || state.window.matchMedia("(hover: none)").matches;
+bioreportr.traces.isTouch = state => state.pointerType === "touch" || state.window.matchMedia("(hover: none)").matches;
 
 /**
  * Hide a card shown by a tap, releasing the hold it put on the timeline.
  * @param {TraceState} state - The state of the playback
  */
-saanich.traces.releaseTouch = function (state) {
+bioreportr.traces.releaseTouch = function (state) {
     if (state.touchHold) {
         state.touchHold = false;
         state.holding = Math.max(0, state.holding - 1);
     }
-    saanich.traces.hideCard(state);
+    bioreportr.traces.hideCard(state);
 };
 
 // How far in pixels a finger may move between touching and lifting for its touch to count as a tap
-saanich.traces.tapSlop = 10;
+bioreportr.traces.tapSlop = 10;
 
 /**
  * Respond to taps and clicks on an element of the playback - a marker or the card. Touches on it are kept from the map,
@@ -402,7 +405,7 @@ saanich.traces.tapSlop = 10;
  * @param {HTMLElement} element - The element
  * @param {Function} handler - Called on each tap or click
  */
-saanich.traces.onTap = function (element, handler) {
+bioreportr.traces.onTap = function (element, handler) {
     let start = null;
     let tappedAt = 0;
     element.addEventListener("touchstart", touchEvent => {
@@ -414,7 +417,7 @@ saanich.traces.onTap = function (element, handler) {
     element.addEventListener("touchend", touchEvent => {
         touchEvent.stopPropagation();
         const touch = touchEvent.changedTouches[0];
-        if (start && Math.hypot(touch.clientX - start.x, touch.clientY - start.y) <= saanich.traces.tapSlop) {
+        if (start && Math.hypot(touch.clientX - start.x, touch.clientY - start.y) <= bioreportr.traces.tapSlop) {
             // Stops the click, and any zoom, which would follow
             touchEvent.preventDefault();
             tappedAt = Date.now();
@@ -438,16 +441,16 @@ saanich.traces.onTap = function (element, handler) {
  * @param {TraceEvent} event - The event of the marker
  * @param {HTMLElement} element - The element of the marker
  */
-saanich.traces.markerClick = function (state, event, element) {
-    if (saanich.traces.isTouch(state) && !(state.touchHold && state.heldMarker === element)) {
+bioreportr.traces.markerClick = function (state, event, element) {
+    if (bioreportr.traces.isTouch(state) && !(state.touchHold && state.heldMarker === element)) {
         if (!state.touchHold) {
             state.touchHold = true;
             state.holding++;
         }
-        saanich.traces.showCard(state, event, element);
+        bioreportr.traces.showCard(state, event, element);
     } else {
-        saanich.traces.releaseTouch(state);
-        saanich.traces.openTaxon(state.storyPage, event.taxon, state.window);
+        bioreportr.traces.releaseTouch(state);
+        bioreportr.traces.openTaxon(state.storyPage, event.taxon, state.window);
     }
 };
 
@@ -455,35 +458,35 @@ saanich.traces.markerClick = function (state, event, element) {
  * Bind the card, which holds the timeline while the pointer rests on it, and opens its species when clicked.
  * @param {TraceState} state - The state of the playback
  */
-saanich.traces.bindCard = function (state) {
+bioreportr.traces.bindCard = function (state) {
     const {card} = state.overlay;
     card.addEventListener("mouseenter", () => {
         state.holding++;
-        saanich.traces.cancelHide(state);
+        bioreportr.traces.cancelHide(state);
     });
     card.addEventListener("mouseleave", () => {
         state.holding = Math.max(0, state.holding - 1);
-        saanich.traces.scheduleHide(state);
+        bioreportr.traces.scheduleHide(state);
     });
-    saanich.traces.onTap(card, () => {
+    bioreportr.traces.onTap(card, () => {
         if (state.cardEvent) {
             const taxon = state.cardEvent.taxon;
-            saanich.traces.releaseTouch(state);
-            saanich.traces.openTaxon(state.storyPage, taxon, state.window);
+            bioreportr.traces.releaseTouch(state);
+            bioreportr.traces.openTaxon(state.storyPage, taxon, state.window);
         }
     });
     // Whether presses are touches, noted before any of the events they lead to. A press anywhere but on the card or a
     // marker puts away a card shown by a tap, as for every other tooltip on the page
     state.window.addEventListener("pointerdown", pointerEvent => {
         state.pointerType = pointerEvent.pointerType;
-        if (state.touchHold && !pointerEvent.target.closest?.(".saanich-trace, .saanich-trace-card")) {
-            saanich.traces.releaseTouch(state);
+        if (state.touchHold && !pointerEvent.target.closest?.(".mxcw-trace, .mxcw-trace-card")) {
+            bioreportr.traces.releaseTouch(state);
         }
     }, true);
     // A tap on the map away from the markers puts away a card shown by a tap
     state.map.on("click", mapEvent => {
-        if (state.touchHold && !mapEvent.originalEvent?.target?.closest?.(".saanich-trace")) {
-            saanich.traces.releaseTouch(state);
+        if (state.touchHold && !mapEvent.originalEvent?.target?.closest?.(".mxcw-trace")) {
+            bioreportr.traces.releaseTouch(state);
         }
     });
 };
@@ -494,15 +497,9 @@ saanich.traces.bindCard = function (state) {
  * @param {TaxonRow} taxon - The species
  * @param {Window} window - The window holding the story page
  */
-saanich.traces.openTaxon = function (storyPage, taxon, window) {
-    saanich.lostPlants.showTaxon(storyPage, taxon.id, "Solow", window.document, window);
-    // Once the map has taken up its size in the newly visible pane
-    window.requestAnimationFrame(() => {
-        const row = storyPage.solowTaxa.taxaTable.selectedRow;
-        if (row) {
-            storyPage.solowFitTaxon = {taxon: row};
-        }
-    });
+bioreportr.traces.openTaxon = function (storyPage, taxon, window) {
+    bioreportr.atlas.showSolowTaxon(storyPage, taxon.id, "Solow", window.document, window);
+    // The map then pans and zooms to the plant's records - see bioreportr.atlas.fitToTaxon
 };
 
 /**
@@ -511,29 +508,29 @@ saanich.traces.openTaxon = function (storyPage, taxon, window) {
  * @param {TraceEvent} event - The event to show
  * @param {Number} [age] - How many seconds into its fade the marker should begin
  */
-saanich.traces.addMarker = function (state, event, age = 0) {
+bioreportr.traces.addMarker = function (state, event, age = 0) {
     const element = state.window.document.createElement("div");
-    element.className = "saanich-trace";
+    element.className = "mxcw-trace";
     element.dataset.kind = event.kind;
-    element.innerHTML = `<div class="saanich-trace-mark" style="animation-duration: ${saanich.traces.life(event.kind)}s; animation-delay: ${-age}s">${saanich.traces.icon(event.kind)}</div>`;
+    element.innerHTML = `<div class="mxcw-trace-mark" style="animation-duration: ${bioreportr.traces.life(event.kind)}s; animation-delay: ${-age}s">${bioreportr.traces.icon(event.kind)}</div>`;
     const marker = new maplibregl.Marker({element}).setLngLat(bioreportr.obsPoint(event.record)).addTo(state.map);
     state.markers.add(marker);
     // A touch also sends these, which would show and then schedule the hiding of the card a tap is about to show
     element.addEventListener("mouseenter", () => {
         if (state.pointerType !== "touch") {
             state.holding++;
-            saanich.traces.showCard(state, event, element);
+            bioreportr.traces.showCard(state, event, element);
         }
     });
     element.addEventListener("mouseleave", () => {
         if (state.pointerType !== "touch") {
             state.holding = Math.max(0, state.holding - 1);
             if (!state.touchHold) {
-                saanich.traces.scheduleHide(state);
+                bioreportr.traces.scheduleHide(state);
             }
         }
     });
-    saanich.traces.onTap(element, () => saanich.traces.markerClick(state, event, element));
+    bioreportr.traces.onTap(element, () => bioreportr.traces.markerClick(state, event, element));
     element.firstElementChild.addEventListener("animationend", () => {
         marker.remove();
         state.markers.delete(marker);
@@ -544,41 +541,41 @@ saanich.traces.addMarker = function (state, event, age = 0) {
  * Remove every marker from the map, and the card of any.
  * @param {TraceState} state - The state of the playback
  */
-saanich.traces.clearMarkers = function (state) {
+bioreportr.traces.clearMarkers = function (state) {
     state.markers.forEach(marker => marker.remove());
     state.markers.clear();
     state.holding = 0;
-    saanich.traces.hideCard(state);
+    bioreportr.traces.hideCard(state);
 };
 
 // The time in milliseconds before the next event: the quiet stretches of the record pass more slowly than the busy ones,
 // though never for long
-saanich.traces.delayAfter = (event, next) => Math.min(1600, 600 + Math.max(0, next.year - event.year) * 200);
+bioreportr.traces.delayAfter = (event, next) => Math.min(1600, 600 + Math.max(0, next.year - event.year) * 200);
 
 // The time in milliseconds before trying again to show an event, while the timeline is held
-saanich.traces.retryDelay = 300;
+bioreportr.traces.retryDelay = 300;
 
 /**
  * Show the next event, unless the timeline is held, and schedule the step after.
  * @param {fluid.component} that - The timeline
  * @param {TraceState} state - The state of the playback
  */
-saanich.traces.step = function (that, state) {
-    let delay = saanich.traces.retryDelay;
+bioreportr.traces.step = function (that, state) {
+    let delay = bioreportr.traces.retryDelay;
     if (!that.paused && !that.scrubbing && state.holding === 0 && !state.window.document.hidden) {
         const event = state.events[state.index];
-        saanich.traces.addMarker(state, event);
-        saanich.traces.showYear(state, event.year);
+        bioreportr.traces.addMarker(state, event);
+        bioreportr.traces.showYear(state, event.year);
         state.index = (state.index + 1) % state.events.length;
-        delay = saanich.traces.delayAfter(event, state.events[state.index]);
+        delay = bioreportr.traces.delayAfter(event, state.events[state.index]);
     }
-    state.timer = state.window.setTimeout(() => saanich.traces.step(that, state), delay);
+    state.timer = state.window.setTimeout(() => bioreportr.traces.step(that, state), delay);
 };
 
 // As many markers as playback could have left on the map, at its quickest and with the longest fade
-saanich.traces.trailLength = 30;
+bioreportr.traces.trailLength = 30;
 // Far enough into its fade that a marker has finished appearing, so that it shows even while the timeline is frozen
-saanich.traces.trailStartAge = 1.2;
+bioreportr.traces.trailStartAge = 1.2;
 
 /**
  * Lay out the markers playback would have left on the map by the time it reached a given event, each as far through its
@@ -586,15 +583,15 @@ saanich.traces.trailStartAge = 1.2;
  * @param {TraceState} state - The state of the playback
  * @param {Number} end - The index following the most recent event to show
  */
-saanich.traces.placeTrail = function (state, end) {
+bioreportr.traces.placeTrail = function (state, end) {
     const {events} = state;
-    let age = saanich.traces.trailStartAge;
-    for (let i = end - 1; i >= Math.max(0, end - saanich.traces.trailLength); --i) {
-        if (age < saanich.traces.life(events[i].kind)) {
-            saanich.traces.addMarker(state, events[i], age);
+    let age = bioreportr.traces.trailStartAge;
+    for (let i = end - 1; i >= Math.max(0, end - bioreportr.traces.trailLength); --i) {
+        if (age < bioreportr.traces.life(events[i].kind)) {
+            bioreportr.traces.addMarker(state, events[i], age);
         }
         if (i > 0) {
-            age += saanich.traces.delayAfter(events[i - 1], events[i]) / 1000;
+            age += bioreportr.traces.delayAfter(events[i - 1], events[i]) / 1000;
         }
     }
 };
@@ -604,13 +601,13 @@ saanich.traces.placeTrail = function (state, end) {
  * @param {TraceState} state - The state of the playback
  * @param {Number} year - The year to move to
  */
-saanich.traces.seek = function (state, year) {
+bioreportr.traces.seek = function (state, year) {
     const next = state.events.findIndex(event => event.year > year);
     const end = next === -1 ? state.events.length : next;
     state.index = end % state.events.length;
-    saanich.traces.clearMarkers(state);
-    saanich.traces.placeTrail(state, end);
-    saanich.traces.showYear(state, year);
+    bioreportr.traces.clearMarkers(state);
+    bioreportr.traces.placeTrail(state, end);
+    bioreportr.traces.showYear(state, year);
 };
 
 /**
@@ -622,17 +619,17 @@ saanich.traces.seek = function (state, year) {
  * @param {Window} window - The window holding the story page
  * @return {TraceState} The state of the playback
  */
-saanich.traces.createState = function (that, storyPage, map, events, window) {
+bioreportr.traces.createState = function (that, storyPage, map, events, window) {
     const firstYear = events[0].year, lastYear = fluid.peek(events).year;
     const startYear = firstYear + Math.floor(Math.random() * (lastYear - firstYear + 1));
     const state = {storyPage, map, window, events, firstYear, lastYear, markers: new Set(), holding: 0, timer: null, cardEvent: null,
         hideTimer: null, heldMarker: null,
         index: Math.max(0, events.findIndex(event => event.year >= startYear)),
-        overlay: saanich.traces.createOverlay(map.getContainer(), firstYear, lastYear)};
-    saanich.traces.states.set(that, state);
-    saanich.traces.bindControls(that, state);
-    saanich.traces.bindCard(state);
-    saanich.traces.showPlayback(that, that.paused);
+        overlay: bioreportr.traces.createOverlay(map.getContainer(), firstYear, lastYear)};
+    bioreportr.traces.states.set(that, state);
+    bioreportr.traces.bindControls(that, state);
+    bioreportr.traces.bindCard(state);
+    bioreportr.traces.showPlayback(that, that.paused);
     return state;
 };
 
@@ -646,13 +643,13 @@ saanich.traces.createState = function (that, storyPage, map, events, window) {
  * @param {Boolean} loaded - `true` once the page's data is real rather than placeholders
  * @param {Window} window - The window holding the story page
  */
-saanich.traces.control = function (that, storyPage, map, events, active, loaded, window) {
+bioreportr.traces.control = function (that, storyPage, map, events, active, loaded, window) {
     const ready = map && loaded && events.length > 0;
-    const state = ready ? saanich.traces.states.get(that) ?? saanich.traces.createState(that, storyPage, map, events, window) :
-        saanich.traces.states.get(that);
+    const state = ready ? bioreportr.traces.states.get(that) ?? bioreportr.traces.createState(that, storyPage, map, events, window) :
+        bioreportr.traces.states.get(that);
     if (state) {
         window.clearTimeout(state.timer);
-        saanich.traces.clearMarkers(state);
+        bioreportr.traces.clearMarkers(state);
         if (active) {
             const camera = bioreportr.storyMap.firstCamera(storyPage.mapData);
             if (camera) {
@@ -662,9 +659,9 @@ saanich.traces.control = function (that, storyPage, map, events, active, loaded,
             state.timer = window.setTimeout(() => {
                 // Someone returning to a timeline they paused finds it as they left it
                 if (that.paused) {
-                    saanich.traces.placeTrail(state, state.index || state.events.length);
+                    bioreportr.traces.placeTrail(state, state.index || state.events.length);
                 }
-                saanich.traces.step(that, state);
+                bioreportr.traces.step(that, state);
             }, 0);
         }
     }
@@ -673,20 +670,20 @@ saanich.traces.control = function (that, storyPage, map, events, active, loaded,
 
 <style>
 /* The map takes the whole column, dimmed so that the records stand out against it */
-.mxcw-leftPane.saanich-traces-active .mxcw-map {
+.mxcw-leftPane.mxcw-traces-active .mxcw-map {
     height: 100% !important;
 }
-.mxcw-leftPane.saanich-traces-active > .mxcw-data,
-.mxcw-leftPane.saanich-traces-active > .resize-bar {
+.mxcw-leftPane.mxcw-traces-active > .mxcw-data,
+.mxcw-leftPane.mxcw-traces-active > .resize-bar {
     display: none !important;
 }
-.mxcw-leftPane.saanich-traces-active .maplibregl-canvas {
+.mxcw-leftPane.mxcw-traces-active .maplibregl-canvas {
     filter: brightness(0.45) saturate(0.6);
 }
-.mxcw-leftPane:not(.saanich-traces-active) .saanich-traces-overlay {
+.mxcw-leftPane:not(.mxcw-traces-active) .mxcw-traces-overlay {
     display: none;
 }
-.saanich-traces-overlay {
+.mxcw-traces-overlay {
     position: absolute;
     left: 20px;
     /* Clear of the map's attribution */
@@ -696,21 +693,21 @@ saanich.traces.control = function (that, storyPage, map, events, active, loaded,
     color: #eefaff;
     text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
 }
-.saanich-traces-year {
+.mxcw-traces-year {
     font-size: 56px;
     font-weight: 300;
     line-height: 1;
     letter-spacing: 0.04em;
     font-variant-numeric: tabular-nums;
 }
-.saanich-traces-controls {
+.mxcw-traces-controls {
     display: flex;
     align-items: center;
     gap: 6px;
     margin: 4px 0 10px;
     pointer-events: auto;
 }
-.saanich-traces-play {
+.mxcw-traces-play {
     flex: none;
     width: 28px;
     height: 28px;
@@ -720,14 +717,14 @@ saanich.traces.control = function (that, storyPage, map, events, active, loaded,
     cursor: pointer;
     filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.7));
 }
-.saanich-traces-play:focus-visible,
-.saanich-traces-slider:focus-visible {
+.mxcw-traces-play:focus-visible,
+.mxcw-traces-slider:focus-visible {
     outline: 2px solid #FDF2CE;
     outline-offset: 2px;
 }
-.saanich-traces-slider {
-    --saanich-progress: 0%;
-    --saanich-track: linear-gradient(to right, #FDF2CE var(--saanich-progress), rgba(238, 250, 255, 0.3) var(--saanich-progress));
+.mxcw-traces-slider {
+    --mxcw-progress: 0%;
+    --mxcw-track: linear-gradient(to right, #FDF2CE var(--mxcw-progress), rgba(238, 250, 255, 0.3) var(--mxcw-progress));
     appearance: none;
     -webkit-appearance: none;
     width: min(360px, calc(100vw - 96px));
@@ -736,15 +733,15 @@ saanich.traces.control = function (that, storyPage, map, events, active, loaded,
     background: transparent;
     cursor: pointer;
 }
-.saanich-traces-slider::-webkit-slider-runnable-track {
+.mxcw-traces-slider::-webkit-slider-runnable-track {
     height: 2px;
-    background: var(--saanich-track);
+    background: var(--mxcw-track);
 }
-.saanich-traces-slider::-moz-range-track {
+.mxcw-traces-slider::-moz-range-track {
     height: 2px;
-    background: var(--saanich-track);
+    background: var(--mxcw-track);
 }
-.saanich-traces-slider::-webkit-slider-thumb {
+.mxcw-traces-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     width: 14px;
     height: 14px;
@@ -753,7 +750,7 @@ saanich.traces.control = function (that, storyPage, map, events, active, loaded,
     border-radius: 50%;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 }
-.saanich-traces-slider::-moz-range-thumb {
+.mxcw-traces-slider::-moz-range-thumb {
     width: 14px;
     height: 14px;
     background: #FDF2CE;
@@ -762,52 +759,52 @@ saanich.traces.control = function (that, storyPage, map, events, active, loaded,
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 }
 /* Markers hold still while the timeline is paused or being dragged */
-.saanich-traces-still .saanich-trace-mark {
+.mxcw-traces-still .mxcw-trace-mark {
     animation-play-state: paused;
 }
-.saanich-traces-key {
+.mxcw-traces-key {
     display: flex;
     flex-wrap: wrap;
     gap: 4px 14px;
     max-width: 420px;
     font-size: var(--story-small);
 }
-.saanich-traces-key span {
+.mxcw-traces-key span {
     display: inline-flex;
     align-items: center;
     gap: 4px;
 }
-.saanich-traces-key svg,
-.saanich-trace-kind svg {
+.mxcw-traces-key svg,
+.mxcw-trace-kind svg {
     width: 14px;
     height: 14px;
 }
-.saanich-trace {
+.mxcw-trace {
 
 /* Traces: a quicker timeline, with its marks shaped as acorn, plant, leaf skeleton and dandelion */
     cursor: pointer;
     width: 24px;
     height: 24px;
 }
-.saanich-trace-mark {
+.mxcw-trace-mark {
     width: 100%;
     height: 100%;
-    animation: saanich-trace-life 16s ease-out forwards;
+    animation: mxcw-trace-life 16s ease-out forwards;
 }
-.saanich-trace[data-kind="last"] {
+.mxcw-trace[data-kind="last"] {
     width: 32px;
     height: 32px;
     z-index: 2;
 }
-.saanich-trace[data-kind="last"] .saanich-trace-mark {
+.mxcw-trace[data-kind="last"] .mxcw-trace-mark {
     filter: drop-shadow(0 0 3px rgba(255, 138, 0, 0.5));
 }
-.saanich-trace:hover .saanich-trace-mark,
-.saanich-trace-held .saanich-trace-mark {
+.mxcw-trace:hover .mxcw-trace-mark,
+.mxcw-trace-held .mxcw-trace-mark {
     animation-play-state: paused;
     opacity: 1;
 }
-.saanich-trace-card {
+.mxcw-trace-card {
     position: fixed;
     z-index: 1000;
     display: none;
@@ -823,30 +820,30 @@ saanich.traces.control = function (that, storyPage, map, events, active, loaded,
     font-size: 12px;
     line-height: 1.4;
 }
-.saanich-trace-card-visible {
+.mxcw-trace-card-visible {
     display: block;
 }
-.saanich-trace-kind {
+.mxcw-trace-kind {
     display: flex;
     align-items: center;
     gap: 5px;
     color: #a8c8d0;
     margin-bottom: 4px;
 }
-.saanich-trace-name {
+.mxcw-trace-name {
     font-size: 14px;
     font-style: italic;
     font-weight: 700;
 }
-.saanich-trace-common {
+.mxcw-trace-common {
     color: #a8c8d0;
     margin-bottom: 4px;
 }
-.saanich-trace-significance {
+.mxcw-trace-significance {
     margin-top: 6px;
     color: #FDF2CE;
 }
-.saanich-trace-action {
+.mxcw-trace-action {
     margin-top: 6px;
     color: #a8c8d0;
 }
@@ -869,12 +866,12 @@ saanich.traces.control = function (that, storyPage, map, events, active, loaded,
     margin: 2rem 0 clamp(14px, 3vh, 32px);
 }
 .mxcw-paneKey-Traces p {
-    --saanich-traces-text: clamp(16px, min(0.55vw + 11px, 2.3vh), 21px);
+    --mxcw-traces-text: clamp(16px, min(0.55vw + 11px, 2.3vh), 21px);
     max-width: 31em;
     margin: 0 auto clamp(10px, 2.2vh, 22px);
     padding: 0 1.5rem;
     color: #d6e8ee;
-    font-size: var(--saanich-traces-text);
+    font-size: var(--mxcw-traces-text);
     line-height: 1.5;
     text-align: center;
     text-wrap: balance;
@@ -883,10 +880,10 @@ saanich.traces.control = function (that, storyPage, map, events, active, loaded,
 .mxcw-paneKey-Traces p:first-of-type {
     margin-bottom: clamp(16px, 3.6vh, 36px);
     color: #FDF2CE;
-    font-size: calc(var(--saanich-traces-text) * 1.2);
+    font-size: calc(var(--mxcw-traces-text) * 1.2);
     line-height: 1.4;
 }
-.mxcw-paneKey-Traces .saanich-traces-next {
+.mxcw-paneKey-Traces .mxcw-traces-next {
     color: #FDF2CE;
     cursor: pointer;
     text-decoration: underline;
@@ -894,19 +891,19 @@ saanich.traces.control = function (that, storyPage, map, events, active, loaded,
     text-underline-offset: 5px;
     transition: text-decoration-color 0.2s;
 }
-.saanich-traces-next:hover {
+.mxcw-traces-next:hover {
     text-decoration-color: currentColor;
 }
-.saanich-traces-next:focus-visible {
+.mxcw-traces-next:focus-visible {
     outline: 2px solid #FDF2CE;
     outline-offset: 4px;
 }
 @media (prefers-reduced-motion: no-preference) {
-    .saanich-trace[data-kind="last"] .saanich-trace-mark {
-        animation-name: saanich-trace-drift;
+    .mxcw-trace[data-kind="last"] .mxcw-trace-mark {
+        animation-name: mxcw-trace-drift;
     }
 
-    @keyframes saanich-trace-drift {
+    @keyframes mxcw-trace-drift {
         0% {
             opacity: 0;
             transform: scale(0.3);
@@ -928,7 +925,7 @@ saanich.traces.control = function (that, storyPage, map, events, active, loaded,
         }
     }
 }
-.saanich-trace-photo {
+.mxcw-trace-photo {
     margin: -12px -12px 8px;
     height: 150px;
     background: #184E62;
@@ -936,12 +933,12 @@ saanich.traces.control = function (that, storyPage, map, events, active, loaded,
     overflow: hidden;
     position: relative;
 }
-.saanich-trace-photo img {
+.mxcw-trace-photo img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
-.saanich-trace-photo span {
+.mxcw-trace-photo span {
     position: absolute;
     left: 0;
     right: 0;
@@ -952,10 +949,10 @@ saanich.traces.control = function (that, storyPage, map, events, active, loaded,
     background: rgba(13, 48, 64, 0.7);
 }
 /* The most numerous marks step back, leaving the plants last seen to stand out */
-.saanich-trace[data-kind="first"] svg {
+.mxcw-trace[data-kind="first"] svg {
     opacity: 0.7;
 }
-@keyframes saanich-trace-life {
+@keyframes mxcw-trace-life {
     0% {
         opacity: 0;
         transform: scale(0.3);
@@ -976,7 +973,7 @@ saanich.traces.control = function (that, storyPage, map, events, active, loaded,
 }
 
 @media (prefers-reduced-motion: reduce) {
-    @keyframes saanich-trace-life {
+    @keyframes mxcw-trace-life {
         0%, 65% {
             opacity: 1;
         }
@@ -990,25 +987,25 @@ saanich.traces.control = function (that, storyPage, map, events, active, loaded,
 /* Phones: the map leaves room for the text beneath it, the timeline's controls and key sit clear of the map's credits,
    and the markers, which are small and brief, take a larger area for a fingertip */
 @media (max-width: 767.98px) {
-    .mxcw-leftPane.saanich-traces-active {
+    .mxcw-leftPane.mxcw-traces-active {
         height: max(360px, 62vh);
     }
 
-    .saanich-traces-overlay {
+    .mxcw-traces-overlay {
         left: 12px;
         right: 12px;
         bottom: 56px;
     }
 
-    .saanich-traces-year {
+    .mxcw-traces-year {
         font-size: 40px;
     }
 
-    .saanich-traces-key {
+    .mxcw-traces-key {
         gap: 2px 10px;
     }
 
-    .saanich-trace-card {
+    .mxcw-trace-card {
         width: min(260px, calc(100vw - 16px));
     }
 
@@ -1022,7 +1019,7 @@ saanich.traces.control = function (that, storyPage, map, events, active, loaded,
 }
 
 @media (pointer: coarse) {
-    .saanich-trace::after {
+    .mxcw-trace::after {
         content: "";
         position: absolute;
         inset: -12px;
@@ -1031,10 +1028,11 @@ saanich.traces.control = function (that, storyPage, map, events, active, loaded,
 </style>
 
 <!-- The <template> block below is written by src/js/storyBuild.js and must not be edited here: it holds the section
-     knitted from content/story/Traces.Rmd, whose front matter names saanich.tracesPane as its paneComponent. Edit the
-     R Markdown and knit it, then run "npm run story", which replaces everything between <template> and </template>
-     and nothing else in this file. The markup is a template, which may bind members of saanich.tracesPane with
-     @{...} - written in the R Markdown as raw HTML, e.g. `<span>@{count}</span>`{=html}, which pandoc leaves as it is -->
+     knitted from each project's content/story/Traces.Rmd, whose front matter names bioreportr.tracesPane as its
+     paneComponent - so that it holds the section of whichever project was built last. Edit the R Markdown and knit it,
+     then run "npm run story", which replaces everything between <template> and </template> and nothing else in this
+     file. The markup is a template, which may bind members of bioreportr.tracesPane with @{...} - written in the R Markdown
+     as raw HTML, e.g. `<span>@{count}</span>`{=html}, which pandoc leaves as it is -->
 <template>
 <div id="in-memory-of-plants" class="section level2 mxcw-paneKey-Traces"><h2>In Memory of Plants</h2><div class="mxcw-sectionInner"><div class="mxcw-sectionColumn">
 
@@ -1046,7 +1044,7 @@ iNaturalist, reaching back to 1859.</p>
 <p>Each record is a moment when someone stopped to take note of a
 plant.</p>
 <p>Some plants have long been recorded, while others have appeared only
-in more recent years. Still others have gone unseen for decades, <a href="#pane:LostPlants" class="saanich-traces-next">quietly disappearing
+in more recent years. Still others have gone unseen for decades, <a href="#pane:LostPlants" class="mxcw-traces-next">quietly disappearing
 from the record.</a></p>
 </div></div></div>
 </template>

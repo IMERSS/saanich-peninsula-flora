@@ -51,6 +51,11 @@ fluid.def("bioreportr.storyMap", {
         }
     },
     highlightRegion: "$effect:bioreportr.storyMap.highlightRegion({self}.readyMap, {storyPage}.selectedRegion, {storyPage}.mapData)",
+    // A pane opened from one without a map is placed on its camera once the map has its size - see
+    // bioreportr.storyMap.recentre
+    recentre: "$effect:bioreportr.storyMap.recentre({self}.readyMap, {storyPage}.mapData, {storyPage}.activePane)",
+    // On a phone one finger scrolls the page past the map, and two move the map - see bioreportr.storyMap.phoneGestures
+    phoneGestures: "$effect:bioreportr.storyMap.phoneGestures({self}.readyMap, {global})",
     legendRows: "$compute:bioreportr.storyMap.legendRows({storyPage}.activePane, {storyPage}.regionIndirection.rows, {storyPage}.mapData.style.layers)",
     legendRowsMarkup: "$compute:bioreportr.storyMap.legendMarkup({self}.legendRows, {storyPage}.selectedStatus, {storyPage}.selectedRegion)",
     regionLegend: {

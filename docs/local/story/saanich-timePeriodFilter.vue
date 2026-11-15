@@ -114,3 +114,36 @@ saanich.timePeriodFilter.reset = function (that) {
         </div>
     </div>
 </template>
+
+<style>
+/* The time period filter's two sliders, each a row of its label, its range and its year - first set narrow, then laid out
+   within the filter panel */
+.saanich-time-range label span {
+    width: 2.6em;
+}
+
+#imerss-main-filters .saanich-time-range {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    align-items: stretch;
+    gap: 2px;
+}
+
+#imerss-main-filters .saanich-time-range label {
+    display: grid;
+    grid-template-columns: 2.6em minmax(0, 1fr) 3em;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--story-data);
+}
+
+#imerss-main-filters .saanich-time-range label span {
+    width: auto;
+    color: #4b778f;
+}
+
+#imerss-main-filters .saanich-time-range output {
+    text-align: right;
+}
+</style>

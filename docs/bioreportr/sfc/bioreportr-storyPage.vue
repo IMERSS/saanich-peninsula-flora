@@ -42,6 +42,13 @@ fluid.def("bioreportr.storyPage", {
     // obsFile: String
     // taxaFile: String
     // regionIndirectionFile: String
+    // - the story's data files, named in its bioreportr.yaml and supplied by the layer bioreportr.storyData, which
+    // src/js/storyBuild.js writes from it
+    // The small files from which the page is rendered statically, in place of its data, shared by every story since
+    // they serve only to let the page's skeleton render - see fluid.withPlaceholder
+    obsPlaceholderFile: "../bioreportr/data/placeholder/obs.csv",
+    taxaPlaceholderFile: "../bioreportr/data/placeholder/taxa.csv",
+    regionIndirectionPlaceholderFile: "../bioreportr/data/placeholder/regionIndirection.csv",
     // The directory holding the material written by storyBuild.js, relative to the page and ending in /
     storyBase: "",
     // Map of pane key to settings overriding those of its front matter - see bioreportr.storyPage.paneSettings

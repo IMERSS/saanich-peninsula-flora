@@ -7,7 +7,7 @@ paneHandlerLayers: ["reknitr.obsMapPaneHandler"]
 regionField: Protected
 visibleGrid: false
 # The component rendering this pane's section, into whose template npm run story writes it - see AGENTS.md
-paneComponent: saanich.protectedPane
+paneComponent: bioreportr.protectedPane
 ---
 
 ## Native plant diversity within protected areas
@@ -20,7 +20,7 @@ protectedAreaMap
 
 ```{r, echo=FALSE}
 # A summary of the selection on the map - all the protected areas, a category, an area or the KBAs - see
-# saanich-protectedPane.vue
+# bioreportr-protectedPane.vue
 protected.area.summaries
 # The chart of species by category, or by area within the selected category, shown beneath the map - see
 # mxcw-data-pane-html in src/js/storyBuild.js
@@ -31,7 +31,7 @@ This preliminary evaluation is limited by biases in sampling effort and other ga
 point for a more thorough assessment of progress toward conserving the region's plant diversity. Help improve it by
 reporting your observations to the [“Lost” plants of the Saanich Peninsula iNaturalist project](https://www.inaturalist.org/projects/lost-plants-of-the-saanich-peninsula).
 
-:::: {.saanich-howto}
+:::: {.mxcw-howto}
 The map shows protected and conserved areas by category, with Key Biodiversity Areas outlined in cream. Proposed
 Key Biodiversity Areas, whose boundaries are not yet public, are marked by rings.
 Click an area on the map, or in the chart below it, to show only the plants recorded there and its summary above, or

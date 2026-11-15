@@ -9,13 +9,11 @@ https://github.com/fluid-project/infusion/raw/master/Infusion-LICENSE.txt
 
 "use strict";
 
-/* global maplibregl */
-
 // The summaries and behaviours particular to the story of the Saanich Peninsula's vascular plants which are not those
-// of a single pane of its own - the atlas's tiles, panel and tooltips of the groups of species, the summary of a map
-// cell, and the opening of the extirpation risk pane on its top species. They are configured onto the story page by
-// saanich-story.vue. The three panes of this story alone each have a Single File Component of their own beside it,
-// e.g. static/local/story/saanich-lostPlantsPane.vue
+// of a single pane of its own - the formatting of its tables, the period of its records, the legend and markers of its
+// map, and the opening of the extirpation risk pane on its top species. They are configured onto the story page by
+// saanich-story.vue. The atlas and the panes this story shares with the other bioReportR stories are defined in
+// static/bioreportr/sfc, e.g. bioreportr-atlasPanel.vue, and its pane in memory of Harvey Janszen beside saanich-story.vue
 
 // noinspection ES6ConvertVarToLetConst // otherwise this is a duplicate on minifying
 var saanich = fluid.registerNamespace("saanich");
@@ -24,22 +22,10 @@ var hortis = fluid.registerNamespace("hortis");
 // noinspection ES6ConvertVarToLetConst // otherwise this is a duplicate on minifying
 var bioreportr = fluid.registerNamespace("bioreportr");
 
-fluid.registerNamespace("saanich.atlas");
-fluid.registerNamespace("saanich.statusTooltip");
 
 // Show checklist entries under the project's accepted names, including annotations such as ssp. and var.
 saanich.inatRowToScientific = hortis.rowToScientific;
 hortis.rowToScientific = row => row.scientificName || saanich.inatRowToScientific(row);
-
-saanich.locale = "en-CA";
-
-// Counts are shown plainly, without separators of thousands
-// Shared with the story page's own summaries - see bioreportr.tip in static/bioreportr/js/story.js
-saanich.formatCount = bioreportr.formatCount;
-
-saanich.year = bioreportr.year;
-
-saanich.obsDateComparator = bioreportr.obsDateComparator;
 
 /** Formatters of the cells of the tables **/
 
@@ -84,37 +70,6 @@ saanich.annotateGeoref = function (taxaRows, obsRows) {
 };
 
 /**
- * Group dated records by their taxon.
- * @param {Object[]} obsRows - All records
- * @return {Map<String, Object[]>} The dated records of each taxon id
- */
-saanich.groupRecords = function (obsRows) {
-    const byTaxon = new Map();
-    obsRows.forEach(obs => {
-        if (obs.eventDate) {
-            const records = byTaxon.get(obs.iNaturalistTaxonId) || [];
-            records.push(obs);
-            byTaxon.set(obs.iNaturalistTaxonId, records);
-        }
-    });
-    return byTaxon;
-};
-
-/**
- * Find the taxa of the summary holding a reporting status.
- * @param {TaxonRow[]} taxaRows - All taxa
- * @param {String} status - The reporting status
- * @return {TaxonRow[]} The taxa
- */
-saanich.taxaOfStatus = function (taxaRows, status) {
-    return taxaRows.filter(taxon => taxon.inSummary && taxon.reportingStatus === status);
-};
-
-/** The atlas's tiles of the three groups of species **/
-
-saanich.statusColours = bioreportr.statusColours;
-
-/**
  * Find the period covered by the dated records.
  * @param {Object[]} obsRows - All records
  * @return {Object} The earliest and latest years, as `first` and `last` - infinite while there are no dated records
@@ -132,350 +87,6 @@ saanich.recordPeriod = function (obsRows) {
  * @return {Object} The analysis's `baselineYear` and `analysisYear`, as for `bioreportr.solowBayesFactor`
  */
 saanich.solowParams = period => ({baselineYear: period.first, analysisYear: period.last});
-
-// Each tile is a link which selects its group
-saanich.atlas.tiles = [{
-    status: "confirmed",
-    name: "Confirmed",
-    meaning: "Reported historically and found again since 2000."
-}, {
-    status: "unconfirmed",
-    name: "Historical",
-    meaning: "Reported in the past but not recorded since 2000."
-}, {
-    status: "new",
-    name: "Newly reported",
-    meaning: "Added new to the flora from recent reports."
-}];
-
-/**
- * Render the tile for one group of species.
- * @param {Object} tile - One entry of `saanich.atlas.tiles`
- * @param {TaxonRow[]} taxa - The species of this group
- * @param {Boolean} pressed - Whether the group is selected
- * @return {String} The markup for the tile
- */
-saanich.atlas.renderTile = function (tile, taxa, pressed) {
-    return `<button type="button" class="saanich-status-link saanich-status-tile" data-status="${tile.status}" aria-pressed="${pressed}" style="--tip-colour:${saanich.statusColours[tile.status]}">
-        <span class="saanich-tile-name">${tile.name}</span>
-        <span class="saanich-tile-count">${saanich.formatCount(taxa.length)} <small>species</small></span>
-        <span class="saanich-tile-meaning">${tile.meaning}</span>
-    </button>`;
-};
-
-/**
- * Render the tiles of the three groups of species, computed from the site's data.
- * @param {TaxonRow[]} taxaRows - All taxa
- * @param {String|null} selectedStatus - The selected group, if any
- * @return {String} The markup of the tiles
- */
-saanich.atlas.tilesMarkup = function (taxaRows, selectedStatus) {
-    return saanich.atlas.tiles.map(tile => saanich.atlas.renderTile(tile, saanich.taxaOfStatus(taxaRows, tile.status),
-        tile.status === selectedStatus)).join("");
-};
-
-saanich.atlas.sectionInserts = tiles => ({"saanich-status-tiles": tiles});
-
-/** The atlas's panel of the plant chosen in the checklist **/
-
-/**
- * Resolve the taxon chosen in the checklist's search, whose state held in the URL records only its id.
- * @param {Object<String, TaxonRow>} rowById - Taxon rows indexed by id
- * @param {Object|null} search - The search's state, a taxon row or a record holding its `id`
- * @return {TaxonRow|null} The taxon's row, or null if none is chosen
- */
-saanich.atlas.resolveTaxon = function (rowById, search) {
-    return search && rowById[search.id] || null;
-};
-
-saanich.atlas.statusLabels = {confirmed: "Confirmed", unconfirmed: "Historical", new: "New"};
-
-saanich.atlas.field = (label, value) => value ? `<dt>${label}:</dt> <dd>${hortis.dataTable.encode(value)}</dd>` : "";
-
-/**
- * Find the dated records of a taxon and of any taxa beneath it, in date order.
- * @param {Object[]} obsRows - All records
- * @param {Object<String, TaxonRow>} rowById - Taxon rows indexed by id
- * @param {TaxonRow|null} taxon - The selected taxon
- * @return {Object[]} The records found
- */
-saanich.atlas.taxonRecords = function (obsRows, rowById, taxon) {
-    const isWithin = id => {
-        let within = false;
-        for (let row = rowById[id]; row && !within; row = row.parent) {
-            within = row === taxon;
-        }
-        return within;
-    };
-    return taxon ? obsRows.filter(obs => obs.eventDate && isWithin(obs.iNaturalistTaxonId)).sort(saanich.obsDateComparator) : [];
-};
-
-/**
- * Render the panel of the plant or group chosen in the checklist - or, in the extirpation risk pane, of the plant chosen
- * for its analysis, which also gives its regional EP.
- * @param {TaxonRow|null} taxon - The chosen taxon
- * @param {Object[]} records - Its dated records
- * @param {Object<String, Object>} [historyById] - The history of the curatorial notes on each taxon, by id
- * @param {Object[]} [sources] - The sources of that history, oldest first - see bioreportr.curationForm.historyMarkup
- * @param {Object<String, CurationNote[]>} [byTaxon] - The notes added through the site on each taxon, by id
- * @param {Object<String, Object>} [annotations] - The annotations of records, by occurrenceID
- * @param {String} [context] - "atlas", or "solow" for the extirpation risk pane - which also names the panel's tabs,
- * so that those of the two panes are chosen apart
- * @return {String} The panel's markup, empty if no taxon with records is chosen
- */
-saanich.atlas.panelMarkup = function (taxon, records, historyById, sources, byTaxon, annotations, context = "atlas") {
-    let togo = "";
-    if (taxon && records.length > 0) {
-        togo = `<div class="mxcw-solow-taxon-pane saanich-atlas-taxon-pane">
-  <div class="mxcw-taxon-image">${hortis.renderTaxonImage(taxon.iNaturalistTaxonImage, taxon.id)}</div>
-  <div class="mxcw-taxon-info">
-    <div class="mxcw-taxon-name">${hortis.dataTable.encode((taxon.scientificName || taxon.iNaturalistTaxonName) + (taxon.commonName ? ` (${taxon.commonName})` : ""))}</div>
-    <div class="saanich-atlas-facts">
-      <dl class="mxcw-taxon-fields">
-        <dt>Date first seen:</dt> <dd>${bioreportr.eventDay(records[0].eventDate)}</dd>
-        <dt>Date last seen:</dt> <dd>${bioreportr.eventDay(fluid.peek(records).eventDate)}</dd>
-        <dt>Total records:</dt> <dd>${saanich.formatCount(records.length)}</dd>
-        ${saanich.atlas.field("Status", saanich.atlas.statusLabels[taxon.reportingStatus])}
-      ${context === "solow" ? saanich.atlas.field("Regional EP", taxon.solow_EP) : ""}
-      </dl>
-      ${bioreportr.georefNote(records)}
-    </div>
-    ${saanich.atlas.historyMarkup(records, context + "-" + taxon.id, saanich.atlas.notesMarkup(taxon, records, historyById, sources, byTaxon, annotations))}
-  </div>
-</div>`;
-    }
-    return togo;
-};
-
-/** The history of a plant's records, charted in the atlas's panel - only there, since the extirpation risk pane's panel
-    has no room for it beside its slider **/
-
-// The first decade charted, that of the earliest records of the flora, so that every plant is charted on the same span
-saanich.atlas.firstDecade = 1850;
-
-saanich.atlas.monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September",
-    "October", "November", "December"];
-
-/**
- * Count the records of a plant in each decade from `saanich.atlas.firstDecade` to the present, and in each month.
- * @param {Object[]} records - The plant's dated records
- * @param {Number} [thisYear] - The present year
- * @return {Object} Members `decades`, {decade, count}[], and `months`, Number[12]
- */
-saanich.atlas.history = function (records, thisYear = new Date().getFullYear()) {
-    const first = saanich.atlas.firstDecade;
-    const decades = [];
-    for (let decade = first; decade <= thisYear; decade += 10) {
-        decades.push({decade, count: 0});
-    }
-    const months = new Array(12).fill(0);
-    records.forEach(record => {
-        const [year, month] = String(record.eventDate).split("-").map(Number);
-        const index = Math.floor((year - first) / 10);
-        if (index >= 0 && index < decades.length) {
-            ++decades[index].count;
-        }
-        if (month >= 1 && month <= 12) {
-            ++months[month - 1];
-        }
-    });
-    return {decades, months};
-};
-
-/**
- * Render a row of columns, each showing its value on hovering.
- * @param {Object[]} columns - The columns, each with `value`, `title`, and `label`, shown beneath it if not empty
- * @param {String} kind - The kind of chart, which names its class
- * @return {String} The markup of the chart
- */
-saanich.atlas.columns = function (columns, kind) {
-    // On a square root scale, so that the few records of earlier decades still show beside the many of recent ones
-    const max = Math.sqrt(Math.max(...columns.map(column => column.value), 1));
-    const slots = columns.map(column => `<span class="saanich-history-slot" title="${column.title}">` +
-        `<span class="saanich-history-bar${column.value ? "" : " saanich-history-empty"}" style="height:${Math.sqrt(column.value) / max * 100}%"></span>` +
-        `<span class="saanich-history-label">${column.label}</span></span>`).join("");
-    return `<div class="saanich-history-chart saanich-history-${kind}">${slots}</div>`;
-};
-
-/**
- * Render the history of a plant's observations - how many were made in each decade, and in each month of the year - as
- * one chart at a time, chosen by its tabs. The tabs are radio buttons, so that they work without script, the chart shown
- * being picked by CSS - see the styles in saanich-story.vue.
- * @param {Object[]} records - The plant's dated records
- * @param {String} taxonId - The plant's id, naming its tabs apart from any other panel's
- * @return {String} The markup of the charts and their tabs
- */
-saanich.atlas.historyMarkup = function (records, taxonId, notes = "") {
-    const {decades, months} = saanich.atlas.history(records);
-    const count = n => saanich.formatCount(n) + (n === 1 ? " report" : " reports");
-    const decadeColumns = decades.map(({decade, count: n}) => ({value: n, title: `${decade}s: ${count(n)}`,
-        label: decade % 50 === 0 ? String(decade) : ""}));
-    const monthColumns = months.map((n, month) => ({value: n, title: `${saanich.atlas.monthNames[month]}: ${count(n)}`,
-        label: saanich.atlas.monthNames[month][0]}));
-    const name = "saanich-history-" + taxonId;
-    const tab = (kind, label, title, checked) => `<input type="radio" class="saanich-history-${kind}-tab" id="${name}-${kind}" name="${name}"${checked ? " checked" : ""}>` +
-        `<label for="${name}-${kind}" title="${title}">${label}</label>`;
-    return `<div class="saanich-history">
-      <div class="saanich-history-tabs" role="tablist">${tab("decade", "Decades", "Reports by decade", true)}${tab("month", "Months", "Reports by month", false)}${tab("notes", "Notes", "Annotation history", false)}</div>
-      ${saanich.atlas.columns(decadeColumns, "decades")}
-      ${saanich.atlas.columns(monthColumns, "months")}
-      <div class="saanich-history-notes">${notes}</div>
-    </div>`;
-};
-
-/**
- * Render the history of the annotations of a plant, shown by the Notes tab of the atlas's panel - any records set aside,
- * e.g. as planted, then its curatorial notes from the earliest account to those added through the site, as the History
- * tab of the curation pane shows them - see bioreportr.curationForm.historyMarkup.
- * @param {TaxonRow} taxon - The plant
- * @param {Object[]} records - Its records
- * @param {Object<String, Object>} historyById - The history of the curatorial notes on each taxon, by id
- * @param {Object[]} sources - The sources of that history, oldest first - see bioreportr.curationForm.historyMarkup
- * @param {Object<String, CurationNote[]>} byTaxon - The notes added through the site on each taxon, by id
- * @param {Object<String, Object>} annotations - The annotations of records, by occurrenceID
- * @return {String} The markup of the history
- */
-saanich.atlas.notesMarkup = function (taxon, records, historyById, sources, byTaxon, annotations) {
-    const setAside = bioreportr.solowAnnotationNote(records, annotations);
-    const history = bioreportr.curationForm?.historyMarkup ? bioreportr.curationForm.historyMarkup(taxon, historyById || {}, sources, byTaxon || {}) : "";
-    return setAside + history;
-};
-
-// The dated records of a plant, as the panel charts them
-saanich.atlas.dated = records => records.filter(record => record.eventDate);
-
-// Whether the panel is shown, on the atlas and the Protected Areas pane, is decided by
-// saanich.protectedAreas.panelVisible - see saanich-protectedPane.vue
-
-/** Summaries of the groups of species, shown on hovering over a tile or a row of the map's legend **/
-
-// The bars and headings of the summaries are those of the summary of a map cell - see bioreportr.cellTooltip
-saanich.statusTooltip.bars = bioreportr.tip.bars;
-
-
-saanich.statusTooltip.frame = (name, count, body) =>
-    `<div class="mxcw-tip-title">${name} <span>${saanich.formatCount(count)} species</span></div>${body}`;
-
-saanich.statusTooltip.heading = bioreportr.tip.heading;
-
-saanich.firstRecorder = record => (record.recordedBy || "Unknown").split(";")[0].trim() || "Unknown";
-
-saanich.statusTooltip.renderers = {
-    // When each historically reported species was first found again since 2000, and who found the most of them again
-    confirmed: function (taxa, byTaxon) {
-        const refound = taxa.map(taxon => (byTaxon.get(taxon.id) || []).slice().sort(saanich.obsDateComparator)
-            .find(record => parseInt(record.eventDate, 10) >= 2000)).filter(record => record);
-        const counts = {};
-        refound.forEach(record => {
-            const recorder = saanich.firstRecorder(record);
-            counts[recorder] = (counts[recorder] || 0) + 1;
-        });
-        const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
-        return saanich.statusTooltip.frame("Confirmed", taxa.length,
-            saanich.statusTooltip.heading("Observers who found the most species again") + saanich.statusTooltip.bars(top));
-    },
-    new: function (taxa, byTaxon) {
-        // Each species' first record in the atlas, among those made since 2000
-        const reports = taxa.map(taxon => ({taxon, first: (byTaxon.get(taxon.id) || []).slice().sort(saanich.obsDateComparator)[0]}))
-            .filter(report => report.first && parseInt(report.first.eventDate, 10) >= 2000);
-        const counts = {};
-        reports.forEach(report => {
-            const recorder = saanich.firstRecorder(report.first);
-            counts[recorder] = (counts[recorder] || 0) + 1;
-        });
-        const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
-        return saanich.statusTooltip.frame("Newly reported", taxa.length,
-            saanich.statusTooltip.heading("Observers with most added records since 2000") + saanich.statusTooltip.bars(top));
-    },
-    unconfirmed: function (taxa, byTaxon) {
-        const records = taxa.map(taxon => (byTaxon.get(taxon.id) || []).slice().sort(saanich.obsDateComparator)).filter(list => list.length > 0);
-        const withLocality = records.filter(list => list.some(record => record.locality)).length;
-        const withSpecimen = records.filter(list => list.some(record => /specimen/i.test(record.basisOfRecord))).length;
-        // As for the other groups, the observers to whom we owe the most of them - here, who last recorded each species
-        const counts = {};
-        records.forEach(list => {
-            const recorder = saanich.firstRecorder(fluid.peek(list));
-            counts[recorder] = (counts[recorder] || 0) + 1;
-        });
-        const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
-        return saanich.statusTooltip.frame("Historical", taxa.length,
-            saanich.statusTooltip.heading("Last recorded by") + saanich.statusTooltip.bars(top) +
-            `<div class="mxcw-tip-note">${withLocality} species have a recorded locality to search, and ${withSpecimen} have a specimen to consult.</div>`);
-    }
-};
-
-/**
- * Render the summary of a group of species. Each summary is rendered once, since it depends only on the site's data.
- * @param {TaxonRow[]} taxaRows - All taxa
- * @param {Map<String, Object[]>} byTaxon - Dated records indexed by taxon id
- * @param {Object<String, String>} cache - The summaries already rendered, by status
- * @param {String} status - The group's reporting status
- * @return {String|null} The summary's markup, or null if there is no such group
- */
-saanich.statusTooltip.render = function (taxaRows, byTaxon, cache, status) {
-    const renderer = saanich.statusTooltip.renderers[status];
-    if (renderer && !cache[status]) {
-        cache[status] = `<div class="saanich-tip saanich-tip-visible" style="--tip-colour:${saanich.statusColours[status]}">` +
-            renderer(saanich.taxaOfStatus(taxaRows, status), byTaxon) + "</div>";
-    }
-    return cache[status] || null;
-};
-
-saanich.statusTooltip.makeCache = () => ({});
-
-/**
- * Find which group of species an element in the page refers to, if any - a tile of the atlas or a row of the legend
- * of a map coloured by status.
- * @param {Element} element - The element under the pointer
- * @return {String|null} The group's reporting status, or null if there is none
- */
-saanich.statusTooltip.statusFor = function (element) {
-    const link = element.closest?.(".saanich-status-link");
-    const row = element.closest?.(".mxcw-map .mxcw-region-legend [data-selects=\"status\"]");
-    return link ? link.dataset.status : row ? row.dataset.key : null;
-};
-
-/**
- * Report the group of species under the pointer to the tooltip. The listeners are bound to the document, since the
- * tiles and the legend are rerendered beneath them.
- * @param {fluid.component} that - The tooltip, a hortis.withTooltip
- * @param {Document} dokkument - The document
- * @return {Object} A record of the listeners, to be supplied to `saanich.statusTooltip.unbind`
- */
-saanich.statusTooltip.bind = function (that, dokkument) {
-    const move = event => that.hoverAt(saanich.statusTooltip.statusFor(event.target), event);
-    const leave = event => {
-        if (!event.relatedTarget || !saanich.statusTooltip.statusFor(event.relatedTarget)) {
-            that.hoverAt(null);
-        }
-    };
-    dokkument.addEventListener("mousemove", move);
-    dokkument.addEventListener("mouseout", leave);
-    return {dokkument, move, leave};
-};
-
-saanich.statusTooltip.unbind = function (record) {
-    record.dokkument.removeEventListener("mousemove", record.move);
-    record.dokkument.removeEventListener("mouseout", record.leave);
-};
-
-/** The checklist's icons of reporting status **/
-
-/**
- * Decorate a checklist row with an icon of its taxon's reporting status, as hortis.blitzChecklistDecoration does, but
- * referring to the icons by the ids the story page gives them, which carry the prefix `imerss-i-`. Without it the
- * icons refer to symbols which don't exist, and show nothing.
- * @param {TaxonRow} row - The checklist's taxon row
- * @return {VNode|null} The icon, or null if the taxon has no reporting status
- */
-saanich.checklistDecoration = function (row) {
-    const node = hortis.blitzChecklistDecoration(row);
-    const use = node?.children.find(child => child.tag === "use");
-    if (use && !use.attrs.href.startsWith("#imerss-i-")) {
-        use.attrs.href = "#imerss-i-" + use.attrs.href.substring(1);
-    }
-    return node;
-};
 
 /** The markers of records on the map **/
 
@@ -504,159 +115,13 @@ saanich.obsGridLegendMarkup = function (...args) {
         .replace(/ observations"/g, " records\"");
 };
 
-/** The camera of a pane opened from one without a map **/
-
-// Whether the map was shown by the previous pane, by map
-saanich.mapWasShown = new WeakMap();
-
-/**
- * Place the map on the active pane's camera again once it has its full size, when the previous pane hid it - e.g. on
- * moving from Lost Plants to the Atlas. The story page moves the camera as the pane opens, when the map is still without
- * size, which leaves it centred in the wrong place once the map has grown. Harvey's pane frames itself - see
- * saanich.remembering.frame.
- * @param {maplibregl.Map} map - The story's map, once ready
- * @param {Object} mapData - The story's map data, with each pane's camera
- * @param {Object} activePane - The active pane's settings, with its `paneKey` and `visibleMap`
- */
-saanich.recentre = function (map, mapData, activePane) {
-    if (!map || !activePane) {
-        return;
-    }
-    const wasShown = saanich.mapWasShown.get(map);
-    saanich.mapWasShown.set(map, !!activePane.visibleMap);
-    const camera = mapData?.panes?.[activePane.paneKey];
-    if (wasShown === false && activePane.visibleMap && camera?.center && activePane.paneKey !== "Remembering") {
-        hortis.libreMap.afterLayout(map, () => {
-            map.resize();
-            map.jumpTo({center: camera.center, zoom: camera.zoom});
-        });
-    }
-};
-
-/** The species of the Community Science pane, which open on the Atlas **/
-
-// The iNaturalist project of the Community Science pane's panels - see paneOverrides in saanich-story.vue
-saanich.inatSpecies = {projectId: 303782, lookup: null};
-
-/**
- * Look up the iNaturalist taxa of the species shown by the Community Science pane's panels, which name each by its
- * common name alone, by the same query the panels make. Made once, on the first click.
- * @param {Window} window - The window holding the story page
- * @return {Promise<Map<String, Object>>} Map of lower-cased common name to the taxon's `id` and scientific `name`
- */
-saanich.inatSpecies.byName = function (window) {
-    if (!saanich.inatSpecies.lookup) {
-        const {projectId} = saanich.inatSpecies;
-        saanich.inatSpecies.lookup = window.fetch(`https://api.inaturalist.org/v1/observations/species_counts?verifiable=true&project_id=${projectId}&per_page=500`)
-            .then(response => response.json())
-            .then(data => new Map(data.results.filter(result => result.taxon.preferred_common_name)
-                .map(result => [result.taxon.preferred_common_name.toLowerCase(), {id: String(result.taxon.id), name: result.taxon.name}])));
-    }
-    return saanich.inatSpecies.lookup;
-};
-
-/**
- * Find the atlas's taxon for a species of iNaturalist - the same taxon, or else the atlas's taxon of that scientific name
- * or one beneath it, e.g. Pseudotsuga menziesii var. menziesii for iNaturalist's Pseudotsuga menziesii.
- * @param {Object<String, TaxonRow>} rowById - The atlas's taxa
- * @param {Object} taxon - The iNaturalist taxon, with its `id` and scientific `name`
- * @return {TaxonRow|undefined} The atlas's taxon, preferring one of its summary
- */
-saanich.inatSpecies.atlasRow = function (rowById, taxon) {
-    if (rowById[taxon.id]) {
-        return rowById[taxon.id];
-    }
-    const named = Object.values(rowById).filter(row => {
-        const scientific = row.scientificName || "";
-        return scientific === taxon.name || scientific.startsWith(taxon.name + " ");
-    });
-    return named.find(row => row.inSummary) || named[0];
-};
-
-/**
- * Open the Atlas on the species of a card of the Community Science pane, if it is one of the atlas's taxa.
- * @param {bioreportr.storyPage} storyPage - The story page
- * @param {HTMLElement} card - The card clicked
- * @param {Window} window - The window holding the story page
- */
-saanich.inatSpecies.open = function (storyPage, card, window) {
-    const name = card.querySelector(".inat-observation-label-title")?.textContent.trim().toLowerCase();
-    if (name) {
-        saanich.inatSpecies.byName(window).then(byName => {
-            const taxon = byName.get(name);
-            const row = taxon && saanich.inatSpecies.atlasRow(storyPage.taxa.rowById, taxon);
-            if (row) {
-                window.location.hash = "pane:Status&taxon:" + row.id;
-            }
-        }, error => console.error("Could not look up the species of the Community Science pane", error));
-    }
-};
-
-/**
- * Whether a card of the Community Science pane stands for a species, as do those of its "Most common" tab, rather than
- * an observation.
- * @param {Element} card - The card
- * @return {Boolean} `true` if the card is shown under the "Most common" tab
- */
-saanich.inatSpecies.isSpeciesCard = function (card) {
-    const tab = [...card.closest(".mxcw-inat-components").querySelectorAll("li")].find(item => /selected/.test(item.className));
-    return !!tab && tab.textContent.trim() === "Most common";
-};
-
-// The story pages whose Community Science cards already open their species
-saanich.inatSpecies.bound = new WeakSet();
-
-/**
- * Listen for clicks on the cards of the Community Science pane, which the iNaturalist panels render outside the story
- * page's own handling of clicks in its panes.
- * @param {bioreportr.storyPage} storyPage - The story page
- * @param {Window} window - The window holding the story page
- */
-saanich.inatSpecies.bind = function (storyPage, window) {
-    if (!saanich.inatSpecies.bound.has(storyPage)) {
-        saanich.inatSpecies.bound.add(storyPage);
-        // Caught as it descends, before the card's own handler. Only the cards of "Most common" are species, whose own link
-        // to iNaturalist is broken, and open the atlas instead - those of "Recent" and "Most favourited" are observations,
-        // whose own handler opens them on iNaturalist in another window
-        window.document.addEventListener("click", event => {
-            const card = event.target.closest?.(".mxcw-inat-components article");
-            if (card && saanich.inatSpecies.isSpeciesCard(card)) {
-                event.preventDefault();
-                event.stopPropagation();
-                saanich.inatSpecies.open(storyPage, card, window);
-            }
-        }, true);
-    }
-};
-
-/** Clicks and the opening of the extirpation risk pane **/
-
-/**
- * Handle a click within a pane - on a tile of the atlas, which selects or clears its group of species, or on a plant of
- * the gallery, which opens the extirpation risk pane on it.
- * @param {bioreportr.storyPage} storyPage - The story page
- * @param {Event} event - The click
- * @param {String} targetPane - The key of the pane listing a species' records
- * @param {Window} window - The window holding the story page
- */
-saanich.paneClick = function (storyPage, event, targetPane, window) {
-    const tile = event.target.closest(".saanich-status-link");
-    const card = event.target.closest(".saanich-lost-card");
-    if (tile) {
-        const status = tile.dataset.status;
-        storyPage.selectedStatus = storyPage.selectedStatus === status ? null : status;
-    } else if (card) {
-        saanich.lostPlants.showTaxon(storyPage, card.dataset.taxonId, targetPane, event.target.ownerDocument, window);
-    }
-};
-
 // The story pages whose extirpation risk pane has been opened on its top species
 saanich.topSpeciesSelected = new WeakSet();
 
 /**
  * The first time the extirpation risk pane is shown with real data, select the species at the top of its list unless
- * one has already been chosen, and have the map fitted to its records - see `saanich.fitToTaxon`.
- * @param {bioreportr.storyPage} storyPage - The story page, whose `solowFitTaxon` is written with a request to fit the species
+ * one has already been chosen - the map is then fitted to its records, see bioreportr.atlas.fitToTaxon.
+ * @param {bioreportr.storyPage} storyPage - The story page
  * @param {Boolean} isShown - Whether the pane is showing
  * @param {Boolean} loaded - `true` once the page's data is real rather than placeholders
  * @param {Object[]} displayRows - The rows of the species list, in their displayed order
@@ -669,28 +134,16 @@ saanich.selectTopSpecies = function (storyPage, isShown, loaded, displayRows) {
             const table = storyPage.solowTaxa.taxaTable;
             if (!table.selectedRow) {
                 table.selectedRow = displayRows[0];
-                storyPage.solowFitTaxon = {taxon: displayRows[0]};
             }
         });
     }
 };
 
 /**
- * Fit the map to the records of a taxon which have coordinates. Each request is a fresh object, so that the same taxon
- * may be fitted again after the map has moved.
- * @param {maplibregl.Map} map - The story's map, once its style has applied
- * @param {Object|null} request - The request, holding the taxon's row as `taxon`, or null if the map is not to be fitted
- * @param {Object[]} obsRows - All records
- * @param {Number} duration - The duration in milliseconds of the map's smooth move to the records
+ * Compute the classes of the story's left pane - those of the opening timeline, and while the pane in memory of Harvey
+ * Janszen is shown, its own.
+ * @param {String} tracesClass - The classes of the timeline - see bioreportr.traces.leftPaneClass
+ * @param {Boolean} rememberingActive - Whether the pane in memory of Harvey Janszen is shown
+ * @return {String} The classes
  */
-saanich.fitToTaxon = function (map, request, obsRows, duration) {
-    const taxon = request?.taxon;
-    // The map may only just have been shown, in a pane which hid it
-    map.resize();
-    const points = taxon ? bioreportr.solowObsForTaxon(obsRows, taxon).map(bioreportr.obsPoint).filter(point => point) : [];
-    if (points.length > 0) {
-        const bounds = points.reduce((box, point) => box.extend(point), new maplibregl.LngLatBounds(points[0], points[0]));
-        map.fitBounds(bounds, {padding: 80, maxZoom: 11, duration, essential: true});
-    }
-};
-
+saanich.leftPaneClass = (tracesClass, rememberingActive) => [tracesClass, rememberingActive ? "saanich-remembering-active" : ""].filter(Boolean).join(" ");

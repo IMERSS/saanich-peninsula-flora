@@ -4,6 +4,8 @@
 // Build the material of a story map from the HTML knitted from its R Markdown panes - the step between knitting and
 // rendering the story page statically with Infusion 6's hydrate.js. It writes small files which the story page's
 // Single File Components fetch:
+//   - <out>/bioreportr-storyData.vue - the layer bioreportr.storyData, naming the story's data files as bioreportr.yaml
+//     names them - see bioreportr.storyBuild.writeStoryData
 //   - <out>/panes.json - one record per pane, in order of the `weight` of its front matter, holding its front matter,
 //     its `paneKey`, the name of its file, and any members of its <viz_data>/<paneKey>-mapData.json
 //   - <out>/<paneKey>.html - the section of each pane, without the pandoc page around it, and without the data of
@@ -316,6 +318,40 @@ bioreportr.storyBuild.removeStale = function (outDir, panes) {
 };
 
 /**
+ * Write the layer of the story page naming its data files, bioreportr.storyData, from the project's bioreportr.yaml, which
+ * names them once for every part of the project which reads them - its R scripts read it too, through scripts/project.R
+ * and R/build.R. The files are those published in static/local/data/tabular by R/build.R.
+ * @param {String} projectDir - The project's directory, holding bioreportr.yaml
+ * @param {String} outDir - The directory to which the material is written, from which the story page imports the layer
+ * @return {Object} The members of the layer
+ */
+bioreportr.storyBuild.writeStoryData = function (projectDir, outDir) {
+    const {data} = yaml.load(fs.readFileSync(path.join(projectDir, "bioreportr.yaml"), "utf8"));
+    const file = name => name ? JSON.stringify(`../local/data/tabular/${name}`) : "null";
+    const members = {
+        obsFile: file(data.labels),
+        regionIndirectionFile: file(data.regionIndirection),
+        taxaFile: file(data.summary),
+        curationHistoryFile: file(data.curationHistory),
+        recordAnnotationsFile: file(data.recordAnnotations)
+    };
+    const text = `<script>
+"use strict";
+
+// Written by src/js/storyBuild.js from bioreportr.yaml - do not edit. The story's data files, relative to the story page,
+// laid over its story page by naming bioreportr.storyData in the $layers of its <project>-story.vue
+
+fluid.def("bioreportr.storyData", {
+    $layers: "fluid.component",
+${Object.entries(members).map(([key, value]) => `    ${key}: ${value}`).join(",\n")}
+});
+</script>
+`;
+    bioreportr.storyBuild.write(path.join(outDir, "bioreportr-storyData.vue"), text);
+    return members;
+};
+
+/**
  * Build the material of a story map.
  * @param {String} contentDir - The directory holding the panes' .Rmd files and the .html knitted from them
  * @param {String} vizDataDir - The directory holding the panes' map data files
@@ -350,6 +386,7 @@ bioreportr.storyBuild.build = function (contentDir, vizDataDir, outDir) {
         .forEach(source => assets.add(source.url));
     bioreportr.storyBuild.copyAssets(contentDir, outDir, assets);
     bioreportr.storyBuild.removeStale(outDir, panes);
+    bioreportr.storyBuild.writeStoryData(projectDir, outDir);
     bioreportr.storyBuild.write(path.join(outDir, "panes.json"), JSON.stringify(panes, null, 2) + "\n");
     bioreportr.storyBuild.write(path.join(outDir, "mapData.json"), JSON.stringify(bioreportr.storyBuild.composeMapData(mapData)) + "\n");
     return panes;

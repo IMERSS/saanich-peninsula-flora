@@ -2022,3 +2022,45 @@ body {
     margin-bottom: 1.1rem;
     text-align: center;
 }
+
+/* ── Emphasis within the text of a story's panes ── */
+
+/* Directions in a pane's text, e.g. of how to use the Protected Areas pane, set apart beneath it */
+.mxcw-howto {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(168, 200, 208, 0.35);
+    color: #c4dbe2;
+    font-size: var(--story-body);
+    line-height: 1.45;
+}
+
+.mxcw-howto p,
+.mxcw-howto ol {
+    margin: 0 0 var(--story-gap);
+}
+
+.mxcw-howto ol {
+    padding-left: 1.5em;
+}
+
+.mxcw-howto li {
+    margin-bottom: 4px;
+}
+
+.mxcw-howto em,
+.mxcw-howto strong {
+    color: #FDF2CE;
+}
+
+/* A sentence of a pane's text called out */
+.mxcw-callout {
+    color: #FDF2CE;
+    font-weight: 700;
+}
+
+/* The Community Science pane's lead-in, callout and project link are emphasised alike: cream, never bold */
+.mxcw-paneKey-TopContributions .mxcw-sectionColumn > p .mxcw-callout {
+    color: #FDF2CE;
+    font-weight: 400;
+}

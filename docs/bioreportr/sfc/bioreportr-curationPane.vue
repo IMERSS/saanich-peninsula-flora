@@ -94,7 +94,7 @@ fluid.def("bioreportr.curationPane", {
 Peninsula! Please help us to improve the accuracy of the data presented
 here by adding curatorial notes regarding the provenance, taxonomy, or
 georeferencing of records.</p>
-<p><span class="saanich-callout">Click on any taxon in the checklist
+<p><span class="mxcw-callout">Click on any taxon in the checklist
 below</span> to add a curatorial note. You can also choose a taxon from
 any other part of the atlas, through the speech bubble beside its
 name.</p>

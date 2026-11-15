@@ -1,25 +1,29 @@
 <fluid-import src="../../bioreportr/sfc/bioreportr-storyPage.vue"></fluid-import>
+<!-- The story's data files, as its bioreportr.yaml names them - written by src/js/storyBuild.js -->
+<fluid-import src="../../story/bioreportr-storyData.vue"></fluid-import>
 <!-- The Atlas's filters of records by time period - its filter by locality is a collector filter over another field -->
 <fluid-import src="saanich-timePeriodFilter.vue"></fluid-import>
 <!-- The iNaturalist panels of the Top Contributions pane -->
 <script src="%@imerss/inat-components/dist/standalone.min.js" fluid-client data-fl-scope="global"></script>
-<!-- The three panes of this story alone, each rendering its section from its own template - see paneComponent in
-     the front matter of content/story/LostPlants.Rmd, Traces.Rmd and Remembering.Rmd -->
-<fluid-import src="saanich-tracesPane.vue"></fluid-import>
-<fluid-import src="saanich-lostPlantsPane.vue"></fluid-import>
+<!-- The atlas's panel, tiles and tooltips, and the panes shared with the other bioReportR stories, each rendering its
+     section from its own template - see paneComponent in the front matter of content/story/Traces.Rmd, LostPlants.Rmd
+     and Protected.Rmd -->
+<fluid-import src="../../bioreportr/sfc/bioreportr-atlasPanel.vue"></fluid-import>
+<fluid-import src="../../bioreportr/sfc/bioreportr-storyPageTraces.vue"></fluid-import>
+<fluid-import src="../../bioreportr/sfc/bioreportr-storyPageLostPlants.vue"></fluid-import>
+<fluid-import src="../../bioreportr/sfc/bioreportr-storyPageProtectedAreas.vue"></fluid-import>
+<!-- The pane of this story alone, in memory of Harvey Janszen - see content/story/Remembering.Rmd -->
 <fluid-import src="saanich-rememberingPane.vue"></fluid-import>
-<fluid-import src="saanich-protectedPane.vue"></fluid-import>
-<!-- The atlas's tiles, panel and tooltips and the rest particular to this story, which build on the story page's own
-     summaries in story.js -->
+<!-- The rest particular to this story, which builds on the story page's own summaries in story.js -->
 <script src="../../bioreportr/js/story.js"></script>
 <script src="../js/saanich.js"></script>
 <script>
 "use strict";
 
-// The story page of the Saanich Peninsula vascular plant report, with its atlas - see static/local/js/saanich.js - and
-// the three panes of this story alone, each defined by a Single File Component of its own beside this one: the opening
-// timeline, In Memory of Plants, the gallery of lost plants, and the pane in memory of Harvey Janszen. Its paths are
-// relative to the story page, served at /story/, whose panes are written by src/js/storyBuild.js into static/story
+// The story page of the Saanich Peninsula vascular plant report. Its atlas and the panes it shares with the other
+// bioReportR stories are layers of the story page defined in static/bioreportr/sfc, given this story's settings here;
+// the pane in memory of Harvey Janszen is this story's alone, defined beside this file. Its paths are relative to the
+// story page, served at /story/, whose panes are written by src/js/storyBuild.js into static/story
 
 fluid.registerNamespace("saanich");
 
@@ -30,25 +34,12 @@ saanich.weibullCount = (x, maxCount) => maxCount < 200 ? x : 1 - Math.exp(-Math.
 saanich.inverseWeibullCount = (x, maxCount) => maxCount < 200 ? x : 0.012 * Math.pow(-Math.log(1 - x), 1 / 0.5);
 
 fluid.def("saanich.story", {
-    $layers: "bioreportr.storyPage",
-    obsFile: "../local/data/tabular/Saanich_Tracheophyta_ultimate-catalogue_2026-08-20-selected-labels.csv",
-    obsPlaceholderFile: "../local/data/tabular/placeholder/Saanich_Tracheophyta_ultimate-catalogue_2026-08-20-selected-labels.csv",
-    taxaFile: "../local/data/tabular/Saanich_Tracheophyta_ultimate-summary_2026-08-20-prepared-taxa.csv",
-    taxaPlaceholderFile: "../local/data/tabular/placeholder/Saanich_Tracheophyta_ultimate-summary_2026-08-20-prepared-taxa.csv",
-    regionIndirectionFile: "../local/data/tabular/Saanich_Tracheophyta_ultimate-catalogue_2026-08-20-selected-regionIndirection.csv",
-    regionIndirectionPlaceholderFile: "../local/data/tabular/placeholder/Saanich_Tracheophyta_ultimate-catalogue_2026-08-20-selected-regionIndirection.csv",
+    $layers: ["bioreportr.storyPage", "bioreportr.storyData", "bioreportr.atlasPanel", "bioreportr.storyPageTraces", "bioreportr.storyPageLostPlants",
+        "bioreportr.storyPageProtectedAreas"],
     gridResolution: 1000,
     // The regions which may filter the records - a category of protected area, or all the KBAs, is matched through rows
     // of the region index giving each area or KBA the label of its group, see GroupField in scripts/intersectShapes.R
     regionFilterFieldNames: ["BEC", "ProtectedArea", "KBA"],
-    // The Protected Areas pane may also select the native species reported in no protected area, and some of the
-    // species of a region - see saanich.protectedAreas.regionFilter
-    regionFilter: {
-        $component: {
-            doFilter: `$method:saanich.protectedAreas.regionFilter({0}:obsRows, {1}:filterState, {storyPage}.regionIndirection.rows,
-                {storyPage}.regionFilterFieldNames, {storyPage}.protectedAreas.taxonSets, {storyPage}.activePaneKey)`
-        }
-    },
     // The period of the records, over which the extirpation risk analysis always runs
     recordPeriod: "$compute:saanich.recordPeriod({self}.obsRows)",
     solowParams: "$compute:saanich.solowParams({self}.recordPeriod)",
@@ -103,8 +94,7 @@ fluid.def("saanich.story", {
         {key: "occurrenceID", label: "Occurrence ID"},
         {key: "gbifID", label: "GBIF ID"}
     ],
-    // Records indexed by taxon, and the taxa of the summary with their counts of records with and without coordinates
-    byTaxon: "$compute:saanich.groupRecords({self}.obsRows)",
+    // The taxa of the summary with their counts of records with and without coordinates
     summaryTaxa: "$compute:bioreportr.summaryTaxaRows({self}.taxa.allRows)",
     annotatedTaxa: "$compute:saanich.annotateGeoref({self}.summaryTaxa, {self}.obsRows)",
     solowTaxa: {
@@ -116,23 +106,11 @@ fluid.def("saanich.story", {
             }
         }
     },
-    // The gallery of "lost" plants shown beside the Lost Plants pane - see saanich-lostPlantsPane.vue
-    lostPlants: {
-        $component: {
-            $layers: "saanich.lostPlants"
-        }
-    },
-    paneMarkup: "$compute:saanich.paneMarkup({self}.lostPlants.markup)",
     // The Atlas's records may also be narrowed by the places named in them and by a span of years, filters placed by the
     // slots of the same names in the story page's filter panel
-    // The species of the Community Science pane open on the Atlas - see saanich.inatSpecies
-    inatSpeciesClick: "$effect:saanich.inatSpecies.bind({self}, {global})",
-    // The checklist shows each species' reporting status by an icon - see saanich.checklistDecoration
-    checklist: {
-        $component: {
-            decorate: "saanich.checklistDecoration"
-        }
-    },
+    // The species of the Community Science pane, which open on the Atlas, are those of the iNaturalist project of its
+    // panels - see paneOverrides below
+    inatSpeciesQuery: {project_id: 303782},
     // The records come from collectors, observers and others alike, so the recorder filter does not call them volunteers
     collectorFilter: {
         $component: {
@@ -162,10 +140,6 @@ fluid.def("saanich.story", {
             selectedIndex: 2
         }
     },
-    // The annotations of records, e.g. of planted populations, applied by scripts/apply_record_annotations.R
-    recordAnnotationsFile: "../local/data/tabular/Saanich_Tracheophyta_record-annotations_2026-08-20.csv",
-    // The history of the curatorial notes on each taxon, prepared by scripts/prepare_curation_history.R
-    curationHistoryFile: "../local/data/tabular/Saanich_Tracheophyta_curation-history_2026-08-20.csv",
     // The sources of that history, by the column of the file holding each, oldest first
     curationHistorySources: [
         {field: "original", source: "Szczawinski & Harrison", label: "Original account"},
@@ -173,57 +147,9 @@ fluid.def("saanich.story", {
         {field: "fpnw", source: "Flora of the Pacific Northwest", label: "Remarks"},
         {field: "critical", source: "Reviewers", label: "Critical notes"}
     ],
-    // The tiles of the atlas's three groups of species, placed in its section
-    atlasTiles: "$compute:saanich.atlas.tilesMarkup({self}.taxa.allRows, {self}.selectedStatus)",
-    sectionInserts: "$compute:saanich.atlas.sectionInserts({self}.atlasTiles)",
-    paneClick: "$method:saanich.paneClick({self}, {0}:event, Solow, {global})",
-    // The atlas's panel of the plant or group chosen in the checklist
-    checklistTaxon: "$compute:saanich.atlas.resolveTaxon({self}.taxa.rowById, {self}.checklist.search.filterState)",
-    atlasRecords: "$compute:saanich.atlas.taxonRecords({self}.obsRows, {self}.taxa.rowById, {self}.checklistTaxon)",
-    atlasPanelMarkup: `$compute:saanich.atlas.panelMarkup({self}.checklistTaxon, {self}.atlasRecords,
-        {self}.curation.historyById, {self}.curationHistorySources, {self}.curation.byTaxon, {self}.recordAnnotations)`,
-    // The Protected Areas pane shows a smaller panel of the plant, giving its records within the selected region - see
-    // saanich-protectedPane.vue
-    taxonPanel: {
-        $component: {
-            markup: "$compute:saanich.protectedAreas.choosePanel({storyPage}.activePaneKey, {storyPage}.atlasPanelMarkup, {storyPage}.protectedAreas.panelMarkup)"
-        }
-    },
-    taxonPanelVisible: "$compute:saanich.protectedAreas.panelVisible({self}.taxonPanel.markup, {self}.activePaneKey)",
-    // The extirpation risk pane shows the same panel of its chosen plant, with its regional EP
-    solowTaxonPanel: {
-        $component: {
-            markup: `$compute:saanich.atlas.panelMarkup({storyPage}.solowTaxa.selectedTaxon, {storyPage}.solowDatedObs,
-                {storyPage}.curation.historyById, {storyPage}.curationHistorySources, {storyPage}.curation.byTaxon, {storyPage}.recordAnnotations, solow)`
-        }
-    },
-    solowDatedObs: "$compute:saanich.atlas.dated({self}.solowTaxonObs)",
-    // Summaries of each group of species, shown when hovering over its tile in the atlas or its row of the map's legend
-    statusTooltip: {
-        $component: {
-            $layers: "hortis.withTooltip",
-            cache: "$compute:saanich.statusTooltip.makeCache({storyPage}.taxa.allRows)",
-            renderTooltip: "$method:saanich.statusTooltip.render({storyPage}.taxa.allRows, {storyPage}.byTaxon, {self}.cache, {0}:status)",
-            hover: {
-                $bindable: {
-                    bind: "saanich.statusTooltip.bind({self}, {global}.document)",
-                    unbind: "saanich.statusTooltip.unbind({boundValue})"
-                }
-            }
-        }
-    },
     // The extirpation risk pane opens on whichever species is at the top of its list, with the map fitted to its records
     solowShown: "$compute:bioreportr.storyPage.isActive({self}.activePaneKey, Solow)",
     selectTopSpecies: "$effect:saanich.selectTopSpecies({self}, {self}.solowShown, {self}.loaded, {self}.solowTaxa.taxaTable.displayRows)",
-    solowFitTaxon: null,
-    fitToTaxon: "$effect:saanich.fitToTaxon({self}.map.readyMap, {self}.solowFitTaxon, {self}.obsRows, {self}.map.zoomDuration)",
-    // The opening pane, in memory of plants: their key moments appear across the map as a timeline plays - see
-    // saanich-tracesPane.vue
-    traces: {
-        $component: {
-            $layers: "saanich.traces"
-        }
-    },
     // The final pane, in memory of Harvey Janszen, shows the areas of his checklists on the map, described on hover - see
     // saanich-rememberingPane.vue
     remembering: {
@@ -231,24 +157,16 @@ fluid.def("saanich.story", {
             $layers: "saanich.remembering"
         }
     },
-    // The Protected Areas pane selects categories from its chart and individual areas from the map, describing each
-    // area on hover - see saanich-protectedPane.vue
-    protectedAreas: {
-        $component: {
-            $layers: "saanich.protectedAreas"
-        }
-    },
-    // A pane opened from one without a map is placed on its camera once the map has its size - see saanich.recentre
-    // On a phone one finger scrolls the page past the map, and two move the map - see saanich.phoneGestures
-    phoneGestures: "$effect:saanich.phoneGestures({self}.map.readyMap, {global})",
-    recentre: "$effect:saanich.recentre({self}.map.readyMap, {self}.mapData, {self}.activePane)",
-    leftPaneClass: "$compute:saanich.traces.leftPaneClass({self}.traces.active, {self}.traces.paused, {self}.traces.scrubbing, {self}.remembering.active)",
+    // The classes of the left pane - those of the opening timeline, and while Harvey's pane is shown, its own
+    leftPaneClass: "$compute:saanich.leftPaneClass({self}.traces.leftPaneClass, {self}.remembering.active)",
     paneOverrides: {
         Traces: {
             visibleMap: true
         },
         Remembering: {
-            visibleMap: true
+            visibleMap: true,
+            // Harvey's pane frames the areas of his checklists itself - see saanich.remembering.frame
+            framesItself: true
         },
         Solow: {
             layers: ["reknitr.solowPaneHandler"]
@@ -276,12 +194,6 @@ fluid.def("saanich.story", {
         $component: {
             $layers: ["hortis.libreMap.withTiles", "hortis.libreMap.esriTiles"],
             countTransform: "saanich.weibullCount",
-            // The Protected Areas pane shows the grid of the native species outside protected areas when they are selected
-            gridVisible: "{storyPage}.protectedAreas.gridVisible",
-            // A selection of some of the species of a region, made by the figures of the Protected Areas pane, outlines
-            // and marks the region itself
-            highlightRegion: "$effect:bioreportr.storyMap.highlightRegion({self}.readyMap, {storyPage}.protectedAreas.baseRegion, {storyPage}.mapData)",
-            legendRowsMarkup: "$compute:bioreportr.storyMap.legendMarkup({self}.legendRows, {storyPage}.selectedStatus, {storyPage}.protectedAreas.baseRegion)",
             // A selected record hides the grid only while few enough records are in view - see saanich.showMarkers
             showMarkers: "$compute:saanich.showMarkers({self}.gridVisible, {self}.viewportObs.inView, {self}.markerThreshold, {self}.selectedRecord)",
             inverseCountTransform: "saanich.inverseWeibullCount",
@@ -291,253 +203,4 @@ fluid.def("saanich.story", {
         }
     }
 });
-
-/**
- * On a phone, where the map spans the screen and the page scrolls past it, let one finger scroll the page and two move
- * the map, as MapLibre's cooperative gestures do, so that the map can't trap the reader. Larger screens are unchanged.
- * @param {maplibregl.Map} map - The story's map, once ready
- * @param {Window} window - The window holding the story page
- */
-saanich.phoneGestures = function (map, window) {
-    if (map && map.cooperativeGestures) {
-        const phone = window.matchMedia("(max-width: 767.98px)");
-        const apply = () => phone.matches ? map.cooperativeGestures.enable() : map.cooperativeGestures.disable();
-        apply();
-        phone.addEventListener("change", apply);
-    }
-};
 </script>
-
-<style>
-/* The atlas's panel of the chosen plant: its facts, and beside them a chart of the history of its observations, by
-   decade or by month as chosen by the chart's tabs - see saanich.atlas.historyMarkup. The extirpation risk pane's panel,
-   which shares its other styles, has no chart. On a narrow panel the chart falls beneath the facts */
-/* The plant's name runs across the top of the panel's column, and beneath it its facts and the chart sit side by side,
-   the chart filling the height left to it. Where the column is too narrow for both, the chart falls beneath the facts */
-.saanich-atlas-taxon-pane .mxcw-taxon-info {
-    display: grid;
-    grid-template-columns: max-content minmax(0, 1fr);
-    grid-template-rows: auto minmax(0, 1fr);
-    gap: 4px 20px;
-    padding-right: var(--story-gap);
-}
-
-.saanich-atlas-taxon-pane .mxcw-taxon-name {
-    grid-column: 1 / -1;
-    padding-bottom: 4px;
-}
-
-@container (max-width: 380px) {
-    .saanich-atlas-taxon-pane .mxcw-taxon-info {
-        grid-template-columns: minmax(0, 1fr);
-        grid-template-rows: auto;
-    }
-}
-
-/* On a phone the chart always falls beneath the facts, the panel's column scrolling to it */
-@media (max-width: 767.98px) {
-    .saanich-atlas-taxon-pane .mxcw-taxon-info {
-        grid-template-columns: minmax(0, 1fr);
-        grid-template-rows: auto;
-    }
-
-    .saanich-atlas-taxon-pane .saanich-history-chart,
-    .saanich-atlas-taxon-pane .saanich-history-notes {
-        min-height: 90px;
-    }
-}
-
-/* The photo yields room to the chart, which it does not share in the extirpation risk pane's panel */
-.saanich-atlas-taxon-pane .mxcw-taxon-image {
-    max-width: 34%;
-}
-
-.saanich-atlas-facts {
-    min-width: 0;
-}
-
-/* The column is as wide as the facts - a note beneath them wraps within it rather than widening it */
-.saanich-atlas-facts > :not(dl) {
-    contain: inline-size;
-}
-
-/* Dates and counts are kept whole */
-.saanich-atlas-facts dd {
-    white-space: nowrap;
-}
-
-.saanich-history {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    min-height: 0;
-}
-
-.saanich-history-tabs {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 4px;
-    margin-bottom: 8px;
-}
-
-.saanich-history-heading {
-    flex: 0 0 100%;
-    margin-bottom: 2px;
-    color: #5a7680;
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
-
-/* The tabs are radio buttons, hidden behind their labels */
-.saanich-history-tabs input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-}
-
-.saanich-history-tabs label {
-    padding: 1px 9px;
-    border: 1px solid #c9d6dc;
-    border-radius: 999px;
-    color: #4b778f;
-    font-size: 12px;
-    cursor: pointer;
-}
-
-.saanich-history-tabs input:checked + label {
-    border-color: #2f7f8f;
-    background: #2f7f8f;
-    color: #fff;
-}
-
-.saanich-history-tabs input:focus-visible + label {
-    outline: 2px solid #4b778f;
-    outline-offset: 1px;
-}
-
-.saanich-history:has(.saanich-history-decade-tab:checked) .saanich-history-months,
-.saanich-history:has(.saanich-history-month-tab:checked) .saanich-history-decades,
-.saanich-history:has(.saanich-history-notes-tab:checked) .saanich-history-chart,
-.saanich-history:not(:has(.saanich-history-notes-tab:checked)) .saanich-history-notes {
-    display: none;
-}
-
-/* The Notes tab's history of the plant's annotations, scrolling within the room the charts take */
-.saanich-history-notes {
-    flex: 1 1 auto;
-    min-height: 70px;
-    max-height: 150px;
-    overflow-y: auto;
-    padding-right: 4px;
-    color: #1f2a30;
-    font-size: 12px;
-    line-height: 1.35;
-}
-
-.saanich-history-notes .mxcw-curation-history {
-    margin: 0 0 0 6px;
-    padding: 0 0 0 14px;
-    border-left: 2px solid rgba(90, 118, 128, 0.35);
-    list-style: none;
-}
-
-.saanich-history-notes .mxcw-curation-history-entry {
-    position: relative;
-    margin: 0 0 8px;
-    list-style: none;
-}
-
-.saanich-history-notes .mxcw-curation-history-entry::marker {
-    content: none;
-}
-
-.saanich-history-notes .mxcw-curation-history-entry::before {
-    content: "";
-    position: absolute;
-    top: 0.45em;
-    left: -19px;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #5a7680;
-}
-
-.saanich-history-notes .mxcw-curation-history-site::before {
-    background: #e8711a;
-}
-
-.saanich-history-notes .mxcw-curation-history-head span,
-.saanich-history-notes .mxcw-curation-history-reviewed,
-.saanich-history-notes .mxcw-curation-none {
-    color: #5a7680;
-}
-
-.saanich-history-notes .mxcw-curation-history-reviewed {
-    margin: 2px 0 0;
-}
-
-.saanich-history-notes .mxcw-curation-history-text a {
-    color: #184e62;
-}
-
-.saanich-history-notes .mxcw-solow-annotation-note {
-    margin: 0 0 6px;
-}
-
-.saanich-history-chart {
-    display: flex;
-    gap: 2px;
-    flex: 1 1 auto;
-    height: auto;
-    min-height: 70px;
-    max-height: 150px;
-    margin-bottom: 16px;
-    border-bottom: 1px solid rgba(90, 118, 128, 0.35);
-}
-
-.saanich-history-slot {
-    position: relative;
-    flex: 1 1 0;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    height: 100%;
-}
-
-.saanich-history-bar {
-    display: block;
-    width: 100%;
-    min-height: 2px;
-    border-radius: 3px 3px 0 0;
-    background: #2f7f8f;
-}
-
-.saanich-history-bar.saanich-history-empty {
-    min-height: 0;
-}
-
-.saanich-history-slot:hover .saanich-history-bar {
-    background: #184e62;
-}
-
-/* The labels hang beneath the axis, outside the chart's height */
-.saanich-history-label {
-    position: absolute;
-    top: calc(100% + 2px);
-    left: 50%;
-    transform: translateX(-50%);
-    color: #5a7680;
-    font-size: 10px;
-    line-height: 1;
-    white-space: nowrap;
-}
-
-/* The first label is aligned with the chart's edge, which would otherwise cut it off */
-.saanich-history-slot:first-child .saanich-history-label {
-    left: 0;
-    transform: none;
-}
-</style>

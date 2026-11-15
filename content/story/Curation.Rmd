@@ -17,7 +17,7 @@ We invite you to contribute to a living flora of the W̱SÁNEĆ/Saanich Peninsul
 of the data presented here by adding curatorial notes regarding the provenance, taxonomy, or georeferencing of
 records.
 
-<span class="saanich-callout">Click on any taxon in the checklist below</span> to add a curatorial note. You can
+<span class="mxcw-callout">Click on any taxon in the checklist below</span> to add a curatorial note. You can
 also choose a taxon from any other part of the atlas, through the speech bubble beside its name.
 :::
 

@@ -4,17 +4,13 @@ library(sf)
 
 source("scripts/utils.R")
 
-runDataset = "Saanich";
+# This script is shared between bioReportR projects and copied between them by copyFrameworkOut.sh. Each project's
+# own settings - its catalogue, the index of the shapes it is intersected with, and any further filter of its records -
+# are in scripts/project.R
+source("scripts/project.R")
 
-datasets <- list(
-  Saanich = list(
-    obs_file = "tabular_data/Saanich_Tracheophyta_ultimate-catalogue_2026-08-20-selected-orig.csv",
-    shp_index_file = "tabular_data/Saanich Shapefile Index.csv"
-  )
-)
-
-obsFile <- datasets[[runDataset]]$obs_file;
-shapeIndex = timedFread(datasets[[runDataset]]$shp_index_file);
+obsFile <- project$obsFile
+shapeIndex <- timedFread(project$shapeIndexFile)
 
 prefix <- sub("(.*)-orig.*", "\\1", obsFile)
 
@@ -46,6 +42,9 @@ cat("Removing ", length(emptyColNames), " empty columns ", paste(emptyColNames, 
 rawObs <- rawObs[!emptyCols]
 
 filteredObs <- rawObs %>% filter(iNaturalistTaxonId != 0)
+if (!is.null(project$filterObs)) {
+  filteredObs <- project$filterObs(filteredObs)
+}
 
 filteredObs.sf <- st_as_sf(filteredObs, coords = c("decimalLongitude", "decimalLatitude"), crs=4326, na.fail = FALSE) # CRS is WGS:1984
 
@@ -131,6 +130,11 @@ for(i in 1:nrow(shapeIndex)) {
 
 #timedWrite(withoutEco, str_glue("{prefix}-ecoregion-discarded.csv"))
 
+
+# Keep taxonName last, if there is one, after the label columns we have just added - see prepare_obs.R
+if ("taxonName" %in% names(filteredObs.labels)) {
+  filteredObs.labels <- filteredObs.labels %>% relocate(taxonName, .after = last_col())
+}
 
 timedWrite(filteredObs.labels, str_glue("{prefix}-labels.csv"))
 
