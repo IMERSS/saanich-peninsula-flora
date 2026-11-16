@@ -17,3 +17,10 @@ data:
   # The taxa kept off the list - those set aside on the working list, and those of the penultimate catalogue never
   # listed - prepared by scripts/prepare_excluded_taxa.R
   excludedTaxa: Saanich_Tracheophyta_excluded-taxa_2026-11-15.csv
+# The settings which the project's R scripts and its story page share, named once here: its R scripts read them from this
+# file, and src/js/storyBuild.js ("npm run story") writes each into the layer bioreportr.storyData as a member of the same
+# name - see the defaults of bioreportr.storyPage
+settings:
+  # Whether the Protected Areas pane, and its summaries written by scripts/Protected_map_mapbox.R, keep only the records
+  # which can be mapped. The Saanich Peninsula's records nearly all have positions, so it keeps them all
+  protectedMappedOnly: false

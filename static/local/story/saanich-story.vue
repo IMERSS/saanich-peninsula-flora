@@ -12,8 +12,8 @@
 <fluid-import src="../../bioreportr/sfc/bioreportr-storyPageTraces.vue"></fluid-import>
 <fluid-import src="../../bioreportr/sfc/bioreportr-storyPageLostPlants.vue"></fluid-import>
 <fluid-import src="../../bioreportr/sfc/bioreportr-storyPageProtectedAreas.vue"></fluid-import>
-<!-- The pane of this story alone, in memory of Harvey Janszen - see content/story/Remembering.Rmd -->
-<fluid-import src="saanich-rememberingPane.vue"></fluid-import>
+<!-- The pane in memory of Harvey Janszen, which frames the areas of his checklists - see content/story/Remembering.Rmd -->
+<fluid-import src="../../bioreportr/sfc/bioreportr-storyPageRemembering.vue"></fluid-import>
 <!-- The rest particular to this story, which builds on the story page's own summaries in story.js -->
 <script src="../../bioreportr/js/story.js"></script>
 <script src="../js/saanich.js"></script>
@@ -21,8 +21,8 @@
 "use strict";
 
 // The story page of the Saanich Peninsula vascular plant report. Its atlas and the panes it shares with the other
-// bioReportR stories are layers of the story page defined in static/bioreportr/sfc, given this story's settings here;
-// the pane in memory of Harvey Janszen is this story's alone, defined beside this file. Its paths are relative to the
+// bioReportR stories are layers of the story page defined in static/bioreportr/sfc, given this story's settings here.
+// Its paths are relative to the
 // story page, served at /story/, whose panes are written by src/js/storyBuild.js into static/story
 
 fluid.registerNamespace("saanich");
@@ -35,7 +35,7 @@ saanich.inverseWeibullCount = (x, maxCount) => maxCount < 200 ? x : 0.012 * Math
 
 fluid.def("saanich.story", {
     $layers: ["bioreportr.storyPage", "bioreportr.storyData", "bioreportr.atlasPanel", "bioreportr.storyPageTraces", "bioreportr.storyPageLostPlants",
-        "bioreportr.storyPageProtectedAreas"],
+        "bioreportr.storyPageProtectedAreas", "bioreportr.storyPageRemembering"],
     gridResolution: 1000,
     // The regions which may filter the records - a category of protected area, or all the KBAs, is matched through rows
     // of the region index giving each area or KBA the label of its group, see GroupField in scripts/intersectShapes.R
@@ -70,7 +70,9 @@ fluid.def("saanich.story", {
             fieldLabels: ["Graminoid", "Other"]}
     ],
     // The columns of the table of records, ordered to bring forward what helps in finding the plant again and in assessing
-    // the record - the rest of each record's fields, e.g. its licence or GBIF id, are in the download of the records
+    // the record - the rest of each record's fields, e.g. its licence or GBIF id, are in the download of the records.
+    // This order is deliberately this story's own, serving the search for its "lost" plants, and is not the shared
+    // default: bioreportr.storyPage leaves recordColumns empty, for each story to give its own
     recordColumns: [
         {key: "eventDate", label: "Date", formatter: "saanich.formatDate"},
         {key: "taxon_name", label: "Taxon"},
@@ -145,32 +147,24 @@ fluid.def("saanich.story", {
             selectedIndex: 2
         }
     },
-    // The sources of that history, by the column of the file holding each, oldest first
+    // The sources of that history, by the column of the file holding each, oldest first - each with the citation which
+    // follows its notes on the cards of the Lost Plants gallery, none for the reviewers, who sign their own notes
     curationHistorySources: [
-        {field: "original", source: "Szczawinski & Harrison", label: "Original account"},
-        {field: "harvey", source: "Harvey Janszen", label: "Revised account"},
-        {field: "fpnw", source: "Flora of the Pacific Northwest", label: "Remarks"},
-        {field: "critical", source: "Reviewers", label: "Critical notes"}
+        {field: "original", source: "Szczawinski & Harrison", label: "Original account", cite: "Szczawinski & Harrison 1972"},
+        {field: "harvey", source: "Harvey Janszen", label: "Revised account", cite: "Janszen 2021"},
+        {field: "fpnw", source: "Flora of the Pacific Northwest", label: "Remarks", cite: "Flora of the Pacific Northwest"},
+        {field: "critical", source: "Reviewers", label: "Critical notes", cite: ""}
     ],
     // The extirpation risk pane opens on whichever species is at the top of its list, with the map fitted to its records
     solowShown: "$compute:bioreportr.storyPage.isActive({self}.activePaneKey, Solow)",
     selectTopSpecies: "$effect:saanich.selectTopSpecies({self}, {self}.solowShown, {self}.loaded, {self}.solowTaxa.taxaTable.displayRows)",
-    // The final pane, in memory of Harvey Janszen, shows the areas of his checklists on the map, described on hover - see
-    // saanich-rememberingPane.vue
-    remembering: {
-        $component: {
-            $layers: "saanich.remembering"
-        }
-    },
-    // The classes of the left pane - those of the opening timeline, and while Harvey's pane is shown, its own
-    leftPaneClass: "$compute:saanich.leftPaneClass({self}.traces.leftPaneClass, {self}.remembering.active)",
     paneOverrides: {
         Traces: {
             visibleMap: true
         },
         Remembering: {
             visibleMap: true,
-            // Harvey's pane frames the areas of his checklists itself - see saanich.remembering.frame
+            // Harvey's pane frames the areas of his checklists itself - see bioreportr.remembering.frame
             framesItself: true
         },
         Solow: {

@@ -32,9 +32,10 @@ fluid.registerNamespace("bioreportr.protectedAreas");
 fluid.def("bioreportr.protectedAreas", {
     $layers: "fluid.component",
     // Whether the pane keeps only the records which can be mapped, leaving out the species known only from records
-    // without a position, e.g. those of lists, which would leave the map nothing to fit when chosen. A story setting it
-    // sets mappedOnly in project$protected of its scripts/project.R too, so that the pane's summaries agree
-    mappedOnly: false,
+    // without a position, e.g. those of lists, which would leave the map nothing to fit when chosen. Named once, as
+    // protectedMappedOnly in the settings of the project's bioreportr.yaml, which scripts/Protected_map_mapbox.R reads
+    // too, so that the pane's summaries agree
+    mappedOnly: "{storyPage}.protectedMappedOnly",
     active: "$compute:bioreportr.storyPage.isActive({storyPage}.activePaneKey, Protected)",
     hover: "$effect:bioreportr.protectedAreas.bindCards({storyPage}, {storyPage}.map.readyMap, {storyPage}.mapData, {global})",
     selects: "$effect:bioreportr.protectedAreas.bindSelects({storyPage}, {global})",
@@ -215,6 +216,7 @@ bioreportr.protectedAreas.panelMarkup = function (taxon, records, region, status
         <dt>Records:</dt> <dd>${bioreportr.formatCount(records.length)}</dd>
         <dt>First seen:</dt> <dd>${bioreportr.eventDay(records[0].eventDate)}</dd>
         <dt>Last seen:</dt> <dd>${bioreportr.eventDay(fluid.peek(records).eventDate)}</dd>
+        ${bioreportr.atlas.statusFields(taxon)}
       </dl>
     </div>
   </div>
@@ -551,6 +553,13 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 
 .mxcw-pa-taxon-pane .mxcw-atlas-facts dd {
     margin: 0;
+}
+
+/* The plant's conservation status, the longest of its facts, runs beneath its label across the panel's width - see
+   bioreportr.atlas.statusFields */
+.mxcw-pa-taxon-pane .mxcw-atlas-facts dt:has(+ dd.mxcw-taxon-status),
+.mxcw-pa-taxon-pane .mxcw-atlas-facts dd.mxcw-taxon-status {
+    grid-column: 1 / -1;
 }
 
 .mxcw-pa-taxon-region {

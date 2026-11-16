@@ -36,10 +36,10 @@ regions <- timedFread(str_glue("{prefix}-regionIndirection.csv"))
 # The assessment is of the native flora, whose conservation the protected areas and KBAs serve
 plant.summary <- timedFread(project$summaryFile) %>%
   filter(inSummary == 1, introduction_status == "native")
-# A project whose story keeps only the records which can be mapped on this pane - see mappedOnly in
-# bioreportr-protectedPane.vue - leaves out of the assessment the native species known only from records without a
-# position, e.g. those of lists, so that its summaries agree with the pane's checklist
-if (isTRUE(settings$mappedOnly)) {
+# A project whose story keeps only the records which can be mapped on this pane - protectedMappedOnly in the settings
+# of its bioreportr.yaml, which bioreportr-protectedPane.vue reads too - leaves out of the assessment the native species
+# known only from records without a position, e.g. those of lists, so that its summaries agree with the pane's checklist
+if (isTRUE(yaml::read_yaml("bioreportr.yaml")$settings$protectedMappedOnly)) {
   plants <- plants %>% filter(!is.na(decimalLatitude), !is.na(decimalLongitude))
   plant.summary <- plant.summary %>% filter(id %in% plants$iNaturalistTaxonId)
 }
@@ -56,7 +56,7 @@ protected.areas <- mx_read("spatial_data/vectors/Protected_Areas/Protected_Areas
 # Each record's area and KBA, and its area's category of protected area
 records <- plants %>%
   filter(iNaturalistTaxonId %in% plant.summary$id) %>%
-  # A project with no published KBA as yet, e.g. Galiano Island, has no column of them - see scripts/intersectShapes.R
+  # A project with no published KBA as yet has no column of them - see scripts/intersectShapes.R
   mutate(area = region_label("ProtectedArea", ProtectedArea),
          kba = `if`("KBA" %in% names(plants), region_label("KBA", KBA), NA_character_),
          category = protected.areas$category[match(area, protected.areas$name)])
@@ -141,7 +141,7 @@ kba.significance <- function (criteria) {
 }
 
 kbas <- mx_read("spatial_data/vectors/KBA/KBA.geojson")
-# A project may have no published KBA as yet, e.g. Galiano Island, whose KBAs are only proposed - the published KBAs'
+# A project may have no published KBA as yet, its KBAs being only proposed - the published KBAs'
 # layer, row of the chart, chart and summaries are then left out
 has.kbas <- nrow(kbas) > 0
 if (!has.kbas) {

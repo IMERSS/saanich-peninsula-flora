@@ -320,13 +320,14 @@ bioreportr.storyBuild.removeStale = function (outDir, panes) {
 /**
  * Write the layer of the story page naming its data files, bioreportr.storyData, from the project's bioreportr.yaml, which
  * names them once for every part of the project which reads them - its R scripts read it too, through scripts/project.R
- * and R/build.R. The files are those published in static/local/data/tabular by R/build.R.
+ * and R/build.R. The files are those published in static/local/data/tabular by R/build.R. The settings of its
+ * `settings` section, which its R scripts read too, become members of the layer of the same names, holding their values.
  * @param {String} projectDir - The project's directory, holding bioreportr.yaml
  * @param {String} outDir - The directory to which the material is written, from which the story page imports the layer
  * @return {Object} The members of the layer
  */
 bioreportr.storyBuild.writeStoryData = function (projectDir, outDir) {
-    const {data} = yaml.load(fs.readFileSync(path.join(projectDir, "bioreportr.yaml"), "utf8"));
+    const {data, settings = {}} = yaml.load(fs.readFileSync(path.join(projectDir, "bioreportr.yaml"), "utf8"));
     const file = name => name ? JSON.stringify(`../local/data/tabular/${name}`) : "null";
     const members = {
         obsFile: file(data.labels),
@@ -334,13 +335,15 @@ bioreportr.storyBuild.writeStoryData = function (projectDir, outDir) {
         taxaFile: file(data.summary),
         curationHistoryFile: file(data.curationHistory),
         recordAnnotationsFile: file(data.recordAnnotations),
-        excludedTaxaFile: file(data.excludedTaxa)
+        excludedTaxaFile: file(data.excludedTaxa),
+        ...fluid.transform(settings, value => JSON.stringify(value))
     };
     const text = `<script>
 "use strict";
 
 // Written by src/js/storyBuild.js from bioreportr.yaml - do not edit. The story's data files, relative to the story page,
-// laid over its story page by naming bioreportr.storyData in the $layers of its <project>-story.vue
+// and the settings it shares with the project's R scripts, laid over its story page by naming bioreportr.storyData in the
+// $layers of its <project>-story.vue
 
 fluid.def("bioreportr.storyData", {
     $layers: "fluid.component",

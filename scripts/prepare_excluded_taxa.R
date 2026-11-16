@@ -16,12 +16,15 @@ source("scripts/project.R")
 #              reached the working list - mostly those scoring low confidence, e.g. from a single unvouchered record.
 #              The catalogue holds records alone, so these are described by their records, and not by any reasons
 # Each taxon is given the id by which the site knows it - see set_aside_id in scripts/utils.R. The working list and the
-# penultimate catalogue, a file of big_data (not checked in), are named in bioreportr-prep.yaml. The output, named in
-# bioreportr.yaml, is copied into the site by R/build.R
+# penultimate catalogue, a file of big_data (not checked in), are named in bioreportr-prep.yaml, each optional: a project
+# without a working list has only unlisted taxa, and one without the catalogue none. The flags by which curators exclude
+# a row are named by project$curation$flags in scripts/project.R. The output, named in bioreportr.yaml, is copied into
+# the site by R/build.R
+# This script is shared between the projects by copyFrameworkOut.sh, and is written against the columns of the lists
+# and catalogues of checklist-catalogue-alignment-workflow
 
+settings <- project$curation
 list_file <- file.path("tabular_data", config$list)
-working_list_file <- file.path("tabular_data", config$workingList)
-catalogue_file <- file.path("big_data", config$penultimateCatalogue)
 excluded_file <- file.path("tabular_data", config$excludedTaxa)
 
 # The species of a name - its first two words, or three for a hybrid written "Genus × epithet"
@@ -32,7 +35,7 @@ species_of <- function (name) {
 # Every name under which a list knows its taxa - its verbatim names hold the synonyms under which the same plant is
 # catalogued, separated by "; ", e.g. "Urtica dioica; Urtica gracilis"
 names_of <- function (rows) {
-  names <- unique(str_trim(unlist(str_split(c(rows$taxon_name, rows$link_name, rows$verbatim_taxon_name), ";"))))
+  names <- unique(str_trim(unlist(str_split(c(rows[[settings$nameColumn]], rows$link_name, rows$verbatim_taxon_name), ";"))))
   names[!is.na(names) & names != ""]
 }
 
@@ -41,25 +44,32 @@ yes <- function (flag) !is.na(flag) & str_trim(flag) == "yes"
 blank_na <- function (text) ifelse(is.na(text) | text == "" | text == "NA", NA, text)
 
 rawList <- timedFread(list_file)
-workingList <- timedFread(working_list_file)
+workingList <- if (is.null(config$workingList)) rawList[0, ] else timedFread(file.path("tabular_data", config$workingList))
+
+# The flags each row raises, by the label of each - e.g. "doubtful; planted"
+flag_labels <- function (rows) {
+  labels <- rep("", nrow(rows))
+  for (column in intersect(names(settings$flags), names(rows))) {
+    labels <- paste0(labels, ifelse(yes(rows[[column]]), paste0("; ", settings$flags[[column]]), ""))
+  }
+  str_remove(labels, "^; ")
+}
 
 # The curators' decision on each row set aside, the flags first, since a flagged row is excluded even once reviewed -
 # a row flagged, or reviewed but not carried to the list, is excluded, and any other is still under review
-flagged <- function (rows) yes(rows$is_doubtful) | yes(rows$is_persisting_or_waif) | yes(rows$is_planted)
 setAside <- workingList %>%
-  filter(!(taxon_name %in% rawList$taxon_name)) %>%
-  mutate(group = ifelse(flagged(.) | review_status == "complete", "excluded", "underReview"),
+  filter(!(.data[[settings$nameColumn]] %in% rawList[[settings$nameColumn]])) %>%
+  mutate(flags = flag_labels(.),
+         group = ifelse(flags != "" | review_status == "complete", "excluded", "underReview"),
          reason = case_when(
-    yes(is_doubtful) | yes(is_persisting_or_waif) | yes(is_planted) ~
-      str_remove(paste0(ifelse(yes(is_doubtful), "; doubtful", ""), ifelse(yes(is_persisting_or_waif), "; persisting or waif", ""),
-                        ifelse(yes(is_planted), "; planted", "")), "^; "),
+    flags != "" ~ flags,
     review_status == "complete" ~ "reviewed, not carried to the list",
     TRUE ~ paste("review", review_status)
   )) %>%
   transmute(
     group,
-    id = set_aside_id(link_taxon_id, taxon_name),
-    scientificName = taxon_name,
+    id = set_aside_id(.data[[settings$idColumn]], .data[[settings$nameColumn]]),
+    scientificName = .data[[settings$nameColumn]],
     commonName = blank_na(common_name),
     family = blank_na(family),
     introduction_status = blank_na(str_trim(introduction_status)),
@@ -77,8 +87,9 @@ setAside <- workingList %>%
 listed <- names_of(workingList)
 listed_species <- unique(species_of(listed))
 known_ids <- c(as.character(timedFread(project$summaryFile)$id), setAside$id)
+listed <- unique(c(listed, names_of(rawList)))
 
-unlisted <- timedFread(catalogue_file) %>%
+unlisted <- if (is.null(config$penultimateCatalogue)) NULL else timedFread(file.path("big_data", config$penultimateCatalogue)) %>%
   filter(!is.na(linkName) & linkName != "" & taxonRank %in% c("species", "subspecies", "variety", "hybrid", "form")) %>%
   filter(!(linkName %in% listed) & !(originalLinkName %in% listed) & !(species_of(linkName) %in% listed_species) &
            !(as.character(linkTaxonID) %in% known_ids)) %>%
