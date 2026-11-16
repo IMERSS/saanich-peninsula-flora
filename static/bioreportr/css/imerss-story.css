@@ -1461,7 +1461,7 @@ body {
     }
 }
 
-:is(.mxcw-paneKey-Status, .mxcw-paneKey-TopContributions, .mxcw-paneKey-Solow, .mxcw-paneKey-Curation) h2 {
+:is(.mxcw-paneKey-Status, .mxcw-paneKey-TopContributions, .mxcw-paneKey-History, .mxcw-paneKey-Solow, .mxcw-paneKey-Curation) h2 {
     color: #a8c8d0;
     font-size: var(--story-small);
     font-weight: 400;
@@ -1474,7 +1474,7 @@ body {
     margin: 0.5rem 0 var(--story-gap);
 }
 
-:is(.mxcw-paneKey-Status, .mxcw-paneKey-TopContributions, .mxcw-paneKey-Solow) .mxcw-sectionColumn > p,
+:is(.mxcw-paneKey-Status, .mxcw-paneKey-TopContributions, .mxcw-paneKey-History, .mxcw-paneKey-Solow) .mxcw-sectionColumn > p,
 .mxcw-curation-invitation p {
     max-width: 31em;
     margin: 0 auto clamp(10px, 2.2vh, 22px);

@@ -90,11 +90,23 @@ bioreportr.list.notify = function (that, text) {
  * @param {bioreportr.storyPage} storyPage - The story page
  * @return {Array[]} Each part of the query, as its label and its value
  */
+/**
+ * The named area of the list's selection, if a region was chosen - e.g. a protected area, a category of them or a KBA -
+ * without any part of it chosen by a figure of the Protected Areas pane, e.g. its species of concern.
+ * @param {bioreportr.storyPage} storyPage - The story page
+ * @return {String|null} The area's name, or `null` if none was chosen
+ */
+bioreportr.list.area = function (storyPage) {
+    const region = bioreportr.list.read(storyPage.selectedRegion);
+    return region ? (bioreportr.protectedAreas?.parseSelection ? bioreportr.protectedAreas.parseSelection(region).region : region) || null : null;
+};
+
 bioreportr.list.query = function (that, storyPage) {
     const read = bioreportr.list.read;
     const region = read(storyPage.selectedRegion);
+    const area = bioreportr.list.area(storyPage);
     const label = read(storyPage.recordsLabel)?.title || "";
-    const others = label.split(" · ").filter(part => part && part !== region && part !== "drawn area");
+    const others = label.split(" · ").filter(part => part && part !== region && part !== area && part !== "drawn area");
     return others.length ? [["Narrowed to", others.join("; ")]] : [];
 };
 
@@ -398,7 +410,8 @@ bioreportr.list.print = function (that, storyPage, window) {
         `${family.rows.map(item).join("")}</section>`).join("");
     const sources = fluid.makeArray(fluid.unwrapProxy(storyPage.curationHistorySources)).map(source => source.source + (source.year ? " (" + source.year + ")" : ""));
     const siteTitle = bioreportr.list.read(that.siteTitle) || String(window.document.title || "").split("|")[0].trim();
-    const query = bioreportr.list.query(that, storyPage);
+    const area = bioreportr.list.area(storyPage);
+    const query = [...area ? [["Area", area]] : [], ...bioreportr.list.query(that, storyPage)];
     const date = new Date().toLocaleDateString("en-CA", {day: "numeric", month: "long", year: "numeric"});
     const credit = sources.length ? "Drawing on the work of " + sources.join(", ") + ", and every naturalist whose records are gathered here." :
         "Drawing on the records of every naturalist gathered here.";
@@ -414,6 +427,7 @@ bioreportr.list.print = function (that, storyPage, window) {
             margin: 0; font-size: 9.5px; text-align: left; }
         .query dt { color: #6b8794; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; font-size: 8.5px; padding-top: 1px; }
         .query dd { margin: 0; color: #1a1a1a; }
+        .area { grid-column: 1; margin: 6px 0 0; font-size: 14px; font-weight: 700; color: #1a1a1a; }
         .credit { grid-column: 1 / -1; margin: 8px 0 0; font-size: 9px; font-style: italic; color: #555; }
         .link { grid-column: 1 / -1; margin: 2px 0 0; font-size: 8px; color: #8a9aa2; word-break: break-all; }
         .family { display: grid; grid-template-columns: 1fr 1fr; column-gap: 22px; margin-bottom: 8px; }
@@ -428,6 +442,7 @@ bioreportr.list.print = function (that, storyPage, window) {
         <header>
             <p class="site">${html(siteTitle)}</p>
             <p class="kind">Plant checklist</p>
+            ${area ? `<p class="area">${html(area)}</p>` : ""}
             <dl class="query">${query.map(([label, value]) => `<dt>${html(label)}</dt><dd>${html(value)}</dd>`).join("")}
                 <dt>Taxa</dt><dd>${html(count)}</dd>
                 <dt>Compiled</dt><dd>${html(date)}</dd></dl>

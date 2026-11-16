@@ -125,7 +125,9 @@ bioreportr.protectedAreas.taxonSets = function (pkg, rowById, indirectionRows) {
         unprotected: new Set(native.filter(id => !protectedIds.has(id))),
         native: new Set(native),
         concern: new Set(native.filter(id => bareRowById[id].provincial_concern === "concern")),
-        kba: idsWhere([{field: "KBA", op: "notNull"}]),
+        // A story whose records lie in no KBA, e.g. Galiano Island's, has no KBA field, and a query of a field which the
+        // package lacks fails
+        kba: pkg.tables.obs.columns.KBA ? idsWhere([{field: "KBA", op: "notNull"}]) : new Set(),
         unique: bioreportr.protectedAreas.uniqueByCategory(pkg, native, indirectionRows)
     };
 };
