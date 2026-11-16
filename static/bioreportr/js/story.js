@@ -882,6 +882,21 @@ bioreportr.storyPage.clearRecordOnPaneChange = function (storyPage, activePaneKe
             if (!keepTaxon) {
                 storyPage.checklist.search.reset();
             }
+            // Each pane opens on the whole of its map - an area drawn, a cell, a region or a group of species chosen in
+            // another is not carried into it
+            const read = value => fluid.unwrapProxy(value);
+            if ((read(storyPage.map.polygonDraw?.filterState) || []).length > 0) {
+                storyPage.map.polygonDraw.reset();
+            }
+            if (hortis.isValue(read(storyPage.map.gridSelector?.filterState))) {
+                storyPage.map.gridSelector.reset();
+            }
+            if (read(storyPage.selectedRegion)) {
+                storyPage.selectRegion(null);
+            }
+            if (read(storyPage.selectedStatus)) {
+                storyPage.selectedStatus = null;
+            }
         });
     }
 };

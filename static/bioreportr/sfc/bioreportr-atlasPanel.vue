@@ -1,3 +1,6 @@
+<!-- The list of the plants of a place, shown beneath the Atlas's map - see bioreportr-list.vue -->
+<fluid-import src="bioreportr-list.vue"></fluid-import>
+<fluid-import src="bioreportr-listInvite.vue"></fluid-import>
 <script src="../js/story.js"></script>
 <script src="../js/solow.js"></script>
 <script>
@@ -23,8 +26,6 @@ fluid.registerNamespace("bioreportr.atlas");
 fluid.def("bioreportr.atlasPanel", {
     $layers: "fluid.component",
     // Settings which a project may override:
-    // The year from which a record counts as recent - the baseline of sightings, from which a plant counts as confirmed
-    recentYear: 2000,
     // The label of each reporting status of the summary. A status may be followed by a year, e.g. "new 2021", shown
     // after its label
     statusLabels: {confirmed: "Confirmed", reported: "Historical", unconfirmed: "Historical", new: "New"},
@@ -41,6 +42,8 @@ fluid.def("bioreportr.atlasPanel", {
     atlasRecords: "$compute:bioreportr.atlas.taxonRecords({self}.pkg, {self}.allObs, {self}.checklistTaxon, {self}.sightingPredicates)",
     atlasPanelMarkup: `$compute:bioreportr.atlas.panelMarkup({self}.checklistTaxon, {self}.atlasRecords,
         {self}.curation.historyById, {self}.curationHistorySources, {self}.curation.byTaxon, {self}.recordAnnotations, atlas, {self}.statusLabels)`,
+    // Clicks within the panel - its invitation to add a note
+    taxonPanelClick: "$method:bioreportr.atlas.panelClick({self}, {0}:event)",
     // The panel is shown on the atlas, while a plant with records is chosen - and on the Protected Areas pane, if the
     // story has one, see bioreportr.storyPageProtectedAreas
     taxonPanelVisible: "$compute:bioreportr.atlas.panelVisible({self}.taxonPanel.markup, {self}.activePaneKey)",
@@ -62,6 +65,18 @@ fluid.def("bioreportr.atlasPanel", {
     statusById: "$compute:hortis.reportingStatusById({self}.taxa.rowById)",
     atlasTiles: "$compute:bioreportr.atlas.tilesMarkup({self}.taxa.allRows, {self}.statusById, {self}.selectedStatus, {self}.recentYear)",
     sectionInserts: "$compute:bioreportr.atlas.sectionInserts({self}.atlasTiles)",
+    // The Download list panel at the foot of the checklist - see bioreportr-list.vue
+    list: {
+        $component: {
+            $layers: "bioreportr.list"
+        }
+    },
+    // The invitation to make a list, over the map on first view - see bioreportr-listInvite.vue
+    listInvite: {
+        $component: {
+            $layers: "bioreportr.listInvite"
+        }
+    },
     paneClick: "$method:bioreportr.atlas.paneClick({self}, {0}:event)",
     // A click anywhere on a row of the checklist chooses its taxon, as a click on one of its names does
     checklistRowClick: "$effect:bioreportr.atlas.bindRowClick({self}, {global})",
@@ -222,9 +237,36 @@ bioreportr.atlas.sectionInserts = tiles => ({"mxcw-status-tiles": tiles});
  */
 bioreportr.atlas.paneClick = function (storyPage, event) {
     const tile = event.target.closest(".mxcw-status-link");
+    const action = event.target.closest("[data-atlas-action]");
     if (tile) {
         const status = tile.dataset.status;
         storyPage.selectedStatus = storyPage.selectedStatus === status ? null : status;
+    } else if (action) {
+        bioreportr.atlas.act(storyPage, action.dataset.atlasAction, action.dataset);
+    }
+};
+
+/**
+ * Carry out one of the Atlas's actions, from its section or from a plant's panel.
+ * @param {bioreportr.storyPage} storyPage - The story page
+ * @param {String} action - The action - "curate", opening the Community Curation pane on the plant named by `data.taxon`
+ * @param {Object} data - The data of the element bearing the action
+ */
+bioreportr.atlas.act = function (storyPage, action, data) {
+    if (action === "curate" && data.taxon) {
+        bioreportr.curation?.open(storyPage, data.taxon);
+    }
+};
+
+/**
+ * Handle a click within the panel of a plant - its actions.
+ * @param {bioreportr.storyPage} storyPage - The story page
+ * @param {Event} event - The click
+ */
+bioreportr.atlas.panelClick = function (storyPage, event) {
+    const action = event.target.closest("[data-atlas-action]");
+    if (action) {
+        bioreportr.atlas.act(storyPage, action.dataset.atlasAction, action.dataset);
     }
 };
 
@@ -628,7 +670,9 @@ bioreportr.atlas.panelMarkup = function (taxon, records, historyById, sources, b
       </dl>
       ${bioreportr.georefNote(records)}
     </div>
-    ${bioreportr.atlas.historyMarkup(records, context + "-" + taxon.id, bioreportr.atlas.notesMarkup(taxon, records, historyById, sources, byTaxon, annotations))}
+    ${context === "atlas" ? bioreportr.atlas.accountsMarkup(taxon, historyById, sources, byTaxon) : ""}
+    ${bioreportr.atlas.historyMarkup(records, context + "-" + taxon.id, context === "atlas" ? bioreportr.solowAnnotationNote(records, annotations) :
+        bioreportr.atlas.notesMarkup(taxon, records, historyById, sources, byTaxon, annotations))}
   </div>
 </div>`;
     }
@@ -704,7 +748,7 @@ bioreportr.atlas.historyMarkup = function (records, taxonId, notes = "") {
     const tab = (kind, label, title, checked) => `<input type="radio" class="mxcw-history-${kind}-tab" id="${name}-${kind}" name="${name}"${checked ? " checked" : ""}>` +
         `<label for="${name}-${kind}" title="${title}">${label}</label>`;
     return `<div class="mxcw-history">
-      <div class="mxcw-history-tabs" role="tablist">${tab("decade", "Decades", "Reports by decade", true)}${tab("month", "Months", "Reports by month", false)}${tab("notes", "Notes", "Annotation history", false)}</div>
+      <div class="mxcw-history-tabs" role="tablist">${tab("decade", "Decades", "Reports by decade", true)}${tab("month", "Months", "Reports by month", false)}${notes ? tab("notes", "Notes", "Annotation history", false) : ""}</div>
       ${bioreportr.atlas.columns(decadeColumns, "decades")}
       ${bioreportr.atlas.columns(monthColumns, "months")}
       <div class="mxcw-history-notes">${notes}</div>
@@ -728,9 +772,104 @@ bioreportr.atlas.notesMarkup = function (taxon, records, historyById, sources, b
     const history = bioreportr.curationForm?.historyMarkup ? bioreportr.curationForm.historyMarkup(taxon, historyById || {}, sources, byTaxon || {}) : "";
     return setAside + history;
 };
+
+/** A plant's line of accounts, with which the Atlas's panel leads **/
+
+// Encode any value as text for markup - hortis.encodeHTML accepts only strings, and a year or count may be a number
+bioreportr.atlas.html = value => hortis.encodeHTML(String(value ?? ""));
+
+/**
+ * Render a plant's line of accounts, oldest first, as the Atlas's panel leads with it - each source's account opened to
+ * its first sentence, then the community's notes, and an invitation to add one.
+ * @param {TaxonRow} taxon - The plant
+ * @param {Object<String, Object>} historyById - The history of the curatorial accounts of each taxon, by id
+ * @param {Object[]} sources - The sources of the accounts
+ * @param {Object<String, Object[]>} byTaxon - The community's notes on each taxon, by id
+ * @return {String} The markup
+ */
+bioreportr.atlas.accountsMarkup = function (taxon, historyById, sources, byTaxon) {
+    const html = bioreportr.atlas.html;
+    const linkify = text => bioreportr.curationForm?.linkify ? bioreportr.curationForm.linkify(text) : html(text);
+    const history = (fluid.unwrapProxy(historyById) || {})[taxon.id] || {};
+    const first = text => {
+        const match = /^(.{40,180}?[.;])\s/.exec(text);
+        return match ? match[1] : text.length > 180 ? text.substring(0, 177) + "…" : text;
+    };
+    const entry = (who, what, text) => {
+        const summary = first(text);
+        return summary === text ? `<div class="mxcw-atlas-account"><b>${html(who)}</b> <span>${html(what)}</span> <span class="mxcw-atlas-account-text">${linkify(text)}</span></div>` :
+            `<details class="mxcw-atlas-account"><summary><b>${html(who)}</b> <span>${html(what)}</span> <span class="mxcw-atlas-account-text">${html(summary)}</span></summary>
+            <div class="mxcw-atlas-account-full">${linkify(text)}</div></details>`;
+    };
+    const accounts = fluid.makeArray(fluid.unwrapProxy(sources)).filter(({field}) => String(history[field] || "").trim())
+        .map(source => entry(source.source, source.label + (source.year ? ", " + source.year : ""), String(history[source.field]).trim()));
+    const notes = fluid.makeArray((fluid.unwrapProxy(byTaxon) || {})[taxon.id]).slice().reverse().map(note => entry(note.author,
+        (note.type || "note") + ", " + bioreportr.eventDay(note.submitted) + (note.pending ? " (being processed)" : ""), note.comment ||
+        bioreportr.curation.questions.filter(([question]) => note[question]).map(([question, label]) => `${label}: ${note[question]}`).join(" · ")));
+    const reviewed = history.reviewedBy ? `<p class="mxcw-atlas-reviewed">Reviewed by ${html(history.reviewedBy)}</p>` : "";
+    const invite = `<p class="mxcw-atlas-invite">Know this plant? <button type="button" class="mxcw-atlas-invite-button" data-atlas-action="curate"
+        data-taxon="${html(taxon.id)}">Add your note</button> - it joins ${accounts.length + notes.length ? "the history above" : "the record of this plant"}.</p>`;
+    const body = accounts.length + notes.length ? accounts.join("") + notes.join("") + reviewed :
+        "<p class=\"mxcw-atlas-accounts-none\">No naturalist's account of this plant has been gathered yet.</p>";
+    return `<div class="mxcw-atlas-accounts"><div class="mxcw-atlas-accounts-head">What naturalists have said</div>${body}${invite}</div>`;
+};
 </script>
 
 <style>
+/* A plant's line of accounts, with which the Atlas's panel leads, and the invitation to add a note -
+   see bioreportr.atlas.accountsMarkup */
+.mxcw-atlas-accounts {
+    margin: 4px 0 6px;
+    font-size: var(--story-small);
+    color: #eefaff;
+}
+
+.mxcw-atlas-accounts-head {
+    color: #FDF2CE;
+    font-weight: 700;
+}
+
+.mxcw-atlas-account {
+    margin: 2px 0;
+}
+
+.mxcw-atlas-account summary {
+    cursor: pointer;
+}
+
+.mxcw-atlas-account span:not(.mxcw-atlas-account-text) {
+    color: #b9d3df;
+}
+
+.mxcw-atlas-account-full {
+    margin: 2px 0 4px 1em;
+}
+
+.mxcw-atlas-account a,
+.mxcw-atlas-account-full a {
+    color: #FDF2CE;
+}
+
+.mxcw-atlas-reviewed,
+.mxcw-atlas-accounts-none {
+    margin: 2px 0;
+    color: #b9d3df;
+}
+
+.mxcw-atlas-invite {
+    margin: 4px 0 0;
+}
+
+.mxcw-atlas-invite-button {
+    padding: 0 8px;
+    font: inherit;
+    color: #0b2430;
+    background: #FDF2CE;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
 /* The parts of a taxon's conservation status, each on a line of its own - its provincial rank and BC list, then any
    COSEWIC and SARA status - see bioreportr.atlas.statusFields */
 .mxcw-taxon-status-part {

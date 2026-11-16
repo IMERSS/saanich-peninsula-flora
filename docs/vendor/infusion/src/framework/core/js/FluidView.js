@@ -4019,18 +4019,6 @@ const fluidViewScope = function (fluid) {
     };
 
     /**
-     * Report any layers which are demanded but undefined, with fluid.reportUndefinedLayers, each time the graph of cells
-     * falls idle - allocated once, by the first document to boot
-     */
-    fluid.reportUndefinedLayersOnIdle = function () {
-        fluid.undefinedLayersEffect ||= fluid.cell.effect(idle => {
-            if (idle) {
-                fluid.reportUndefinedLayers();
-            }
-        }, [fluid.cell.idleSignal], {name: "Report of undefined layers"});
-    };
-
-    /**
      * Boots the Infusion framework for a given document by acquiring modules and import maps,
      * and initializing self-booting components.
      *
@@ -4043,6 +4031,18 @@ const fluidViewScope = function (fluid) {
      * @param {Document} dokkument - The document to boot the Fluid framework within.
      * @return {Effect} An effect that manages self-booting component instantiation.
      */
+    /**
+     * Report any layers which are demanded but undefined, with fluid.reportUndefinedLayers, each time the graph of cells
+     * falls idle - allocated once, by the first document to boot
+     */
+    fluid.reportUndefinedLayersOnIdle = function () {
+        fluid.undefinedLayersEffect ||= fluid.cell.effect(idle => {
+            if (idle) {
+                fluid.reportUndefinedLayers();
+            }
+        }, [fluid.cell.idleSignal], {name: "Report of undefined layers"});
+    };
+
     fluid.bootDocument = function (dokkument) {
         fluid.applyOnLoad(() => {
             const modules = fluid.acquireModules(dokkument, dokkument.documentElement);

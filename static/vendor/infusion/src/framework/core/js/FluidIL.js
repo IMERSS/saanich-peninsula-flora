@@ -3589,11 +3589,19 @@ const $fluidILScope = function (fluid) {
     };
 
     /**
-     * Delete the value held at a path within a component,
+     * Delete the value held at a path within a component, by immutable application of a fresh value to its parent
+     * path. An element of an array is spliced out of it, and a member of an object is removed from it.
      * @param {Object} component - The component holding the path to be deleted
      * @param {String|String[]} path - The path to be deleted, as a string or array of segments - this must have a
      * parent path within the component
-     * @return {Cell<any>} Signal for the value at the parent path, which will now have been raised into the live layer
+     * @return {Cell<Object>} Signal for the value at the parent path, which will now have been raised into the live layer
+     */
+    /**
+     * Delete the material at a path within a component. As for a write, nothing a deletion consults becomes a dependency
+     * of a computation or effect which makes it - see fluid.setForComponent
+     * @param {Component} component - The component to delete from
+     * @param {String|String[]} path - The path within the component to delete
+     * @return {any} The result of the deletion
      */
     fluid.deleteForComponent = function (component, path) {
         return fluid.cell.untracked(() => fluid.deleteForComponentImpl(component, path));

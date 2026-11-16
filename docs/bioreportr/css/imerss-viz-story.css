@@ -191,9 +191,16 @@
 }
 
 /* Collapsed, the header sits in its strip directly below the map, with no resize bar to count in the space above */
+/* Collapsed, the header is centred in its strip, as the Download list bar beside it is - see bioreportr-list.vue */
 .mxcw-records-collapsed .mxcw-obs-table-controls {
-    margin-top: 5px;
+    margin-top: 0;
     margin-bottom: 0;
+    height: 100%;
+    align-items: center;
+}
+
+.mxcw-records-collapsed .mxcw-obs-table-controls > .imerss-download-button {
+    align-self: center;
 }
 
 .mxcw-leftPane:has(.mxcw-records-collapsed:not(.fl-hidden)):not(:has(.mxcw-atlas-has-taxon)):not(:has(.mxcw-dataPane:not(.fl-hidden) .mxcw-dataPane-widgets)) .mxcw-map {
@@ -278,6 +285,13 @@
 }
 
 /* Clarifies what a records panel is listing - long combinations of filters are cut short, with the full text in a tooltip */
+.mxcw-records-filter-label,
+.mxcw-solow-records-species {
+    font-size: var(--story-data);
+    font-weight: 400;
+    color: #b9d3df;
+}
+
 .mxcw-records-filter-label {
     margin-left: 0.4rem;
     min-width: 0;
