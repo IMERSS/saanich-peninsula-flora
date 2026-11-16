@@ -171,6 +171,23 @@ bioreportr.storyPage.reveal = function (that, loaded, global) {
 bioreportr.storyPage.isActive = (activePaneKey, paneKey) => activePaneKey === paneKey;
 
 /**
+ * Accumulate the panes which have been shown. The record is the identical object until a pane is first shown, so that
+ * whatever depends on it recomputes only then.
+ * @param {bioreportr.storyPage} that - The story page, by which the record is remembered
+ * @param {String} activePaneKey - The key of the pane shown
+ * @return {Object<String, Boolean>} The key of each pane which has been shown, mapped to `true`
+ */
+bioreportr.storyPage.activatedPanes = function (that, activePaneKey) {
+    const bare = fluid.unwrapProxy(that);
+    const last = bioreportr.storyPage.activatedRecords.get(bare) || {};
+    const togo = last[activePaneKey] ? last : {...last, [activePaneKey]: true};
+    bioreportr.storyPage.activatedRecords.set(bare, togo);
+    return togo;
+};
+
+bioreportr.storyPage.activatedRecords = new WeakMap();
+
+/**
  * Read the markup of a `<template>` element of the document holding a component, e.g. site navigation rendered into
  * the page by Hugo, which is to be rendered within the component's own template.
  * @param {Element} container - An element of the document
@@ -253,11 +270,12 @@ bioreportr.storyMap.opacityProperty = function (layer) {
 };
 
 /**
- * Download the observations surviving the filters as CSV.
- * @param {Object[]} rows - The observations
+ * Download the observations shown, as CSV.
+ * @param {VizPackage} pkg - The data package
+ * @param {Selection} selection - The observations shown
  */
-bioreportr.storyPage.downloadObs = function (rows) {
-    hortis.triggerDownload(Papa.unparse(rows), "text/csv;charset=utf-8;", "observations.csv");
+bioreportr.storyPage.downloadObs = function (pkg, selection) {
+    hortis.triggerDownload(Papa.unparse(hortis.selectionRows(pkg, selection).map(row => ({...row}))), "text/csv;charset=utf-8;", "observations.csv");
 };
 
 /** Regions **/
@@ -272,18 +290,22 @@ bioreportr.storyPage.selectRegion = function (that, region) {
 };
 
 /**
- * Filter observations to those lying in the region selected on the map. The region is the label of rows of the region
- * indirection table, whose `regionField` names the column of the observations holding the region and whose `id` is
- * the value found there.
- * @param {Object[]} obsRows - The observations
- * @param {String|null} selectedRegion - The label of the selected region, or null if none is selected
+ * Compute the predicates of the selection of a region - the observations in any region of the given fields bearing
+ * its label.
+ * @param {String|null} selectedRegion - The label of the selected region, if any
  * @param {Object[]} indirectionRows - The rows of the region indirection table
- * @param {String[]} fieldNames - The columns of the table whose regions may be selected
- * @return {Object[]} The observations surviving the filter
+ * @param {String[]} fieldNames - The fields of regions which may be selected
+ * @return {Object[]} The predicates
  */
-bioreportr.regionSelectionFilter = function (obsRows, selectedRegion, indirectionRows, fieldNames) {
-    const rows = selectedRegion ? indirectionRows.filter(row => row.label === selectedRegion && fieldNames.includes(row.regionField)) : [];
-    return selectedRegion ? obsRows.filter(obsRow => rows.some(row => obsRow[row.regionField] === row.id)) : obsRows;
+bioreportr.regionSelectionPredicates = function (selectedRegion, indirectionRows, fieldNames) {
+    const byField = {};
+    if (selectedRegion) {
+        indirectionRows.filter(row => row.label === selectedRegion && fieldNames.includes(row.regionField))
+            .forEach(row => fluid.pushArray(byField, row.regionField, row.id));
+    }
+    const any = Object.entries(byField).map(([regionField, ids]) => ({field: regionField, op: "in", value: ids}));
+    // A region with no row of the indirection selects nothing
+    return selectedRegion ? [{any}] : [];
 };
 
 /**
@@ -559,20 +581,15 @@ bioreportr.choroplethSlider.filterState = function (labels, sliderIndex) {
     return labels.length > 0 ? +labels[sliderIndex] : null;
 };
 
-bioreportr.choroplethSlider.yearCache = function (obsRows) {
-    return new Map(obsRows.map(row => [row, +String(row.eventDate).substring(0, 4)]));
-};
 
 /**
- * Filter observations to those made up to the year of the slider's step.
- * @param {Object[]} obsRows - The observations
+ * Compute the predicates of a filter of the observations to those made up to the year of the slider's step. An
+ * observation without a year is read as of year 0, as it was before observations were queried, and so passes.
  * @param {Number|null} filterState - The year, or null if the slider is not bound
- * @param {Map<Object, Number>} yearCache - The year of each observation
- * @return {Object[]} The observations surviving the filter
+ * @return {Object[]} The predicates
  */
-bioreportr.choroplethSlider.doFilter = function (obsRows, filterState, yearCache) {
-    return filterState === null ? obsRows : obsRows.filter(row => yearCache.get(row) <= filterState);
-};
+bioreportr.choroplethSlider.predicates = filterState => filterState === null ? [] :
+    [{any: [{field: {year: "eventDate"}, op: "isNull"}, {field: {year: "eventDate"}, op: "<=", value: filterState}]}];
 
 /** Summaries shown in tooltips, e.g. of a cell of the map's grid **/
 
@@ -623,8 +640,8 @@ bioreportr.cellTooltip.render = function (grid, rowById, cellId) {
     const bucket = grid.buckets[cellId];
     let togo = null;
     if (bucket) {
-        const taxa = Object.entries(bucket.byTaxonId).filter(([taxonId]) => rowById[taxonId])
-            .map(([taxonId, obsIndices]) => ({status: rowById[taxonId].reportingStatus, records: obsIndices.length}));
+        const taxa = Object.entries(grid.taxaOf(cellId)).filter(([taxonId]) => rowById[taxonId])
+            .map(([taxonId, records]) => ({status: rowById[taxonId].reportingStatus, records}));
         const segments = bioreportr.cellTooltip.statuses.map(([status, label]) => {
             const inStatus = taxa.filter(taxon => taxon.status === status);
             return {status, label, species: inStatus.length, records: inStatus.reduce((sum, taxon) => sum + taxon.records, 0)};

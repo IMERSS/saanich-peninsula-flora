@@ -10,6 +10,9 @@ data:
   regionIndirection: Saanich_Tracheophyta_ultimate-catalogue_2026-11-15-selected-regionIndirection.csv
   # The summary of the catalogue's taxa
   summary: Saanich_Tracheophyta_ultimate-summary_2026-11-15-prepared-taxa.csv
+  # The columnar data package of the three files above, as the tables obs, taxa and regionIndirection, packed from them
+  # by R/build.R as the final stage of data preparation, with its details beside it as "-details.viz"
+  viz: Saanich_Tracheophyta_2026-11-15.viz
   # The history of the curatorial notes on each taxon, prepared by scripts/prepare_curation_history.R
   curationHistory: Saanich_Tracheophyta_curation-history_2026-11-15.csv
   # The annotations of records, e.g. of planted populations, applied by scripts/apply_record_annotations.R

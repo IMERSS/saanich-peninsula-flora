@@ -46,7 +46,8 @@ fluid.def("bioreportr.lostPlants", {
     batchDelay: 1100,
     // The cards of each gallery, by its key - each {cards: String[], complete: Boolean}
     cards: {},
-    plants: "$compute:bioreportr.lostPlants.select({storyPage}.taxa.allRows, {storyPage}.obsRows, {self}, {storyPage}.recordAnnotations, {storyPage}.statusById, {storyPage}.isSighting, {self}.galleries, {self}.excluded)",
+    // Derived only once the pane is first shown - see the story page's activatedPanes
+    plants: "$compute:bioreportr.lostPlants.plantsOnceShown({storyPage}, {self}, {storyPage}.activatedPanes)",
     // The photos of a gallery are fetched only once its tab is first chosen
     load: "$effect:bioreportr.lostPlants.load({self}, {self}.plants, {self}.gallery, {storyPage}.loaded)",
     // The cards are shown in a fresh random order each time the pane is opened, so that a different assemblage leads
@@ -77,33 +78,52 @@ bioreportr.lostPlants.loadExcluded = function (file) {
 };
 
 /**
+ * Select the plants of each gallery once the pane is first shown - until then there are none. The members of the story
+ * page and the pane are read within, rather than as arguments, so that none of them is derived until the pane is shown.
+ * @param {bioreportr.storyPage} storyPage - The story page
+ * @param {bioreportr.lostPlants} that - The pane's component
+ * @param {Object<String, Boolean>} activatedPanes - The panes which have been shown
+ * @return {Object<String, Object[]>} The plants of each gallery - see bioreportr.lostPlants.select
+ */
+bioreportr.lostPlants.plantsOnceShown = (storyPage, that, activatedPanes) => activatedPanes.LostPlants ?
+    bioreportr.lostPlants.select(storyPage.taxa.allRows, storyPage.pkg, that, storyPage.recordAnnotations, storyPage.statusById,
+        storyPage.sightingPredicates, that.galleries, that.excluded) : {};
+
+/**
  * Select the plants of each gallery from the site's data. The galleries of reporting statuses hold the native species
  * of their status - and the "lost" gallery, highest extirpation probability first, only those whose Solow EP is at
  * least `minEP` or which have no more than `maxRecords` records. A gallery with a `group` holds the excluded taxa of
  * that group, most recorded first.
  * @param {TaxonRow[]} taxaRows - All taxa
- * @param {Object[]} obsRows - All records
+ * @param {VizPackage} pkg - The data package
  * @param {Object} options - Members `minEP` and `maxRecords`
  * @param {Object<String, Object>} [annotations] - The annotations of records, by occurrenceID - those suspended from the
  * calculation of extirpation probability, e.g. of a planted population, are not counted as sightings
  * @param {Object<String, String>} statusById - The reporting status of each taxon, by id - see hortis.reportingStatusById,
  * which reads a summary's "reported" as unconfirmed
- * @param {Function} isSighting - Whether a record is a sighting - see the story page's member isSighting
+ * @param {Object[]} sightingPredicates - The predicates of a sighting - see the story page's member sightingPredicates
  * @param {Object<String, Object>} galleries - The galleries, by key - see bioreportr.lostPlants
  * @param {Object[]} excluded - The taxa kept off the list - see bioreportr.lostPlants.loadExcluded
  * @return {Object<String, Object[]>} The plants of each gallery, by its key, each with members `taxon`, `nRecords`,
  * `nUnmapped` and `lastRecorded`, and for an excluded taxon `excluded`, its row
  */
-bioreportr.lostPlants.select = function (taxaRows, obsRows, options, annotations, statusById, isSighting, galleries, excluded) {
-    const sightings = new Map();
-    obsRows.filter(obs => !annotations?.[obs.occurrenceID]?.excludeFromEP && isSighting(obs)).forEach(obs => {
-        const entry = sightings.get(obs.iNaturalistTaxonId) || {nRecords: 0, nUnmapped: 0, lastRecorded: NaN};
-        const year = parseInt(obs.eventDate, 10);
-        entry.nRecords++;
-        entry.nUnmapped += bioreportr.hasCoordinates(obs) ? 0 : 1;
-        entry.lastRecorded = Number.isNaN(entry.lastRecorded) ? year : Math.max(entry.lastRecorded, year || entry.lastRecorded);
-        sightings.set(obs.iNaturalistTaxonId, entry);
+bioreportr.lostPlants.select = function (taxaRows, pkg, options, annotations, statusById, sightingPredicates, galleries, excluded) {
+    // The sightings of each taxon counted towards EP, how many of them can't be mapped, and the year of the last - by one
+    // query grouping them by taxon
+    const year = {year: "eventDate"};
+    const unmapped = {not: {all: bioreportr.coordinatePredicates}};
+    const result = hortis.query(pkg, {
+        from: "obs",
+        where: [...bioreportr.notExcludedFromEPPredicates(fluid.unwrapProxy(annotations)), ...fluid.makeArray(fluid.unwrapProxy(sightingPredicates))],
+        groupBy: ["iNaturalistTaxonId"],
+        measures: {nRecords: {count: true}, nUnmapped: {count: true, filter: [unmapped]}, lastRecorded: {max: year}}
     });
+    const sightings = new Map();
+    for (let g = 0; g < result.groups; ++g) {
+        sightings.set(String(result.keys.iNaturalistTaxonId[g]), {
+            nRecords: result.measures.nRecords[g], nUnmapped: result.measures.nUnmapped[g], lastRecorded: result.measures.lastRecorded[g]
+        });
+    }
     const ofStatus = status => taxaRows
         .filter(taxon => taxon.inSummary && taxon.introduction_status === "native" && statusById[taxon.id] === status)
         .map(taxon => ({taxon, ...(sightings.get(taxon.id) || {nRecords: 0, nUnmapped: 0, lastRecorded: NaN})}));

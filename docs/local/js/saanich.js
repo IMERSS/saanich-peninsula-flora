@@ -49,20 +49,18 @@ saanich.formatUnmapped = function (value, row) {
 };
 
 /**
- * Note on each taxon of the summary its number of records and how many of them lack coordinates, for the table of
- * taxa. The rows are copied, with these display values held in the browser alone.
- * @param {TaxonRow[]} taxaRows - The taxa of the summary
- * @param {Object[]} obsRows - All records
- * @return {TaxonRow[]} The copied taxa, with members `n_obs` and `n_unmapped`
+ * Annotate each taxon with its number of records, and of those which can't be mapped.
+ * @param {Object[]} taxaRows - The taxa
+ * @param {VizPackage} pkg - The data package
+ * @return {Object[]} The taxa, each copied with members `n_obs` and `n_unmapped`
  */
-saanich.annotateGeoref = function (taxaRows, obsRows) {
+saanich.annotateGeoref = function (taxaRows, pkg) {
+    const result = hortis.query(pkg, {from: "obs", groupBy: ["iNaturalistTaxonId"],
+        measures: {total: {count: true}, unmapped: {count: true, filter: [{not: {all: bioreportr.coordinatePredicates}}]}}});
     const counts = new Map();
-    obsRows.forEach(record => {
-        const entry = counts.get(record.iNaturalistTaxonId) || {total: 0, unmapped: 0};
-        entry.total++;
-        entry.unmapped += bioreportr.hasCoordinates(record) ? 0 : 1;
-        counts.set(record.iNaturalistTaxonId, entry);
-    });
+    for (let g = 0; g < result.groups; ++g) {
+        counts.set(String(result.keys.iNaturalistTaxonId[g]), {total: result.measures.total[g], unmapped: result.measures.unmapped[g]});
+    }
     return taxaRows.map(taxon => {
         const entry = counts.get(taxon.id) || {total: 0, unmapped: 0};
         return {...taxon, n_obs: entry.total, n_unmapped: entry.unmapped};
@@ -70,15 +68,14 @@ saanich.annotateGeoref = function (taxaRows, obsRows) {
 };
 
 /**
- * Find the period covered by the dated records.
- * @param {Object[]} obsRows - All records
- * @return {Object} The earliest and latest years, as `first` and `last` - infinite while there are no dated records
+ * Find the first and last years of the records.
+ * @param {VizPackage} pkg - The data package
+ * @return {Object} Members `first` and `last`, Infinity and -Infinity if no record has a year
  */
-saanich.recordPeriod = function (obsRows) {
-    return obsRows.reduce((period, obs) => {
-        const year = parseInt(obs.eventDate, 10);
-        return Number.isFinite(year) ? {first: Math.min(period.first, year), last: Math.max(period.last, year)} : period;
-    }, {first: Infinity, last: -Infinity});
+saanich.recordPeriod = function (pkg) {
+    const year = {year: "eventDate"};
+    const result = hortis.query(pkg, {from: "obs", measures: {first: {min: year}, last: {max: year}}});
+    return {first: isNaN(result.first) ? Infinity : result.first, last: isNaN(result.last) ? -Infinity : result.last};
 };
 
 /**

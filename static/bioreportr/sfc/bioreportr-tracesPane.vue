@@ -23,7 +23,8 @@ fluid.def("bioreportr.traces", {
     // The settings of the timeline's pacing which a story gives for its own record, over bioreportr.traces.pacingDefaults
     pacing: {},
     active: "$compute:bioreportr.storyPage.isActive({storyPage}.activePaneKey, Traces)",
-    events: "$compute:bioreportr.traces.buildEvents({storyPage}.taxa.allRows, {storyPage}.byTaxon, {storyPage}.statusById, {storyPage}.recentYear, {storyPage}.recordAnnotations)",
+    // Derived only once the pane is first shown - see the story page's activatedPanes
+    events: "$compute:bioreportr.traces.eventsOnceShown({storyPage}, {storyPage}.activatedPanes)",
     // The classes of the story's left pane while the timeline shows - see bioreportr.traces.leftPaneClass
     leftPaneClass: "$compute:bioreportr.traces.leftPaneClass({self}.active, {self}.paused, {self}.scrubbing)",
     control: "$effect:bioreportr.traces.control({self}, {storyPage}, {storyPage}.map.readyMap, {self}.events, {self}.active, {storyPage}.loaded, {global})",
@@ -87,36 +88,40 @@ bioreportr.traces.playIcons = {
  */
 
 /**
- * Derive the events of the timeline: each marks a key moment in the record of a species, and is shown only if the record
- * concerned can be mapped. A record which is both the first and last of a lost plant appears once, as its last.
- * @param {TaxonRow[]} taxaRows - All taxa
- * @param {Map<String, Object[]>} byTaxon - Dated records indexed by taxon id
- * @param {Object<String, String>} statusById - The reporting status of each taxon, by id - see hortis.reportingStatusById
- * @param {Number} recentYear - The year from which a record counts as recent
- * @param {Object<String, Object>} [annotations] - The annotations of records, by occurrenceID - those suspended from the
- * calculation of extirpation probability, e.g. of a planted population, mark no moment in the plant's wild record, as
- * in the Lost Plants gallery and the extirpation risk analysis
- * @return {TraceEvent[]} The events, in date order
+ * Build the events of the timeline once its pane is first shown - until then there are none. The story page's members
+ * are read within, rather than as arguments, so that none of them is derived until the pane is shown.
+ * @param {bioreportr.storyPage} storyPage - The story page
+ * @param {Object<String, Boolean>} activatedPanes - The panes which have been shown
+ * @return {Object[]} The events - see bioreportr.traces.buildEvents
  */
+bioreportr.traces.eventsOnceShown = (storyPage, activatedPanes) => activatedPanes.Traces ?
+    bioreportr.traces.buildEvents(storyPage.taxa.allRows, storyPage.byTaxon, storyPage.statusById, storyPage.recentYear, storyPage.recordAnnotations) : [];
+
 bioreportr.traces.buildEvents = function (taxaRows, byTaxon, statusById, recentYear, annotations) {
     const events = [];
-    const add = (taxon, kind, record) => {
+    // The records suspended from the calculation of extirpation probability, found once by their ids
+    const notExcluded = bioreportr.notExcludedFromEPPredicates(fluid.unwrapProxy(annotations));
+    const excluded = notExcluded.length === 0 ? new Set() : byTaxon.idsWhere(notExcluded.map(pred => pred.not));
+    // Only the records shown are read as objects - the first, the last, and the first found again since recentYear
+    const add = (taxon, kind, id) => {
+        const record = id === undefined ? null : byTaxon.rowOf(id);
         if (record && bioreportr.hasCoordinates(record)) {
             events.push({taxon, kind, record, year: parseInt(record.eventDate, 10)});
         }
     };
     const statusOf = taxon => statusById[taxon.id];
     taxaRows.filter(taxon => taxon.inSummary).forEach(taxon => {
-        const records = (byTaxon.get(taxon.id) || []).filter(record => !annotations?.[record.occurrenceID]?.excludeFromEP).sort(bioreportr.obsDateComparator);
-        if (records.length > 0) {
-            const first = records[0], last = fluid.peek(records);
+        const all = byTaxon.idsOf(taxon.id);
+        const ids = excluded.size === 0 ? all : all.filter(id => !excluded.has(id));
+        if (ids.length > 0) {
+            const first = ids[0], last = ids[ids.length - 1];
             if (statusOf(taxon) === "unconfirmed") {
                 add(taxon, "last", last);
-                add(taxon, "first", first === last ? null : first);
+                add(taxon, "first", first === last ? undefined : first);
             } else if (statusOf(taxon) === "confirmed") {
-                const found = records.find(record => parseInt(record.eventDate, 10) >= recentYear);
+                const found = ids.find(id => byTaxon.yearOf(id) >= recentYear);
                 add(taxon, "found", found);
-                add(taxon, "first", first === found ? null : first);
+                add(taxon, "first", first === found ? undefined : first);
             } else if (statusOf(taxon) === "new") {
                 add(taxon, "fresh", first);
             }

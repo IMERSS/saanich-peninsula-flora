@@ -17,6 +17,8 @@
 <fluid-import src="bioreportr-curationPane.vue"></fluid-import>
 <script src="%papaparse/papaparse.min.js" data-fl-scope="global"></script>
 <script src="%pako/dist/pako_inflate.min.js" data-fl-scope="global"></script>
+<script src="%imerss-bioinfo/src/client/js/i6/vizPackage.js"></script>
+<script src="%imerss-bioinfo/src/client/js/i6/qdl.js"></script>
 <script src="%imerss-bioinfo/src/client/js/i6/imerss-core.js"></script>
 <script src="%imerss-bioinfo/src/client/js/i6/filters.js"></script>
 <script src="%imerss-bioinfo/src/client/js/i6/imerss-plants.js"></script>
@@ -39,16 +41,10 @@
 fluid.def("bioreportr.storyPage", {
     // Community curation of the taxa and records - see bioreportr.storyPageCuration
     $layers: ["hortis.vizLoader", "bioreportr.storyPageCuration"],
-    // obsFile: String
-    // taxaFile: String
-    // regionIndirectionFile: String
-    // - the story's data files, named in its bioreportr.yaml and supplied by the layer bioreportr.storyData, which
-    // src/js/storyBuild.js writes from it
-    // The small files from which the page is rendered statically, in place of its data, shared by every story since
-    // they serve only to let the page's skeleton render - see fluid.withPlaceholder
-    obsPlaceholderFile: "../bioreportr/data/placeholder/obs.csv",
-    taxaPlaceholderFile: "../bioreportr/data/placeholder/taxa.csv",
-    regionIndirectionPlaceholderFile: "../bioreportr/data/placeholder/regionIndirection.csv",
+    // vizFile: String - the story's columnar data package, holding its observations, taxa and region indirection, named
+    // in its bioreportr.yaml and supplied by the layer bioreportr.storyData, which src/js/storyBuild.js writes from it
+    // The page is rendered statically from its real data, so that its static rendering shows that data, and holds the
+    // results of the queries of its startup - see hortis.queryCache in imerss-bioinfo
     // The directory holding the material written by storyBuild.js, relative to the page and ending in /
     storyBase: "",
     // Map of pane key to settings overriding those of its front matter - see bioreportr.storyPage.paneSettings
@@ -67,9 +63,16 @@ fluid.def("bioreportr.storyPage", {
     selectedPaneKey: "{hashManager}.hash.pane",
     activePaneKey: "$compute:bioreportr.storyPage.activePaneKey({self}.selectedPaneKey, {self}.panes)",
     activePane: "$compute:bioreportr.storyPage.activePane({self}.panes, {self}.activePaneKey)",
+    // Each pane which has been shown, by key - a pane whose derivations are costly, e.g. the Traces' timeline, derives
+    // them only once it is first shown, so that the page is revealed without waiting for those of panes not yet seen
+    activatedPanes: "$compute:bioreportr.storyPage.activatedPanes({self}, {self}.activePaneKey)",
     // A record selected in one pane is cleared on moving to another
     clearRecordOnPaneChange: "$effect:bioreportr.storyPage.clearRecordOnPaneChange({self}, {self}.activePaneKey)",
     classes: "$compute:bioreportr.storyPage.classes({self}.activePane, {self}.checklist.search.filterState, {self}.map.recordSelector.filterState)",
+    // The classes as the template renders them - each empty while it can't yet be known, e.g. while the page is rendered
+    // statically, where there is no URL to name the pane - so that the fixed classes beside them, which lay out the
+    // page's columns, are rendered from the first, and the main resize bar stands where it will stay
+    renderedClasses: "$compute:bioreportr.storyPage.renderedClasses({self})",
     selectPane: "$method:bioreportr.storyPage.selectPane({self}, {0}:paneKey)",
     // The reporting status chosen in the status filter, or in the legend of a map coloured by status
     selectedStatus: null,
@@ -84,7 +87,7 @@ fluid.def("bioreportr.storyPage", {
             filterState: "{storyPage}.selectedRegion",
             filterSummary: "$compute:hortis.collectorFilter.summarise({self}.filterState, {self}.filterName)",
             filterName: "Region",
-            doFilter: `$method:bioreportr.regionSelectionFilter({0}:obsRows, {1}:filterState, {storyPage}.regionIndirection.rows,
+            predicates: `$compute:bioreportr.regionSelectionPredicates({self}.filterState, {storyPage}.regionIndirectionRows,
                 {storyPage}.regionFilterFieldNames)`,
             reset: "$method:bioreportr.storyPage.selectRegion({storyPage}, {self}.noRegion)",
             noRegion: null
@@ -123,20 +126,13 @@ fluid.def("bioreportr.storyPage", {
             }
         }
     },
-    regionIndirection: {
-        $component: {
-            $layers: ["hortis.csvReader", "fluid.withPlaceholder"],
-            url: "{vizLoader}.regionIndirectionFile",
-            placeholderUrl: "{vizLoader}.regionIndirectionPlaceholderFile"
-        }
-    },
     obsFilters: {
         $component: {
             $layers: "hortis.obsFilters"
         }
     },
     filteredObs: "{self}.obsFilters.allOutput",
-    taxaFromObs: "$compute:hortis.taxaFromObs({self}.filteredObs, {self}.taxa.rowById)",
+    taxaFromObs: "$compute:hortis.taxaFromObs({self}.pkg, {self}.filteredObs, {self}.taxa.rowById)",
     statusFilter: {
         $component: {
             $layers: "bioreportr.statusFilter",
@@ -166,8 +162,8 @@ fluid.def("bioreportr.storyPage", {
     recordReporter: {
         $component: {
             $layers: "bioreportr.recordAndTaxaReporter",
-            filteredRows: "{vizLoader}.finalFilteredObs",
-            allRows: "{vizLoader}.obsRows",
+            filtered: "{vizLoader}.finalFilteredObs",
+            all: "{vizLoader}.allObs",
             taxa: "{vizLoader}.taxaFromObs",
             rowById: "{vizLoader}.taxa.rowById"
         }
@@ -183,7 +179,8 @@ fluid.def("bioreportr.storyPage", {
     obsTable: {
         $component: {
             $layers: "hortis.dataTable",
-            rows: "{vizLoader}.finalFilteredObs",
+            // The rows are read from the data package only as they are shown
+            rows: "$compute:hortis.selectionRowSource({vizLoader}.pkg, {vizLoader}.finalFilteredObs)",
             columns: "{storyPage}.recordColumns",
             // Clicking a record shows its marker alone on the map - see hortis.libreMap.recordSelector
             rowSelectable: true,
@@ -243,7 +240,7 @@ fluid.def("bioreportr.storyPage", {
             $layers: "bioreportr.solowRadius"
         }
     },
-    solowTaxonObs: "$compute:bioreportr.solowObsForTaxon({self}.obsRows, {self}.solowTaxa.selectedTaxon)",
+    solowTaxonObs: "$compute:bioreportr.solowObsForTaxon({self}.pkg, {self}.solowTaxa.selectedTaxon)",
     // The annotations of records the project keeps, e.g. of planted populations, as a CSV file relative to the story page,
     // if it has any - records they suspend from the calculation of extirpation probability are left out of the populations
     recordAnnotationsFile: null,
@@ -333,14 +330,14 @@ fluid.def("bioreportr.storyPage", {
     },
     // true once the observations shown are the real ones - a rendering from placeholder data, e.g. by a static build
     // of the page, marks the page as loading until the real data has loaded
-    loaded: "$compute:bioreportr.storyPage.loaded({self}.finalFilteredObs, {self}.isPlaceholder, {self}.regionIndirection.isPlaceholder)",
+    loaded: "$compute:bioreportr.storyPage.loaded({self}.finalFilteredObs, {self}.isPlaceholder)",
     // Becomes true once the page is loaded and has rendered what it derives from its genuine data, which it does over
     // several tasks - the page's material is hidden until then, see layouts/story/baseof.html
     revealed: false,
     reveal: "$effect:bioreportr.storyPage.reveal({self}, {self}.loaded, {global})",
     filtersCollapsed: true,
     toggleFilters: "$method:bioreportr.storyPage.toggleFilters({self})",
-    downloadObs: "$method:bioreportr.storyPage.downloadObs({self}.finalFilteredObs)",
+    downloadObs: "$method:bioreportr.storyPage.downloadObs({self}.pkg, {self}.finalFilteredObs)",
     recordsExpanded: "$compute:hortis.negate({self}.recordsCollapsed)",
     solowRecordsExpanded: "$compute:hortis.negate({self}.solowRecordsCollapsed)",
     solowRecordsSpecies: "$compute:bioreportr.storyPage.taxonLabel({self}.solowTaxa.selectedTaxon)"
@@ -367,6 +364,29 @@ bioreportr.storyPage.classes = function (pane, chosenTaxon, recordId) {
     };
 };
 
+/**
+ * The classes of the parts of the story page as its template renders them - those of bioreportr.storyPage.classes,
+ * and the left pane's, each empty while it is unavailable, e.g. while the page is rendered statically, where there is
+ * no URL to name the pane shown. An attribute interpolating an unavailable value is not rendered at all, which would
+ * lose the fixed classes beside it - those of the left pane give it its width, without which the main resize bar
+ * would stand far to the left until the page boots. The members are read within, so that each is read as it is.
+ * @param {bioreportr.storyPage} that - The story page
+ * @return {Object<String, String>} The classes of each part, as for bioreportr.storyPage.classes, and `leftPane`
+ */
+bioreportr.storyPage.renderedClasses = function (that) {
+    const read = value => {
+        const bare = fluid.unwrapProxy(value);
+        return fluid.isUnavailable(bare) || bare === undefined ? undefined : bare;
+    };
+    const classes = read(that.classes) || {};
+    const leftPane = read(that.leftPaneClass);
+    const parts = ["map", "vizControls", "obsFilters", "filters", "obsTable", "solow"];
+    return {
+        ...Object.fromEntries(parts.map(part => [part, typeof(classes[part]) === "string" ? classes[part] : ""])),
+        leftPane: typeof(leftPane) === "string" ? leftPane : ""
+    };
+};
+
 bioreportr.storyPage.toggleFilters = function (that) {
     that.filtersCollapsed = !that.filtersCollapsed;
 };
@@ -390,13 +410,13 @@ bioreportr.storyPage.hasMarkup = markup => !!markup;
 
 <template>
     <div class="imerss-main" @class="imerss-loading:!@{revealed}">
-        <div class="mxcw-leftPane @{leftPaneClass}" data-mxcw-startup-hidden="map">
-            <div class="mxcw-map fld-imerss-nodismiss-map @{classes.map}" @id="map"></div>
+        <div class="mxcw-leftPane @{renderedClasses.leftPane}" data-mxcw-startup-hidden="map">
+            <div class="mxcw-map fld-imerss-nodismiss-map @{renderedClasses.map}" @id="map"></div>
             <div @id="mapResizeBar"></div>
             <div class="mxcw-data fld-imerss-nodismiss-map">
                 <div class="mxcw-data-pane-widget mxcw-atlas-taxon-holder" @class="mxcw-atlas-has-taxon:@{taxonPanelVisible}"><div @id="taxonPanel"></div></div>
                 <div @id="taxonPanelResizeBar"></div>
-                <div class="mxcw-data-pane-widget mxcw-obs-table-holder @{classes.obsTable}" @class="mxcw-records-collapsed:@{recordsCollapsed}"
+                <div class="mxcw-data-pane-widget mxcw-obs-table-holder @{renderedClasses.obsTable}" @class="mxcw-records-collapsed:@{recordsCollapsed}"
                     @onclick="{self}.recordTableClick({0})">
                     <div class="mxcw-obs-table-controls">
                         <button type="button" class="mxcw-records-toggle mxcw-data-widget-text" aria-expanded="@{recordsExpanded}"
@@ -412,7 +432,7 @@ bioreportr.storyPage.hasMarkup = markup => !!markup;
                     <div id="mxcw-records-table" class="mxcw-obs-table hortis-datatable" @id="obsTable"></div>
                 </div>
                 <!-- The slider of the population radius, in a slim strip beneath the map, above the panel of the taxon -->
-                <div class="mxcw-data-pane-widget mxcw-solow-widgets-holder @{classes.solow}" @class="mxcw-solow-has-taxon:@{solowHasTaxon}">
+                <div class="mxcw-data-pane-widget mxcw-solow-widgets-holder @{renderedClasses.solow}" @class="mxcw-solow-has-taxon:@{solowHasTaxon}">
                     <div class="mxcw-solow-radius-holder"><div @id="solowRadius"></div></div>
                     <div class="mxcw-solow-taxon-holder">
                         <div @id="solowTaxonPanel"></div>
@@ -420,7 +440,7 @@ bioreportr.storyPage.hasMarkup = markup => !!markup;
                     </div>
                 </div>
                 <div @id="solowRecordsResizeBar"></div>
-                <div class="mxcw-data-pane-widget mxcw-solow-records-holder @{classes.solow}" @class="mxcw-solow-records-collapsed:@{solowRecordsCollapsed}">
+                <div class="mxcw-data-pane-widget mxcw-solow-records-holder @{renderedClasses.solow}" @class="mxcw-solow-records-collapsed:@{solowRecordsCollapsed}">
                     <div class="mxcw-obs-table-controls">
                         <button type="button" class="mxcw-records-toggle mxcw-data-widget-text" aria-expanded="@{solowRecordsExpanded}"
                             aria-controls="mxcw-solow-records-table" @onclick="{self}.toggleSolowRecords()">Records<span class="mxcw-solow-records-species">@{solowRecordsSpecies}</span></button>
@@ -450,14 +470,14 @@ bioreportr.storyPage.hasMarkup = markup => !!markup;
                         <div class="mxcw-content imerss-nodismiss-map" data-mxcw-startup-hidden @id="storyPanes"></div>
                     </div>
                     <div @id="contentResizeBar"></div>
-                    <div class="imerss-container @{classes.vizControls}" data-mxcw-startup-hidden>
-                        <div class="imerss-filter-panel @{classes.obsFilters}" @class="imerss-filters-collapsed:@{filtersCollapsed}">
+                    <div class="imerss-container @{renderedClasses.vizControls}" data-mxcw-startup-hidden>
+                        <div class="imerss-filter-panel @{renderedClasses.obsFilters}" @class="imerss-filters-collapsed:@{filtersCollapsed}">
                             <div class="imerss-panel-label imerss-filters-header">
                                 <button type="button" class="imerss-filters-toggle" aria-expanded="@{filtersCollapsed}"
                                     aria-controls="imerss-main-filters" @onclick="{self}.toggleFilters()">Filters:</button>
                                 <div @id="filterControls"></div>
                             </div>
-                            <div id="imerss-main-filters" class="imerss-filters imerss-main-filters @{classes.filters}">
+                            <div id="imerss-main-filters" class="imerss-filters imerss-main-filters @{renderedClasses.filters}">
                                 <div class="imerss-filter"></div>
                                 <div class="imerss-status-filter imerss-filter" @id="statusFilter"></div>
                                 <div class="imerss-collector-filter imerss-filter" @id="collectorFilter"></div>
@@ -468,7 +488,7 @@ bioreportr.storyPage.hasMarkup = markup => !!markup;
                             <div @id="recordReporter"></div>
                             <div @id="checklist"></div>
                         </div>
-                        <div class="mxcw-solow-taxa @{classes.solow}" @id="solowTaxa"></div>
+                        <div class="mxcw-solow-taxa @{renderedClasses.solow}" @id="solowTaxa"></div>
                     </div>
                 </div>
             </div>

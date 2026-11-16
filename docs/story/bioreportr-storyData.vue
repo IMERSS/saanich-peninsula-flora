@@ -6,6 +6,7 @@
 
 fluid.def("bioreportr.storyData", {
     $layers: "fluid.component",
+    vizFile: "../local/data/tabular/Saanich_Tracheophyta_2026-11-15.viz",
     obsFile: "../local/data/tabular/Saanich_Tracheophyta_ultimate-catalogue_2026-11-15-selected-labels.csv",
     regionIndirectionFile: "../local/data/tabular/Saanich_Tracheophyta_ultimate-catalogue_2026-11-15-selected-regionIndirection.csv",
     taxaFile: "../local/data/tabular/Saanich_Tracheophyta_ultimate-summary_2026-11-15-prepared-taxa.csv",

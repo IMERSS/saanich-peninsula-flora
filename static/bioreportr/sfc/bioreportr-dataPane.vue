@@ -71,10 +71,9 @@ fluid.def("bioreportr.choroplethSlider", {
             onceOnly: true
         }
     },
-    yearCache: "$compute:bioreportr.choroplethSlider.yearCache({vizLoader}.obsRows)",
     filterState: "$compute:bioreportr.choroplethSlider.filterState({self}.labels, {self}.sliderIndex)",
     filterSummary: {count: 0, title: ""},
-    doFilter: "$method:bioreportr.choroplethSlider.doFilter({0}:obsRows, {1}:filterState, {self}.yearCache)",
+    predicates: "$compute:bioreportr.choroplethSlider.predicates({self}.filterState)",
     reset: "$method:fluid.identity"
 });
 

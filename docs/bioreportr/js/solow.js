@@ -55,12 +55,51 @@ bioreportr.obsDateComparator = (a, b) => a.eventDate < b.eventDate ? -1 : a.even
 
 /**
  * Find the observations of a taxon, in order of date.
- * @param {Object[]} obsRows - All the observations
+ * @param {VizPackage} pkg - The data package
  * @param {TaxonRow|null} taxonRow - The taxon, or null if none is chosen
  * @return {Object[]} The taxon's observations
  */
-bioreportr.solowObsForTaxon = function (obsRows, taxonRow) {
-    return taxonRow ? obsRows.filter(row => row.iNaturalistTaxonId === taxonRow.id).sort(bioreportr.obsDateComparator) : [];
+bioreportr.solowObsForTaxon = function (pkg, taxonRow) {
+    return taxonRow ? bioreportr.queryRows(pkg, [{field: "iNaturalistTaxonId", op: "=", value: taxonRow.id}]) : [];
+};
+
+/** Queries of the observations - see notes/query-description-language.md in imerss-bioinfo **/
+
+// The predicates of records which have coordinates and so can be mapped - neither of them zero, as
+// bioreportr.hasCoordinates holds
+bioreportr.coordinatePredicates = [
+    {field: "decimalLatitude", op: "notNull"}, {field: "decimalLongitude", op: "notNull"},
+    {field: "decimalLatitude", op: "!=", value: 0}, {field: "decimalLongitude", op: "!=", value: 0}
+];
+
+/**
+ * The predicates of the dated sightings - records with a date which pass the project's predicates of what counts as a
+ * sighting, e.g. Howe Sound's, which sets aside a species list.
+ * @param {Object[]} sightingPredicates - The project's predicates of a sighting
+ * @return {Object[]} The predicates
+ */
+bioreportr.datedPredicates = sightingPredicates => [{field: "eventDate", op: "notNull"}, ...fluid.makeArray(fluid.unwrapProxy(sightingPredicates))];
+
+/**
+ * The predicates leaving out the records suspended from the calculation of extirpation probability.
+ * @param {Object<String, Object>} annotations - The annotations of records, by occurrenceID
+ * @return {Object[]} The predicates
+ */
+bioreportr.notExcludedFromEPPredicates = function (annotations) {
+    const excluded = Object.keys(annotations || {}).filter(id => annotations[id].excludeFromEP);
+    return excluded.length === 0 ? [] : [{not: {field: "occurrenceID", op: "in", value: excluded}}];
+};
+
+/**
+ * Read the observations passing a list of predicates as row objects, in order of date - for a view showing a few
+ * records, e.g. those of one taxon.
+ * @param {VizPackage} pkg - The data package
+ * @param {Object[]} predicates - The predicates
+ * @param {Selection} [within] - A selection which they narrow
+ * @return {Object[]} The rows, in order of date
+ */
+bioreportr.queryRows = function (pkg, predicates, within) {
+    return hortis.selectionRows(pkg, hortis.selectObs(pkg, predicates, within)).sort(bioreportr.obsDateComparator);
 };
 
 /**

@@ -56,7 +56,7 @@ fluid.def("bioreportr.storyMap", {
     recentre: "$effect:bioreportr.storyMap.recentre({self}.readyMap, {storyPage}.mapData, {storyPage}.activePane)",
     // On a phone one finger scrolls the page past the map, and two move the map - see bioreportr.storyMap.phoneGestures
     phoneGestures: "$effect:bioreportr.storyMap.phoneGestures({self}.readyMap, {global})",
-    legendRows: "$compute:bioreportr.storyMap.legendRows({storyPage}.activePane, {storyPage}.regionIndirection.rows, {storyPage}.mapData.style.layers)",
+    legendRows: "$compute:bioreportr.storyMap.legendRows({storyPage}.activePane, {storyPage}.regionIndirectionRows, {storyPage}.mapData.style.layers)",
     legendRowsMarkup: "$compute:bioreportr.storyMap.legendMarkup({self}.legendRows, {storyPage}.selectedStatus, {storyPage}.selectedRegion)",
     regionLegend: {
         $bindable: {

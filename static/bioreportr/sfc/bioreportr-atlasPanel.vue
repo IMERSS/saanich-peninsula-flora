@@ -28,28 +28,29 @@ fluid.def("bioreportr.atlasPanel", {
     // The label of each reporting status of the summary. A status may be followed by a year, e.g. "new 2021", shown
     // after its label
     statusLabels: {confirmed: "Confirmed", reported: "Historical", unconfirmed: "Historical", new: "New"},
-    // Whether a record is a sighting of its plant, giving a date at which it was seen - a project whose catalogue holds
-    // records which are not, such as a species list entered as pseudo-records, overrides this
-    isSighting: "$method:bioreportr.atlas.isSighting({0}:record)",
+    // The predicates of the query description language by which a record is a sighting of its plant, giving a date at
+    // which it was seen - by default every record. A project whose catalogue holds records which are not, such as a
+    // species list entered as pseudo-records, overrides this - see notes/query-description-language.md in imerss-bioinfo
+    sightingPredicates: [],
     // The query by which the Community Science pane's panels choose their species, as parameters of iNaturalist's
     // species_counts API, e.g. {project_id: 303782} or {place_id: 121270, taxon_id: 211194} - see paneOverrides in the
     // project's story. Its species open on the atlas - see bioreportr.inatSpecies
     inatSpeciesQuery: null,
     // The plant or group chosen in the checklist, and its dated records
     checklistTaxon: "$compute:bioreportr.atlas.resolveTaxon({self}.taxa.rowById, {self}.checklist.search.filterState)",
-    atlasRecords: "$compute:bioreportr.atlas.taxonRecords({self}.obsRows, {self}.taxa.rowById, {self}.checklistTaxon, {self}.isSighting)",
+    atlasRecords: "$compute:bioreportr.atlas.taxonRecords({self}.pkg, {self}.allObs, {self}.checklistTaxon, {self}.sightingPredicates)",
     atlasPanelMarkup: `$compute:bioreportr.atlas.panelMarkup({self}.checklistTaxon, {self}.atlasRecords,
         {self}.curation.historyById, {self}.curationHistorySources, {self}.curation.byTaxon, {self}.recordAnnotations, atlas, {self}.statusLabels)`,
     // The panel is shown on the atlas, while a plant with records is chosen - and on the Protected Areas pane, if the
     // story has one, see bioreportr.storyPageProtectedAreas
     taxonPanelVisible: "$compute:bioreportr.atlas.panelVisible({self}.taxonPanel.markup, {self}.activePaneKey)",
     // The extirpation risk pane shows the same panel of its chosen plant, with its regional EP
-    solowDatedObs: "$compute:bioreportr.atlas.dated({self}.solowTaxonObs, {self}.isSighting)",
+    solowDatedObs: "$compute:bioreportr.atlas.datedObsOfTaxon({self}.pkg, {self}.solowTaxa.selectedTaxon, {self}.sightingPredicates)",
     // The populations mapped by the extirpation risk pane are drawn from dated sightings alone, since an undated record
     // gives no time of sighting for its population's EP - the records table still lists every record
-    solowEPObs: "$compute:bioreportr.atlas.datedEPObs({self}.solowTaxonObs, {self}.recordAnnotations, {self}.isSighting)",
+    solowEPObs: "$compute:bioreportr.atlas.datedObsOfTaxon({self}.pkg, {self}.solowTaxa.selectedTaxon, {self}.sightingPredicates, {self}.recordAnnotations)",
     // The map pans and zooms to the records of the plant chosen in the extirpation risk pane's table
-    fitToSolowTaxon: "$effect:bioreportr.atlas.fitToTaxon({self}.map.readyMap, {self}.solowTaxa.selectedTaxon, {self}.obsRows, {self}.map.zoomDuration, {self}.activePaneKey)",
+    fitToSolowTaxon: "$effect:bioreportr.atlas.fitToTaxon({self}.map.readyMap, {self}.solowTaxa.selectedTaxon, {self}.solowTaxonObs, {self}.map.zoomDuration, {self}.activePaneKey)",
     solowTaxonPanel: {
         $component: {
             markup: `$compute:bioreportr.atlas.panelMarkup({storyPage}.solowTaxa.selectedTaxon, {storyPage}.solowDatedObs,
@@ -73,7 +74,7 @@ fluid.def("bioreportr.atlasPanel", {
     // The species of the Community Science pane open on the atlas - see bioreportr.inatSpecies
     inatSpeciesClick: "$effect:bioreportr.inatSpecies.bind({self}, {self}.inatSpeciesQuery, {global})",
     // The dated sightings of each taxon, from which the groups' summaries are drawn
-    byTaxon: "$compute:bioreportr.atlas.groupRecords({self}.obsRows, {self}.isSighting)",
+    byTaxon: "$compute:bioreportr.atlas.groupRecords({self}.pkg, {self}.sightingPredicates)",
     // Summaries of each group of species, shown when hovering over its tile or its row of the map's legend
     statusTooltip: {
         $component: {
@@ -91,9 +92,6 @@ fluid.def("bioreportr.atlasPanel", {
     }
 });
 
-// By default every record is a sighting
-bioreportr.atlas.isSighting = () => true;
-
 // The panel is shown only on the atlas, while a plant with records is chosen
 bioreportr.atlas.panelVisible = (markup, activePaneKey) => !!markup && activePaneKey === "Status";
 
@@ -105,9 +103,9 @@ bioreportr.atlas.panelVisible = (markup, activePaneKey) => !!markup && activePan
  * @param {Number} duration - The duration in milliseconds of the map's smooth move to the records
  * @param {String} activePaneKey - The key of the pane shown - the map is fitted only on the extirpation risk pane
  */
-bioreportr.atlas.fitToTaxon = function (map, taxon, obsRows, duration, activePaneKey) {
+bioreportr.atlas.fitToTaxon = function (map, taxon, taxonObs, duration, activePaneKey) {
     if (taxon && activePaneKey === "Solow") {
-        const points = bioreportr.solowObsForTaxon(obsRows, taxon).map(bioreportr.obsPoint).filter(point => point);
+        const points = taxonObs.map(bioreportr.obsPoint).filter(point => point);
         if (points.length > 0) {
             hortis.libreMap.afterLayout(map, () => {
                 // The map may only just have been shown, in a pane which hid it
@@ -118,13 +116,6 @@ bioreportr.atlas.fitToTaxon = function (map, taxon, obsRows, duration, activePan
         }
     }
 };
-
-// The dated sightings of a plant, as the panel charts them
-bioreportr.atlas.dated = (records, isSighting) => records.filter(record => record.eventDate && isSighting(record));
-
-// The records from which the extirpation risk pane's populations are drawn - those counted towards EP, as
-// bioreportr.solowObsForEP chooses them, which are sightings and also have a date
-bioreportr.atlas.datedEPObs = (records, annotations, isSighting) => bioreportr.atlas.dated(bioreportr.solowObsForEP(records, annotations), isSighting);
 
 /**
  * Decorate a checklist row with an icon of its taxon's reporting status, as hortis.blitzChecklistDecoration does, but
@@ -242,22 +233,48 @@ bioreportr.atlas.paneClick = function (storyPage, event) {
 };
 
 /**
- * Group the dated sightings by taxon - the records of the In Memoriam timeline and of the summaries of the atlas's
- * groups.
- * @param {Object[]} obsRows - All records
- * @param {Function} isSighting - Whether a record is a sighting - see the story page's member isSighting
- * @return {Map<String, Object[]>} The dated sightings of each taxon, by id
+ * Index the dated sightings of each taxon - by one query grouping their ids by taxon, each taxon's records being read
+ * as row objects only when they are first asked for, e.g. by a summary of its group of species.
+ * @param {VizPackage} pkg - The data package
+ * @param {Object[]} sightingPredicates - The project's predicates of a sighting
+ * @return {Object} The index, with a method `get` accepting a taxon id and returning its records, in no order, or
+ * `undefined` if it has none - as a Map of taxon id to records would - and for a view which needs only a few of each
+ * taxon's records, `idsOf`, returning the ids of its records in order of date, `rowOf`, reading a record by its id,
+ * `yearOf`, the year of a record by its id, and `idsWhere`, returning a Set of the ids of the records passing a list
+ * of predicates
  */
-bioreportr.atlas.groupRecords = function (obsRows, isSighting) {
-    const byTaxon = new Map();
-    obsRows.forEach(obs => {
-        if (obs.eventDate && isSighting(obs)) {
-            const records = byTaxon.get(obs.iNaturalistTaxonId) || [];
-            records.push(obs);
-            byTaxon.set(obs.iNaturalistTaxonId, records);
+bioreportr.atlas.groupRecords = function (pkg, sightingPredicates) {
+    const result = hortis.query(pkg, {from: "obs", where: bioreportr.datedPredicates(sightingPredicates),
+        groupBy: ["iNaturalistTaxonId"], measures: {rows: {rows: true}}});
+    const bare = fluid.unwrapProxy(pkg), obs = bare.tables.obs;
+    const groupOf = new Map();
+    for (let g = 0; g < result.groups; ++g) {
+        groupOf.set(String(result.keys.iNaturalistTaxonId[g]), g);
+    }
+    const cache = new Map();
+    const {offsets, values} = result.measures.rows;
+    const days = obs.columns.eventDate.days;
+    return {
+        has: taxonId => groupOf.has(String(taxonId)),
+        idsOf: function (taxonId) {
+            const g = groupOf.get(String(taxonId));
+            // Ordered by day, and within a day as the records were catalogued
+            return g === undefined ? new Int32Array(0) : values.slice(offsets[g], offsets[g + 1]).sort((a, b) => days[a] - days[b] || a - b);
+        },
+        rowOf: id => hortis.qdl.rowObject(obs, id),
+        yearOf: id => hortis.qdl.dateParts.year(days[id]),
+        idsWhere: predicates => new Set(hortis.query(pkg, {from: "obs", where: predicates, select: {rows: true}}).rows),
+        get: function (taxonId) {
+            const id = String(taxonId);
+            let togo = cache.get(id);
+            if (!togo && groupOf.has(id)) {
+                const g = groupOf.get(id);
+                togo = hortis.qdl.rowObjects(obs, values.subarray(offsets[g], offsets[g + 1]));
+                cache.set(id, togo);
+            }
+            return togo;
         }
-    });
-    return byTaxon;
+    };
 };
 
 /** Plants opened from other panes, and their photos **/
@@ -530,22 +547,31 @@ bioreportr.atlas.statusLabel = (status, labels) => {
 bioreportr.atlas.field = (label, value) => value ? `<dt>${label}:</dt> <dd>${hortis.dataTable.encode(value)}</dd>` : "";
 
 /**
- * Find the dated sightings of a taxon and of any taxa beneath it, in date order.
- * @param {Object[]} obsRows - All records
- * @param {Object<String, TaxonRow>} rowById - Taxon rows indexed by id
- * @param {TaxonRow|null} taxon - The selected taxon
- * @param {Function} isSighting - Whether a record is a sighting - see the story page's member isSighting
- * @return {Object[]} The records found
+ * Find the dated sightings of a taxon, or of any taxon beneath it, in order of date.
+ * @param {VizPackage} pkg - The data package
+ * @param {Selection} selection - The observations from which they are drawn
+ * @param {TaxonRow|null} taxon - The taxon, if any is chosen
+ * @param {Object[]} sightingPredicates - The project's predicates of a sighting
+ * @return {Object[]} The records
  */
-bioreportr.atlas.taxonRecords = function (obsRows, rowById, taxon, isSighting) {
-    const isWithin = id => {
-        let within = false;
-        for (let row = rowById[id]; row && !within; row = row.parent) {
-            within = row === taxon;
-        }
-        return within;
-    };
-    return taxon ? obsRows.filter(obs => obs.eventDate && isSighting(obs) && isWithin(obs.iNaturalistTaxonId)).sort(bioreportr.obsDateComparator) : [];
+bioreportr.atlas.taxonRecords = function (pkg, selection, taxon, sightingPredicates) {
+    return taxon ? bioreportr.queryRows(pkg, [{field: "iNaturalistTaxonId", op: "within", taxa: [taxon.id]},
+        ...bioreportr.datedPredicates(sightingPredicates)], selection) : [];
+};
+
+/**
+ * Find the dated sightings of a taxon alone, in order of date, optionally leaving out the records suspended from the
+ * calculation of extirpation probability - from which the populations mapped by the extirpation risk pane are drawn.
+ * @param {VizPackage} pkg - The data package
+ * @param {TaxonRow|null} taxon - The taxon, if any is chosen
+ * @param {Object[]} sightingPredicates - The project's predicates of a sighting
+ * @param {Object<String, Object>} [annotations] - The annotations of records, by occurrenceID, if those suspended
+ * from the calculation are to be left out
+ * @return {Object[]} The records
+ */
+bioreportr.atlas.datedObsOfTaxon = function (pkg, taxon, sightingPredicates, annotations) {
+    return taxon ? bioreportr.queryRows(pkg, [{field: "iNaturalistTaxonId", op: "=", value: taxon.id},
+        ...bioreportr.datedPredicates(sightingPredicates), ...bioreportr.notExcludedFromEPPredicates(fluid.unwrapProxy(annotations))]) : [];
 };
 
 /**

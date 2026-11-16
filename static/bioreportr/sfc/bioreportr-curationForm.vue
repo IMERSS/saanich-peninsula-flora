@@ -309,16 +309,16 @@ bioreportr.curationForm.locationRecordLimit = 12;
  * oldest, each a button choosing it
  * for the correction of its position. Records without a position, and those with notes already, are marked.
  * @param {TaxonRow|null} taxon - The taxon chosen for curation
- * @param {Object} recordIndex - The index of the records, as `hortis.libreMap.recordIndex`, whose `ids` map each row to
- * its id
+ * @param {Object} recordIndex - The index of the records, as `hortis.libreMap.recordIndex`, whose `recordsOf` finds the
+ * records of a taxon with their ids
  * @param {Object<String, CurationNote[]>} byObservation - The notes of each record, by record id
  * @return {String} The markup of the list
  */
 bioreportr.curationForm.locationRecordsMarkup = function (taxon, recordIndex, byObservation) {
     const encode = hortis.dataTable.encode;
     let togo = "";
-    if (taxon && recordIndex?.ids) {
-        const records = [...recordIndex.ids.entries()].filter(([row]) => String(hortis.rowToLinkTaxonId(row)) === String(taxon.id))
+    if (taxon && recordIndex?.recordsOf) {
+        const records = recordIndex.recordsOf("iNaturalistTaxonId", taxon.id)
             // Those most in need of placing first - any without a position, then the oldest, whose localities are vaguest
             .sort(([a], [b]) => hortis.libreMap.hasCoords(a) - hortis.libreMap.hasCoords(b) ||
                 String(a.eventDate || "9999").localeCompare(String(b.eventDate || "9999")));
@@ -349,9 +349,9 @@ bioreportr.curationForm.chooseRecord = function (recordSelector, event) {
     const button = event.target.closest?.(".mxcw-curation-record-choice");
     if (button) {
         const id = button.dataset.recordId;
-        const entry = [...recordSelector.recordIndex.ids.entries()].find(([, candidate]) => candidate === id);
-        if (entry) {
-            recordSelector.select(entry[0]);
+        const row = recordSelector.recordIndex.byId.get(id);
+        if (row) {
+            recordSelector.select(row);
         }
     }
 };

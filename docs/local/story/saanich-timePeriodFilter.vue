@@ -10,23 +10,24 @@ fluid.def("saanich.timePeriodFilter", {
     filterState: null,
     // The span shown while a handle is being moved: the records, of which there are many, are filtered only once it is let go
     dragging: null,
-    bounds: "$compute:saanich.recordPeriod({self}.obsRows)",
+    // The period of the records, computed once by the story
+    bounds: "{storyPage}.recordPeriod",
     display: "$compute:saanich.timePeriodFilter.display({self}.bounds, {self}.filterState, {self}.dragging)",
     // The handles are placed from code, since the renderer writes the value of a bound input back into what it is bound to
     placeHandles: "$effect:saanich.timePeriodFilter.placeHandles({self}.display, {global}.document)",
     filterSummary: "$compute:saanich.timePeriodFilter.summarise({self}.filterState)",
-    doFilter: "$method:saanich.timePeriodFilter.doFilter({0}:rows, {1}:filterState)",
+    predicates: "$compute:saanich.timePeriodFilter.predicates({self}.filterState)",
     reset: "$method:saanich.timePeriodFilter.reset({self})"
 });
 
 fluid.registerNamespace("saanich.timePeriodFilter");
 
-saanich.timePeriodFilter.doFilter = function (rows, state) {
-    return state ? rows.filter(row => {
-        const year = parseInt(row.eventDate, 10);
-        return year >= state.min && year <= state.max;
-    }) : rows;
-};
+/**
+ * Compute the predicates of a filter of the records to a span of years - a record without a year is outside any.
+ * @param {Object|null} state - The span, with members `min` and `max`, or null if every record is shown
+ * @return {Object[]} The predicates
+ */
+saanich.timePeriodFilter.predicates = state => state ? [{field: {year: "eventDate"}, op: "between", value: [state.min, state.max]}] : [];
 
 // The sliders run over a fixed scale of positions, since the renderer does not keep bound `min` and `max` attributes of an
 // input, and each position is converted to a year within the period of the records

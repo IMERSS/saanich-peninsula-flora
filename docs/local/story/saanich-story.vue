@@ -41,7 +41,7 @@ fluid.def("saanich.story", {
     // of the region index giving each area or KBA the label of its group, see GroupField in scripts/intersectShapes.R
     regionFilterFieldNames: ["BEC", "ProtectedArea", "KBA"],
     // The period of the records, over which the extirpation risk analysis always runs
-    recordPeriod: "$compute:saanich.recordPeriod({self}.obsRows)",
+    recordPeriod: "$compute:saanich.recordPeriod({self}.pkg)",
     solowParams: "$compute:saanich.solowParams({self}.recordPeriod)",
     taxonColumns: [
         {key: "scientificName", label: "Taxon name"},
@@ -92,7 +92,7 @@ fluid.def("saanich.story", {
     ],
     // The taxa of the summary with their counts of records with and without coordinates
     summaryTaxa: "$compute:bioreportr.summaryTaxaRows({self}.taxa.allRows)",
-    annotatedTaxa: "$compute:saanich.annotateGeoref({self}.summaryTaxa, {self}.obsRows)",
+    annotatedTaxa: "$compute:saanich.annotateGeoref({self}.summaryTaxa, {self}.pkg)",
     solowTaxa: {
         $component: {
             taxaFilters: {

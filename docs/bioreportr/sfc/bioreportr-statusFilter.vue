@@ -15,7 +15,7 @@ fluid.def("bioreportr.statusFilter", {
     statusById: "$compute:hortis.reportingStatusById({vizLoader}.taxa.rowById)",
     checked: "$compute:bioreportr.statusFilter.checked({self}.filterState)",
     filterSummary: "$compute:hortis.collectorFilter.summarise({self}.filterState, {self}.filterName)",
-    doFilter: "$method:bioreportr.statusFilter.doFilter({0}:obsRows, {1}:filterState, {self}.statusById)",
+    predicates: "$compute:bioreportr.statusFilter.predicates({self}.filterState, {self}.statusById)",
     toggle: "$method:bioreportr.statusFilter.toggle({storyPage}, {0}:status)",
     reset: "$method:bioreportr.statusFilter.reset({storyPage})"
 });
@@ -34,9 +34,14 @@ bioreportr.statusFilter.reset = function (storyPage) {
     storyPage.selectedStatus = null;
 };
 
-bioreportr.statusFilter.doFilter = function (obsRows, filterState, statusById) {
-    return filterState ? obsRows.filter(row => statusById[row.iNaturalistTaxonId] === filterState) : obsRows;
-};
+/**
+ * Compute the predicates of a filter of the observations to the taxa of a reporting status.
+ * @param {String|null} filterState - The status, or null if none is chosen
+ * @param {Object<String, String>} statusById - Map of taxon id to its status
+ * @return {Object[]} The predicates
+ */
+bioreportr.statusFilter.predicates = (filterState, statusById) => filterState ?
+    [{field: "iNaturalistTaxonId", op: "in", value: Object.keys(statusById).filter(id => statusById[id] === filterState)}] : [];
 
 bioreportr.statusFilter.click = function (event, that) {
     const input = event.target.closest("input[data-status]");
