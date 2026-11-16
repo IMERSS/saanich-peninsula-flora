@@ -24,7 +24,9 @@ taking a list into the field, recording what they find, and adding to the curato
 Lists (§3) and search events (§4, §5) then grow out of the Atlas. §2 argues the central choice for events: how people
 register and log searches.
 
-Nothing here is built. The code cited is as it stands at commit `aa3e0b1`.
+Nothing here is built. The code cited is as it stands at commit `aa3e0b1`, except §3.5 and §3.7, revised on 15 November
+2026 to place the list in a **Download checklist** pane of its own on the right of the Atlas, beneath its checklist,
+mirroring the Records pane beneath its map, rather than in place of the map.
 
 ## 1. The Atlas: the way in
 
@@ -137,8 +139,11 @@ it. So a list carries its lineage and its doubts:
 
 ### 1.5 What follows for the rest of the design
 
-* **The list is a mode of the Atlas, not a pane of its own** (§3.7). The Atlas's data pane shows the map with the
-  records beneath it, as now, or the list, and its URL says which, e.g. `#pane:Status&view:list&region:...`.
+* **The list is part of the Atlas, not a story pane of its own** (§3.7). Beneath the Atlas's checklist, on the right,
+  a **Download checklist** pane mirrors the **Records** pane beneath its map, on the left: closed to a bar until it is
+  opened, it shows the checklist of the current selection, formatted for print and download. The map stays in view
+  beside it, so that an area is drawn or chosen while its list is watched. Its URL says it is open, e.g.
+  `#pane:Status&checklist:open&region:...`.
 * **The Atlas becomes a pane with a component of its own**, `bioreportr.atlasPane`, so that its R Markdown can bind
   the counts in its words, e.g. `` `<span>@{openQuestions.noVoucher}</span>`{=html} ``, and place the strip, tiles,
   questions and verbs as slots. Today's `sectionInserts` could place them too, but could not put counts into the
@@ -321,7 +326,7 @@ is already state of `bioreportr.storyPage`, already held in the URL by `fluid.ha
 `{storyPage}.filteredObs` is the result of all of them, and `{storyPage}.taxaFromObs` the taxa it holds. A list adds
 only taxon filters of its own (§3.4), its columns and grouping, and its title. This keeps the selection
 single-sourced: the Atlas's list, the map, its legend and the record table all follow the one `selectedRegion` or the
-one polygon, and a list's URL is simply the Atlas's URL with `view:list`.
+one polygon, and a list's URL is simply the Atlas's URL with `checklist:open`.
 
 ### 3.2 Data model
 
@@ -414,11 +419,21 @@ status, SARA status*, with rows grouped under friendly headings such as "frogs a
 for plants, lichens and fungi; order for mammals and herptiles; class for terrestrial invertebrates; phylum for algae
 and marine animals).
 
-The list offers three column sets, as a project's settings (§7.2):
+The list offers three formats, as a project's settings (§7.2):
 
-* **Field** - for the printed sheet: a tick box, scientific name, common name, status here, last seen here (year and
-  recorder), and a blank column for notes. Grouped by family. This is Harvey's list.
-* **Conservation** - Howe Sound's appendix columns, with status here and EP.
+* **Field sheet** - for the printed sheet: a tick box, scientific name, common name, status here, last seen here (year
+  and recorder), and a blank column for notes. Grouped by family. This is Harvey's list.
+* **Appendix** - the layout of Howe Sound's appendix tables, so that a list drawn from the Atlas matches those of the
+  synthesis: a title naming the area, the group and the date, with a line giving the filters in words; rows grouped
+  under friendly headings in bold, e.g. "arum family (Araceae)"; and the columns *Scientific name, Authority, Common
+  name, Provincial status, BC list, National status, SARA status*, followed by the two only a list of an area can
+  have, *Status here* and *Last seen here*. It is set as `build_appendix_gt` sets the appendices - left aligned,
+  striped rows, 11 px type, 14 px title - in HTML and a print stylesheet, so that R plays no part in it. The friendly
+  headings of Saanich's families are the common names its summary already carries for them, as the checklist shows
+  ("APIACEAE - CARROT FAMILY"); Howe Sound's other groups would take theirs from `classification_display_lookup.csv`,
+  carried into the story's data by R. Ranks marked in a scientific name, e.g. "ssp." and "var.", are set upright, as
+  the Lost Plants gallery sets them (`bioreportr.lostPlants.nameMarkup`, which would move to the framework's shared
+  scripts).
 * **Full** - everything of §3.2, for the CSV.
 
 Grouping is by `listGroupRanks`: one rank for a single-group project (family, for the vascular floras), or report
@@ -434,7 +449,7 @@ Two corrections to the brief, found in checking:
 * **The conservation ranks are not yet in the stories' summaries.** Saanich's summary has `provincial_concern` and
   `introduction_status`, but no S-rank, BC list, COSEWIC or SARA columns, and no authorities. Adding them is an R
   change (§7.1), from the BC CDC ranking table Howe Sound uses, `rankings/bc-cdc_full_2026-04-10-assigned.csv`, as
-  `assign_consevation_rankings.R` joins it. Until then the Conservation set shows `provincial_concern` alone.
+  `assign_consevation_rankings.R` joins it. Until then the Appendix format shows `provincial_concern` in place of the ranks, and no authorities.
 
 The meaning of Howe Sound's variants, as `split_flag_variants` in that script defines them: `_all` every taxon;
 `_unlisted` those whose `FLAG` is `!`; `_incorrectLocalityRemoved` those whose `FLAG` is `!!`, despite its name; and
@@ -458,20 +473,47 @@ UNESCO nomination's list, and `!!` one listed there in error of locality, is my 
 
 ### 3.7 Where it lives
 
-In the Atlas, with links into it from wherever an area is chosen (§1.5):
+In the Atlas, in a pane of its own beside the map, with links into it from wherever an area is chosen (§1.5):
 
-* **A mode of the Atlas.** The Atlas's data pane shows either the map with its records, as now, or the list of the
-  current selection, chosen by a switch above it and held in the URL as `view:list`. The list's controls sit above
-  it: the area chooser, an autocomplete over the region index's labels, grouped by field, and **Draw an area**, which
-  arms the map's draw control; then the filters, the column set and the title; then **Print**, **Download** and
-  **Copy link**. The map stays above the list, so that the area is always in view. The Atlas's lists before us and
-  open questions (§1.2) open this mode with their own selections.
+* **A Download checklist pane, mirroring Records.** The Atlas's left column ends in the **Records** pane, a bar
+  beneath the map, e.g. "Records — Elk/Beaver Lake Regional Park", which opens on the table of the selection's records
+  and bears their download. The right column, beneath the checklist and its filters, gains its counterpart, closed to a
+  bar until it is opened:
+
+  ```
+  ▸ Download checklist — Elk/Beaver Lake Regional Park · 308 taxa                    ⎙  ⤓
+  ```
+
+  The bar names the selection as the Records bar does, counts its taxa, and offers **Print** and **Download** at once.
+  Opened, the pane shows, in order:
+
+  1. **The area** - the region or drawn shape chosen, by name; an autocomplete over the region index's labels,
+     grouped by field (protected areas, KBAs, BEC zones); and **Draw an area**, which arms the map's draw control.
+     Whatever is chosen here is the Atlas's own selection, so the map, its Records and the checklist above all
+     follow it.
+  2. **Narrowing it** - the list's filters of §3.4, each a short control: status here, introduction, conservation,
+     lost.
+  3. **The format** - Field sheet or Appendix (§3.5), and the list's title, which defaults to the area's name.
+  4. **A preview** of the list as it will print, scrolling within the pane.
+  5. **Print / Save as PDF**, **Download CSV** and **Copy link** (§3.6).
+
+  Its open state is held in the URL as `checklist:open`, beside the selection's own keys, so that a shared link opens
+  the Atlas with the area drawn and the list showing. The map is never hidden: the person sees the area they are
+  listing as they list it. On a phone, where the Atlas's columns stack, the pane follows the checklist down the page.
+* **The invitation.** The Atlas's section says, in each project's own words in `Status.Rmd`, that anyone can make a
+  checklist of any place - "Choose a park, or draw an area on the map, and make your own checklist to take into the
+  field" - with a link opening the pane. Once a shape is drawn, a small prompt beside the map's draw control offers the
+  same: **Make a checklist of this area**. The Atlas's lists before us and open questions (§1.2) open the pane with their
+  own selections.
 * **The list is its own component**, `bioreportr.list` in `static/bioreportr/sfc/bioreportr-list.vue`, with its
-  print `<style>`, made a member `list` of the story page by `bioreportr.atlasPanel`. So another pane can show a list
-  too - the Events pane shows each event's targets as one (§4.5) - without a second implementation.
+  print `<style>`, made a member `list` of the story page by a layer of its own, `bioreportr.storyPageList` in
+  `bioreportr-storyPageList.vue`, which a project names in its `$layers`. The pane is placed in the story page's right
+  column, after the checklist's filter panel, as the Records pane is placed beneath the map - a slot of
+  `bioreportr-storyPage.vue`'s template, filled only for a story naming the layer. So another pane can show a list too -
+  the Events pane shows each event's targets as one (§4.5) - without a second implementation.
 * **"List these plants" wherever an area is chosen**: on the card of a protected area or KBA in the Protected Areas
   pane, on a checklist area of *Harvey's footsteps*, in the Atlas's region legend, and beside the map's draw control
-  once a shape is drawn. Each is a link, `#pane:Status&view:list&region:<label>` or with the current `polygon`, so
+  once a shape is drawn. Each is a link, `#pane:Status&checklist:open&region:<label>` or with the current `polygon`, so
   that it costs the panes nothing but an anchor.
 
 ## 4. The search event
@@ -502,7 +544,7 @@ organiser:
 targets:
   - {taxonId: "78150", taxonName: Myosotis laxa}
   - {taxonId: "77553", taxonName: Juncus bolanderi}
-listUrl: "https://imerss.github.io/saanich-peninsula-flora/story/#pane:Status&view:list&region:...&here:historical"
+listUrl: "https://imerss.github.io/saanich-peninsula-flora/story/#pane:Status&checklist:open&region:...&here:historical"
 visibility: public
 ```
 
@@ -856,7 +898,7 @@ In `<project>-story.vue`, as members of the layers:
 
 | Setting | Saanich | Howe Sound | Galiano |
 |---|---|---|---|
-| `listColumnSets` | the three of §3.5 | the same; Conservation as Howe's appendices | the same |
+| `listColumnSets` | the three formats of §3.5 | the same; Appendix as Howe's appendices | the same |
 | `listGroupRanks` | `["family"]` | `["family"]` now; `["report_group", <rank by group>]` once multi-group | `["family"]` |
 | `listFilters` | from `taxaFilterRecords`, with Here, Lost, Community | the same; Listing for its `FLAG` | the same |
 | `sensitiveMinAreaKm2` | 1 | 1 | 1 |
@@ -953,21 +995,22 @@ with every field later phases read; and the sign-in is curation's.
 
 * **Scope**: the Atlas's section recast as §1.2 proposes - its lists before us, its tiles, its open questions and its
   ways to take part - with its counts bound into each project's own words; the taxon panel's line of accounts, open
-  questions and invitation (§1.3); the list as a mode of the Atlas, with its filters, columns, print and CSV; "List
-  these plants" links; the area's download. No sign-in, no new data files - named areas are drawn from the region
+  questions and invitation (§1.3); the Download checklist pane of the Atlas, with its filters, formats, print and CSV;
+  "List these plants" links; the area's download. No sign-in, no new data files - named areas are drawn from the region
   index alone, outlined from the shapes already in `mapData.json` where a pane holds them, and otherwise only as a
   name. A source's list of taxa (*FSP 1972*, *HJ*) comes from the curation history's non-empty columns, which the
   page already loads.
-* **Files**: `static/bioreportr/sfc/bioreportr-atlasPane.vue`, `bioreportr-list.vue`; changes to
-  `bioreportr-atlasPanel.vue`; small additions to `bioreportr-protectedPane.vue`, `bioreportr-storyMap.vue` and
-  `saanich-rememberingPane.vue`; in each project, `content/story/Status.Rmd`, reworded and naming its component, and
+* **Files**: `static/bioreportr/sfc/bioreportr-atlasPane.vue`, `bioreportr-list.vue`, `bioreportr-storyPageList.vue`;
+  changes to `bioreportr-atlasPanel.vue`, and to `bioreportr-storyPage.vue` for the pane's place beneath the checklist;
+  small additions to `bioreportr-protectedPane.vue`, `bioreportr-storyMap.vue` and `bioreportr-rememberingPane.vue`
+  (shared since this note was written); in each project, `content/story/Status.Rmd`, reworded and naming its component, and
   settings in `<project>-story.vue`; `copyFrameworkOut.sh`.
 * **Verify, in both sites**: build each with `npm run build`, reading all its output, and serve with
   `--noHTTPCache`. Each count on the Atlas agrees with the same count made in R from the summary and the curation
   history - e.g. Saanich's 189 species without a voucher - and clicking it selects exactly those taxa. For a protected
   area, the list filtered to native species gives the count the Protected Areas card gives for it, from
   `scripts/Protected_map_mapbox.R` - an independent check of the selection. A drawn polygon, its URL reloaded in a
-  fresh tab, gives the same list. Back and forward move between areas and between map and list. Each panel's
+  fresh tab, gives the same list. Back and forward move between areas, and open and close the pane. Each panel's
   invitation opens the Curation pane on its plant, or record. Print preview, in Chrome and Safari, keeps headings with
   their rows. The CSV opens in a spreadsheet with its accents intact. On a phone width, the Atlas's section reads in
   order and the list's controls work. Say plainly where the map could not be checked, since the built-in browser's

@@ -1,8 +1,8 @@
 # Map the project areas of Harvey Janszen's regional checklists, each named on hover, for the pane in memory of him
 # The areas are the "lists" layers of https://github.com/IMERSS/janszen-legacy-storymap
 # Shared by the bioReportR projects which have such a pane - each gives in project$janszen of its scripts/project.R the
-# area picked out as its own, and any area of its own drawn besides the checklists', e.g. Galiano Island within the
-# Outer Gulf Islands checklist
+# area picked out as its own, and any area of its own drawn besides the checklists', e.g. a single island within the
+# checklist of the island group holding it
 
 # Set relative paths (https://stackoverflow.com/questions/13672720/r-command-for-setting-working-directory-to-source-file-location-in-rstudio)
 if (!isTRUE(getOption('knitr.in.progress'))) {
@@ -51,8 +51,8 @@ areas <- lapply(seq_len(nrow(checklists)), function (i) read_checklist_area(chec
 
 checklists$id <- paste0("Checklist.", checklists$folder)
 
-# The label of each area is the markup of its hover card, which names it, in the class the project's pane styles
-checklists$label <- sprintf("<div class=\"%s\">%s</div>", settings$labelClass, checklists$name)
+# The label of each area is the markup of its hover card, which names it, in the class styled by bioreportr-rememberingPane.vue
+checklists$label <- sprintf("<div class=\"mxcw-checklist-name\">%s</div>", checklists$name)
 
 allSources <- do.call(merge_lists, lapply(seq_along(areas), function (i) {
   sf_to_mapbox_sources(st_sf(geometry = areas[[i]]), id = checklists$id[i], digits = 4)

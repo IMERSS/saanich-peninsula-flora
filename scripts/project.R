@@ -13,12 +13,49 @@ project <- list(
   shapeIndexFile = file.path("tabular_data", config$shapeIndex),
   # The summary of the catalogue's taxa
   summaryFile = file.path("tabular_data", config$summary),
+  # The settings of the curation history and of the taxa kept off the checklist, read by scripts/prepare_curation_history.R
+  # and scripts/prepare_excluded_taxa.R, from the lists of checklist-catalogue-alignment-workflow
+  curation = list(
+    # The columns of the lists naming each taxon, and giving its iNaturalist id
+    nameColumn = "taxon_name",
+    idColumn = "link_taxon_id",
+    # Each field of the history, as curationHistorySources in saanich-story.vue names it, from the first of its columns
+    # holding a note - Harvey Janszen's own inscription of the account, or, where he made none, his account as
+    # transcribed - with who has reviewed the taxon
+    history = list(
+      original = "original_comment",
+      harvey = c("revised_comment", "HJ_comment"),
+      fpnw = "FPNW_comment",
+      critical = "critical_comments",
+      reviewedBy = "reviewed_by"
+    ),
+    # The fields in which reviewers may sign with their initials in parentheses, e.g. "(TL)", which are spelled out.
+    # Initials outside such signatures are left as written, e.g. those by which Harvey Janszen names collectors,
+    # "FL Finnerty Cove 1993"
+    expandInitials = c("original", "harvey", "fpnw", "critical"),
+    reviewedBy = "reviewedBy",
+    # The reviewers who sign the notes with their initials. Other signatures, e.g. of a collection, are kept as written
+    reviewers = c(
+      TL = "Terry Ludwar",
+      EM = "Emma Menchions",
+      JM = "James Miskelly",
+      AS = "Andrew Simon",
+      MF = "Matt Fairbarns",
+      DG = "David Giblin",
+      FL = "Frank Lomer",
+      KM = "Kristen Miskelly",
+      AJW = "Alexander J. Wright",
+      PD = "Peter Dunwiddie"
+    ),
+    # An automatic review, credited to its reviewer by name as their own reviews are
+    automatic = c("Automatic (EM)" = "EM"),
+    # The flags of the working list by which curators exclude a taxon, each with the label shown for it
+    flags = c(is_doubtful = "doubtful", is_persisting_or_waif = "persisting or waif", is_planted = "planted")
+  ),
   # The settings of the map of Harvey Janszen's checklists in the pane in memory of him, read by
-  # scripts/Janszen_checklists_mapbox.R: the checklist area picked out as the project's own, and the class of the
-  # hover cards, styled by saanich-rememberingPane.vue
+  # scripts/Janszen_checklists_mapbox.R: the checklist area picked out as the project's own
   janszen = list(
-    highlight = "Saanich",
-    labelClass = "saanich-checklist-name"
+    highlight = "Saanich"
   ),
   # The settings of the Protected Areas pane's map and summaries, read by scripts/Protected_map_mapbox.R
   protected = list(

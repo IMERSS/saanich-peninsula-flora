@@ -136,11 +136,3 @@ saanich.selectTopSpecies = function (storyPage, isShown, loaded, displayRows) {
     }
 };
 
-/**
- * Compute the classes of the story's left pane - those of the opening timeline, and while the pane in memory of Harvey
- * Janszen is shown, its own.
- * @param {String} tracesClass - The classes of the timeline - see bioreportr.traces.leftPaneClass
- * @param {Boolean} rememberingActive - Whether the pane in memory of Harvey Janszen is shown
- * @return {String} The classes
- */
-saanich.leftPaneClass = (tracesClass, rememberingActive) => [tracesClass, rememberingActive ? "saanich-remembering-active" : ""].filter(Boolean).join(" ");

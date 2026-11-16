@@ -222,13 +222,9 @@ bioreportr.atlas.sectionInserts = tiles => ({"mxcw-status-tiles": tiles});
  */
 bioreportr.atlas.paneClick = function (storyPage, event) {
     const tile = event.target.closest(".mxcw-status-link");
-    // A click in the Lost Plants gallery, if the story has one, is its own - see bioreportr.lostPlants.click
-    const gallery = event.target.closest(".mxcw-lost-gallery-pane");
     if (tile) {
         const status = tile.dataset.status;
         storyPage.selectedStatus = storyPage.selectedStatus === status ? null : status;
-    } else if (gallery) {
-        bioreportr.lostPlants.click(storyPage, event);
     }
 };
 
@@ -546,6 +542,32 @@ bioreportr.atlas.statusLabel = (status, labels) => {
 
 bioreportr.atlas.field = (label, value) => value ? `<dt>${label}:</dt> <dd>${hortis.dataTable.encode(value)}</dd>` : "";
 
+// The label of each provenance of a taxon - whether it is native or introduced - as its summary's introduction_status
+// gives it
+bioreportr.atlas.provenanceLabels = {native: "Native", exotic: "Exotic", unknown: "Unknown"};
+
+/**
+ * Render the provenance and conservation status of a taxon, as fields of its panel - its provenance, native or exotic,
+ * from its introduction_status. Its conservation status is that
+ * assigned by scripts/assign_conservation_status.R from the BC Conservation Data Centre's rankings: its provincial rank
+ * and BC list, e.g. "S2S3 (2025), Blue", followed by its status under COSEWIC and the Species at Risk Act where it has
+ * one - as the appendix tables of the Howe Sound synthesis give them.
+ * @param {TaxonRow} taxon - The taxon
+ * @return {String} The markup of the fields, empty for a taxon which has neither
+ */
+bioreportr.atlas.statusFields = function (taxon) {
+    const encode = hortis.dataTable.encode;
+    const provenance = bioreportr.atlas.provenanceLabels[String(taxon.introduction_status || "").trim()];
+    // The BC list's "Exotic" is left out, since the taxon's provenance already says it is introduced
+    const bcList = /^exotic$/i.test(String(taxon.bc_list || "").trim()) ? "" : taxon.bc_list;
+    const provincial = [taxon.provincial_status, bcList].filter(Boolean).join(", ");
+    const parts = [provincial,
+        taxon.national_status && "COSEWIC: " + taxon.national_status,
+        taxon.sara_status && "SARA: " + taxon.sara_status].filter(Boolean);
+    const conservation = parts.length ? `<dt>Conservation status:</dt> <dd class="mxcw-taxon-status">${parts.map(part => `<span class="mxcw-taxon-status-part">${encode(part)}</span>`).join("")}</dd>` : "";
+    return bioreportr.atlas.field("Provenance", provenance) + conservation;
+};
+
 /**
  * Find the dated sightings of a taxon, or of any taxon beneath it, in order of date.
  * @param {VizPackage} pkg - The data package
@@ -601,6 +623,7 @@ bioreportr.atlas.panelMarkup = function (taxon, records, historyById, sources, b
         <dt>Date last seen:</dt> <dd>${bioreportr.eventDay(fluid.peek(records).eventDate)}</dd>
         <dt>Total records:</dt> <dd>${bioreportr.formatCount(records.length)}</dd>
         ${bioreportr.atlas.field("Status", bioreportr.atlas.statusLabel(taxon.reportingStatus, statusLabels))}
+        ${bioreportr.atlas.statusFields(taxon)}
       ${context === "solow" ? bioreportr.atlas.field("Regional EP", taxon.solow_EP) : ""}
       </dl>
       ${bioreportr.georefNote(records)}
@@ -708,6 +731,17 @@ bioreportr.atlas.notesMarkup = function (taxon, records, historyById, sources, b
 </script>
 
 <style>
+/* The parts of a taxon's conservation status, each on a line of its own - its provincial rank and BC list, then any
+   COSEWIC and SARA status - see bioreportr.atlas.statusFields */
+.mxcw-taxon-status-part {
+    display: block;
+}
+
+/* Its values may run longer than the panel's other fields, which keep to one line, so they wrap */
+.mxcw-taxon-fields dd.mxcw-taxon-status {
+    white-space: normal;
+}
+
 /* The atlas's panel of the chosen plant: its facts, and beside them a chart of the history of its observations, by
    decade or by month as chosen by the chart's tabs - see bioreportr.atlas.historyMarkup. The extirpation risk pane's panel,
    which shares its other styles, has no chart. On a narrow panel the chart falls beneath the facts */

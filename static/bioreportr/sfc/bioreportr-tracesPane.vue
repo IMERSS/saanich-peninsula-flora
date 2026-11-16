@@ -765,8 +765,8 @@ bioreportr.traces.control = function (that, storyPage, map, events, active, load
 .mxcw-leftPane.mxcw-traces-active > .resize-bar {
     display: none !important;
 }
-/* How far the map is dimmed suits the landscape a story shows - a story whose imagery is dark already, e.g. Galiano
-   Island's forest and sea, lightens it by setting these properties in its own stylesheet */
+/* How far the map is dimmed suits the landscape a story shows - a story whose imagery is dark already, e.g. of forest
+   and sea, lightens it by setting these properties in its own stylesheet */
 .mxcw-leftPane.mxcw-traces-active .maplibregl-canvas {
     filter: brightness(var(--mxcw-traces-brightness, 0.45)) saturate(var(--mxcw-traces-saturation, 0.6));
 }

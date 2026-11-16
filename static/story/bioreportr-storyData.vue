@@ -2,7 +2,8 @@
 "use strict";
 
 // Written by src/js/storyBuild.js from bioreportr.yaml - do not edit. The story's data files, relative to the story page,
-// laid over its story page by naming bioreportr.storyData in the $layers of its <project>-story.vue
+// and the settings it shares with the project's R scripts, laid over its story page by naming bioreportr.storyData in the
+// $layers of its <project>-story.vue
 
 fluid.def("bioreportr.storyData", {
     $layers: "fluid.component",
@@ -12,6 +13,7 @@ fluid.def("bioreportr.storyData", {
     taxaFile: "../local/data/tabular/Saanich_Tracheophyta_ultimate-summary_2026-11-15-prepared-taxa.csv",
     curationHistoryFile: "../local/data/tabular/Saanich_Tracheophyta_curation-history_2026-11-15.csv",
     recordAnnotationsFile: "../local/data/tabular/Saanich_Tracheophyta_record-annotations_2026-11-15.csv",
-    excludedTaxaFile: "../local/data/tabular/Saanich_Tracheophyta_excluded-taxa_2026-11-15.csv"
+    excludedTaxaFile: "../local/data/tabular/Saanich_Tracheophyta_excluded-taxa_2026-11-15.csv",
+    protectedMappedOnly: false
 });
 </script>

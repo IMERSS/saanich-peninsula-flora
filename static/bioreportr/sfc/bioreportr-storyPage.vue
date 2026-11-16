@@ -246,6 +246,10 @@ fluid.def("bioreportr.storyPage", {
     recordAnnotationsFile: null,
     // The taxa kept off the list by the curation workflow, shown by the Lost Plants gallery - see bioreportr-lostPlantsPane.vue
     excludedTaxaFile: null,
+    // The settings of the settings section of the project's bioreportr.yaml, which its R scripts read too, with their
+    // defaults - see bioreportr.storyBuild.writeStoryData. Whether the Protected Areas pane keeps only the records
+    // which can be mapped - see bioreportr.protectedAreas
+    protectedMappedOnly: false,
     recordAnnotations: "$compute:bioreportr.loadRecordAnnotations({self}.recordAnnotationsFile)",
     solowEPObs: "$compute:bioreportr.solowObsForEP({self}.solowTaxonObs, {self}.recordAnnotations)",
     solowTaxonInfo: {

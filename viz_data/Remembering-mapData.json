@@ -21,7 +21,7 @@
       "type": "fill",
       "id": "Checklist.Saanich",
       "source": "Checklist.Saanich",
-      "label": "<div class=\"saanich-checklist-name\">Saanich Peninsula and surrounding islets<\/div>",
+      "label": "<div class=\"mxcw-checklist-name\">Saanich Peninsula and surrounding islets<\/div>",
       "paint": {
         "fill-color": "#E0A11B",
         "fill-opacity": 0.55
@@ -48,7 +48,7 @@
       "type": "fill",
       "id": "Checklist.Saltspring_Island",
       "source": "Checklist.Saltspring_Island",
-      "label": "<div class=\"saanich-checklist-name\">Salt Spring Island<\/div>",
+      "label": "<div class=\"mxcw-checklist-name\">Salt Spring Island<\/div>",
       "paint": {
         "fill-color": "#3F7590",
         "fill-opacity": 0.3
@@ -75,7 +75,7 @@
       "type": "fill",
       "id": "Checklist.Outer_Gulf_Islands",
       "source": "Checklist.Outer_Gulf_Islands",
-      "label": "<div class=\"saanich-checklist-name\">Outer Gulf Islands<\/div>",
+      "label": "<div class=\"mxcw-checklist-name\">Outer Gulf Islands<\/div>",
       "paint": {
         "fill-color": "#3F7590",
         "fill-opacity": 0.3
@@ -102,7 +102,7 @@
       "type": "fill",
       "id": "Checklist.San_Juan_Islands",
       "source": "Checklist.San_Juan_Islands",
-      "label": "<div class=\"saanich-checklist-name\">San Juan Islands<\/div>",
+      "label": "<div class=\"mxcw-checklist-name\">San Juan Islands<\/div>",
       "paint": {
         "fill-color": "#3F7590",
         "fill-opacity": 0.3
