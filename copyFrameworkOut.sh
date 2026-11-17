@@ -69,6 +69,9 @@ FILES=(
     # a layer which the project names in its <project>-story.vue, with its own settings - see AGENTS.md. Each project's
     # own content/story/Traces.Rmd, LostPlants.Rmd and Protected.Rmd write their sections into the panes' templates
     static/bioreportr/sfc/bioreportr-atlasPanel.vue
+    # The list of the plants of a place, beneath the Atlas's map, made a member of the story page by the atlas's panel
+    static/bioreportr/sfc/bioreportr-list.vue
+    static/bioreportr/sfc/bioreportr-listInvite.vue
     static/bioreportr/sfc/bioreportr-tracesPane.vue
     static/bioreportr/sfc/bioreportr-lostPlantsPane.vue
     static/bioreportr/sfc/bioreportr-protectedPane.vue

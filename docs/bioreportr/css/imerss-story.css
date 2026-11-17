@@ -1464,7 +1464,7 @@ body {
     }
 }
 
-:is(.mxcw-paneKey-Status, .mxcw-paneKey-TopContributions, .mxcw-paneKey-Solow, .mxcw-paneKey-Curation) h2 {
+:is(.mxcw-paneKey-Status, .mxcw-paneKey-TopContributions, .mxcw-paneKey-History, .mxcw-paneKey-Solow, .mxcw-paneKey-Curation) h2 {
     color: #a8c8d0;
     font-size: var(--story-small);
     font-weight: 400;
@@ -1477,7 +1477,7 @@ body {
     margin: 0.5rem 0 var(--story-gap);
 }
 
-:is(.mxcw-paneKey-Status, .mxcw-paneKey-TopContributions, .mxcw-paneKey-Solow) .mxcw-sectionColumn > p,
+:is(.mxcw-paneKey-Status, .mxcw-paneKey-TopContributions, .mxcw-paneKey-History, .mxcw-paneKey-Solow) .mxcw-sectionColumn > p,
 .mxcw-curation-invitation p {
     max-width: 31em;
     margin: 0 auto clamp(10px, 2.2vh, 22px);
@@ -2067,3 +2067,35 @@ body {
     color: #FDF2CE;
     font-weight: 400;
 }
+
+/* A footnote within a pane's section - written in its R Markdown as a ::: {.mxcw-footnote} block - set apart beneath a
+   thin rule, a step smaller and quieter than the reading text */
+.mxcw-storyPane .mxcw-footnote {
+    margin-top: 1.4em;
+    padding-top: 0.7em;
+    border-top: 1px solid rgba(253, 242, 206, 0.35);
+    font-size: 0.85em;
+    line-height: 1.5;
+    color: #c9dbe3;
+}
+
+.mxcw-storyPane .mxcw-footnote p {
+    margin: 0;
+}
+
+/* The small-caps title of each pane's section is set between two small flowers, drawn as masks so that they take the
+   title's colour. The Protected Areas pane, whose title is not set in small caps, has none */
+.mxcw-storyPane .section.level2:not(.mxcw-paneKey-Protected) > h2::before,
+.mxcw-storyPane .section.level2:not(.mxcw-paneKey-Protected) > h2::after {
+    content: "";
+    display: inline-block;
+    width: 1.15em;
+    height: 1.15em;
+    margin: 0 0.75em;
+    vertical-align: -0.2em;
+    background-color: currentColor;
+    opacity: 0.85;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-12 -12 24 24'%3E%3Cg fill='black'%3E%3Cellipse cx='0' cy='-6.2' rx='2.9' ry='5' transform='rotate(0)'/%3E%3Cellipse cx='0' cy='-6.2' rx='2.9' ry='5' transform='rotate(72)'/%3E%3Cellipse cx='0' cy='-6.2' rx='2.9' ry='5' transform='rotate(144)'/%3E%3Cellipse cx='0' cy='-6.2' rx='2.9' ry='5' transform='rotate(216)'/%3E%3Cellipse cx='0' cy='-6.2' rx='2.9' ry='5' transform='rotate(288)'/%3E%3C/g%3E%3Ccircle r='2.3' fill='black' fill-opacity='0.55'/%3E%3C/svg%3E") no-repeat center / contain;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-12 -12 24 24'%3E%3Cg fill='black'%3E%3Cellipse cx='0' cy='-6.2' rx='2.9' ry='5' transform='rotate(0)'/%3E%3Cellipse cx='0' cy='-6.2' rx='2.9' ry='5' transform='rotate(72)'/%3E%3Cellipse cx='0' cy='-6.2' rx='2.9' ry='5' transform='rotate(144)'/%3E%3Cellipse cx='0' cy='-6.2' rx='2.9' ry='5' transform='rotate(216)'/%3E%3Cellipse cx='0' cy='-6.2' rx='2.9' ry='5' transform='rotate(288)'/%3E%3C/g%3E%3Ccircle r='2.3' fill='black' fill-opacity='0.55'/%3E%3C/svg%3E") no-repeat center / contain;
+}
+

@@ -150,16 +150,30 @@ fluid.def("saanich.story", {
     // The sources of that history, by the column of the file holding each, oldest first - each with the citation which
     // follows its notes on the cards of the Lost Plants gallery, none for the reviewers, who sign their own notes
     curationHistorySources: [
-        {field: "original", source: "Szczawinski & Harrison", label: "Original account", cite: "Szczawinski & Harrison 1972"},
-        {field: "harvey", source: "Harvey Janszen", label: "Revised account", cite: "Janszen 2021"},
-        {field: "fpnw", source: "Flora of the Pacific Northwest", label: "Remarks", cite: "Flora of the Pacific Northwest"},
-        {field: "critical", source: "Reviewers", label: "Critical notes", cite: ""}
+        // Each with the year and words by which the Atlas names it among the lists before us, and the abbreviation by which
+        // a list marks the plants it treated - see bioreportr.atlas.sourcesMarkup and bioreportr.list
+        {field: "original", source: "Szczawinski & Harrison", label: "Original account", cite: "Szczawinski & Harrison 1972",
+            year: "1972", description: "Flora of the Saanich Peninsula", abbreviation: "FSP"},
+        {field: "harvey", source: "Harvey Janszen", label: "Revised account", cite: "Janszen 2021",
+            year: "1973–2017", description: "His revision of the Flora", abbreviation: "HJ"},
+        {field: "fpnw", source: "Flora of the Pacific Northwest", label: "Remarks", cite: "Flora of the Pacific Northwest",
+            year: "2018", description: "Remarks on the peninsula's plants", abbreviation: "FPNW"},
+        {field: "critical", source: "Reviewers", label: "Critical notes", cite: "",
+            year: "Today", description: "Critical review of each account", abbreviation: "Rev"}
     ],
     // The extirpation risk pane opens on whichever species is at the top of its list, with the map fitted to its records
     solowShown: "$compute:bioreportr.storyPage.isActive({self}.activePaneKey, Solow)",
     selectTopSpecies: "$effect:saanich.selectTopSpecies({self}, {self}.solowShown, {self}.loaded, {self}.solowTaxa.taxaTable.displayRows)",
     // true once the extirpation risk pane has been opened on its top species - see saanich.selectTopSpecies
     topSpeciesSelected: {$transient: false},
+    // The Download list panel names the story's whole area so, and its files so - see bioreportr-list.vue
+    list: {
+        $component: {
+            areaName: "the whole Saanich Peninsula",
+            // The stem of each downloaded checklist's file name - the site's title without its W̱SÁNEĆ, for a plain name
+            fileStem: "Flora-of-the-Saanich-Peninsula"
+        }
+    },
     paneOverrides: {
         Traces: {
             visibleMap: true

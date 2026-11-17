@@ -28,7 +28,8 @@ fluid.def("bioreportr.lostPlants", {
     // last is of groups of the taxa which the curation workflow kept off the list, read from excludedTaxaFile - see
     // scripts/prepare_excluded_taxa.R. A gallery with no plants, e.g. in a story without that file, has no tab
     galleries: {
-        lost: {label: "Lost", status: "unconfirmed", title: "Native species historically reported, not seen in recent decades"},
+        // A plant of a gallery marked `find` is followed to the pane where it may be searched for, rather than to the atlas
+        lost: {label: "Lost", status: "unconfirmed", title: "Native species historically reported, not seen in recent decades", find: true},
         confirmed: {label: "Confirmed", status: "confirmed", title: "Native species recorded both historically and recently"},
         new: {label: "New", status: "new", title: "Native species first reported in recent decades"},
         // Taxa the curators have excluded from the list - flagged doubtful, persisting or planted
@@ -40,6 +41,9 @@ fluid.def("bioreportr.lostPlants", {
     excluded: "$compute:bioreportr.lostPlants.loadExcluded({storyPage}.excludedTaxaFile)",
     // The gallery shown
     gallery: "lost",
+    // The pane to which a plant of a gallery marked `find` is followed - the extirpation risk analysis, where its
+    // populations may be found. A story without that pane follows it to the atlas, as the other galleries do
+    findPaneKey: "Solow",
     // The maximum number of ids accepted by a single request to the iNaturalist taxa endpoint
     batchSize: 30,
     // Observes iNaturalist's requested limit of about one request per second
@@ -174,8 +178,8 @@ bioreportr.lostPlants.nameMarkup = function (name) {
 /**
  * Render one plant of the gallery, as a card which turns over to show its curatorial notes.
  * @param {Object} plant - A plant as selected by `bioreportr.lostPlants.select`
- * @param {Object} [photo] - Its photo record from the iNaturalist API - a taxon set aside by the curators is shown
- * without one if it has none, since its notes matter more than its picture
+ * @param {Object} [photo] - Its photo record from the iNaturalist API - a plant with no openly licensed photo is shown
+ * without one, since every plant of a gallery is shown
  * @return {String} The markup for the plant
  */
 bioreportr.lostPlants.renderCard = function (plant, photo) {
@@ -267,7 +271,8 @@ bioreportr.lostPlants.fetchCards = async function (that, allPlants, key) {
     const current = () => that.run?.plants === allPlants;
     const plants = allPlants[key];
     const {batchSize, batchDelay} = that;
-    const keepWithout = !!that.galleries[key]?.group;
+    // A gallery of taxa set aside keeps its order, most recorded first, where the others are shuffled
+    const ordered = !!that.galleries[key]?.group;
     // Any card fetched ahead of its batch, for a plant searched for, is kept at the front until its batch brings it -
     // see bioreportr.lostPlants.fetchOne
     const write = (cards, complete) => {
@@ -284,8 +289,9 @@ bioreportr.lostPlants.fetchCards = async function (that, allPlants, key) {
         try {
             const taxa = ids ? (await (await fetch(`https://api.inaturalist.org/v1/taxa/${ids}?per_page=${batchSize}`)).json()).results : [];
             const photos = Object.fromEntries(taxa.map(taxon => [String(taxon.id), bioreportr.atlas.licensedPhoto(taxon)]));
-            cards = cards.concat(batch.filter(plant => keepWithout || photos[plant.taxon.id])
-                .map(plant => bioreportr.lostPlants.renderCard(plant, photos[plant.taxon.id])));
+            // Every plant of the gallery is shown, one without an openly licensed photo under a plain card, so that the
+            // gallery holds as many plants as its tab and the pane's text count
+            cards = cards.concat(batch.map(plant => bioreportr.lostPlants.renderCard(plant, photos[plant.taxon.id])));
             if (current()) {
                 write(cards, false);
             }
@@ -296,7 +302,7 @@ bioreportr.lostPlants.fetchCards = async function (that, allPlants, key) {
         }
     }
     if (current()) {
-        write(keepWithout ? cards : bioreportr.lostPlants.shuffle(cards), true);
+        write(ordered ? cards : bioreportr.lostPlants.shuffle(cards), true);
     }
 };
 
@@ -306,15 +312,16 @@ bioreportr.lostPlants.cardId = card => /data-taxon-id="([^"]*)"/.exec(card)?.[1]
 
 /**
  * Fetch the photo of one plant of a gallery still loading and place its card at the gallery's front, so that a plant
- * searched for is shown at once rather than once its batch arrives - see bioreportr.lostPlants.reveal. A plant of a
- * gallery of the site's own taxa without an openly licensed photo has no card, as in its batch.
+ * searched for is shown at once rather than once its batch arrives - see bioreportr.lostPlants.reveal. A plant without an
+ * openly licensed photo is given a plain card, as in its batch.
  * @param {fluid.component} that - The component holding the gallery
  * @param {String} key - The key of the gallery
  * @param {Object} plant - The plant, as selected by `bioreportr.lostPlants.select`
- * @return {Promise<Boolean>} Resolves to whether the plant has a card
+ * @return {Promise<Boolean>} Resolves to `true` once the plant has its card
  */
 bioreportr.lostPlants.fetchOne = async function (that, key, plant) {
-    const keepWithout = !!that.galleries[key]?.group;
+    // A gallery of taxa set aside keeps its order, most recorded first, where the others are shuffled
+    const ordered = !!that.galleries[key]?.group;
     let photo;
     if (/^\d+$/.test(plant.taxon.id)) {
         try {
@@ -326,11 +333,10 @@ bioreportr.lostPlants.fetchOne = async function (that, key, plant) {
     }
     const entry = that.cards[key] || {cards: [], complete: false};
     const id = String(plant.taxon.id);
-    const has = photo || keepWithout;
-    if (has && !entry.cards.some(card => bioreportr.lostPlants.cardId(card) === id)) {
+    if (!entry.cards.some(card => bioreportr.lostPlants.cardId(card) === id)) {
         that.cards = {...that.cards, [key]: {...entry, cards: [bioreportr.lostPlants.renderCard(plant, photo)].concat(entry.cards)}};
     }
-    return !!has;
+    return true;
 };
 
 /**
@@ -368,15 +374,41 @@ bioreportr.lostPlants.markup = function (cards, gallery, galleries, plants, that
 };
 
 /**
+ * Open the pane where a plant may be searched for - the extirpation risk analysis - with the plant chosen in its table,
+ * bringing its row into view once the table has its size in the newly visible pane. The map then pans and zooms to its
+ * populations - see bioreportr.atlas.fitToTaxon.
+ * @param {bioreportr.storyPage} storyPage - The story page
+ * @param {String} taxonId - The id of the plant's taxon
+ * @param {Document} dokkument - The document holding the story page
+ */
+bioreportr.lostPlants.findPlant = function (storyPage, taxonId, dokkument) {
+    const table = storyPage.solowTaxa.taxaTable;
+    const row = table.rows.find(candidate => String(candidate.id) === String(taxonId));
+    storyPage.selectPane(storyPage.lostPlants.findPaneKey);
+    if (row) {
+        table.selectedRow = row;
+        dokkument.defaultView.requestAnimationFrame(() => {
+            const index = table.displayRows.indexOf(row);
+            const scrollEl = dokkument.querySelector(".mxcw-solow-taxa .hortis-dataTable-scroll");
+            if (index >= 0 && scrollEl) {
+                scrollEl.scrollTop = index * table.rowHeight;
+            }
+        });
+    }
+};
+
+/**
  * Render the back of a plant's card - its curatorial history, from the curation history, the same source as the atlas's
  * Notes tab and the curation pane's History tab - see bioreportr.curationForm.historyMarkup. A taxon kept off the list
  * is also given the curators' decision on it, or, if it was never reviewed, an account of its records. A plant of the
- * site's own data may be followed to its records in the atlas, or to the Living Data pane to comment on it.
+ * site's own data may be followed to its records in the atlas - or, in a gallery marked `find`, to the pane where it may
+ * be searched for - or to the Living Data pane to comment on it.
  * @param {Object} plant - A plant as selected by `bioreportr.lostPlants.select`
- * @param {Object} context - Members `historyById`, `sources`, `byTaxon`, `statusLabels`, `rowById` and `canCurate`
+ * @param {Object} context - Members `historyById`, `sources`, `byTaxon`, `statusLabels`, `rowById`, `canCurate` and
+ * `canFind`, whether the plant is followed to the pane where it may be searched for
  * @return {String} The markup of the back of the card
  */
-bioreportr.lostPlants.backMarkup = function (plant, {historyById, sources, byTaxon, statusLabels, rowById, canCurate}) {
+bioreportr.lostPlants.backMarkup = function (plant, {historyById, sources, byTaxon, statusLabels, rowById, canCurate, canFind}) {
     const encode = hortis.dataTable.encode;
     const {taxon, excluded} = plant;
     const year = date => parseInt(date, 10) || "";
@@ -399,7 +431,8 @@ bioreportr.lostPlants.backMarkup = function (plant, {historyById, sources, byTax
     // Only a plant of the site's own data has records in the atlas, and may be curated
     const known = !!rowById?.[taxon.id];
     const action = (kind, label) => `<button type="button" class="mxcw-lost-action" data-action="${kind}" data-taxon-id="${encode(taxon.id)}">${label}</button>`;
-    const actions = known ? [action("atlas", "See in the Atlas"), canCurate ? action("curate", "Comment in Living Data") : ""].join("") : "";
+    const follow = canFind ? action("find", "Find this plant") : action("atlas", "See in the Atlas");
+    const actions = known ? [follow, canCurate ? action("curate", "Comment in Living Data") : ""].join("") : "";
     return `<div class="mxcw-lost-back-head">
             <span class="mxcw-lost-name">${bioreportr.lostPlants.nameMarkup(taxon.scientificName)}</span>
             <button type="button" class="mxcw-lost-close" aria-label="Turn the card back">×</button>
@@ -481,6 +514,8 @@ bioreportr.lostPlants.click = function (storyPage, event) {
         const taxonId = action.dataset.taxonId;
         if (action.dataset.action === "curate") {
             bioreportr.curation.open(storyPage, taxonId);
+        } else if (action.dataset.action === "find") {
+            bioreportr.lostPlants.findPlant(storyPage, taxonId, target.ownerDocument);
         } else {
             // Kept as the pane changes, as a species of the Community Science pane is - see the story page's `keepTaxon`
             storyPage.keepTaxon = true;
@@ -511,7 +546,8 @@ bioreportr.lostPlants.open = function (storyPage, card) {
             byTaxon: storyPage.curation?.byTaxon,
             statusLabels: storyPage.statusLabels,
             rowById: storyPage.taxa.rowById,
-            canCurate: !!(bioreportr.curation?.paneKey && bioreportr.curation.paneKey(storyPage.panes))
+            canCurate: !!(bioreportr.curation?.paneKey && bioreportr.curation.paneKey(storyPage.panes)),
+            canFind: !!lostPlants.galleries[lostPlants.gallery]?.find && storyPage.panes.some(pane => pane.paneKey === lostPlants.findPaneKey)
         });
         bioreportr.lostPlants.flip(card, true);
     }
@@ -1254,56 +1290,49 @@ been seen in recent decades. Some may be lost <em>to us</em>—overlooked,
 forgotten, or waiting to be rediscovered. Others may be lost <em>because
 of us</em>, through impacts like habitat change or the introduction of
 invasive species.</p>
-<p><span class="mxcw-callout">Pick a plant from the gallery</span> to
-turn it over and read its curatorial notes, from the earliest accounts
-to the latest reviews. From there you can follow it to its records in
-the Atlas, or add your own notes in Living Data. Then join local
-naturalists and community members on a search for the <a href="https://www.inaturalist.org/projects/lost-plants-of-the-saanich-peninsula">“Lost”
+<p><span class="mxcw-callout">Select a plant from the gallery</span> to
+read its curatorial notes, then explore its distribution on the <a href="#pane:Status">Atlas</a>, or add curatorial notes in <a href="#pane:Curation">Living Data</a>. Then join local naturalists and
+community members on a search for the <a href="https://www.inaturalist.org/projects/lost-plants-of-the-saanich-peninsula">“Lost”
 Plants of the Saanich Peninsula</a> project on iNaturalist.</p>
 </div>
 <div class="mxcw-lost-text" data-gallery="confirmed" hidden="hidden">
-<p>These native species were known to the peninsula’s earlier botanists,
-and have been <strong>seen again</strong> since 2000. They are the
-enduring core of its native flora—though being found again is no promise
-of security, and some now survive in only one or two places.</p>
-<p><span class="mxcw-callout">Pick a plant from the gallery</span> to
-turn it over and read its curatorial notes, then follow it to its
-records in the Atlas to see where it persists, or add your own notes in
-Living Data.</p>
+<p>These native species were reported for the peninsula in the past, and
+have been seen again since 2000. They represent the enduring core of its
+native flora—though being found again is no promise of security, and
+some plants are known to occur in only one or two places.</p>
+<p><span class="mxcw-callout">Select a plant from the gallery</span> to
+read its curatorial notes, then explore its distribution on the <a href="#pane:Status">Atlas</a>, or add curatorial notes in <a href="#pane:Curation">Living Data</a>.</p>
 </div>
 <div class="mxcw-lost-text" data-gallery="new" hidden="hidden">
-<p>These native species were <strong>first reported</strong> for the
-Saanich Peninsula since 2000. Some were surely here all along,
-overlooked by earlier botanists or confused with their relatives; others
-may be newly arrived, or newly told apart by taxonomists.</p>
-<p><span class="mxcw-callout">Pick a plant from the gallery</span> to
-turn it over and read its curatorial notes, then follow it to its
-records in the Atlas, or add your own notes in Living Data.</p>
+<p>These native species were first reported for the Saanich Peninsula
+since 2000. Some were surely here all along, overlooked by earlier
+botanists or confused with their relatives; others may be new arrivals
+or newly recognized taxonomically.</p>
+<p><span class="mxcw-callout">Select a plant from the gallery</span> to
+read its curatorial notes, then explore its distribution on the <a href="#pane:Status">Atlas</a>, or add curatorial notes in <a href="#pane:Curation">Living Data</a>.</p>
 </div>
 <div class="mxcw-lost-text" data-gallery="excluded" hidden="hidden">
-<p>Not every plant reported for the peninsula belongs on its checklist.
-These taxa are <strong>excluded</strong> from it: curators have judged
-some to be doubtful records, others to be garden escapes that persist
-without establishing, or to have been planted.</p>
-<p><span class="mxcw-callout">Pick a plant from the gallery</span> to
-turn it over and read the curators’ reasoning. These notes show how the
-checklist was made, and where it remains open to question.</p>
+<p>Not every plant reported for the peninsula is an accepted part of its
+flora. Some plants have been excluded for various reasons: curators have
+judged some to be doubtful records, others to be garden escapes that
+persist without establishing, or to have been planted.</p>
+<p><span class="mxcw-callout">Select a plant from the gallery</span> to
+read curatorial notes.</p>
 </div>
 <div class="mxcw-lost-text" data-gallery="underReview" hidden="hidden">
-<p>These taxa are <strong>under review</strong>, and are not yet on the
-checklist. Curators are still weighing some of them; many more have
-never been reviewed at all, mostly names known from a single record, or
-unknown elsewhere in BC.</p>
-<p><span class="mxcw-callout">Pick a plant from the gallery</span> to
-turn it over and read any notes the curators have made so far. If you
-know one of these plants here, your observations can help to settle its
-place.</p>
+<p>These taxa are under review, and are not yet on the checklist. Plants
+are evaluated and prioritized for review based on the weight of
+evidence.</p>
+<p><span class="mxcw-callout">Select a plant from the gallery</span> to
+read curatorial notes.</p>
 </div>
+<div class="mxcw-footnote">
 <p>Szczawinski and Harrison’s (1972) <em>Flora of the Saanich
 Peninsula</em> provides the historical baseline for this atlas. Harvey
 Janszen devoted much of his life to revising this flora, but passed away
 in 2021, before completing this work. A community of naturalists has
 since carried those efforts forward; this atlas is a testament to that
 continuing legacy.</p>
+</div>
 </div></div></div>
 </template>

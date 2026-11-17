@@ -68,7 +68,7 @@ fluid.def("bioreportr.storyPage", {
     activatedPanes: "$compute:bioreportr.storyPage.activatedPanes({$oldValue}, {self}.activePaneKey)",
     // The move from the pane last shown to the active one
     paneTransition: "$compute:bioreportr.storyPage.paneTransition({$oldValue}, {self}.activePaneKey)",
-    // A record selected in one pane is cleared on moving to another
+    // A record, taxon, drawn area, map cell, region or group of species selected in one pane is cleared on moving to another
     clearRecordOnPaneChange: "$effect:bioreportr.storyPage.clearRecordOnPaneChange({self}, {self}.paneTransition)",
     // The id of a record selected together with a move to another pane, which is kept as the pane changes, e.g. on
     // opening the curation of a record - see bioreportr.curation.openRecord
@@ -221,6 +221,8 @@ fluid.def("bioreportr.storyPage", {
         }
     },
     taxonPanelVisible: false,
+    // Handles a click within the taxon panel, e.g. on an action it offers - see bioreportr.atlas.panelClick
+    taxonPanelClick: "$method:fluid.identity({0}:event)",
     // Further classes of the left pane, holding the map and data panes, e.g. to give a pane's map the whole column
     leftPaneClass: "",
     // Map of pane key to markup shown in the pane's data pane in place of the map, e.g. a gallery
@@ -260,6 +262,9 @@ fluid.def("bioreportr.storyPage", {
     // defaults - see bioreportr.storyBuild.writeStoryData. Whether the Protected Areas pane keeps only the records
     // which can be mapped - see bioreportr.protectedAreas
     protectedMappedOnly: false,
+    // The year from which a record counts as recent - the baseline of sightings, from which a plant counts as confirmed.
+    // A project may give its own as recentYear in the settings of its bioreportr.yaml, read by its R scripts too
+    recentYear: 2000,
     recordAnnotations: "$compute:bioreportr.loadRecordAnnotations({self}.recordAnnotationsFile)",
     solowEPObs: "$compute:bioreportr.solowObsForEP({self}.solowTaxonObs, {self}.recordAnnotations)",
     solowTaxonInfo: {
@@ -426,9 +431,11 @@ bioreportr.storyPage.hasMarkup = markup => !!markup;
     <div class="imerss-main" @class="imerss-loading:!@{revealed}">
         <div class="mxcw-leftPane @{renderedClasses.leftPane}" data-mxcw-startup-hidden="map">
             <div class="mxcw-map fld-imerss-nodismiss-map @{renderedClasses.map}" @id="map"></div>
+            <!-- The invitation to make a list, over the map, filled by a story bearing bioreportr.atlasPanel -->
+            <div @id="listInvite"></div>
             <div @id="mapResizeBar"></div>
             <div class="mxcw-data fld-imerss-nodismiss-map">
-                <div class="mxcw-data-pane-widget mxcw-atlas-taxon-holder" @class="mxcw-atlas-has-taxon:@{taxonPanelVisible}"><div @id="taxonPanel"></div></div>
+                <div class="mxcw-data-pane-widget mxcw-atlas-taxon-holder" @class="mxcw-atlas-has-taxon:@{taxonPanelVisible}" @onclick="{self}.taxonPanelClick({0})"><div @id="taxonPanel"></div></div>
                 <div @id="taxonPanelResizeBar"></div>
                 <div class="mxcw-data-pane-widget mxcw-obs-table-holder @{renderedClasses.obsTable}" @class="mxcw-records-collapsed:@{recordsCollapsed}"
                     @onclick="{self}.recordTableClick({0})">
@@ -502,6 +509,8 @@ bioreportr.storyPage.hasMarkup = markup => !!markup;
                             <div @id="recordReporter"></div>
                             <div @id="checklist"></div>
                         </div>
+                        <!-- The Download list panel, filled by a story bearing bioreportr.atlasPanel - see bioreportr-list.vue -->
+                        <div class="mxcw-list-download-holder @{renderedClasses.obsFilters}" @id="list"></div>
                         <div class="mxcw-solow-taxa @{renderedClasses.solow}" @id="solowTaxa"></div>
                     </div>
                 </div>
