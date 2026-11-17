@@ -430,9 +430,10 @@ bioreportr.storyPage.hasMarkup = markup => !!markup;
 <template>
     <div class="imerss-main" @class="imerss-loading:!@{revealed}">
         <div class="mxcw-leftPane @{renderedClasses.leftPane}" data-mxcw-startup-hidden="map">
-            <div class="mxcw-map fld-imerss-nodismiss-map @{renderedClasses.map}" @id="map"></div>
-            <!-- The invitation to make a list, over the map, filled by a story bearing bioreportr.atlasPanel -->
+            <!-- The invitation to make a list, over the map, filled by a story bearing bioreportr.atlasPanel. It precedes
+                 the map, since mapResizeBar resizes the elements immediately either side of it -->
             <div @id="listInvite"></div>
+            <div class="mxcw-map fld-imerss-nodismiss-map @{renderedClasses.map}" @id="map"></div>
             <div @id="mapResizeBar"></div>
             <div class="mxcw-data fld-imerss-nodismiss-map">
                 <div class="mxcw-data-pane-widget mxcw-atlas-taxon-holder" @class="mxcw-atlas-has-taxon:@{taxonPanelVisible}" @onclick="{self}.taxonPanelClick({0})"><div @id="taxonPanel"></div></div>
