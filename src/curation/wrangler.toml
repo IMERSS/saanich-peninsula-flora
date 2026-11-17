@@ -1,5 +1,8 @@
 # The token exchange of bioReportR's community curation, as a Cloudflare Worker - see notes/curation-token-exchange.md.
-# CLIENT_SECRET and SESSION_KEY are secrets, set with "npx wrangler secret put", never written here
+# NOTE: since November 2026 the deployed Worker is managed by OpenTofu, from curation.tf in the imerss-cloudflare
+# repository, which holds its own copy of oauthWorker.mjs and the values of [vars] below. Make changes there and run
+# "tofu apply" - don't run "npx wrangler deploy" from here, which would overwrite it. This file is kept for reference,
+# and so that "npx wrangler tail" still knows the Worker's name. Its secrets are kept there too, encrypted with sops.
 name = "bioreportr-curation"
 main = "oauthWorker.mjs"
 compatibility_date = "2026-11-01"

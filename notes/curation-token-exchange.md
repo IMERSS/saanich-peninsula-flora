@@ -41,6 +41,17 @@ are in `curation-token-lifetime.md`.
 
 The token exchange runs as a Cloudflare Worker named `bioreportr-curation`, from `src/curation/oauthWorker.mjs`, as
 configured by `src/curation/wrangler.toml`. One Worker serves every site, so this is done once, from either project.
+
+> **Now managed with OpenTofu.** Since November 2026, the deployed Worker is managed from the separate `imerss-cloudflare`
+> repository, by `curation.tf`, which deploys a copy of `oauthWorker.mjs` held there under
+> `workers/bioreportr-curation/`. Its variables `CLIENT_ID` and `ALLOWED_ORIGINS` are set in `curation.tf`, not in
+> `wrangler.toml`, and a change to either, or to the code, is deployed with `tofu apply` from that repository, not
+> with `npx wrangler deploy`. Running `npx wrangler deploy` from `src/curation` would overwrite what OpenTofu manages.
+> The secrets `CLIENT_SECRET` and `SESSION_KEY` are kept there too, encrypted with sops in `secrets/cloudflare.yaml`,
+> and are changed with `sops secrets/cloudflare.yaml` followed by `./tofu.sh apply`, not with `npx wrangler secret put`,
+> whose changes the next apply would undo. The steps below describe how the Worker was first set up, and still apply
+> to the GitHub App and to checking the Worker (§3.4). Where they say to edit `wrangler.toml` and deploy, as in §3.5 and
+> step 4 of §5, edit `curation.tf` and run `tofu apply` instead.
 The Worker and the GitHub App of §4 each need something of the other - the App needs the Worker's URL as its Callback
 URL, and the Worker needs the App's Client ID and client secret. So the two are set up in an interleaved order:
 
@@ -361,3 +372,176 @@ configuration it writes. The only step needing a person in the browser is the Ap
 The steps the script can't do could be automated only by something holding the App's own credentials - a private key,
 with which the App can act for itself - and even then only for repositories it is already installed on. Neither is
 worth the risk of keeping such a key for steps done once per repository.
+
+## 7. Proposed: signing in with iNaturalist
+
+*A design, not yet built.* People could sign in with their iNaturalist account as well as with GitHub, and post to
+Discussions just the same. Anyone with an iNat account may post. This is little more open than now, when anyone with a
+GitHub account may post.
+
+### 7.1 Why this changes the service
+
+Signing in with GitHub gives the page the person's own GitHub token, with which it posts as them. An iNat token can't
+post to GitHub, so a person signed in with iNat can only post through the service, which posts **on their behalf** as
+the GitHub App itself, naming them in the comment. The service then does more than exchange tokens. It holds the App's
+**private key** and writes to GitHub, and so needs its own checks on what it posts. The reasoning of §6, that a private
+key is not worth keeping, then no longer holds: posting for iNat users can't be done without one.
+
+No new Worker or GitHub App is needed. `bioreportr-curation` serves both kinds of sign-in, and the App keeps its
+Discussions permission. iNat needs an **OAuth application registered on iNaturalist**, at
+<https://www.inaturalist.org/oauth/applications>, which iNat lets only accounts meeting its activity requirements
+create. Its redirect URI is the Worker's `/callback/inat`.
+
+### 7.2 How it works, still keeping no state
+
+```
+GET  /authorize?provider=github|inat&redirect_uri=<page>   provider defaults to github, so existing sites are unchanged
+GET  /callback                                             GitHub returns here, as now, so the App's Callback URL is unchanged
+GET  /callback/inat                                        iNat returns here
+POST /token  {"session": "..."}                            as now, for GitHub sign-ins
+POST /post   {"session": "...", "discussion": "...", "body": "..."}   for iNat sign-ins
+```
+
+1. **Signing in with iNat**: at `/callback/inat` the Worker exchanges the code for an iNat access token at
+   `https://www.inaturalist.org/oauth/token`, asks iNat's `/users/me` who the person is, and then discards the token. It
+   returns to the page a session sealed as now, but holding `{provider: "inat", inat_id, login, expires}` instead of a
+   token, valid for e.g. 8 hours. The page never holds an iNat token.
+2. **Posting**: `POST /post` opens the session, and checks the body against basic limits, such as its length. It
+   then signs a short-lived JWT with the App's private key, exchanges it for an **installation token** of the
+   repository's installation, and posts with `addDiscussionComment`, adding a line such as "posted for iNat user
+   @login".
+3. **Signing in with GitHub** works just as now, posting as the person themselves.
+
+The providers are described by one table in `oauthWorker.mjs`, giving each one's authorize and token URLs and
+credentials, so that the handlers stay generic, and the sealed `state` records which provider the sign-in began
+with.
+
+New settings:
+
+| Name | Kind | Value |
+|---|---|---|
+| `INAT_CLIENT_ID` | variable | the iNat application's ID |
+| `INAT_CLIENT_SECRET` | secret | its secret |
+| `APP_ID` | variable | the GitHub App's ID, from its settings |
+| `APP_PRIVATE_KEY` | secret | a private key generated in the App's settings, converted to PKCS#8 for Web Crypto with `openssl pkcs8 -topk8 -nocrypt -in key.pem` |
+
+As with the other settings, these are kept in `imerss-cloudflare`, with the secrets encrypted by sops in
+`secrets/cloudflare.yaml` - see the note at the start of §3.
+
+### 7.3 Fitting in Cloudflare's free plan
+
+The free plan is ample. These limits are as remembered in November 2026 - check them at
+<https://developers.cloudflare.com/workers/platform/pricing/>:
+
+| Resource | Free limit | Per post | Per sign-in |
+|---|---|---|---|
+| Worker requests | 100,000 a day | 1-2 | 3 |
+| CPU time | 10 ms a request | ~1-3 ms, to sign the JWT | slight |
+| KV reads | 100,000 a day | 0-2 | 0 |
+| KV writes | 1,000 a day | 0-1 | 0 |
+
+Time spent waiting for GitHub or iNat doesn't count as CPU time. GitHub allows an installation about 5,000 API
+requests an hour, and limits content creation to about 80 a minute.
+
+### 7.4 Where storage would earn its place
+
+The design needs no storage. Cloudflare's key-value store, KV, would be needed only for:
+
+* **Rate limiting per iNat user** - the most useful, since anyone with an iNat account can post as the App. About one
+  read and one write per post. KV is eventually consistent, so its counts are approximate, which is enough to stop a
+  flood. The Workers rate limiting binding, where the plan offers it, does this without KV writes.
+* **Blocking a person** - a list read on each post, written only by hand.
+* **Revoking one session** - without storage, only rotating `SESSION_KEY` revokes sessions, and it revokes everyone's.
+* **Caching the installation token** for its hour - at most 24 writes a day, but saving only one GitHub request per
+  post, so not worth it.
+
+Even with all of these, a day's curation would use a small part of the free plan's 1,000 writes.
+
+### 7.5 Moderation
+
+Notes posted for iNat users all appear as the App's, so GitHub can't block one of those people - only the service can,
+by the list of §7.4. Otherwise the usual tools of Discussions, deleting comments and locking threads, work as for any
+comment.
+
+### 7.6 Status: paused
+
+*November 2026.* This work is paused until an iNaturalist account meets iNat's requirements for registering an OAuth
+application, which may take some time. A draft of the Worker's side is kept aside in `src/curation/oauthWorker.inat-draft.mjs`,
+checked only for syntax - it has not been run or deployed, and `copyFrameworkOut.sh` does not copy it. Its GitHub
+sign-in is unchanged, so when the work resumes it can replace `oauthWorker.mjs`, and be deployed before iNat sign-in
+is ready.
+
+### 7.7 The draft of the Worker
+
+What the draft takes from iNat's API reference, as saved in November 2026:
+
+* Signing in uses iNat's authorization code flow: `/oauth/authorize` with `response_type=code`, and the code is
+  exchanged with the client secret at `/oauth/token`. The documentation shows that exchange only form-encoded, so the
+  Worker now sends it so for both providers, as GitHub also accepts.
+* iNat's tokens don't expire (`expires_in: null`) and carry `write` access to the person's iNat data, so the Worker
+  uses one only to ask `/users/edit.json`, documented as the way to read the signed-in user's profile, who the person
+  is, and then discards it.
+
+How the draft works:
+
+* **Signing in**: `/authorize` takes `provider=github|inat`, defaulting to `github`. iNat returns to `/callback/inat`;
+  GitHub keeps `/callback`, so existing sites and the App's Callback URL are unchanged. The providers are described by
+  one table, `providers`, and the sealed `state` records which one the sign-in began with.
+* **The session**: for iNat, `POST /token` answers `{provider: "inat", viewer: {login, avatarUrl, url}, session}`, the
+  session lasting **24 hours**, not the 8 of §7.2, which the page keeps in place of a token. GitHub's answer is as
+  before, with `provider: "github"` added, and sessions sealed before iNat was offered, which name no provider, are
+  taken to be GitHub's.
+* **Posting**: `POST /post {session, repository, repositoryId, categoryId, taxonId, title, threadBody, subject, body}`
+  does what `submit` of the github backend in `bioreportr-curation.vue` does: finds the taxon's thread or starts it,
+  removes the person's earlier note on the same subject, and adds the note. It posts as the App, with an installation
+  token granted only Discussions write, on only that repository.
+* **Telling whose comment is whose**: since every comment is the App's, `viewerDidAuthor` can't tell them apart. Each
+  ends with "Posted for iNaturalist user @login" and a hidden marker,
+  `<!-- curation-poster {"inat": <id>, "subject": "..."} -->`. Anything like a marker within the note itself is
+  altered, so that one person's note can't pass for another's.
+* **Limits**: the request is checked to be complete, with a note of at most 20,000 characters, and, if a
+  `POST_LIMITER` rate limiting binding is configured, limited for each iNat user.
+
+Still to do:
+
+1. **The client**, `bioreportr-curation.vue`: a "Sign in with iNaturalist" button; handling the new answer of
+   `/token`, keeping the session rather than a token; and, for iNat users, `submit` posting to `/post` - see also
+   §7.8.
+2. **The GitHub App**: generate a private key, convert it to PKCS#8, and note the App ID.
+3. **iNat**: register the application, with the redirect URI
+   `https://bioreportr-curation.imerss.workers.dev/callback/inat`.
+4. **`imerss-cloudflare`**: copy in the new `oauthWorker.mjs`; add the bindings `APP_ID`, `INAT_CLIENT_ID`,
+   `APP_PRIVATE_KEY` and `INAT_CLIENT_SECRET` to `curation.tf`, with the two secrets in sops; and optionally the rate
+   limiting binding.
+5. **This note**: bring §7.2 in line with the draft - the fields of `/post`, `APP_ID`, and the session's 24 hours.
+
+### 7.8 Checking pending notes, and authorship
+
+**What `missingComments` does.** The page keeps each note it submits in local storage as *pending* until consolidation
+takes it up, showing it meanwhile as being processed. With it, it keeps the GitHub node id of its comment,
+`commentId`. If the comment disappears first - deleted by its author, or with its thread, by a moderator - it is
+never consolidated, and the note would show as being processed for ever. So `verifyPending`, when the page loads and
+when the person signs in, calls `missingComments`, which looks up every pending note's comment in one GraphQL query,
+and drops the notes whose comments GitHub reports as `NOT_FOUND`.
+
+**Why it doesn't work for iNat users.** The query is made with the person's own GitHub token. GitHub's GraphQL API
+answers no anonymous queries, and has no other way to read Discussions' comments, so a person signed in with iNat,
+holding only a sealed session, can't make it, and the check is skipped. It matters less for them, since they can't
+delete their own comments on GitHub, which are the App's, but a moderator deleting a note or a thread would still
+leave notes stuck for ever.
+
+The options:
+
+1. **A `POST /check` endpoint on the Worker** - the one recommended. It takes `{session, repository, commentIds}`, and
+   makes the same lookup with the App's installation token. It only reads, says only whether each comment exists, and
+   the session it requires limits who may use it. It costs one request on each page load, only for people signed in
+   with iNat who have notes pending, and about 30 lines, mostly reusing `installationToken` and the client's query.
+2. **Skipping the check for iNat users** - simple, but a stuck note can be cleared only by clearing the browser's
+   storage.
+3. **Expiring pending notes** after a time by which consolidation should surely have run - this serves both kinds of
+   user, but is a guess, and may hide a note still truly waiting.
+
+**Authorship in consolidation.** A note's YAML records `author: that.viewer.login`, for an iNat user their iNat login.
+If the consolidation workflow, `curation.yml`, attributes or trusts notes by the author of their GitHub comment, every
+iNat user's note will seem to be the App's bot's. It would then need to read the person from the marker at the end of
+the comment instead. This has not yet been checked.

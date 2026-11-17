@@ -106,9 +106,9 @@ fluid.def("saanich.story", {
     },
     // The Atlas's records may also be narrowed by the places named in them and by a span of years, filters placed by the
     // slots of the same names in the story page's filter panel
-    // The species of the Community Science pane, which open on the Atlas, are those of the iNaturalist project of its
+    // The species of the Community Science pane, which open on the Atlas, are those of the taxon and places of its
     // panels - see paneOverrides below
-    inatSpeciesQuery: {project_id: 303782},
+    inatSpeciesQuery: {place_id: "81137,186747,186948,186945,202523,182730", taxon_id: 211194},
     // The records come from collectors, observers and others alike, so the recorder filter does not call them volunteers
     collectorFilter: {
         $component: {
@@ -188,19 +188,26 @@ fluid.def("saanich.story", {
         },
         TopContributions: {
             iNatPanels: [{
-                // The iNaturalist project "Lost" plants of the Saanich Peninsula, whose own rules choose its observations
-                project: {
-                    id: 303782,
-                    str: "lostplants"
+                taxon: {
+                    id: 211194,
+                    str: "Vascular plants"
+                },
+                // The Saanich Peninsula, as the union of iNaturalist places, which inat-components passes on to
+                // iNaturalist as a comma-separated list: Saanich (81137), Central Saanich (186747), North Saanich
+                // (186948), Sidney (186945), D'Arcy Island (202523) and Sidney Channel (182730) - a subset of the
+                // places of the project "Lost" plants of the Saanich Peninsula, which also spans Greater Victoria
+                place: {
+                    id: "81137,186747,186948,186945,202523,182730",
+                    str: "saanichpeninsula"
                 },
                 features: [{ // recentObservations
-                    desc: "Recent observations of the Saanich Peninsula's \"lost\" plants"
+                    desc: "Recent vascular plant observations on the Saanich Peninsula"
                 }, { // commonTaxa
-                    desc: "The Saanich Peninsula's \"lost\" plants most often found again"
+                    desc: "Most commonly reported vascular plants on the Saanich Peninsula"
                 }, { // favourites
-                    desc: "The most favourited observations of the Saanich Peninsula's \"lost\" plants"
+                    desc: "Most favourited vascular plant observations on the Saanich Peninsula"
                 }, { // stats
-                    desc: "Statistics of the observations of the Saanich Peninsula's \"lost\" plants"
+                    desc: "Statistics of vascular plant observations on the Saanich Peninsula"
                 }]
             }]
         }
