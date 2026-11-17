@@ -800,8 +800,11 @@ h2 {
     margin-right: calc(4px - var(--mxcw-container-padding));
 }
 
-/* Panes which hide the viz controls leave nothing for contentResizeBar to resize against */
-.mxcw-container > .resize-bar:has(+ .imerss-container.fl-hidden) {
+/* Panes which hide the viz controls leave nothing for contentResizeBar to resize against. Whether they are hidden is
+   computed by the page as it boots, and so isn't held by a static build, whose rendering always shows them - so the bar
+   is hidden too until the page has loaded, and then shown only if the active pane shows them */
+.mxcw-container > .resize-bar:has(+ .imerss-container.fl-hidden),
+.imerss-main.imerss-loading .mxcw-container > .resize-bar {
     display: none;
 }
 

@@ -28,6 +28,54 @@ fluid.registerNamespace("bioreportr.storyMap");
 fluid.registerNamespace("bioreportr.pageFragment");
 
 /**
+ * @typedef {Object} Binding
+ * @property {Function} listen - `(target, type, handler, options)`: add a DOM listener, removed on disposal
+ * @property {Function} onMap - `(map, type, ...args)`: add a MapLibre listener, as `map.on(type, ...args)`, removed on
+ * disposal by `map.off` with the same arguments
+ * @property {Function} element - `(element)`: hold an element added to the page, removed on disposal, and return it
+ * @property {Function} onDispose - `(fn)`: run a function on disposal
+ * @property {Function} dispose - Remove everything added, in reverse order
+ */
+
+/**
+ * Begin a record of the listeners and elements which bind some behaviour to a map or a document, so that they can be
+ * removed together - the value bound by a `$bindable`, whose `unbind` is bioreportr.unbind. The bindable binds afresh
+ * should its map or document change, and unbinds as its component is destroyed, so that each is bound once only.
+ * @return {Binding} The binding
+ */
+bioreportr.binding = function () {
+    const disposers = [];
+    return {
+        listen(target, type, handler, options) {
+            target.addEventListener(type, handler, options);
+            disposers.push(() => target.removeEventListener(type, handler, options));
+        },
+        onMap(map, type, ...args) {
+            map.on(type, ...args);
+            disposers.push(() => map.off(type, ...args));
+        },
+        element(element) {
+            disposers.push(() => element.remove());
+            return element;
+        },
+        onDispose(fn) {
+            disposers.push(fn);
+        },
+        dispose() {
+            disposers.splice(0).reverse().forEach(fn => fn());
+        }
+    };
+};
+
+/**
+ * Remove what a binding added - the `unbind` of a `$bindable` whose binder returns a binding - see bioreportr.binding.
+ * @param {Binding|undefined} binding - The binding, if one was made
+ */
+bioreportr.unbind = function (binding) {
+    fluid.unwrapProxy(binding)?.dispose?.();
+};
+
+/**
  * The settings of a pane, which govern what the story page shows alongside it.
  * @typedef {Object} PaneSettings
  * @property {String} paneKey - The pane's key, the name of the R Markdown file it was knitted from
@@ -171,21 +219,25 @@ bioreportr.storyPage.reveal = function (that, loaded, global) {
 bioreportr.storyPage.isActive = (activePaneKey, paneKey) => activePaneKey === paneKey;
 
 /**
- * Accumulate the panes which have been shown. The record is the identical object until a pane is first shown, so that
- * whatever depends on it recomputes only then.
- * @param {bioreportr.storyPage} that - The story page, by which the record is remembered
+ * Accumulate the panes which have been shown, from the panes previously accumulated - see `{$oldValue}`. The record is
+ * the identical object until a pane is first shown, so that whatever depends on it recomputes only then.
+ * @param {Object<String, Boolean>|undefined} previous - The panes accumulated so far, if any
  * @param {String} activePaneKey - The key of the pane shown
  * @return {Object<String, Boolean>} The key of each pane which has been shown, mapped to `true`
  */
-bioreportr.storyPage.activatedPanes = function (that, activePaneKey) {
-    const bare = fluid.unwrapProxy(that);
-    const last = bioreportr.storyPage.activatedRecords.get(bare) || {};
-    const togo = last[activePaneKey] ? last : {...last, [activePaneKey]: true};
-    bioreportr.storyPage.activatedRecords.set(bare, togo);
-    return togo;
+bioreportr.storyPage.activatedPanes = function (previous, activePaneKey) {
+    const last = fluid.unwrapProxy(previous) || {};
+    return last[activePaneKey] ? last : {...last, [activePaneKey]: true};
 };
 
-bioreportr.storyPage.activatedRecords = new WeakMap();
+/**
+ * Compute the move from the pane last shown to the pane shown, from the previous move - see `{$oldValue}`.
+ * @param {Object|undefined} previous - The previous move, if any
+ * @param {String} activePaneKey - The key of the pane shown
+ * @return {Object} Members `from`, the key of the pane last shown, or `undefined` as the page first shows a pane, and
+ * `to`, the key of the pane shown
+ */
+bioreportr.storyPage.paneTransition = (previous, activePaneKey) => ({from: fluid.unwrapProxy(previous)?.to, to: activePaneKey});
 
 /**
  * Read the markup of a `<template>` element of the document holding a component, e.g. site navigation rendered into
@@ -244,26 +296,25 @@ bioreportr.storyMap.showPane = function (that, map, mapData, activePaneKey) {
             map.setPaintProperty(layer.id, opacityProp, visible[layer.id] ? layer.paint?.[opacityProp] ?? 1 : 0);
         }
     });
+    // The map whose camera has been placed flies, rather than jumps, to each pane
+    const placed = that.placedMap === map;
     if (paneMap?.center) {
-        if (bioreportr.storyMap.placed.has(map)) {
+        if (placed) {
             const zoomRatio = Math.abs(Math.log(map.getZoom() / paneMap.zoom));
             map.flyTo({center: paneMap.center, zoom: paneMap.zoom, essential: true,
                 duration: zoomRatio > 0.3 ? that.slowZoomDuration : that.zoomDuration});
         } else {
             map.jumpTo({center: paneMap.center, zoom: paneMap.zoom});
-            bioreportr.storyMap.placed.add(map);
+            that.placedMap = map;
         }
-    } else if (!bioreportr.storyMap.placed.has(map)) {
+    } else if (!placed) {
         const camera = bioreportr.storyMap.firstCamera(mapData);
         if (camera) {
             map.jumpTo({center: camera.center, zoom: camera.zoom});
-            bioreportr.storyMap.placed.add(map);
+            that.placedMap = map;
         }
     }
 };
-
-// The maps whose camera has been placed, which subsequently fly rather than jump to each pane
-bioreportr.storyMap.placed = new WeakSet();
 
 bioreportr.storyMap.opacityProperty = function (layer) {
     return {line: "line-opacity", fill: "fill-opacity", raster: "raster-opacity"}[layer.type] || null;
@@ -356,22 +407,33 @@ bioreportr.storyMap.highlightRegion = function (map, selectedRegion, mapData) {
     }
 };
 
-// Whether the map was shown by the previous pane, by map
-bioreportr.storyMap.mapWasShown = new WeakMap();
+/**
+ * Compute whether the map was shown by the previous pane, from the previous value - see `{$oldValue}`. It takes every
+ * argument of bioreportr.storyMap.recentre, so that it is recomputed whenever that runs.
+ * @param {Object|undefined} previous - The previous value, if any
+ * @param {maplibregl.Map} map - The story's map, once ready
+ * @param {Object} mapData - The story's map data, with each pane's camera
+ * @param {Object} activePane - The active pane's settings
+ * @return {Object} Members `map`, `mapData` and `activePane`, as supplied, and `wasShown`, whether the same map was shown
+ * by the previous pane, or `undefined` if there was none
+ */
+bioreportr.storyMap.recentreState = function (previous, map, mapData, activePane) {
+    const last = fluid.unwrapProxy(previous);
+    return {map, mapData, activePane, wasShown: last?.map === map && last.activePane ? !!last.activePane.visibleMap : undefined};
+};
 
 /**
  * Place the map on the active pane's camera again once it has its full size, when the previous pane hid it - e.g. on
  * moving from Lost Plants to the atlas. The story page moves the camera as the pane opens, when the map is still without
  * size, which leaves it centred in the wrong place once the map has grown. A pane whose settings have `framesItself`,
  * which places the map by a camera of its own, is left alone.
- * @param {maplibregl.Map} map - The story's map, once ready
- * @param {Object} mapData - The story's map data, with each pane's camera
- * @param {Object} activePane - The active pane's settings, with its `paneKey`, `visibleMap` and any `framesItself`
+ * @param {Object} state - As computed by bioreportr.storyMap.recentreState - the story's map, once ready, its map data,
+ * with each pane's camera, the active pane's settings, with its `paneKey`, `visibleMap` and any `framesItself`, and
+ * whether the previous pane showed the map
  */
-bioreportr.storyMap.recentre = function (map, mapData, activePane) {
+bioreportr.storyMap.recentre = function (state) {
+    const {map, mapData, activePane, wasShown} = fluid.unwrapProxy(state);
     if (map && activePane) {
-        const wasShown = bioreportr.storyMap.mapWasShown.get(map);
-        bioreportr.storyMap.mapWasShown.set(map, !!activePane.visibleMap);
         const camera = mapData?.panes?.[activePane.paneKey];
         if (wasShown === false && activePane.visibleMap && camera?.center && !activePane.framesItself) {
             hortis.libreMap.afterLayout(map, () => {
@@ -844,41 +906,29 @@ bioreportr.storyMap.homeCamera = function (mapData, activePaneKey) {
 
 bioreportr.storyPage.noRecordSelected = filterState => !hortis.isValue(filterState);
 
-// The pane last shown by each story page, so that a record or plant chosen in it is cleared on moving to another
-bioreportr.storyPage.lastPaneKey = new WeakMap();
-
-// The id of a record selected together with a move to another pane, which is kept as the pane changes, e.g. on opening
-// the curation of a record - see bioreportr.curation.openRecord
-bioreportr.storyPage.keepRecord = new WeakMap();
-
-// The story pages moving to the curation pane together with the choice of a taxon, by its speech bubble, which is kept -
-// see bioreportr.curation.open. Any other move to the curation pane, e.g. by its tab, opens it on its landing page, with
-// the checklist from which to choose, rather than on a taxon chosen in another pane
-bioreportr.storyPage.keepTaxon = new WeakSet();
-
 /**
  * Clear the selected record, and the plant chosen in the checklist, when the story page moves from one pane to another
  * - but not as it first shows a pane, so that a record or plant held in the URL survives the page's loading, nor a
  * record or plant chosen together with the move, e.g. by the speech bubble of the curation pane, or a species of the
- * Community Science pane opening on the atlas - see bioreportr.storyPage.keepTaxon. A plant carried into another pane
+ * Community Science pane opening on the atlas - see the story page's `keepTaxon`. A plant carried into another pane
  * may have no records within that pane's selection - e.g. in the History pane's years before it was first recorded, or
  * in a protected area where it has not been found - leaving the map nothing to show.
  * @param {bioreportr.storyPage} storyPage - The story page
- * @param {String} activePaneKey - The key of the active pane
+ * @param {Object} paneTransition - The move from the pane last shown to the active one - see
+ * bioreportr.storyPage.paneTransition
  */
-bioreportr.storyPage.clearRecordOnPaneChange = function (storyPage, activePaneKey) {
-    const lastPaneKey = bioreportr.storyPage.lastPaneKey.get(storyPage);
-    bioreportr.storyPage.lastPaneKey.set(storyPage, activePaneKey);
-    if (lastPaneKey !== undefined && lastPaneKey !== activePaneKey) {
+bioreportr.storyPage.clearRecordOnPaneChange = function (storyPage, paneTransition) {
+    const {from, to} = fluid.unwrapProxy(paneTransition);
+    if (from !== undefined && from !== to) {
         // Deferred since an effect may not write signals
         fluid.invokeLater(() => {
-            const kept = bioreportr.storyPage.keepRecord.get(storyPage);
-            bioreportr.storyPage.keepRecord.delete(storyPage);
-            if (kept === undefined || kept !== storyPage.map.recordSelector.filterState) {
+            const kept = storyPage.keepRecord;
+            storyPage.keepRecord = null;
+            if (kept === null || kept !== storyPage.map.recordSelector.filterState) {
                 storyPage.map.recordSelector.reset();
             }
-            const keepTaxon = bioreportr.storyPage.keepTaxon.has(storyPage);
-            bioreportr.storyPage.keepTaxon.delete(storyPage);
+            const keepTaxon = storyPage.keepTaxon;
+            storyPage.keepTaxon = false;
             if (!keepTaxon) {
                 storyPage.checklist.search.reset();
             }

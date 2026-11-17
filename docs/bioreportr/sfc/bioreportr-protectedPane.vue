@@ -37,8 +37,18 @@ fluid.def("bioreportr.protectedAreas", {
     // too, so that the pane's summaries agree
     mappedOnly: "{storyPage}.protectedMappedOnly",
     active: "$compute:bioreportr.storyPage.isActive({storyPage}.activePaneKey, Protected)",
-    hover: "$effect:bioreportr.protectedAreas.bindCards({storyPage}, {storyPage}.map.readyMap, {storyPage}.mapData, {global})",
-    selects: "$effect:bioreportr.protectedAreas.bindSelects({storyPage}, {global})",
+    hover: {
+        $bindable: {
+            bind: "bioreportr.protectedAreas.bindCards({storyPage}, {storyPage}.map.readyMap, {storyPage}.mapData, {global})",
+            unbind: "bioreportr.unbind({boundValue})"
+        }
+    },
+    selects: {
+        $bindable: {
+            bind: "bioreportr.protectedAreas.bindSelects({storyPage}, {global})",
+            unbind: "bioreportr.unbind({boundValue})"
+        }
+    },
     shown: "$effect:bioreportr.protectedAreas.showSelection({storyPage}.selectedRegion, {self}.baseRegion, {self}.active, {global})",
     // The plant chosen in the checklist, with its records within the selected region, shown in a smaller panel beside
     // the chart, in place of the atlas's
@@ -260,9 +270,6 @@ bioreportr.protectedAreas.isShown = function (dokkument) {
     return !!(section && section.offsetParent);
 };
 
-// The maps whose individual areas already show their cards
-bioreportr.protectedAreas.boundMaps = new WeakSet();
-
 /**
  * Show a card describing each individual area as the pointer passes over it, or as it is tapped on a touch screen,
  * while the pane is shown. The card's markup is the property `card` given to the area's shape by scripts/Protected_map_mapbox.R.
@@ -273,16 +280,17 @@ bioreportr.protectedAreas.boundMaps = new WeakSet();
  * @param {maplibregl.Map} map - The story's map, once ready
  * @param {Object} mapData - The story's map data, whose style holds the areas' layers
  * @param {Window} window - The window holding the map
+ * @return {Binding|null} The binding, removed should the map or its data change - see bioreportr.binding
  */
 bioreportr.protectedAreas.bindCards = function (storyPage, map, mapData, window) {
-    if (!map || !mapData || bioreportr.protectedAreas.boundMaps.has(map)) {
-        return;
+    if (!map || !mapData) {
+        return null;
     }
-    bioreportr.protectedAreas.boundMaps.add(map);
+    const binding = bioreportr.binding();
     // The layers whose shapes carry cards, in sources named "... .cards" - see regions_to_mapbox_source
     const cardLayers = mapData.style.layers.filter(layer => layer.type === "fill" && layer.source?.endsWith(".cards"))
         .map(layer => layer.id);
-    const card = window.document.createElement("div");
+    const card = binding.element(window.document.createElement("div"));
     card.className = "mxcw-pa-card";
     card.hidden = true;
     map.getContainer().appendChild(card);
@@ -312,7 +320,7 @@ bioreportr.protectedAreas.bindCards = function (storyPage, map, mapData, window)
     };
     // At most once a frame, since finding the area under the pointer is costly over so many layers
     let pending = null;
-    map.on("mousemove", event => {
+    binding.onMap(map, "mousemove", event => {
         if (pending === null) {
             window.requestAnimationFrame(() => {
                 const latest = pending;
@@ -324,11 +332,11 @@ bioreportr.protectedAreas.bindCards = function (storyPage, map, mapData, window)
     });
     const container = map.getContainer();
     let start = null;
-    container.addEventListener("pointerdown", event => {
+    binding.listen(container, "pointerdown", event => {
         start = event.pointerType === "touch" && event.isPrimary ?
             {id: event.pointerId, x: event.clientX, y: event.clientY, time: event.timeStamp} : null;
     }, true);
-    container.addEventListener("pointerup", event => {
+    binding.listen(container, "pointerup", event => {
         const tap = start;
         start = null;
         if (tap && event.pointerId === tap.id && event.timeStamp - tap.time <= bioreportr.solowMapLayer.tapDuration &&
@@ -341,17 +349,15 @@ bioreportr.protectedAreas.bindCards = function (storyPage, map, mapData, window)
             }
         }
     }, true);
-    container.addEventListener("pointercancel", () => {
+    binding.listen(container, "pointercancel", () => {
         start = null;
     }, true);
-    map.getCanvas().addEventListener("mouseleave", () => {
+    binding.listen(map.getCanvas(), "mouseleave", () => {
         card.hidden = true;
         shown = null;
     });
+    return binding;
 };
-
-// The pages whose rows and links already select what they name
-bioreportr.protectedAreas.boundPages = new WeakSet();
 
 /**
  * Make the rows of the charts and the links of the summaries select what they name, as the map's legend and its
@@ -360,13 +366,11 @@ bioreportr.protectedAreas.boundPages = new WeakSet();
  * all of them if it names nothing.
  * @param {bioreportr.storyPage} storyPage - The story page, whose selected region they set
  * @param {Window} window - The window holding the page
+ * @return {Binding} The binding - see bioreportr.binding
  */
 bioreportr.protectedAreas.bindSelects = function (storyPage, window) {
     const dokkument = window.document;
-    if (bioreportr.protectedAreas.boundPages.has(dokkument)) {
-        return;
-    }
-    bioreportr.protectedAreas.boundPages.add(dokkument);
+    const binding = bioreportr.binding();
     const select = target => {
         const row = target.closest?.(".mxcw-pa-row[data-region]");
         const link = target.closest?.("[data-select]");
@@ -380,12 +384,13 @@ bioreportr.protectedAreas.bindSelects = function (storyPage, window) {
         }
         return !!(row || link);
     };
-    dokkument.addEventListener("click", event => select(event.target));
-    dokkument.addEventListener("keydown", event => {
+    binding.listen(dokkument, "click", event => select(event.target));
+    binding.listen(dokkument, "keydown", event => {
         if ((event.key === "Enter" || event.key === " ") && select(event.target)) {
             event.preventDefault();
         }
     });
+    return binding;
 };
 
 /**

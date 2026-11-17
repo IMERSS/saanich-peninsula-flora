@@ -64,15 +64,19 @@ fluid.def("bioreportr.atlasPanel", {
     sectionInserts: "$compute:bioreportr.atlas.sectionInserts({self}.atlasTiles)",
     paneClick: "$method:bioreportr.atlas.paneClick({self}, {0}:event)",
     // A click anywhere on a row of the checklist chooses its taxon, as a click on one of its names does
-    checklistRowClick: "$effect:bioreportr.atlas.bindRowClick({self}, {global})",
-    // The checklist shows each species' reporting status by an icon - see bioreportr.atlas.checklistDecoration
-    checklist: {
-        $component: {
-            decorate: "bioreportr.atlas.checklistDecoration"
+    checklistRowClick: {
+        $bindable: {
+            bind: "bioreportr.atlas.bindRowClick({self}, {global})",
+            unbind: "bioreportr.unbind({boundValue})"
         }
     },
     // The species of the Community Science pane open on the atlas - see bioreportr.inatSpecies
-    inatSpeciesClick: "$effect:bioreportr.inatSpecies.bind({self}, {self}.inatSpeciesQuery, {global})",
+    inatSpeciesClick: {
+        $bindable: {
+            bind: "bioreportr.inatSpecies.bind({self}, {self}.inatSpeciesQuery, {global})",
+            unbind: "bioreportr.unbind({boundValue})"
+        }
+    },
     // The dated sightings of each taxon, from which the groups' summaries are drawn
     byTaxon: "$compute:bioreportr.atlas.groupRecords({self}.pkg, {self}.sightingPredicates)",
     // Summaries of each group of species, shown when hovering over its tile or its row of the map's legend
@@ -117,24 +121,6 @@ bioreportr.atlas.fitToTaxon = function (map, taxon, taxonObs, duration, activePa
     }
 };
 
-/**
- * Decorate a checklist row with an icon of its taxon's reporting status, as hortis.blitzChecklistDecoration does, but
- * referring to the icons by the ids the story page gives them, which carry the prefix `imerss-i-`. Without it the
- * icons refer to symbols which don't exist, and show nothing.
- * @param {TaxonRow} row - The checklist's taxon row
- * @return {VNode|null} The icon, or null if the taxon has no reporting status
- */
-bioreportr.atlas.checklistDecoration = function (row) {
-    const node = hortis.blitzChecklistDecoration(row);
-    const use = node?.children.find(child => child.tag === "use");
-    if (use && !use.attrs.href.startsWith("#imerss-i-")) {
-        use.attrs.href = "#imerss-i-" + use.attrs.href.substring(1);
-    }
-    return node;
-};
-
-// The story pages whose checklist rows already choose their taxa
-bioreportr.atlas.rowClickBound = new WeakSet();
 
 /**
  * Let a click anywhere on a row of the checklist - on the separator between its names, or the space beside them -
@@ -142,18 +128,18 @@ bioreportr.atlas.rowClickBound = new WeakSet();
  * row's first name.
  * @param {bioreportr.storyPage} storyPage - The story page
  * @param {Window} window - The window holding the story page
+ * @return {Binding} The binding - see bioreportr.binding
  */
 bioreportr.atlas.bindRowClick = function (storyPage, window) {
-    if (!bioreportr.atlas.rowClickBound.has(storyPage)) {
-        bioreportr.atlas.rowClickBound.add(storyPage);
-        window.document.addEventListener("click", event => {
-            const row = event.target.matches?.("li.checklist-row") ? event.target : null;
-            const name = row && [...row.children].find(child => child.matches("p[data-row-id]"));
-            if (name) {
-                name.click();
-            }
-        });
-    }
+    const binding = bioreportr.binding();
+    binding.listen(window.document, "click", event => {
+        const row = event.target.matches?.("li.checklist-row") ? event.target : null;
+        const name = row && [...row.children].find(child => child.matches("p[data-row-id]"));
+        if (name) {
+            name.click();
+        }
+    });
+    return binding;
 };
 
 /** The atlas's tiles of the three groups of species **/
@@ -357,7 +343,7 @@ bioreportr.inatSpecies.atlasRow = function (rowById, taxon) {
 
 /**
  * Open the atlas on the species of a card of the Community Science pane, if it is one of the atlas's taxa. The plant is
- * kept as the pane changes, which a story may otherwise clear it on - see bioreportr.storyPage.keepTaxon.
+ * kept as the pane changes, which a story may otherwise clear it on - see the story page's `keepTaxon`.
  * @param {bioreportr.storyPage} storyPage - The story page
  * @param {HTMLElement} card - The card clicked
  * @param {Object} query - The panels' query - see bioreportr.inatSpecies.byName
@@ -370,7 +356,7 @@ bioreportr.inatSpecies.open = function (storyPage, card, query, window) {
             const taxon = byName.get(name);
             const row = taxon && bioreportr.inatSpecies.atlasRow(storyPage.taxa.rowById, taxon);
             if (row) {
-                bioreportr.storyPage.keepTaxon.add(storyPage);
+                storyPage.keepTaxon = true;
                 window.location.hash = "pane:Status&taxon:" + row.id;
             }
         }, error => console.error("Could not look up the species of the Community Science pane", error));
@@ -388,9 +374,6 @@ bioreportr.inatSpecies.isSpeciesCard = function (card) {
     return !!tab && tab.textContent.trim() === "Most common";
 };
 
-// The story pages whose Community Science cards already open their species
-bioreportr.inatSpecies.bound = new WeakSet();
-
 /**
  * Listen for clicks on the cards of the Community Science pane, which the iNaturalist panels render outside the story
  * page's own handling of clicks in its panes. Only the cards of "Most common" are species, which open the atlas - those
@@ -398,12 +381,14 @@ bioreportr.inatSpecies.bound = new WeakSet();
  * @param {bioreportr.storyPage} storyPage - The story page
  * @param {Object|null} query - The panels' query - see bioreportr.inatSpecies.byName - or null if the story has none
  * @param {Window} window - The window holding the story page
+ * @return {Binding|null} The binding, or null if the story has no query - see bioreportr.binding
  */
 bioreportr.inatSpecies.bind = function (storyPage, query, window) {
-    if (query && !bioreportr.inatSpecies.bound.has(storyPage)) {
-        bioreportr.inatSpecies.bound.add(storyPage);
+    let binding = null;
+    if (query) {
+        binding = bioreportr.binding();
         // Caught as it descends, before the card's own handler
-        window.document.addEventListener("click", event => {
+        binding.listen(window.document, "click", event => {
             const card = event.target.closest?.(".mxcw-inat-components article");
             if (card && bioreportr.inatSpecies.isSpeciesCard(card)) {
                 event.preventDefault();
@@ -412,6 +397,7 @@ bioreportr.inatSpecies.bind = function (storyPage, query, window) {
             }
         }, true);
     }
+    return binding;
 };
 
 /** Summaries of the groups of species, shown on hovering over a tile or a row of the map's legend **/

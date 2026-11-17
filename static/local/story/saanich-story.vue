@@ -158,6 +158,8 @@ fluid.def("saanich.story", {
     // The extirpation risk pane opens on whichever species is at the top of its list, with the map fitted to its records
     solowShown: "$compute:bioreportr.storyPage.isActive({self}.activePaneKey, Solow)",
     selectTopSpecies: "$effect:saanich.selectTopSpecies({self}, {self}.solowShown, {self}.loaded, {self}.solowTaxa.taxaTable.displayRows)",
+    // true once the extirpation risk pane has been opened on its top species - see saanich.selectTopSpecies
+    topSpeciesSelected: {$transient: false},
     paneOverrides: {
         Traces: {
             visibleMap: true

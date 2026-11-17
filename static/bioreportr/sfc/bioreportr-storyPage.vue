@@ -65,9 +65,19 @@ fluid.def("bioreportr.storyPage", {
     activePane: "$compute:bioreportr.storyPage.activePane({self}.panes, {self}.activePaneKey)",
     // Each pane which has been shown, by key - a pane whose derivations are costly, e.g. the Traces' timeline, derives
     // them only once it is first shown, so that the page is revealed without waiting for those of panes not yet seen
-    activatedPanes: "$compute:bioreportr.storyPage.activatedPanes({self}, {self}.activePaneKey)",
+    activatedPanes: "$compute:bioreportr.storyPage.activatedPanes({$oldValue}, {self}.activePaneKey)",
+    // The move from the pane last shown to the active one
+    paneTransition: "$compute:bioreportr.storyPage.paneTransition({$oldValue}, {self}.activePaneKey)",
     // A record selected in one pane is cleared on moving to another
-    clearRecordOnPaneChange: "$effect:bioreportr.storyPage.clearRecordOnPaneChange({self}, {self}.activePaneKey)",
+    clearRecordOnPaneChange: "$effect:bioreportr.storyPage.clearRecordOnPaneChange({self}, {self}.paneTransition)",
+    // The id of a record selected together with a move to another pane, which is kept as the pane changes, e.g. on
+    // opening the curation of a record - see bioreportr.curation.openRecord
+    keepRecord: {$transient: null},
+    // true whilst a move to another pane is made together with the choice of a taxon, e.g. by the speech bubble of the
+    // curation pane, which is kept - see bioreportr.curation.open. Any other move to the curation pane, e.g. by its
+    // tab, opens it on its landing page, with the checklist from which to choose, rather than on a taxon chosen in
+    // another pane
+    keepTaxon: {$transient: false},
     classes: "$compute:bioreportr.storyPage.classes({self}.activePane, {self}.checklist.search.filterState, {self}.map.recordSelector.filterState)",
     // The classes as the template renders them - each empty while it can't yet be known, e.g. while the page is rendered
     // statically, where there is no URL to name the pane - so that the fixed classes beside them, which lay out the
@@ -502,18 +512,18 @@ bioreportr.storyPage.hasMarkup = markup => !!markup;
 
 <symbols>
     <symbol id="imerss-i-exclamation" viewBox="0 0 24 24" stroke="#ffac1c">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13.253 5.98 12 13.5l-1.253-7.52a1.27 1.27 0 1 1 2.506 0Z"/>
-        <circle cx="12" cy="19" r="1" stroke-width="2"/>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13.253 5.98 12 13.5l-1.253-7.52a1.27 1.27 0 1 1 2.506 0Z"></path>
+        <circle cx="12" cy="19" r="1" stroke-width="2"></circle>
     </symbol>
     <symbol id="imerss-i-question" viewBox="0 0 512 512" fill="#55b">
         <g transform="translate(256,256) scale(0.8) translate(-256,-256)">
-            <path d="M396,85c-13-25-34-46-59-61C311,9,280,0,247,0c-41-0-76,11-101,26c-26,15-37,32-37,32c-4,4-7,9-7,15 c0,6,3,11,7,15l36,29c7,6,18,6,25-1c0,0,4-8,18-16c14-8,32-14,59-14c24,0,44,9,58,21c7,6,12,13,15,19c3,6,4,11,4,16 c0,14-3,23-7,30c-3,6-7,11-12,16c-7,7-17,14-29,20c-11,6-23,12-36,19c-14,8-29,19-40,36c-5,8-10,18-12,28 c-3,10-4,20-4,31c0,11,0,21,0,21c0,11,9,19,19,19h47c11,0,19-9,19-19c0,0,0-9,0-21c0-4,0-7,1-8c1-3,1-3,2-5 c1-1,4-4,9-6c7-4,18-9,31-16c19-10,42-25,62-48c10-12,18-26,24-42c6-16,9-34,9-54C410,121,405,102,396,85z"/>
-            <path d="M229,406c-29,0-53,24-53,53c0,29,24,53,53,53c29,0,53-24,53-53C282,430,258,406,229,406z"/>
+            <path d="M396,85c-13-25-34-46-59-61C311,9,280,0,247,0c-41-0-76,11-101,26c-26,15-37,32-37,32c-4,4-7,9-7,15 c0,6,3,11,7,15l36,29c7,6,18,6,25-1c0,0,4-8,18-16c14-8,32-14,59-14c24,0,44,9,58,21c7,6,12,13,15,19c3,6,4,11,4,16 c0,14-3,23-7,30c-3,6-7,11-12,16c-7,7-17,14-29,20c-11,6-23,12-36,19c-14,8-29,19-40,36c-5,8-10,18-12,28 c-3,10-4,20-4,31c0,11,0,21,0,21c0,11,9,19,19,19h47c11,0,19-9,19-19c0,0,0-9,0-21c0-4,0-7,1-8c1-3,1-3,2-5 c1-1,4-4,9-6c7-4,18-9,31-16c19-10,42-25,62-48c10-12,18-26,24-42c6-16,9-34,9-54C410,121,405,102,396,85z"></path>
+            <path d="M229,406c-29,0-53,24-53,53c0,29,24,53,53,53c29,0,53-24,53-53C282,430,258,406,229,406z"></path>
         </g>
     </symbol>
     <symbol id="imerss-i-tick" viewBox="0 0 70 70" fill="#5b5">
         <g transform="translate(35,35) scale(0.75) translate(-35,-35)">
-            <path d="M26.474,70c-2.176,0-4.234-1.018-5.557-2.764L3.049,43.639C0.725,40.57,1.33,36.2,4.399,33.875 c3.074-2.326,7.441-1.717,9.766,1.35l11.752,15.518L55.474,3.285c2.035-3.265,6.332-4.264,9.604-2.232 c3.268,2.034,4.266,6.334,2.23,9.602l-34.916,56.06c-1.213,1.949-3.307,3.175-5.6,3.279C26.685,69.998,26.58,70,26.474,70z"/>
+            <path d="M26.474,70c-2.176,0-4.234-1.018-5.557-2.764L3.049,43.639C0.725,40.57,1.33,36.2,4.399,33.875 c3.074-2.326,7.441-1.717,9.766,1.35l11.752,15.518L55.474,3.285c2.035-3.265,6.332-4.264,9.604-2.232 c3.268,2.034,4.266,6.334,2.23,9.602l-34.916,56.06c-1.213,1.949-3.307,3.175-5.6,3.279C26.685,69.998,26.58,70,26.474,70z"></path>
         </g>
     </symbol>
 </symbols>

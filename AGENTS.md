@@ -98,6 +98,34 @@ is asked for in one project, assume by default that it belongs to both:
 This covers in particular the navigation - the navbar, subnav, sidebar and mobile menu partials in `layouts/partials/`,
 the menu in `hugo.yaml`, and the rules for them in `static/bioreportr/css/imerss-story.css`.
 
+### State outside the reactive graph
+
+Thinking of writing a `WeakMap` or `WeakSet` at file scope, keyed by a component, map or document? Consider using one of
+the following four strategies instead, each of which keeps the state with the component that owns it and disposes it
+with that component:
+
+1. **Remembering a previous value, to act on a transition or to accumulate** - a `$compute` taking `{$oldValue}`
+   among its arguments, which receives the computation's previous result (`undefined` the first time), as a reducer.
+   E.g. `paneTransition: "$compute:bioreportr.storyPage.paneTransition({$oldValue}, {self}.activePaneKey)"`, computing
+   `{from: old?.to, to: key}`, for an effect to act on when `from !== to`; or `activatedPanes`, which hands back `old`
+   itself when nothing is new, so that nothing downstream recomputes.
+2. **Keeping a recomputed value identical when it is equal to the last** - `equiv` on the computation, e.g.
+   `$compute: {func, args, equiv: "fluid.equiv.elementwise"}`, or a policy of your own, so that fresh but equal results
+   cut off the graph. A reducer as in 1 which returns `old` does the same.
+3. **Binding listeners or a widget once per map, document or page** - a `$bindable` record,
+   `{bind, unbind, onceOnly?}`, whose `bind` returns what it bound and whose `unbind` receives it as `{boundValue}`. It
+   binds afresh should its target change, and unbinds as its component is destroyed, so listeners don't leak. Collect
+   what is bound in a `bioreportr.binding()`, and unbind it with `bioreportr.unbind` - see `story.js`.
+4. **Mutable state of an interaction or an asynchronous process, which nothing should react to** - a `$transient`
+   member, e.g. `drag: {$transient: null}`. Its reads aren't tracked and its writes notify nothing, so it can be
+   written freely from event handlers. Its value survives the component's turnover, and an optional `dispose` runs when
+   it is overwritten or the component is destroyed, e.g. to clear a timer. A timer whose only job is to act once some
+   values have rested is better written as an `$effect` with `debounce: <milliseconds>`.
+
+A `WeakMap` remains right for a cache keyed by immutable data, e.g. the derived columns of a data package, which is
+not the state of any component. See `a-scratch/reports/weak-state-inventory.md` in Infusion 6 for the full inventory
+from which these strategies were drawn.
+
 ### Styling
 
 Keep any overall styling change, such as the navigation banner, colours, fonts or page layout, in sync with the

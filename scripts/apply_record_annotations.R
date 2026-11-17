@@ -44,8 +44,10 @@ solow_ep <- function (years, baseline_year, analysis_year) {
   B <- if (n == 0 || tn <= 0) {
     0
   } else if (n == 1) {
+    # The limit of the general factor below as n tends to 1, unbounded as the last record approaches the end of the
+    # period - a record in the analysis year itself, or after it, is the strongest evidence that the taxon persists
     ln_ratio <- log(T / tn)
-    if (ln_ratio <= 0) 0 else 1 / ln_ratio
+    if (ln_ratio <= 0) Inf else 1 / ln_ratio
   } else {
     denominator <- (T / tn) ^ (n - 1) - 1
     if (denominator <= 0) Inf else (n - 1) / denominator

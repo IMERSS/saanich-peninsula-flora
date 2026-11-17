@@ -42,6 +42,8 @@ fluid.def("bioreportr.storyMap", {
         }
     },
     showPane: "$effect:bioreportr.storyMap.showPane({self}, {self}.readyMap, {storyPage}.mapData, {storyPage}.activePaneKey)",
+    // The map whose camera has been placed, which subsequently flies rather than jumps to each pane
+    placedMap: {$transient: null},
     regionSelector: {
         $component: {
             $layers: "hortis.libreMap.clickHandler",
@@ -53,7 +55,8 @@ fluid.def("bioreportr.storyMap", {
     highlightRegion: "$effect:bioreportr.storyMap.highlightRegion({self}.readyMap, {storyPage}.selectedRegion, {storyPage}.mapData)",
     // A pane opened from one without a map is placed on its camera once the map has its size - see
     // bioreportr.storyMap.recentre
-    recentre: "$effect:bioreportr.storyMap.recentre({self}.readyMap, {storyPage}.mapData, {storyPage}.activePane)",
+    recentreState: "$compute:bioreportr.storyMap.recentreState({$oldValue}, {self}.readyMap, {storyPage}.mapData, {storyPage}.activePane)",
+    recentre: "$effect:bioreportr.storyMap.recentre({self}.recentreState)",
     // On a phone one finger scrolls the page past the map, and two move the map - see bioreportr.storyMap.phoneGestures
     phoneGestures: "$effect:bioreportr.storyMap.phoneGestures({self}.readyMap, {global})",
     legendRows: "$compute:bioreportr.storyMap.legendRows({storyPage}.activePane, {storyPage}.regionIndirectionRows, {storyPage}.mapData.style.layers)",

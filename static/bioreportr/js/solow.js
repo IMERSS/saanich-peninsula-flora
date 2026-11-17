@@ -257,8 +257,11 @@ bioreportr.solowBayesFactor = function (sortedCluster, solowParams) {
     if (tn <= 0) {
         B = 0;
     } else if (n === 1) {
+        // The limit of the general factor below as n tends to 1. It grows without bound as the last sighting approaches
+        // the end of the period, so that a sighting in the analysis year itself, or after it, is the strongest evidence
+        // that the population persists - as in the general case, whose denominator then vanishes
         const lnRatio = Math.log(T / tn);
-        B = lnRatio <= 0 ? 0 : 1 / lnRatio;
+        B = lnRatio <= 0 ? Number.POSITIVE_INFINITY : 1 / lnRatio;
     } else {
         const denominator = Math.pow(T / tn, n - 1) - 1;
         B = denominator <= 0 ? Number.POSITIVE_INFINITY : (n - 1) / denominator;
@@ -453,9 +456,10 @@ bioreportr.solowMapLayer.tapDuration = 500;
  * where it was tapped, and a tap on the map elsewhere, or anywhere else on the page, or moving the map, puts it away.
  * @param {bioreportr.solowMapLayer} that - The layer
  * @param {maplibregl.Map} map - The map
- * @return {Object} A record of the listeners
+ * @return {Binding} The binding, removed should the map change - see bioreportr.binding
  */
 bioreportr.solowMapLayer.bindHover = function (that, map) {
+    const binding = bioreportr.binding();
     // Shown as the map's own popup, beside the population, rather than through the page's tooltips, so that it follows
     // the map wherever it is laid out
     const popup = new maplibregl.Popup({closeButton: false, closeOnClick: false, maxWidth: "none", offset: 14,
@@ -481,15 +485,15 @@ bioreportr.solowMapLayer.bindHover = function (that, map) {
             leave();
         }
     };
-    map.on("mousemove", listener);
-    map.on("mouseout", leave);
+    binding.onMap(map, "mousemove", listener);
+    binding.onMap(map, "mouseout", leave);
     const container = map.getContainer();
     let start = null;
-    container.addEventListener("pointerdown", event => {
+    binding.listen(container, "pointerdown", event => {
         start = event.pointerType === "touch" && event.isPrimary ?
             {id: event.pointerId, x: event.clientX, y: event.clientY, time: event.timeStamp} : null;
     }, true);
-    container.addEventListener("pointerup", event => {
+    binding.listen(container, "pointerup", event => {
         const tap = start;
         start = null;
         if (tap && event.pointerId === tap.id && event.timeStamp - tap.time <= bioreportr.solowMapLayer.tapDuration &&
@@ -500,36 +504,24 @@ bioreportr.solowMapLayer.bindHover = function (that, map) {
             listener({point, lngLat: map.unproject([point.x, point.y])});
         }
     }, true);
-    container.addEventListener("pointercancel", () => {
+    binding.listen(container, "pointercancel", () => {
         start = null;
     }, true);
     // A touch anywhere else on the page puts the popup away, as hortis.tooltip.dismissOnTouch does the page's tooltips
-    container.ownerDocument.addEventListener("pointerdown", event => {
+    binding.listen(container.ownerDocument, "pointerdown", event => {
         if (event.pointerType === "touch" && !container.contains(event.target) && shown !== null) {
             leave();
         }
     }, true);
     // A move begun by a gesture, rather than by the map's own animation, leaves the popup behind its population
-    map.on("movestart", event => {
+    binding.onMap(map, "movestart", event => {
         if (event.originalEvent && event.originalEvent.pointerType !== "mouse" && shown !== null) {
             leave();
         }
     });
-    return {map, listener, leave};
-};
-
-// The listeners of the populations' tooltips, by map, so that each map is given them once only
-bioreportr.solowMapLayer.hoverBound = new WeakMap();
-
-/**
- * Give the map the listeners showing the tooltips of the populations, if it does not have them already.
- * @param {bioreportr.solowMapLayer} that - The layer
- * @param {maplibregl.Map} map - The map, once it is ready
- */
-bioreportr.solowMapLayer.ensureHover = function (that, map) {
-    if (!bioreportr.solowMapLayer.hoverBound.has(map)) {
-        bioreportr.solowMapLayer.hoverBound.set(map, bioreportr.solowMapLayer.bindHover(that, map));
-    }
+    // The popup is put away as the binding is removed
+    binding.onDispose(leave);
+    return binding;
 };
 
 bioreportr.summaryTaxaRows = rows => rows.filter(row => row.inSummary);
@@ -598,6 +590,11 @@ fluid.def("bioreportr.solowMapLayer", {
     },
     renderLegend: "$effect:hortis.libreMap.renderLegend({self}.legend, {self}.legendMarkup, {self}.visible)",
     renderTooltip: "$method:bioreportr.solowMapLayer.renderTooltip({self}.clusters, {0}:clusterId, {storyPage}.solowParams)",
-    // Attached by an effect, as the circles are drawn, once the map is ready - see bioreportr.solowMapLayer.ensureHover
-    hover: "$effect:bioreportr.solowMapLayer.ensureHover({self}, {storyPage}.map.readyMap)"
+    // Bound once the map is ready, and afresh should it change - see bioreportr.solowMapLayer.bindHover
+    hover: {
+        $bindable: {
+            bind: "bioreportr.solowMapLayer.bindHover({self}, {storyPage}.map.readyMap)",
+            unbind: "bioreportr.unbind({boundValue})"
+        }
+    }
 });

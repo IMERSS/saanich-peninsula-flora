@@ -46,6 +46,18 @@ fluid.def("bioreportr.lostPlants", {
     batchDelay: 1100,
     // The cards of each gallery, by its key - each {cards: String[], complete: Boolean}
     cards: {},
+    // The latest run of loading the galleries, so that a later run supersedes an earlier, and the galleries it has
+    // started - see bioreportr.lostPlants.load
+    run: {$transient: null},
+    // The state of the gallery's search - whether its box had the focus and where its caret stood, its message, and the
+    // plant sought - kept apart from its signals, so that typing doesn't draw the gallery afresh
+    search: {$transient: {focused: false, caret: 0, message: "", target: null}},
+    // The gallery's search widget, made once and moved into the gallery each time it is drawn afresh - see
+    // bioreportr.lostPlants.placeSearch
+    searchWidget: {
+        $transient: null,
+        dispose: "bioreportr.lostPlants.removeWidget"
+    },
     // Derived only once the pane is first shown - see the story page's activatedPanes
     plants: "$compute:bioreportr.lostPlants.plantsOnceShown({storyPage}, {self}, {storyPage}.activatedPanes)",
     // The photos of a gallery are fetched only once its tab is first chosen
@@ -58,7 +70,12 @@ fluid.def("bioreportr.lostPlants", {
     afterRender: "$effect:bioreportr.lostPlants.afterRender({storyPage}, {self}.markup, {global})",
     // The gallery handles its own clicks, and a card turned over to show its notes turns back once the pointer leaves
     // it - see bioreportr.lostPlants.bindEvents
-    events: "$effect:bioreportr.lostPlants.bindEvents({storyPage}, {global})",
+    events: {
+        $bindable: {
+            bind: "bioreportr.lostPlants.bindEvents({storyPage}, {global})",
+            unbind: "bioreportr.unbind({boundValue})"
+        }
+    },
     count: "$compute:bioreportr.lostPlants.count({self}.cards)"
 });
 
@@ -192,13 +209,13 @@ bioreportr.lostPlants.renderCard = function (plant, photo) {
  */
 bioreportr.lostPlants.load = function (that, plants, gallery, loaded) {
     if (loaded) {
-        const state = bioreportr.lostPlants.runs.get(that);
+        const state = that.run;
         if (!state || state.plants !== plants) {
-            bioreportr.lostPlants.runs.set(that, {plants, started: new Set()});
+            that.run = {plants, started: new Set()};
             // Deferred, since an effect may not write signals
             fluid.invokeLater(() => that.cards = {});
         }
-        const {started} = bioreportr.lostPlants.runs.get(that);
+        const {started} = that.run;
         // The lost plants are always fetched, since the pane's text gives their number
         ["lost", gallery].filter(key => plants[key] && !started.has(key)).forEach(key => {
             started.add(key);
@@ -247,7 +264,7 @@ bioreportr.lostPlants.reshuffle = function (that, activePaneKey) {
  * @return {Promise} A promise which resolves once every batch has been fetched
  */
 bioreportr.lostPlants.fetchCards = async function (that, allPlants, key) {
-    const current = () => bioreportr.lostPlants.runs.get(that)?.plants === allPlants;
+    const current = () => that.run?.plants === allPlants;
     const plants = allPlants[key];
     const {batchSize, batchDelay} = that;
     const keepWithout = !!that.galleries[key]?.group;
@@ -283,8 +300,6 @@ bioreportr.lostPlants.fetchCards = async function (that, allPlants, key) {
     }
 };
 
-// The latest run of loading each gallery, so that a later run supersedes an earlier, and the galleries it has started
-bioreportr.lostPlants.runs = new WeakMap();
 
 // The id of the plant of a card's markup
 bioreportr.lostPlants.cardId = card => /data-taxon-id="([^"]*)"/.exec(card)?.[1];
@@ -467,8 +482,8 @@ bioreportr.lostPlants.click = function (storyPage, event) {
         if (action.dataset.action === "curate") {
             bioreportr.curation.open(storyPage, taxonId);
         } else {
-            // Kept as the pane changes, as a species of the Community Science pane is - see bioreportr.storyPage.keepTaxon
-            bioreportr.storyPage.keepTaxon.add(storyPage);
+            // Kept as the pane changes, as a species of the Community Science pane is - see the story page's `keepTaxon`
+            storyPage.keepTaxon = true;
             storyPage.checklist.search.select(taxonId);
             storyPage.selectPane("Status");
         }
@@ -504,23 +519,12 @@ bioreportr.lostPlants.open = function (storyPage, card) {
 
 /** Searching the gallery **/
 
-// The state of each gallery's search - whether its box had the focus and where its caret stood, its message, and the
-// plant sought - kept apart from its signals, so that typing doesn't draw the gallery afresh
-bioreportr.lostPlants.searches = new WeakMap();
-
 /**
- * The state of a gallery's search.
+ * The state of a gallery's search - see the component's `search`.
  * @param {fluid.component} that - The component holding the gallery
  * @return {Object} Its state - members `focused`, `caret`, `message` and `target`
  */
-bioreportr.lostPlants.search = function (that) {
-    let search = bioreportr.lostPlants.searches.get(that);
-    if (!search) {
-        search = {focused: false, caret: 0, message: "", target: null};
-        bioreportr.lostPlants.searches.set(that, search);
-    }
-    return search;
-};
+bioreportr.lostPlants.search = that => that.search;
 
 /**
  * Find the plant of any gallery best matching a query - one whose scientific or common name is the query, else one
@@ -619,8 +623,11 @@ bioreportr.lostPlants.reveal = function (storyPage, dokkument) {
 // The id of the gallery's search box
 bioreportr.lostPlants.searchId = "mxcw-lost-search";
 
-// The search widget of each document, made once and moved into the gallery each time it is drawn afresh
-bioreportr.lostPlants.searchWidgets = new WeakMap();
+/**
+ * Remove the gallery's search widget from the page, as its component is destroyed - see the component's `searchWidget`.
+ * @param {Element} widget - The widget
+ */
+bioreportr.lostPlants.removeWidget = widget => widget.remove();
 
 /**
  * Suggest the plants of any gallery matching a query, best first - see bioreportr.lostPlants.find - each by its
@@ -654,7 +661,8 @@ bioreportr.lostPlants.suggest = function (lostPlants, query) {
 bioreportr.lostPlants.placeSearch = function (storyPage, window) {
     const dokkument = window.document;
     const slot = dokkument.querySelector(".mxcw-dataPane-LostPlants .mxcw-lost-search-slot");
-    let widget = bioreportr.lostPlants.searchWidgets.get(dokkument);
+    const lostPlants = storyPage.lostPlants;
+    let widget = lostPlants.searchWidget;
     if (!widget && window.accessibleAutocomplete) {
         widget = dokkument.createElement("div");
         window.accessibleAutocomplete({
@@ -669,7 +677,7 @@ bioreportr.lostPlants.placeSearch = function (storyPage, window) {
             onConfirm: choice => choice && bioreportr.lostPlants.seek(storyPage, choice.replace(/ \(.*\)$/, ""), dokkument)
         });
         widget.querySelector("input")?.setAttribute("spellcheck", "false");
-        bioreportr.lostPlants.searchWidgets.set(dokkument, widget);
+        lostPlants.searchWidget = widget;
     }
     if (slot && widget && widget.parentElement !== slot) {
         slot.appendChild(widget);
@@ -698,9 +706,6 @@ bioreportr.lostPlants.afterRender = function (storyPage, markup, window) {
     }
 };
 
-// The documents whose galleries already handle their events
-bioreportr.lostPlants.boundDocuments = new WeakSet();
-
 /**
  * Handle the gallery's clicks - see bioreportr.lostPlants.click - and turn a card back once a mouse leaves it, so that
  * browsing may resume across the gallery. On a touch screen, which has no pointer to leave, a card turns back when
@@ -708,14 +713,15 @@ bioreportr.lostPlants.boundDocuments = new WeakSet();
  * afresh as its cards arrive.
  * @param {bioreportr.storyPage} storyPage - The story page
  * @param {Window} window - The window holding the page
+ * @return {Binding|null} The binding - see bioreportr.binding
  */
 bioreportr.lostPlants.bindEvents = function (storyPage, window) {
     const dokkument = window.document;
-    if (!dokkument || bioreportr.lostPlants.boundDocuments.has(dokkument)) {
-        return;
+    if (!dokkument) {
+        return null;
     }
-    bioreportr.lostPlants.boundDocuments.add(dokkument);
-    dokkument.addEventListener("click", event => {
+    const binding = bioreportr.binding();
+    binding.listen(dokkument, "click", event => {
         if (event.target.closest?.(".mxcw-lost-gallery-pane")) {
             bioreportr.lostPlants.click(storyPage, event);
         }
@@ -725,36 +731,37 @@ bioreportr.lostPlants.bindEvents = function (storyPage, window) {
     // highlighted is sought on Enter
     const inSearch = event => event.target.id === bioreportr.lostPlants.searchId ? event.target : null;
     const search = () => bioreportr.lostPlants.search(storyPage.lostPlants);
-    dokkument.addEventListener("input", event => {
+    binding.listen(dokkument, "input", event => {
         const input = inSearch(event);
         if (input) {
             search().caret = input.selectionStart ?? input.value.length;
         }
     });
-    dokkument.addEventListener("keydown", event => {
+    binding.listen(dokkument, "keydown", event => {
         const input = inSearch(event);
         if (input && event.key === "Enter" && !dokkument.querySelector(".mxcw-lost-search .autocomplete__option--focused")) {
             event.preventDefault();
             bioreportr.lostPlants.seek(storyPage, input.value, dokkument);
         }
     });
-    dokkument.addEventListener("focusin", event => {
+    binding.listen(dokkument, "focusin", event => {
         if (inSearch(event)) {
             search().focused = true;
         }
     });
-    dokkument.addEventListener("focusout", event => {
+    binding.listen(dokkument, "focusout", event => {
         // Not when the box loses its focus by being drawn afresh, which it is to be given back
         if (inSearch(event) && event.target.isConnected) {
             search().focused = false;
         }
     });
-    dokkument.addEventListener("pointerout", event => {
+    binding.listen(dokkument, "pointerout", event => {
         const card = event.target.closest?.(".mxcw-lost-flipped");
         if (card && event.pointerType === "mouse" && !card.contains(event.relatedTarget)) {
             bioreportr.lostPlants.flip(card, false);
         }
     });
+    return binding;
 };
 
 /**

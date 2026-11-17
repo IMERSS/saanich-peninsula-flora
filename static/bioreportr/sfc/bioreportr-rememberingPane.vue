@@ -18,7 +18,12 @@ fluid.registerNamespace("bioreportr.remembering");
 fluid.def("bioreportr.remembering", {
     $layers: "fluid.component",
     active: "$compute:bioreportr.storyPage.isActive({storyPage}.activePaneKey, Remembering)",
-    hover: "$effect:bioreportr.remembering.bindHover({storyPage}.map.readyMap, {storyPage}.mapData, {global})",
+    hover: {
+        $bindable: {
+            bind: "bioreportr.remembering.bindHover({storyPage}.map.readyMap, {storyPage}.mapData, {global})",
+            unbind: "bioreportr.unbind({boundValue})"
+        }
+    },
     frame: "$effect:bioreportr.remembering.frame({storyPage}.map.readyMap, {storyPage}.mapData, {self}.active, {storyPage}.map.zoomDuration)"
 });
 
@@ -83,26 +88,24 @@ bioreportr.remembering.frame = function (map, mapData, active, duration) {
     }
 };
 
-// The maps whose checklist areas already show their cards on hover
-bioreportr.remembering.boundMaps = new WeakSet();
-
 /**
  * Show a card describing each checklist area as the pointer passes over it while Harvey's pane is shown, outlining that
  * area more strongly. The markup of each card is the label given to the area's layer by scripts/Janszen_checklists_mapbox.R
  * @param {maplibregl.Map} map - The story's map, once ready
  * @param {Object} mapData - The story's map data, whose style holds the layers' labels
  * @param {Window} window - The window holding the story page
+ * @return {Binding|null} The binding, removed should the map or its data change - see bioreportr.binding
  */
 bioreportr.remembering.bindHover = function (map, mapData, window) {
-    if (!map || !mapData || bioreportr.remembering.boundMaps.has(map)) {
-        return;
+    if (!map || !mapData) {
+        return null;
     }
-    bioreportr.remembering.boundMaps.add(map);
+    const binding = bioreportr.binding();
     const layers = mapData.style.layers.filter(layer => layer.type === "fill" && layer.id.startsWith("Checklist."));
     const labels = Object.fromEntries(layers.map(layer => [layer.id, layer.label]));
     // Each area's own outline width, to which it returns once the pointer leaves it
     const widths = Object.fromEntries(mapData.style.layers.filter(layer => layer.id.endsWith("-outline")).map(layer => [layer.id, layer.paint?.["line-width"] ?? 1]));
-    const card = window.document.createElement("div");
+    const card = binding.element(window.document.createElement("div"));
     card.className = "mxcw-checklist-card";
     card.hidden = true;
     map.getContainer().appendChild(card);
@@ -120,7 +123,7 @@ bioreportr.remembering.bindHover = function (map, mapData, window) {
         }
         card.hidden = !id;
     };
-    map.on("mousemove", event => {
+    binding.onMap(map, "mousemove", event => {
         const active = window.document.querySelector(".mxcw-leftPane.mxcw-remembering-active");
         const feature = active && map.queryRenderedFeatures(event.point, {layers: layers.map(layer => layer.id)})[0];
         setHovered(feature ? feature.layer.id : null);
@@ -130,7 +133,8 @@ bioreportr.remembering.bindHover = function (map, mapData, window) {
             card.style.top = Math.min(event.point.y + 16, height - card.offsetHeight - 8) + "px";
         }
     });
-    map.getCanvas().addEventListener("mouseleave", () => setHovered(null));
+    binding.listen(map.getCanvas(), "mouseleave", () => setHovered(null));
+    return binding;
 };
 </script>
 

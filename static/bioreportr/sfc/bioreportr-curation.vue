@@ -569,7 +569,7 @@ bioreportr.curation.open = function (storyPage, taxonId) {
     const paneKey = bioreportr.curation.paneKey(storyPage.panes);
     if (paneKey) {
         // Kept as the pane changes, which otherwise opens the curation pane on its own landing page
-        bioreportr.storyPage.keepTaxon.add(storyPage);
+        storyPage.keepTaxon = true;
         storyPage.checklist.search.select(taxonId);
         storyPage.selectPane(paneKey);
     }
@@ -587,8 +587,8 @@ bioreportr.curation.openRecord = function (storyPage, recordId) {
     const selector = storyPage.map.recordSelector;
     const row = selector.recordIndex.byId.get(recordId);
     if (paneKey && row) {
-        bioreportr.storyPage.keepRecord.set(storyPage, recordId);
-        bioreportr.storyPage.keepTaxon.add(storyPage);
+        storyPage.keepRecord = recordId;
+        storyPage.keepTaxon = true;
         storyPage.checklist.search.select(String(hortis.rowToLinkTaxonId(row)));
         storyPage.selectPane(paneKey);
         selector.filterState = recordId;

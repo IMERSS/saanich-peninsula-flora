@@ -20,6 +20,12 @@ fluid.def("bioreportr.traces", {
     $layers: "fluid.component",
     paused: false,
     scrubbing: false,
+    // The state of the timeline's playback, once it is first ready - see bioreportr.traces.createState. Its timers are
+    // cleared as the component is destroyed
+    playback: {
+        $transient: null,
+        dispose: "bioreportr.traces.disposeState"
+    },
     // The settings of the timeline's pacing which a story gives for its own record, over bioreportr.traces.pacingDefaults
     pacing: {},
     active: "$compute:bioreportr.storyPage.isActive({storyPage}.activePaneKey, Traces)",
@@ -201,8 +207,14 @@ bioreportr.traces.leftPaneClass = function (active, paused, scrubbing) {
  * @property {Object} overlay - The elements which change during playback - `year`, `play`, `slider` and `card`
  */
 
-// The state of each timeline, by its component
-bioreportr.traces.states = new WeakMap();
+/**
+ * Stop a timeline's playback as its component is destroyed - see the component's `playback`.
+ * @param {TraceState} state - The state of the playback
+ */
+bioreportr.traces.disposeState = function (state) {
+    state.window.clearTimeout(state.timer);
+    state.window.clearTimeout(state.hideTimer);
+};
 
 /**
  * Create the elements laid over the map: the year, the controls of the timeline, the key and the card shown on hover.
@@ -237,7 +249,7 @@ bioreportr.traces.createOverlay = function (mapElement, firstYear, lastYear) {
  * @param {Boolean} paused - Whether the timeline is paused
  */
 bioreportr.traces.showPlayback = function (that, paused) {
-    const state = bioreportr.traces.states.get(that);
+    const state = that.playback;
     if (state) {
         const {play} = state.overlay, action = paused ? "Play" : "Pause";
         play.innerHTML = bioreportr.traces.playIcons[action.toLowerCase()];
@@ -714,7 +726,7 @@ bioreportr.traces.createState = function (that, storyPage, map, events, window) 
         hideTimer: null, heldMarker: null,
         index: Math.max(0, events.findIndex(event => event.year >= startYear)),
         overlay: bioreportr.traces.createOverlay(map.getContainer(), firstYear, lastYear)};
-    bioreportr.traces.states.set(that, state);
+    that.playback = state;
     bioreportr.traces.bindControls(that, state);
     bioreportr.traces.bindCard(state);
     bioreportr.traces.showPlayback(that, that.paused);
@@ -733,8 +745,7 @@ bioreportr.traces.createState = function (that, storyPage, map, events, window) 
  */
 bioreportr.traces.control = function (that, storyPage, map, events, active, loaded, window) {
     const ready = map && loaded && events.length > 0;
-    const state = ready ? bioreportr.traces.states.get(that) ?? bioreportr.traces.createState(that, storyPage, map, events, window) :
-        bioreportr.traces.states.get(that);
+    const state = ready ? that.playback ?? bioreportr.traces.createState(that, storyPage, map, events, window) : that.playback;
     if (state) {
         window.clearTimeout(state.timer);
         bioreportr.traces.clearMarkers(state);

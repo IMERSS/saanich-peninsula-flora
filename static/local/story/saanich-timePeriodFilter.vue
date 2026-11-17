@@ -17,6 +17,14 @@ fluid.def("saanich.timePeriodFilter", {
     placeHandles: "$effect:saanich.timePeriodFilter.placeHandles({self}.display, {global}.document)",
     filterSummary: "$compute:saanich.timePeriodFilter.summarise({self}.filterState)",
     predicates: "$compute:saanich.timePeriodFilter.predicates({self}.filterState)",
+    // The span being dragged is applied once the handles have rested, should the slider's change event not arrive
+    applyRested: {
+        $effect: {
+            func: "saanich.timePeriodFilter.applyRested",
+            args: ["{self}", "{self}.dragging"],
+            debounce: 400
+        }
+    },
     reset: "$method:saanich.timePeriodFilter.reset({self})"
 });
 
@@ -69,29 +77,32 @@ saanich.timePeriodFilter.span = function (event, that) {
         {min: Math.min(current.min, value), max: value};
 };
 
-// The timer applying each filter's span once its handles have rested, by filter
-saanich.timePeriodFilter.timers = new WeakMap();
-
-// How long in milliseconds the handles must rest before the span is applied, should the slider's change event not arrive
-saanich.timePeriodFilter.restDelay = 400;
-
 /**
  * Apply a span of years as the filter's state - none if it covers the whole period.
  * @param {saanich.timePeriodFilter} that - The filter
  * @param {Object} span - The span, with members `min` and `max`
  */
 saanich.timePeriodFilter.apply = function (that, span) {
-    window.clearTimeout(saanich.timePeriodFilter.timers.get(that));
     that.dragging = null;
     that.filterState = span.min <= that.bounds.first && span.max >= that.bounds.last ? null : span;
 };
 
-// The years follow a handle as it moves, and the records are filtered once it is let go or has rested a moment
+/**
+ * Apply the span being dragged, once the handles have rested - see the filter's `applyRested`.
+ * @param {saanich.timePeriodFilter} that - The filter
+ * @param {Object|null} dragging - The span being dragged, if any
+ */
+saanich.timePeriodFilter.applyRested = function (that, dragging) {
+    const span = fluid.unwrapProxy(dragging);
+    if (span) {
+        saanich.timePeriodFilter.apply(that, span);
+    }
+};
+
+// The years follow a handle as it moves, and the records are filtered once it is let go or has rested a moment - see
+// the filter's `applyRested`
 saanich.timePeriodFilter.input = function (event, that) {
-    const span = saanich.timePeriodFilter.span(event, that);
-    that.dragging = span;
-    window.clearTimeout(saanich.timePeriodFilter.timers.get(that));
-    saanich.timePeriodFilter.timers.set(that, window.setTimeout(() => saanich.timePeriodFilter.apply(that, span), saanich.timePeriodFilter.restDelay));
+    that.dragging = saanich.timePeriodFilter.span(event, that);
 };
 
 saanich.timePeriodFilter.change = function (event, that) {
