@@ -49,20 +49,8 @@ fluid.def("bioreportr.list", {
 
 bioreportr.list.label = recordsLabel => recordsLabel?.text || "";
 
-/**
- * Read the present value of a member of a component, as read outside any computation - unwrapping its proxy, and reading
- * a member which arrives as its reactive cell, e.g. one defined by a reference to another, through the cell.
- * @param {any} value - The member as read
- * @return {any} Its value
- */
-bioreportr.list.read = function (value) {
-    let togo = fluid.unwrapProxy(value);
-    // A reference to a member defined by a reference arrives as a cell of a cell
-    for (let i = 0; i < 4 && togo && typeof(togo.get) === "function" && "cellId" in togo; ++i) {
-        togo = fluid.unwrapProxy(togo.get());
-    }
-    return togo;
-};
+// Read a member of a component outside any computation - see bioreportr.read
+bioreportr.list.read = value => bioreportr.read(value);
 
 /**
  * Compute the rows of the list from the records the story page's filters now select.
@@ -78,7 +66,7 @@ bioreportr.list.currentRows = function (that, storyPage) {
         return null;
     }
     const stats = bioreportr.list.stats(read(storyPage.pkg), selection);
-    return bioreportr.list.rows(stats, read(storyPage.taxa.rowById), read(storyPage.statusById) || {}, read(storyPage.recentYear),
+    return bioreportr.list.rows(stats, read(read(storyPage.taxa).rowById), read(storyPage.statusById) || {}, read(storyPage.recentYear),
         read(that.groupRank), read(storyPage.curation?.historyById), read(storyPage.curationHistorySources), {}, [], {});
 };
 

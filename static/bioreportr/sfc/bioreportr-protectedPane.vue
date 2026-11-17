@@ -37,12 +37,10 @@ fluid.def("bioreportr.protectedAreas", {
     // too, so that the pane's summaries agree
     mappedOnly: "{storyPage}.protectedMappedOnly",
     active: "$compute:bioreportr.storyPage.isActive({storyPage}.activePaneKey, Protected)",
-    hover: {
-        $bindable: {
-            bind: "bioreportr.protectedAreas.bindCards({storyPage}, {storyPage}.map.readyMap, {storyPage}.mapData, {global})",
-            unbind: "bioreportr.unbind({boundValue})"
-        }
-    },
+    // Bound once the map is ready - see bioreportr.keepBinding
+    hoverBinding: {$transient: null, dispose: "bioreportr.unbind"},
+    hover: `$effect:bioreportr.keepBinding({self}, hoverBinding, bioreportr.protectedAreas.bindCards, {storyPage},
+        {storyPage}.map.readyMap, {storyPage}.mapData, {global})`,
     selects: {
         $bindable: {
             bind: "bioreportr.protectedAreas.bindSelects({storyPage}, {global})",

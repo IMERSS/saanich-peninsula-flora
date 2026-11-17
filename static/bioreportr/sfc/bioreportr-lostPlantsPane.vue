@@ -545,7 +545,7 @@ bioreportr.lostPlants.open = function (storyPage, card) {
             sources: storyPage.curationHistorySources,
             byTaxon: storyPage.curation?.byTaxon,
             statusLabels: storyPage.statusLabels,
-            rowById: storyPage.taxa.rowById,
+            rowById: bioreportr.read(bioreportr.read(storyPage.taxa).rowById),
             canCurate: !!(bioreportr.curation?.paneKey && bioreportr.curation.paneKey(storyPage.panes)),
             canFind: !!lostPlants.galleries[lostPlants.gallery]?.find && storyPage.panes.some(pane => pane.paneKey === lostPlants.findPaneKey)
         });

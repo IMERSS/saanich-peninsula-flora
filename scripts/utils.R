@@ -61,10 +61,11 @@ mx_read <- function (filename) {
   return(lat_lon(dropped));
 }
 
-# Read a CSV file fast with the proper encoding - note that read.csv is generally faulty
-timedFread <- function (toread) {
+# Read a CSV file fast with the proper encoding - note that read.csv is generally faulty. Any further arguments are
+# passed to data.table::fread, e.g. colClasses = "character" to read every column as text
+timedFread <- function (toread, ...) {
   start <- Sys.time()
-  frame <- data.table::fread(toread, encoding = "UTF-8")
+  frame <- data.table::fread(toread, encoding = "UTF-8", ...)
   end <- Sys.time()
   message("Read ", nrow(frame), " rows from ", toread, " in ", round((end - start), digits = 3), "s")
   # Otherwise traditional R indexing notation fails

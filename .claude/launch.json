@@ -1,0 +1,4 @@
+{"version":"0.0.1","configurations":[
+{"name":"docs","runtimeExecutable":"npx","runtimeArgs":["http-server","docs","-p","8077","-c-1","-s"],"port":8077},
+{"name":"howe","runtimeExecutable":"npx","runtimeArgs":["http-server","../howe-sound-mapping-2026/docs","-p","8078","-c-1","-s"],"port":8078},
+{"name":"galiano","runtimeExecutable":"npx","runtimeArgs":["http-server","../galiano-island-flora/docs","-p","8079","-c-1","-s"],"port":8079}]}

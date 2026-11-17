@@ -590,11 +590,8 @@ fluid.def("bioreportr.solowMapLayer", {
     },
     renderLegend: "$effect:hortis.libreMap.renderLegend({self}.legend, {self}.legendMarkup, {self}.visible)",
     renderTooltip: "$method:bioreportr.solowMapLayer.renderTooltip({self}.clusters, {0}:clusterId, {storyPage}.solowParams)",
-    // Bound once the map is ready, and afresh should it change - see bioreportr.solowMapLayer.bindHover
-    hover: {
-        $bindable: {
-            bind: "bioreportr.solowMapLayer.bindHover({self}, {storyPage}.map.readyMap)",
-            unbind: "bioreportr.unbind({boundValue})"
-        }
-    }
+    // Bound once the map is ready, and afresh should it change - see bioreportr.solowMapLayer.bindHover and
+    // bioreportr.keepBinding
+    hoverBinding: {$transient: null, dispose: "bioreportr.unbind"},
+    hover: "$effect:bioreportr.keepBinding({self}, hoverBinding, bioreportr.solowMapLayer.bindHover, {self}, {storyPage}.map.readyMap)"
 });
