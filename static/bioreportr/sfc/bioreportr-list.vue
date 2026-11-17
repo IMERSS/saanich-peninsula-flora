@@ -49,9 +49,6 @@ fluid.def("bioreportr.list", {
 
 bioreportr.list.label = recordsLabel => recordsLabel?.text || "";
 
-// Read a member of a component outside any computation - see bioreportr.read
-bioreportr.list.read = value => bioreportr.read(value);
-
 /**
  * Compute the rows of the list from the records the story page's filters now select.
  * @param {bioreportr.list} that - The list
@@ -59,15 +56,14 @@ bioreportr.list.read = value => bioreportr.read(value);
  * @return {Object[]|null} The rows, grouped and sorted, or `null` while the page has not settled its selection
  */
 bioreportr.list.currentRows = function (that, storyPage) {
-    const read = bioreportr.list.read;
-    const selection = read(storyPage.finalFilteredObs);
+    const selection = storyPage.finalFilteredObs;
     // While the page has not yet settled its selection of records, there is no list to give
     if (!selection || !selection.selection || fluid.isUnavailable(selection)) {
         return null;
     }
-    const stats = bioreportr.list.stats(read(storyPage.pkg), selection);
-    return bioreportr.list.rows(stats, read(read(storyPage.taxa).rowById), read(storyPage.statusById) || {}, read(storyPage.recentYear),
-        read(that.groupRank), read(storyPage.curation?.historyById), read(storyPage.curationHistorySources), {}, [], {});
+    const stats = bioreportr.list.stats(storyPage.pkg, selection);
+    return bioreportr.list.rows(stats, storyPage.taxa.rowById, storyPage.statusById || {}, storyPage.recentYear,
+        that.groupRank, storyPage.curation?.historyById, storyPage.curationHistorySources, {}, [], {});
 };
 
 /**
@@ -104,15 +100,14 @@ bioreportr.list.clearNotice = function (that, notice) {
  * @return {String|null} The area's name, or `null` if none was chosen
  */
 bioreportr.list.area = function (storyPage) {
-    const region = bioreportr.list.read(storyPage.selectedRegion);
+    const region = storyPage.selectedRegion;
     return region ? (bioreportr.protectedAreas?.parseSelection ? bioreportr.protectedAreas.parseSelection(region).region : region) || null : null;
 };
 
 bioreportr.list.query = function (that, storyPage) {
-    const read = bioreportr.list.read;
-    const region = read(storyPage.selectedRegion);
+    const region = storyPage.selectedRegion;
     const area = bioreportr.list.area(storyPage);
-    const label = read(storyPage.recordsLabel)?.title || "";
+    const label = storyPage.recordsLabel?.title || "";
     const others = label.split(" · ").filter(part => part && part !== region && part !== area && part !== "drawn area");
     return others.length ? [["Narrowed to", others.join("; ")]] : [];
 };
@@ -124,9 +119,8 @@ bioreportr.list.query = function (that, storyPage) {
  * @return {String} The title, e.g. "Plants of Elk/Beaver Lake Regional Park"
  */
 bioreportr.list.title = function (that, storyPage) {
-    const read = bioreportr.list.read;
-    const place = bioreportr.list.place(read(storyPage.selectedRegion), read(storyPage.map.polygonDraw.filterState), read(that.areaName));
-    const label = read(storyPage.recordsLabel)?.title || "";
+    const place = bioreportr.list.place(storyPage.selectedRegion, storyPage.map.polygonDraw.filterState, that.areaName);
+    const label = storyPage.recordsLabel?.title || "";
     const others = label.split(" · ").filter(part => part && part !== storyPage.selectedRegion && part !== "drawn area");
     return ["Plants of " + place, ...others].join(" · ");
 };
@@ -416,7 +410,7 @@ bioreportr.list.print = function (that, storyPage, window) {
     const body = families.map(family => `<section class="family"><h2>${html(family.group)}<span class="n">${family.rows.length}</span></h2>` +
         `${family.rows.map(item).join("")}</section>`).join("");
     const sources = fluid.makeArray(fluid.unwrapProxy(storyPage.curationHistorySources)).map(source => source.source + (source.year ? " (" + source.year + ")" : ""));
-    const siteTitle = bioreportr.list.read(that.siteTitle) || String(window.document.title || "").split("|")[0].trim();
+    const siteTitle = that.siteTitle || String(window.document.title || "").split("|")[0].trim();
     const area = bioreportr.list.area(storyPage);
     const query = [...area ? [["Area", area]] : [], ...bioreportr.list.query(that, storyPage)];
     const date = new Date().toLocaleDateString("en-CA", {day: "numeric", month: "long", year: "numeric"});
@@ -500,7 +494,7 @@ bioreportr.list.printDocument = function (doc, window, fileName) {
  * @return {String} The name
  */
 bioreportr.list.fileName = function (that, window) {
-    const stem = bioreportr.list.read(that.fileStem) || String(window.document.title || "Flora").split("|")[0]
+    const stem = that.fileStem || String(window.document.title || "Flora").split("|")[0]
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "");
     return stem + "_checklist_" + new Date().toISOString().substring(0, 10);
 };

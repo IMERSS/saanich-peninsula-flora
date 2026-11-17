@@ -68,45 +68,6 @@ bioreportr.binding = function () {
 };
 
 /**
- * Read the present value of a member of a component, as read outside any computation - unwrapping its proxy, and reading
- * a member which arrives as its reactive cell, e.g. one defined by a reference to another, through the cell.
- * @param {any} value - The member as read
- * Needed wherever a member is read from an event handler rather than a computation - e.g. `storyPage.taxa`, a
- * reference to a component, which arrives as its cell, so that `storyPage.taxa.rowById` is undefined unless read through
- * this as `bioreportr.read(storyPage.taxa).rowById`
- * @return {any} Its value
- */
-bioreportr.read = function (value) {
-    let togo = fluid.unwrapProxy(value);
-    // A reference to a member defined by a reference arrives as a cell of a cell
-    for (let i = 0; i < 4 && togo && typeof(togo.get) === "function" && "cellId" in togo; ++i) {
-        togo = fluid.unwrapProxy(togo.get());
-    }
-    return togo;
-};
-
-/**
- * Bind some behaviour to a map from an `$effect`, holding the binding in a `$transient` member whose `dispose` is
- * bioreportr.unbind, and binding afresh only should any of the binder's arguments change. Used in place of a
- * `$bindable` for listeners bound to the story's map: in Infusion 6.2.6 a `$bindable` taking the map, which nothing
- * reads, is left pending once the map arrives and never binds - so that the tooltips of the populations of the
- * extirpation risk analysis, the hover cards of the Protected Areas pane and those of the Remembering pane were lost.
- * To be returned to a `$bindable` once this is fixed upstream.
- * @param {fluid.component} that - The component holding the binding
- * @param {String} key - The name of its `$transient` member holding the binding
- * @param {String} binder - The global name of the binder, which returns a Binding, or nothing if it bound nothing
- * @param {...any} args - The binder's arguments
- */
-bioreportr.keepBinding = function (that, key, binder, ...args) {
-    const old = that[key];
-    if (!old || old.args.length !== args.length || old.args.some((arg, i) => arg !== args[i])) {
-        const bound = fluid.getGlobalValue(binder)(...args);
-        // Overwriting the member disposes the old binding
-        that[key] = Object.assign(bound || bioreportr.binding(), {args});
-    }
-};
-
-/**
  * Remove what a binding added - the `unbind` of a `$bindable` whose binder returns a binding - see bioreportr.binding.
  * @param {Binding|undefined} binding - The binding, if one was made
  */

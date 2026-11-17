@@ -13,3 +13,4 @@ node_modules
 big_data
 
 moduleOverrides.json5
+moduleOverrides-inactive.json5

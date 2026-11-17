@@ -396,7 +396,7 @@ bioreportr.inatSpecies.open = function (storyPage, card, query, window) {
     if (name) {
         bioreportr.inatSpecies.byName(query, window).then(byName => {
             const taxon = byName.get(name);
-            const row = taxon && bioreportr.inatSpecies.atlasRow(bioreportr.read(bioreportr.read(storyPage.taxa).rowById), taxon);
+            const row = taxon && bioreportr.inatSpecies.atlasRow(storyPage.taxa.rowById, taxon);
             if (row) {
                 storyPage.keepTaxon = true;
                 window.location.hash = "pane:Status&taxon:" + row.id;

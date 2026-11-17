@@ -18,10 +18,12 @@ fluid.registerNamespace("bioreportr.remembering");
 fluid.def("bioreportr.remembering", {
     $layers: "fluid.component",
     active: "$compute:bioreportr.storyPage.isActive({storyPage}.activePaneKey, Remembering)",
-    // Bound once the map is ready - see bioreportr.keepBinding
-    hoverBinding: {$transient: null, dispose: "bioreportr.unbind"},
-    hover: `$effect:bioreportr.keepBinding({self}, hoverBinding, bioreportr.remembering.bindHover, {storyPage}.map.readyMap,
-        {storyPage}.mapData, {global})`,
+    hover: {
+        $bindable: {
+            bind: "bioreportr.remembering.bindHover({storyPage}.map.readyMap, {storyPage}.mapData, {global})",
+            unbind: "bioreportr.unbind({boundValue})"
+        }
+    },
     frame: "$effect:bioreportr.remembering.frame({storyPage}.map.readyMap, {storyPage}.mapData, {self}.active, {storyPage}.map.zoomDuration)"
 });
 
