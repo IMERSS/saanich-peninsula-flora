@@ -73,8 +73,7 @@ hortis.libreMap.polygonFilter.summarise = function (filterState) {
  * @return {Object[]} The predicates
  */
 hortis.libreMap.polygonFilter.predicates = filterState => filterState.length === 0 ? [] :
-    // The features are read bare, since a proxy embedded in the predicate could not be serialised with it
-    [{field: ["decimalLongitude", "decimalLatitude"], op: "inPolygons", value: {type: "FeatureCollection", features: fluid.unwrapProxy(filterState)}}];
+    [{field: ["decimalLongitude", "decimalLatitude"], op: "inPolygons", value: {type: "FeatureCollection", features: filterState}}];
 
 hortis.libreMap.polygonFilter.reset = function (that) {
     that.filterState = [];

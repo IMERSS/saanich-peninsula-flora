@@ -804,14 +804,15 @@ bioreportr.atlas.accountsMarkup = function (taxon, historyById, sources, byTaxon
 <style>
 /* A plant's line of accounts, with which the Atlas's panel leads, and the invitation to add a note -
    see bioreportr.atlas.accountsMarkup */
+/* Its colours are those of the rest of the panel, whose surface is pale */
 .mxcw-atlas-accounts {
     margin: 4px 0 6px;
     font-size: var(--story-small);
-    color: #eefaff;
+    color: #1f2a30;
 }
 
 .mxcw-atlas-accounts-head {
-    color: #FDF2CE;
+    color: #2f7f8f;
     font-weight: 700;
 }
 
@@ -824,7 +825,7 @@ bioreportr.atlas.accountsMarkup = function (taxon, historyById, sources, byTaxon
 }
 
 .mxcw-atlas-account span:not(.mxcw-atlas-account-text) {
-    color: #b9d3df;
+    color: #5a7680;
 }
 
 .mxcw-atlas-account-full {
@@ -833,13 +834,13 @@ bioreportr.atlas.accountsMarkup = function (taxon, historyById, sources, byTaxon
 
 .mxcw-atlas-account a,
 .mxcw-atlas-account-full a {
-    color: #FDF2CE;
+    color: #2f7f8f;
 }
 
 .mxcw-atlas-reviewed,
 .mxcw-atlas-accounts-none {
     margin: 2px 0;
-    color: #b9d3df;
+    color: #5a7680;
 }
 
 .mxcw-atlas-invite {
@@ -875,13 +876,31 @@ bioreportr.atlas.accountsMarkup = function (taxon, historyById, sources, byTaxon
 .mxcw-atlas-taxon-pane .mxcw-taxon-info {
     display: grid;
     grid-template-columns: max-content minmax(0, 1fr);
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    grid-template-areas: "name name" "facts history" "accounts accounts";
+    align-content: start;
     gap: 4px 20px;
     padding-right: var(--story-gap);
+    /* The facts, the chart and the naturalists' accounts beneath them may be taller than the panel, which then scrolls,
+       rather than any of them overlapping another */
+    overflow-y: auto;
+}
+
+.mxcw-atlas-taxon-pane .mxcw-atlas-facts {
+    grid-area: facts;
+}
+
+.mxcw-atlas-taxon-pane .mxcw-history {
+    grid-area: history;
+}
+
+/* The naturalists' accounts run beneath the facts and chart, across the panel - see bioreportr.atlas.accountsMarkup */
+.mxcw-atlas-taxon-pane .mxcw-atlas-accounts {
+    grid-area: accounts;
 }
 
 .mxcw-atlas-taxon-pane .mxcw-taxon-name {
-    grid-column: 1 / -1;
+    grid-area: name;
     padding-bottom: 4px;
 }
 
@@ -889,6 +908,7 @@ bioreportr.atlas.accountsMarkup = function (taxon, historyById, sources, byTaxon
     .mxcw-atlas-taxon-pane .mxcw-taxon-info {
         grid-template-columns: minmax(0, 1fr);
         grid-template-rows: auto;
+        grid-template-areas: "name" "facts" "history" "accounts";
     }
 }
 
@@ -897,6 +917,7 @@ bioreportr.atlas.accountsMarkup = function (taxon, historyById, sources, byTaxon
     .mxcw-atlas-taxon-pane .mxcw-taxon-info {
         grid-template-columns: minmax(0, 1fr);
         grid-template-rows: auto;
+        grid-template-areas: "name" "facts" "history" "accounts";
     }
 
     .mxcw-atlas-taxon-pane .mxcw-history-chart,

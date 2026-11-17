@@ -11,12 +11,13 @@ fluid.def("hortis.resizeBar", {
     axis: "horizontal", // "horizontal" | "vertical"
     minBefore: 48,
     minAfter: 48,
-    orientation: "$compute:hortis.resizeBar.orientation({self}.axis)",
-    // The state of a drag in progress, if any - no business of the reactive graph
-    drag: {$transient: null}
+    orientation: "$compute:hortis.resizeBar.orientation({self}.axis)"
 });
 
 hortis.resizeBar.orientation = axis => axis === "horizontal" ? "vertical" : "horizontal";
+
+// The state of a drag in progress, keyed by the bar's element
+hortis.resizeBar.drags = new WeakMap();
 
 hortis.resizeBar.sizeOf = (horizontal, element) => horizontal ? element.getBoundingClientRect().width : element.getBoundingClientRect().height;
 
@@ -45,7 +46,7 @@ hortis.resizeBar.pointerDown = function (event, that) {
     if (event.button === 0) {
         const bar = event.currentTarget;
         const horizontal = that.axis === "horizontal";
-        that.drag = {...hortis.resizeBar.startSizes(that, bar), startPos: horizontal ? event.clientX : event.clientY};
+        hortis.resizeBar.drags.set(bar, {...hortis.resizeBar.startSizes(that, bar), startPos: horizontal ? event.clientX : event.clientY});
         bar.setPointerCapture(event.pointerId);
         bar.classList.add("resize-bar--active");
         bar.ownerDocument.body.style.cursor = horizontal ? "col-resize" : "row-resize";
@@ -56,17 +57,17 @@ hortis.resizeBar.pointerDown = function (event, that) {
 
 hortis.resizeBar.pointerMove = function (event, that) {
     const bar = event.currentTarget;
-    const drag = that.drag;
+    const drag = hortis.resizeBar.drags.get(bar);
     if (drag) {
         const pos = that.axis === "horizontal" ? event.clientX : event.clientY;
         hortis.resizeBar.apply(that, bar, drag, drag.startBefore + pos - drag.startPos);
     }
 };
 
-hortis.resizeBar.pointerUp = function (event, that) {
+hortis.resizeBar.pointerUp = function (event) {
     const bar = event.currentTarget;
-    if (that.drag) {
-        that.drag = null;
+    if (hortis.resizeBar.drags.has(bar)) {
+        hortis.resizeBar.drags.delete(bar);
         bar.classList.remove("resize-bar--active");
         bar.ownerDocument.body.style.cursor = "";
         bar.ownerDocument.body.style.userSelect = "";
@@ -89,6 +90,6 @@ hortis.resizeBar.keyDown = function (event, that) {
 <template>
     <div class="resize-bar resize-bar--@{axis}" role="separator" aria-orientation="@{orientation}" tabindex="0" aria-label="Resize panels"
         @onpointerdown="hortis.resizeBar.pointerDown({0}, {self})" @onpointermove="hortis.resizeBar.pointerMove({0}, {self})"
-        @onpointerup="hortis.resizeBar.pointerUp({0}, {self})" @onpointercancel="hortis.resizeBar.pointerUp({0}, {self})"
+        @onpointerup="hortis.resizeBar.pointerUp({0})" @onpointercancel="hortis.resizeBar.pointerUp({0})"
         @onkeydown="hortis.resizeBar.keyDown({0}, {self})"></div>
 </template>
