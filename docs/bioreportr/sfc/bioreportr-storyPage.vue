@@ -208,7 +208,7 @@ fluid.def("bioreportr.storyPage", {
             $layers: "hortis.standardChecklist",
             label: "Plants",
             rootId: "47126", // Plantae
-            decorate: "hortis.blitzChecklistDecoration",
+            decorate: "bioreportr.checklistDecoration",
             // In Living Data the search offers the taxa kept off the list too, marked by their status - see
             // bioreportr.checklistStatusFilter.searchRows
             search: {

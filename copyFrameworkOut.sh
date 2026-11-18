@@ -159,6 +159,8 @@ FILES=(
     # The taxa kept off the checklist, and their records, brought into the story's data for the Atlas and Living Data
     scripts/prepare_set_aside_taxa.R
     scripts/prepare_set_aside.R
+    # The study area's boundary as KML, linked from the Atlas pane
+    scripts/write_study_area_kml.R
 
     # Lint configuration
     .eslintrc.json

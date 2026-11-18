@@ -263,6 +263,28 @@ bioreportr.storyPage.revealLater = function (that, loaded, global) {
     }
 };
 
+/**
+ * Decorate a checklist row with the icon of its taxon's reporting status, as hortis.blitzChecklistDecoration does, its
+ * description borne as the icon's title attribute rather than an SVG <title> child - the page's tooltips, of
+ * hortis.titleTooltips, show only titles borne as attributes, and the browser would otherwise show its own besides.
+ * The description is kept for assistive technology as the icon's aria-label.
+ * TODO: offer upstream to imerss-bioinfo's blitz.js, and remove once its release holds it
+ * @param {TaxonRow} row - The checklist's taxon row
+ * @return {VNode|null} The icon, or null if the taxon has no reporting status
+ */
+bioreportr.checklistDecoration = function (row) {
+    const icon = hortis.blitzChecklistDecoration(row);
+    if (!icon) {
+        return null;
+    }
+    const titleNode = icon.children.find(child => child.tag === "title");
+    const title = titleNode?.children?.[0]?.text || "";
+    return {...icon,
+        attrs: {...icon.attrs, title, role: "img", "aria-label": title},
+        children: icon.children.filter(child => child !== titleNode)
+    };
+};
+
 bioreportr.storyPage.isActive = (activePaneKey, paneKey) => activePaneKey === paneKey;
 
 /**

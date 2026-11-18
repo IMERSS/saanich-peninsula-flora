@@ -1145,7 +1145,7 @@ iNaturalist, reaching back to 1859.</p>
 <p>Each record is a moment when someone stopped to take note of a
 plant.</p>
 <p>Some plants have long been recorded, while others have appeared only
-in more recent years. Still others have gone unseen for decades, <a href="#pane:LostPlants" class="mxcw-traces-next">quietly disappearing
+in more recent years. Still others have gone unreported for decades, <a href="#pane:LostPlants" class="mxcw-traces-next">quietly disappearing
 from the record.</a></p>
 </div></div></div>
 </template>

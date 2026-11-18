@@ -36,6 +36,8 @@ see only its records, or use the shape tool at the top left of the map to draw a
 selection.
 ::::
 
+[Download the study area (KML)](../local/data/tabular/`r data$studyArea`){.mxcw-study-area}
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 source("scripts/Community_science_contributions_mapbox.R")
 reportingStatusMap
