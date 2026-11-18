@@ -1014,8 +1014,8 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 81% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Protected areas · species of conservation concern" role="button" tabindex="0">
-<b>62</b>
-<span>of the 80 species of conservation concern</span>
+<b>46</b>
+<span>of the 59 species of conservation concern</span>
 </div>
 </div>
 </section>
@@ -1029,7 +1029,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 19% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Unprotected native plant diversity · species of conservation concern" role="button" tabindex="0">
-<b>18</b>
+<b>13</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Unprotected native plant diversity · within Key Biodiversity Areas" role="button" tabindex="0">
@@ -1048,7 +1048,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 29% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="National park reserve · species of conservation concern" role="button" tabindex="0">
-<b>14</b>
+<b>12</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat" data-select="National park reserve · found in no other category" role="button" tabindex="0">
@@ -1071,7 +1071,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 26% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Ecological reserve · species of conservation concern" role="button" tabindex="0">
-<b>22</b>
+<b>18</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Ecological reserve · found in no other category" role="button" tabindex="0">
@@ -1111,7 +1111,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 52% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Provincial park · species of conservation concern" role="button" tabindex="0">
-<b>19</b>
+<b>8</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Provincial park · found in no other category" role="button" tabindex="0">
@@ -1151,7 +1151,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 42% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Migratory bird sanctuary · species of conservation concern" role="button" tabindex="0">
-<b>36</b>
+<b>31</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Migratory bird sanctuary · found in no other category" role="button" tabindex="0">
@@ -1191,7 +1191,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 66% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Regional park · species of conservation concern" role="button" tabindex="0">
-<b>37</b>
+<b>27</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Regional park · found in no other category" role="button" tabindex="0">
@@ -1231,7 +1231,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 30% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Private conservation land · species of conservation concern" role="button" tabindex="0">
-<b>3</b>
+<b>2</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Private conservation land · found in no other category" role="button" tabindex="0">
@@ -1340,7 +1340,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 15% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Bear Hill Regional Park · species of conservation concern" role="button" tabindex="0">
-<b>2</b>
+<b>1</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -1406,7 +1406,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 13% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Discovery Island Marine Park · species of conservation concern" role="button" tabindex="0">
-<b>6</b>
+<b>3</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -1450,7 +1450,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 28% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Elk/Beaver Lake Regional Park · species of conservation concern" role="button" tabindex="0">
-<b>7</b>
+<b>6</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -1472,7 +1472,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 18% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Esquimalt Lagoon Migratory Bird Sanctuary · species of conservation concern" role="button" tabindex="0">
-<b>4</b>
+<b>2</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -1493,8 +1493,8 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <b>135</b>
 <span>native species · 20% of the native flora</span>
 </div>
-<div class="mxcw-pa-stat" data-select="Francis/King Regional Park · species of conservation concern" role="button" tabindex="0">
-<b>1</b>
+<div class="mxcw-pa-stat">
+<b>0</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -1538,7 +1538,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 37% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Goldstream Park · species of conservation concern" role="button" tabindex="0">
-<b>8</b>
+<b>3</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -1560,7 +1560,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 7% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Gonzales Hill Regional Park · species of conservation concern" role="button" tabindex="0">
-<b>4</b>
+<b>3</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -1582,7 +1582,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 41% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Gowlland Tod Park · species of conservation concern" role="button" tabindex="0">
-<b>11</b>
+<b>3</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -1604,7 +1604,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 29% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Gulf Islands National Park Reserve of Canada · species of conservation concern" role="button" tabindex="0">
-<b>14</b>
+<b>12</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -1648,7 +1648,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 15% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Island View Beach Regional Park · species of conservation concern" role="button" tabindex="0">
-<b>6</b>
+<b>7</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -1669,8 +1669,8 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <b>93</b>
 <span>native species · 14% of the native flora</span>
 </div>
-<div class="mxcw-pa-stat" data-select="Lone Tree Hill Regional Park · species of conservation concern" role="button" tabindex="0">
-<b>4</b>
+<div class="mxcw-pa-stat">
+<b>0</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -1735,8 +1735,8 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <b>51</b>
 <span>native species · 8% of the native flora</span>
 </div>
-<div class="mxcw-pa-stat" data-select="Mary Hill Connector · species of conservation concern" role="button" tabindex="0">
-<b>1</b>
+<div class="mxcw-pa-stat">
+<b>0</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -1780,7 +1780,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 29% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Mill Hill Regional Park · species of conservation concern" role="button" tabindex="0">
-<b>15</b>
+<b>8</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -1846,7 +1846,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 29% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Mount Work Regional Park · species of conservation concern" role="button" tabindex="0">
-<b>3</b>
+<b>1</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -1912,7 +1912,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 16% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Oak Bay Islands Ecological Reserve · species of conservation concern" role="button" tabindex="0">
-<b>10</b>
+<b>7</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -2022,7 +2022,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 8% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Shoal Harbour Migratory Bird Sanctuary · species of conservation concern" role="button" tabindex="0">
-<b>2</b>
+<b>1</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -2066,7 +2066,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 5% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Ten Mile Point Ecological Reserve · species of conservation concern" role="button" tabindex="0">
-<b>3</b>
+<b>2</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -2088,7 +2088,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 43% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Thetis Lake Regional Park · species of conservation concern" role="button" tabindex="0">
-<b>17</b>
+<b>11</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -2110,7 +2110,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 18% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Trial Islands Ecological Reserve · species of conservation concern" role="button" tabindex="0">
-<b>16</b>
+<b>13</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -2132,7 +2132,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 38% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Victoria Harbour Migratory Bird Sanctuary · species of conservation concern" role="button" tabindex="0">
-<b>35</b>
+<b>30</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -2154,7 +2154,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 23% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Witty's Lagoon Regional Park · species of conservation concern" role="button" tabindex="0">
-<b>6</b>
+<b>4</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -2176,7 +2176,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 22% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="ȽÁU,WELṈEW̱/John Dean Park · species of conservation concern" role="button" tabindex="0">
-<b>2</b>
+<b>1</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -2217,7 +2217,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 55% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Published Key Biodiversity Areas · species of conservation concern" role="button" tabindex="0">
-<b>47</b>
+<b>40</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -2256,7 +2256,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 13% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Christmas Hill · species of conservation concern" role="button" tabindex="0">
-<b>4</b>
+<b>2</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -2277,8 +2277,8 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <b>125</b>
 <span>native species · 19% of the native flora</span>
 </div>
-<div class="mxcw-pa-stat" data-select="Durrance Lake - Cole Hill · species of conservation concern" role="button" tabindex="0">
-<b>2</b>
+<div class="mxcw-pa-stat">
+<b>0</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -2300,7 +2300,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 26% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Fort Rodd Hill · species of conservation concern" role="button" tabindex="0">
-<b>20</b>
+<b>16</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -2322,7 +2322,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 6% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Gonzales Point · species of conservation concern" role="button" tabindex="0">
-<b>5</b>
+<b>3</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -2344,7 +2344,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 14% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Harling Point · species of conservation concern" role="button" tabindex="0">
-<b>9</b>
+<b>6</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -2366,7 +2366,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 10% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Kohweechela - Mary Tod Island · species of conservation concern" role="button" tabindex="0">
-<b>8</b>
+<b>5</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -2432,7 +2432,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 7% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Trafalgar Park · species of conservation concern" role="button" tabindex="0">
-<b>3</b>
+<b>2</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -2454,7 +2454,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 22% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Trial Islands · species of conservation concern" role="button" tabindex="0">
-<b>20</b>
+<b>17</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
@@ -2498,7 +2498,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>native species · 33% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Uplands Park - Cattle Point · species of conservation concern" role="button" tabindex="0">
-<b>26</b>
+<b>22</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
