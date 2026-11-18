@@ -19,6 +19,11 @@ source("scripts/project.R")
 #   bc_list           - the BC list, e.g. "Yellow", "Blue", "Red" or "Exotic"
 #   national_status   - COSEWIC's status with the year of its assessment, e.g. "Endangered (2008)", "Not at Risk" left out
 #   sara_status       - the schedule and status under the Species at Risk Act, e.g. "S1: Endangered (2005)"
+#   provincial_concern - whether the taxon is of conservation concern, as the Conservation filter reads it: "concern"
+#                        for a taxon on BC's Red or Blue list, or assessed by COSEWIC or listed under SARA as at risk;
+#                        "secure" for one on the Yellow list; "unknown" for any other, e.g. an exotic or unranked taxon.
+#                        Derived afresh from the statuses, rather than kept from the checklist, so that it follows the
+#                        CDC's current ranks - a rank of S3S4 is on the Yellow list, and not of concern
 # A taxon the table doesn't rank keeps any provincial or national status its checklist gives it, in the columns
 # provincial_conservation_status and national_conservation_status, or as project$conservation names them. conservation_source says which was used. Run after
 # scripts/prepare_summary_final.R, whose output it extends in place; the output is copied into the site by R/build.R.
@@ -157,8 +162,20 @@ ranked <- ranked %>%
          conservation_source = ifelse(fromList, "checklist", conservation_source)) %>%
   select(id, all_of(status_columns))
 
+# Whether a taxon is of conservation concern, from its BC list and its national statuses - "Data Deficient" is no
+# assessment of risk, and "Not at Risk" is already left out
+concern_of <- function (bc_list, national_status, sara_status) {
+  national_risk <- national_status != "" & !str_detect(national_status, "^Data Deficient")
+  sara_risk <- sara_status != "" & !str_detect(sara_status, "Data Deficient|Not at Risk")
+  case_when(bc_list %in% c("Red", "Blue") | national_risk | sara_risk ~ "concern",
+            bc_list == "Yellow" ~ "secure",
+            TRUE ~ "unknown")
+}
+
 out <- summary %>%
+  select(-any_of("provincial_concern")) %>%
   left_join(ranked, by = "id") %>%
-  mutate(across(all_of(status_columns), ~ coalesce(.x, "")))
+  mutate(across(all_of(status_columns), ~ coalesce(.x, "")),
+         provincial_concern = concern_of(bc_list, national_status, sara_status))
 
 timedWrite(out, project$summaryFile)
