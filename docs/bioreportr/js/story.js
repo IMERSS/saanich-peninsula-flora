@@ -198,24 +198,68 @@ bioreportr.storyPage.loaded = (finalFilteredObs, ...isPlaceholders) => !fluid.wi
 // The longest in milliseconds that the page waits for the browser to fall idle before revealing it regardless
 bioreportr.storyPage.revealTimeout = 4000;
 
+// The longest in milliseconds that the page waits for its map to draw its first tiles before revealing it regardless
+bioreportr.storyPage.mapRevealTimeout = 3000;
+
 /**
- * Reveal the story page once it has loaded and the browser has fallen idle - by which time it has rendered everything
- * derived from its genuine data, which happens over several tasks after it is loaded, during which what was derived
- * from its placeholders would otherwise show. Nothing is revealed where there is no browser, e.g. under hydrate.js.
+ * Reveal the story page once it has loaded, its map has drawn its first tiles, and the browser has fallen idle - by
+ * which time it has rendered everything derived from its genuine data, which happens over several tasks after it is
+ * loaded, during which what was derived from its placeholders would otherwise show. Until its map has drawn, the map is
+ * transparent, and whatever lies beneath it, e.g. the invitation to make a list, would show through. Nothing is
+ * revealed where there is no browser, e.g. under hydrate.js, whose map never becomes ready, so that this never runs.
  * @param {bioreportr.storyPage} that - The story page, whose `revealed` is written
  * @param {Boolean} loaded - Whether the page's data is genuine
+ * @param {maplibregl.Map} map - The page's map, as soon as it is made - not its readyMap, which awaits the style of
+ *     mapData.json, which is fetched only once a pane needing it is shown
  * @param {Object} global - The global object, which supplies `requestIdleCallback` in a browser
  */
-bioreportr.storyPage.reveal = function (that, loaded, global) {
-    if (loaded && global.requestIdleCallback) {
-        global.requestIdleCallback(() => {
-            that.revealed = true;
-        }, {timeout: bioreportr.storyPage.revealTimeout});
-    } else if (loaded && global.setTimeout && global.document) {
-        // e.g. Safari, which lacks requestIdleCallback
+bioreportr.storyPage.reveal = function (that, loaded, map, global) {
+    if (!loaded || that.revealed || !global.setTimeout || !global.document) {
+        return;
+    }
+    let done = false;
+    const revealWhenIdle = () => {
+        if (!done) {
+            done = true;
+            if (global.requestIdleCallback) {
+                global.requestIdleCallback(() => {
+                    that.revealed = true;
+                }, {timeout: bioreportr.storyPage.revealTimeout});
+            } else {
+                // e.g. Safari, which lacks requestIdleCallback
+                global.setTimeout(() => {
+                    that.revealed = true;
+                }, 0);
+            }
+        }
+    };
+    const bare = fluid.unwrapProxy(map);
+    // Revealed as soon as the map has loaded and drawn the tiles it has asked for - its "idle" - or straight away if it
+    // already has
+    if (bare?.once && !(bare.loaded?.() && bare.areTilesLoaded?.())) {
+        bare.once("idle", revealWhenIdle);
+        global.setTimeout(revealWhenIdle, bioreportr.storyPage.mapRevealTimeout);
+    } else {
+        revealWhenIdle();
+    }
+};
+
+// The longest in milliseconds that the page, once loaded, stays hidden should its map never become ready, e.g. in a
+// browser without WebGL - see bioreportr.storyPage.revealLater
+bioreportr.storyPage.fallbackRevealTimeout = 8000;
+
+/**
+ * Reveal the story page some while after it has loaded, whether or not its map has become ready - see
+ * bioreportr.storyPage.reveal, which reveals it sooner as its map is drawn.
+ * @param {bioreportr.storyPage} that - The story page, whose `revealed` is written
+ * @param {Boolean} loaded - Whether the page's data is genuine
+ * @param {Object} global - The global object
+ */
+bioreportr.storyPage.revealLater = function (that, loaded, global) {
+    if (loaded && global.setTimeout && global.document) {
         global.setTimeout(() => {
             that.revealed = true;
-        }, 0);
+        }, bioreportr.storyPage.fallbackRevealTimeout);
     }
 };
 

@@ -405,7 +405,8 @@ fluid.def("bioreportr.storyPage", {
     // Becomes true once the page is loaded and has rendered what it derives from its genuine data, which it does over
     // several tasks - the page's material is hidden until then, see layouts/story/baseof.html
     revealed: false,
-    reveal: "$effect:bioreportr.storyPage.reveal({self}, {self}.loaded, {global})",
+    reveal: "$effect:bioreportr.storyPage.reveal({self}, {self}.loaded, {self}.map.map, {global})",
+    revealLater: "$effect:bioreportr.storyPage.revealLater({self}, {self}.loaded, {global})",
     filtersCollapsed: true,
     // Closes the menu of any search box which opens while the box hasn't the focus - as each does when a taxon is
     // chosen otherwise than through it, e.g. in the checklist, whose name is then written into the box - see
