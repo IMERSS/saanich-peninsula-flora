@@ -375,12 +375,12 @@ bioreportr.list.download = function (that, storyPage) {
     const columns = bioreportr.list.downloadColumns.map(name => bioreportr.list.columnDefs[name]);
     const headers = ["Family", ...columns.map(column => column.label), "Taxon id"];
     const data = rows.map(row => [row.group, ...columns.map(column => column.text(row)), row.taxon.id]);
-    hortis.downloadCSV(headers, data, bioreportr.list.fileName(that, window) + ".csv");
+    hortis.downloadCSV(headers, data, bioreportr.list.fileName(that, window, bioreportr.list.area(storyPage)) + ".csv");
 };
 
 /**
  * Print the list, from a page of its own so that nothing of the story's page is printed with it: its title, the
- * people and sources it draws on, its link and date, and its table in the chosen columns, with any columns for the field.
+ * query which selected it, its link and date, and its table in the chosen columns, with any columns for the field.
  * @param {bioreportr.list} that - The list
  * @param {bioreportr.storyPage} storyPage - The story page
  * @param {Window} window - The window
@@ -409,14 +409,12 @@ bioreportr.list.print = function (that, storyPage, window) {
         column.name === "tick" ? "<span class=\"box\"></span>" : `<span class="${column.name}">${column.markup(row)}</span>`).join("")}</div>`;
     const body = families.map(family => `<section class="family"><h2>${html(family.group)}<span class="n">${family.rows.length}</span></h2>` +
         `${family.rows.map(item).join("")}</section>`).join("");
-    const sources = fluid.makeArray(fluid.unwrapProxy(storyPage.curationHistorySources)).map(source => source.source + (source.year ? " (" + source.year + ")" : ""));
     const siteTitle = that.siteTitle || String(window.document.title || "").split("|")[0].trim();
     const area = bioreportr.list.area(storyPage);
     const query = [...area ? [["Area", area]] : [], ...bioreportr.list.query(that, storyPage)];
     const date = new Date().toLocaleDateString("en-CA", {day: "numeric", month: "long", year: "numeric"});
-    const credit = sources.length ? "Drawing on the work of " + sources.join(", ") + ", and every naturalist whose records are gathered here." :
-        "Drawing on the records of every naturalist gathered here.";
-    const doc = `<!doctype html><html><head><meta charset="utf-8"><title>${html(bioreportr.list.fileName(that, window))}</title><style>
+    const fileName = bioreportr.list.fileName(that, window, area);
+    const doc = `<!doctype html><html><head><meta charset="utf-8"><title>${html(fileName)}</title><style>
         @page { margin: 1.5cm 1.4cm; }
         body { font: 10px/1.45 "Open Sans", "Helvetica Neue", Arial, sans-serif; color: #1a1a1a; margin: 0; }
         @media screen { body { max-width: 19cm; margin: 1.2cm auto; } }
@@ -429,8 +427,7 @@ bioreportr.list.print = function (that, storyPage, window) {
         .query dt { color: #6b8794; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; font-size: 8.5px; padding-top: 1px; }
         .query dd { margin: 0; color: #1a1a1a; }
         .area { grid-column: 1; margin: 6px 0 0; font-size: 14px; font-weight: 700; color: #1a1a1a; }
-        .credit { grid-column: 1 / -1; margin: 8px 0 0; font-size: 9px; font-style: italic; color: #555; }
-        .link { grid-column: 1 / -1; margin: 2px 0 0; font-size: 8px; color: #8a9aa2; word-break: break-all; }
+        .link { grid-column: 1 / -1; margin: 8px 0 0; font-size: 8px; color: #8a9aa2; word-break: break-all; }
         .family { display: grid; grid-template-columns: 1fr 1fr; column-gap: 22px; margin-bottom: 8px; }
         .family h2 { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; margin: 8px 0 3px;
             padding-bottom: 2px; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #184E62;
@@ -447,12 +444,11 @@ bioreportr.list.print = function (that, storyPage, window) {
             <dl class="query">${query.map(([label, value]) => `<dt>${html(label)}</dt><dd>${html(value)}</dd>`).join("")}
                 <dt>Taxa</dt><dd>${html(count)}</dd>
                 <dt>Compiled</dt><dd>${html(date)}</dd></dl>
-            <p class="credit">${html(credit)}</p>
             <p class="link">${html(window.location.href)}</p>
         </header>
         ${body}
     </body></html>`;
-    bioreportr.list.printDocument(doc, window, bioreportr.list.fileName(that, window));
+    bioreportr.list.printDocument(doc, window, fileName);
 };
 
 /**
@@ -487,16 +483,19 @@ bioreportr.list.printDocument = function (doc, window, fileName) {
 };
 
 /**
- * The name of a downloaded checklist, without its extension, e.g. "Flora-of-the-Saanich-Peninsula_checklist_2026-11-16" -
- * its stem, the project's fileStem or else the site's title in plain letters, then "_checklist_" and the date.
+ * The name of a downloaded checklist, without its extension, e.g.
+ * "Flora-of-the-Saanich-Peninsula_Elk-Beaver-Lake-Regional-Park_checklist_2026-11-16" - its stem, the project's fileStem
+ * or else the site's title, then the name of the area selected, if any, each in plain letters, then "_checklist_" and
+ * the date.
  * @param {bioreportr.list} that - The list
  * @param {Window} window - The window of the page
+ * @param {String} [area] - The name of the area selected, e.g. a protected area - see bioreportr.list.area
  * @return {String} The name
  */
-bioreportr.list.fileName = function (that, window) {
-    const stem = that.fileStem || String(window.document.title || "Flora").split("|")[0]
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "");
-    return stem + "_checklist_" + new Date().toISOString().substring(0, 10);
+bioreportr.list.fileName = function (that, window, area) {
+    const plain = text => String(text).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const stem = that.fileStem || plain(String(window.document.title || "Flora").split("|")[0]);
+    return [stem, ...area ? [plain(area)] : []].join("_") + "_checklist_" + new Date().toISOString().substring(0, 10);
 };
 </script>
 

@@ -86,7 +86,12 @@ setAside <- workingList %>%
 # site already knows by id, including the parents of the list's infrataxa
 listed <- names_of(workingList)
 listed_species <- unique(species_of(listed))
-known_ids <- c(as.character(timedFread(project$summaryFile)$id), setAside$id)
+# The summary's own taxa - not those which scripts/prepare_set_aside.R adds to it, the taxa kept off the list
+summaryTaxa <- timedFread(project$summaryFile)
+if ("set_aside_added" %in% names(summaryTaxa)) {
+  summaryTaxa <- summaryTaxa %>% filter(!(set_aside_added %in% c(TRUE, "TRUE")))
+}
+known_ids <- c(as.character(summaryTaxa$id), setAside$id)
 listed <- unique(c(listed, names_of(rawList)))
 
 unlisted <- if (is.null(config$penultimateCatalogue)) NULL else timedFread(file.path("big_data", config$penultimateCatalogue)) %>%

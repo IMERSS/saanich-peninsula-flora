@@ -56,6 +56,7 @@ bioreportr.solowSearch.reset = function (table, controlId, dokkument) {
 
 <template>
     <div class="imerss-panel-label mxcw-solow-search">
+        <span>Plants</span>
         <span class="imerss-search-checklist">
             <span class="imerss-filter-autocomplete">
                 <div @id="autocomplete"></div>
@@ -70,7 +71,7 @@ bioreportr.solowSearch.reset = function (table, controlId, dokkument) {
 </template>
 
 <style>
-/* The search above the species list, set as the atlas checklist's search is in its header */
+/* The search above the species list, labelled and set as the atlas checklist's search is in its header */
 .mxcw-solow-search {
     display: flex;
     align-items: center;

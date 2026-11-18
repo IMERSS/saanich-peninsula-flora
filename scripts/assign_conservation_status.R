@@ -94,7 +94,10 @@ summary <- timedFread(project$summaryFile) %>%
   select(-any_of(status_columns))
 
 # The match of each taxon of the summary in the table, by the passes above - NA where there is none, or more than one
-taxa <- summary %>% filter(inSummary == 1)
+# The summary's own taxa, and any taxa kept off the list which scripts/prepare_set_aside.R has added, marked by their
+# checklist_status - so that it may run before or after that step
+taxa <- summary %>% filter(inSummary %in% c(1, "1") |
+                             ("checklist_status" %in% names(summary) & coalesce(as.character(checklist_status), "") != ""))
 match_by <- function (values, keys) {
   counts <- table(keys[keys != ""])
   unique_keys <- names(counts)[counts == 1]

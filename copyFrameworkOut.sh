@@ -62,6 +62,8 @@ FILES=(
     static/bioreportr/sfc/bioreportr-solowTaxa.vue
     static/bioreportr/sfc/bioreportr-solowTaxonInfo.vue
     static/bioreportr/sfc/bioreportr-statusFilter.vue
+    static/bioreportr/sfc/bioreportr-checklistStatusFilter.vue
+    static/bioreportr/sfc/bioreportr-taxonAttributeFilter.vue
     static/bioreportr/sfc/bioreportr-storyMap.vue
     static/bioreportr/sfc/bioreportr-storyPage.vue
     static/bioreportr/sfc/bioreportr-storyPane.vue
@@ -154,6 +156,9 @@ FILES=(
     scripts/prepare_excluded_taxa.R
     # The conservation status of each taxon of the summary, from the BC CDC's rankings, as the Howe Sound synthesis assigns it
     scripts/assign_conservation_status.R
+    # The taxa kept off the checklist, and their records, brought into the story's data for the Atlas and Living Data
+    scripts/prepare_set_aside_taxa.R
+    scripts/prepare_set_aside.R
 
     # Lint configuration
     .eslintrc.json

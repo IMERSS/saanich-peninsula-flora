@@ -22,6 +22,8 @@
 fluid.registerNamespace("bioreportr.solowTaxa");
 bioreportr.solowTaxa.valueOf = record => Object.prototype.hasOwnProperty.call(record, "valueOf") ? record.valueOf : null;
 
+bioreportr.solowTaxa.count = rows => fluid.makeArray(fluid.unwrapProxy(rows)).length.toLocaleString();
+
 fluid.def("bioreportr.solowTaxa", {
     $layers: "fluid.component",
     // filterRecords: Object[]
@@ -86,7 +88,10 @@ fluid.def("bioreportr.solowTaxa", {
             sortDirection: -1
         }
     },
-    selectedTaxon: "{self}.taxaTable.selectedRow"
+    selectedTaxon: "{self}.taxaTable.selectedRow",
+    // The count of the taxa shown, as the other panes' checklists report their records - see the template
+    shownCount: "$compute:bioreportr.solowTaxa.count({self}.taxaFilters.allOutput)",
+    allCount: "$compute:bioreportr.solowTaxa.count({self}.taxaFilters.allInput)"
 });
 
 </script>
@@ -103,12 +108,29 @@ fluid.def("bioreportr.solowTaxa", {
                 <div @id="filters"></div>
             </div>
         </div>
-        <div @id="search"></div>
+        <div class="imerss-reporter imerss-record-reporter mxcw-solow-reporter"><p>Displaying <b>@{shownCount}</b> of <span>@{allCount}</span> taxa</p></div>
+        <div class="mxcw-solow-search-holder" @id="search"></div>
         <div @id="taxaTable"></div>
     </div>
 </template>
 
 <style>
+/* The count and the search above the species list, inset as those above the other panes' checklists are */
+.mxcw-solow-taxa .mxcw-solow-reporter {
+    flex: none;
+    padding: 2px 8px 0;
+}
+
+.mxcw-solow-taxa .mxcw-solow-search-holder {
+    flex: none;
+    padding: 0 6px;
+}
+
+/* Spaced from its label as the atlas checklist's search is, past its download button */
+.mxcw-solow-search .imerss-search-checklist {
+    margin-left: 12px;
+}
+
 /* The filters of the species list: a row for each, its label beside its choices, which are set as chips, so that they
    read in order and leave room for the list beneath them */
 .mxcw-solow-taxa .imerss-taxa-filters {

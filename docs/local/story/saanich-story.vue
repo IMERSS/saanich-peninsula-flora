@@ -41,28 +41,49 @@ fluid.def("saanich.story", {
     // of the region index giving each area or KBA the label of its group, see GroupField in scripts/intersectShapes.R
     regionFilterFieldNames: ["BEC", "ProtectedArea", "KBA"],
     // The period of the records, over which the extirpation risk analysis always runs
-    recordPeriod: "$compute:saanich.recordPeriod({self}.pkg)",
+    recordPeriod: "$compute:saanich.recordPeriod({self}.pkg, {self}.listedPredicates)",
     solowParams: "$compute:saanich.solowParams({self}.recordPeriod)",
+    // The columns of the extirpation risk pane's table of taxa - what a searcher needs to choose a plant to look for: what
+    // it is, whether it has been seen recently, its extirpation probability, and how many of its records there are and
+    // can't be mapped. Its rank, introduction status and evidence are chosen by the filters instead, and its ids are the
+    // data's own, so none of those is a column
+    // The extirpation probability, the point of the pane, follows the name, so that it is seen in the narrow column
+    // without scrolling; the common name, which the plant's panel gives too, comes last
     taxonColumns: [
         {key: "scientificName", label: "Taxon name"},
         {key: "solow_EP", label: "EP"},
-        {key: "n_obs", label: "obs"},
-        {key: "n_unmapped", label: "No coords", formatter: "saanich.formatUnmapped"},
-        {key: "taxon_rank", label: "Rank"},
-        {key: "introduction_status", label: "Introduction"},
-        {key: "provenance_status", label: "Has Voucher"},
-        {key: "commonName", label: "Common Name"},
-        {key: "reportingStatus", label: "Reporting status"},
-        {key: "id", label: "ID"},
-        {key: "iNaturalistTaxonName", label: "Link name"}
+        {key: "reportingStatus", label: "Status", formatter: "bioreportr.atlas.formatStatus"},
+        {key: "n_obs", label: "Records"},
+        {key: "n_unmapped", label: "Unmapped", formatter: "saanich.formatUnmapped"},
+        {key: "commonName", label: "Common name"}
     ],
-    // In the order in which a search is most often narrowed, each value with the label shown for it
+    // In the order in which a search is most often narrowed, each value with the label shown for it. They filter the
+    // records on every pane showing filters, as well as the extirpation risk pane's table of taxa
+    // The filters shown on each pane, by what each is for - the Atlas, for exploring the flora, shows every filter; the
+    // Protected Areas pane, which assesses the checklist's native flora by place, those of its status and concern; and
+    // Living Data, for curating records, those which find the records to be corrected, and the taxa kept off the list.
+    // A filter not shown on a pane is not applied there - see bioreportr.storyPage.filterShown
+    filterPanes: {
+        "Status": ["Status", "Protected", "Curation"],
+        "Checklist": ["Status", "Curation"],
+        "Introduction": ["Status", "Protected", "Curation"],
+        "Conservation": ["Status", "Protected"],
+        "Evidence": ["Status", "Curation"],
+        "Rank": ["Status"],
+        "Graminoid": ["Status"],
+        "Recorder": ["Status", "Curation"],
+        "Locality": ["Status", "Curation"],
+        "Time period": ["Status", "Curation"]
+    },
     taxaFilterRecords: [
+        // The Protected Areas pane assesses the native flora alone, and shows the filter fixed so - see
+        // bioreportr-taxonAttributeFilter.vue
         {filterName: "Introduction", fieldName: "introduction_status", fieldValues: ["native", "exotic", "unknown"],
-            fieldLabels: ["Native", "Exotic", "Unknown"]},
+            fieldLabels: ["Native", "Exotic", "Unknown"], paneValues: {Protected: ["native"]}},
         {filterName: "Conservation", fieldName: "provincial_concern", fieldValues: ["concern", "secure"],
             fieldLabels: ["Of concern", "Secure"]},
-        {filterName: "Provenance", fieldName: "provenance_status", fieldValues: ["voucher", "no_voucher", "unknown"],
+        // Named apart from the provenance of the taxon panel, which is whether a plant is native or exotic
+        {filterName: "Evidence", fieldName: "provenance_status", fieldValues: ["voucher", "no_voucher", "unknown"],
             fieldLabels: ["Vouchered", "Not vouchered", "Unknown"]},
         {filterName: "Rank", fieldName: "infrataxon_status", fieldValues: ["non-infrataxon", "infrataxon"],
             fieldLabels: ["Species", "Subspecies or variety"]},
@@ -122,13 +143,13 @@ fluid.def("saanich.story", {
             fieldName: "locality",
             controlId: "fli-saanich-locality",
             placeholder: "Search localities ...",
-            isActive: "{storyPage}.activePane.visibleFilters"
+            isActive: "$compute:bioreportr.storyPage.filterShown({storyPage}.filterPanes, {self}.filterName, {storyPage}.activePaneKey, {storyPage}.activePane.visibleFilters)"
         }
     },
     timePeriodFilter: {
         $component: {
             $layers: "saanich.timePeriodFilter",
-            isActive: "{storyPage}.activePane.visibleFilters"
+            isActive: "$compute:bioreportr.storyPage.filterShown({storyPage}.filterPanes, {self}.filterName, {storyPage}.activePaneKey, {storyPage}.activePane.visibleFilters)"
         }
     },
     // The Saanich Peninsula's record spans more than 160 years, so the opening timeline's pass is unhurried, and opens on

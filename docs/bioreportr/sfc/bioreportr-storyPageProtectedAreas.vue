@@ -30,7 +30,9 @@ fluid.def("bioreportr.storyPageProtectedAreas", {
             markup: "$compute:bioreportr.protectedAreas.choosePanel({storyPage}.activePaneKey, {storyPage}.atlasPanelMarkup, {storyPage}.protectedAreas.panelMarkup)"
         }
     },
-    taxonPanelVisible: "$compute:bioreportr.protectedAreas.panelVisible({self}.taxonPanel.markup, {self}.activePaneKey)",
+    // The Protected Areas pane shows its own panel of the chosen taxon, beside the panes which show the atlas's
+    taxonPanelPanes: ["Status", "Protected", "Curation"],
+    taxonPanelVisible: "$compute:bioreportr.atlas.panelVisible({self}.taxonPanel.markup, {self}.activePaneKey, {self}.taxonPanelPanes)",
     // The plant chosen in the checklist is cleared on moving between the selections of the pane - its tabs, categories,
     // areas and figures - since it may not have been recorded within the new one
     // The move from the selection last made in the Protected Areas pane to the current one

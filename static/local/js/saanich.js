@@ -70,11 +70,14 @@ saanich.annotateGeoref = function (taxaRows, pkg) {
 /**
  * Find the first and last years of the records.
  * @param {VizPackage} pkg - The data package
+ * @param {Object[]} [listedPredicates] - The predicates of the list's own records, which alone are counted - see
+ * bioreportr.storyPage.listedPredicates
  * @return {Object} Members `first` and `last`, Infinity and -Infinity if no record has a year
  */
-saanich.recordPeriod = function (pkg) {
+saanich.recordPeriod = function (pkg, listedPredicates = []) {
     const year = {year: "eventDate"};
-    const result = hortis.query(pkg, {from: "obs", measures: {first: {min: year}, last: {max: year}}});
+    // Of the list's own records alone, not those of the taxa kept off it - see bioreportr.storyPage.listedPredicates
+    const result = hortis.query(pkg, {from: "obs", where: listedPredicates, measures: {first: {min: year}, last: {max: year}}});
     return {first: isNaN(result.first) ? Infinity : result.first, last: isNaN(result.last) ? -Infinity : result.last};
 };
 

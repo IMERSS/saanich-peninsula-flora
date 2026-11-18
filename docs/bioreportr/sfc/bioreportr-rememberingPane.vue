@@ -333,19 +333,22 @@ With thanks to our supporters
 </p>
 <ul class="mxcw-supporters-list">
 <li>
-<img src="../local/images/supporters/ciee.png" alt="Canadian Institute for Ecology and Evolution" title="Canadian Institute for Ecology and Evolution">
+<img src="../local/images/supporters/ciee-icee.png" alt="Canadian Institute for Ecology and Evolution" title="Canadian Institute for Ecology and Evolution">
 </li>
 <li class="mxcw-supporter-tall">
 <img src="../local/images/supporters/sitka-foundation.png" alt="Sitka Foundation" title="Sitka Foundation">
-</li>
-<li>
-<img src="../local/images/supporters/capital-regional-district.png" alt="Capital Regional District" title="Capital Regional District">
 </li>
 <li>
 <img src="../local/images/supporters/nature-victoria.png" alt="Nature Victoria" title="Nature Victoria">
 </li>
 <li class="mxcw-supporter-tall">
 <img src="../local/images/supporters/keefer-ecological-services.png" alt="Keefer Ecological Services Ltd." title="Keefer Ecological Services Ltd.">
+</li>
+<li>
+<img src="../local/images/supporters/habitat-acquisition-trust.png" alt="Habitat Acquisition Trust" title="Habitat Acquisition Trust">
+</li>
+<li class="mxcw-supporter-tall">
+<img src="../local/images/supporters/swan-lake-nature-sanctuary.png" alt="Swan Lake Nature Sanctuary" title="Swan Lake Nature Sanctuary">
 </li>
 </ul>
 </div>

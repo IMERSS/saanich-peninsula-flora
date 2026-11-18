@@ -35,7 +35,9 @@ fluid.def("bioreportr.lostPlants", {
         // Taxa the curators have excluded from the list - flagged doubtful, persisting or planted
         excluded: {label: "Excluded", group: "excluded", title: "Taxa the curators have excluded from the checklist"},
         // Taxa still awaiting review, followed by those never reviewed, most recorded first in each
-        underReview: {label: "Under review", group: ["underReview", "unlisted"], title: "Taxa not yet on the checklist, awaiting review"}
+        // Ordered by the weight of the evidence for each, as the curation workflow scores it - see bioreportr.lostPlants.byConfidence
+        underReview: {label: "Under review", group: ["underReview", "unlisted"], title: "Taxa not yet on the checklist, awaiting review",
+            order: "confidence"}
     },
     // The taxa kept off the list
     excluded: "$compute:bioreportr.lostPlants.loadExcluded({storyPage}.excludedTaxaFile)",
@@ -156,8 +158,11 @@ bioreportr.lostPlants.select = function (taxaRows, pkg, options, annotations, st
         taxon: {id: row.id, scientificName: row.scientificName, commonName: row.commonName},
         nRecords: +row.n_records || 0, nUnmapped: 0, lastRecorded: parseInt(row.last_record_date, 10), excluded: row
     }));
-    return fluid.transform(galleries, ({status, group}, key) => {
+    return fluid.transform(galleries, ({status, group, order}, key) => {
         const plants = group ? ofGroup(group) : ofStatus(status);
+        if (order === "confidence") {
+            return plants.sort(bioreportr.lostPlants.byConfidence);
+        }
         return key === "lost" ? plants
             .filter(({taxon, nRecords}) => +taxon.solow_EP >= options.minEP || nRecords > 0 && nRecords <= options.maxRecords)
             .sort((a, b) => +b.taxon.solow_EP - +a.taxon.solow_EP || a.taxon.scientificName.localeCompare(b.taxon.scientificName)) : plants;
@@ -175,6 +180,27 @@ bioreportr.lostPlants.nameMarkup = function (name) {
         "$1<span class=\"mxcw-lost-rank\">$2</span>");
 };
 
+// The ranks of the confidence which the curation workflow, checklist-catalogue-alignment-workflow, gives each taxon of its
+// working list from the weight of the evidence for it - its vouchers, its presence on the BC reference list, its records
+// and how many of them still need identifying. A taxon which never reached the list has none, having scored too low
+bioreportr.lostPlants.confidenceRanks = {"high": 0, "medium-high": 1, "medium-low": 2, "low": 3};
+
+/**
+ * Compare two plants kept off the checklist by the weight of the evidence for them - the most confident first, and of
+ * equal confidence, the most recorded.
+ * @param {Object} a - A plant, as selected by `bioreportr.lostPlants.select`
+ * @param {Object} b - Another
+ * @return {Number} Their order
+ */
+bioreportr.lostPlants.byConfidence = function (a, b) {
+    const rank = plant => bioreportr.lostPlants.confidenceRanks[plant.excluded?.confidence] ?? 4;
+    return rank(a) - rank(b) || b.nRecords - a.nRecords || a.taxon.scientificName.localeCompare(b.taxon.scientificName);
+};
+
+// The weight of the evidence for a plant kept off the checklist, as its card gives it
+bioreportr.lostPlants.confidenceLabel = excluded => excluded?.confidence ? `${excluded.confidence} evidence` :
+    excluded?.group === "unlisted" ? "not yet scored" : "";
+
 /**
  * Render one plant of the gallery, as a card which turns over to show its curatorial notes.
  * @param {Object} plant - A plant as selected by `bioreportr.lostPlants.select`
@@ -187,7 +213,8 @@ bioreportr.lostPlants.renderCard = function (plant, photo) {
     const name = encode(plant.taxon.scientificName);
     const details = [plant.taxon.commonName, plant.lastRecorded && "last recorded " + plant.lastRecorded].filter(Boolean).join(" · ");
     const unmapped = !plant.excluded && plant.nRecords > 0 && plant.nUnmapped === plant.nRecords ? "<span class=\"mxcw-lost-unmapped\">⚠ no mapped records</span>" : "";
-    const reason = plant.excluded ? `<span class="mxcw-lost-reason">${encode(plant.excluded.reason)}</span>` : "";
+    const confidence = bioreportr.lostPlants.confidenceLabel(plant.excluded);
+    const reason = plant.excluded ? `<span class="mxcw-lost-reason">${encode(plant.excluded.reason + (confidence ? " · " + confidence : ""))}</span>` : "";
     const credit = photo ? photo.attribution.replace(/, uploaded by .*$/, "").replace(", some rights reserved", "") : "";
     const image = photo ? `<img src="${encode(photo.medium_url)}" alt="${name}" loading="lazy">` : "<span class=\"mxcw-lost-noimage\" aria-hidden=\"true\"></span>";
     // The card turns over to show the plant's notes on its back, filled as it turns - see bioreportr.lostPlants.click
@@ -417,6 +444,7 @@ bioreportr.lostPlants.backMarkup = function (plant, {historyById, sources, byTax
     // The plant's facts, run together on one line - for a taxon kept off the list, the curators' decision on it first
     const facts = (excluded ? [
         excluded.reason && excluded.reason[0].toUpperCase() + excluded.reason.slice(1),
+        bioreportr.lostPlants.confidenceLabel(excluded),
         excluded.introduction_status,
         plant.nRecords && plural(plant.nRecords, "record") + (+excluded.n_research_grade ? `, ${bioreportr.formatCount(+excluded.n_research_grade)} research grade` : ""),
         span(year(excluded.first_record_date), year(excluded.last_record_date))
@@ -512,6 +540,13 @@ bioreportr.lostPlants.click = function (storyPage, event) {
         lostPlants.gallery = tab.dataset.gallery;
     } else if (action) {
         const taxonId = action.dataset.taxonId;
+        // A taxon kept off the checklist is shown with its records only once its status is chosen in the Checklist status
+        // filter, which these actions choose together with it - see bioreportr.checklistStatusFilter
+        const plant = (lostPlants.plants[lostPlants.gallery] || []).find(candidate => String(candidate.taxon.id) === String(taxonId));
+        if (plant?.excluded && bioreportr.checklistStatusFilter) {
+            const status = plant.excluded.group === "excluded" ? "excluded" : "underReview";
+            bioreportr.checklistStatusFilter.choose(storyPage, ["listed", status]);
+        }
         if (action.dataset.action === "curate") {
             bioreportr.curation.open(storyPage, taxonId);
         } else if (action.dataset.action === "find") {
@@ -758,7 +793,13 @@ bioreportr.lostPlants.bindEvents = function (storyPage, window) {
     }
     const binding = bioreportr.binding();
     binding.listen(dokkument, "click", event => {
-        if (event.target.closest?.(".mxcw-lost-gallery-pane")) {
+        // A link in the pane's text to one of the gallery's tabs, e.g. that of the plants under review
+        const goto = event.target.closest?.(".mxcw-lost-goto[data-gallery]");
+        if (goto) {
+            storyPage.lostPlants.gallery = goto.dataset.gallery;
+            bioreportr.lostPlants.search(storyPage.lostPlants).target = null;
+            dokkument.querySelector(".mxcw-dataPane-LostPlants")?.scrollTo({top: 0, behavior: "smooth"});
+        } else if (event.target.closest?.(".mxcw-lost-gallery-pane")) {
             bioreportr.lostPlants.click(storyPage, event);
         }
     });
@@ -1254,6 +1295,84 @@ bioreportr.lostPlants.paneMarkup = galleryMarkup => ({LostPlants: galleryMarkup}
     text-wrap: pretty;
 }
 
+/* The note beneath every tab that the record is uncertain, inviting review - written in the pane's R Markdown as a
+   ::: {.mxcw-lost-review} block, with a title and a call to action of its own. Set apart by a cream outline on a lighter
+   ground, its title a size up with a warning mark, and its call to action a cream button as the gallery's actions are,
+   so that it is seen at a glance without adding to the reading */
+.mxcw-paneKey-LostPlants .mxcw-lost-review {
+    max-width: 31em;
+    margin: 0 auto clamp(14px, 2.6vh, 26px);
+    /* Its title, text and button stacked with one even gap between them, rather than each paragraph's margin */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 18px 16px;
+    background: rgba(253, 242, 206, 0.08);
+    border: 1px solid rgba(253, 242, 206, 0.55);
+    border-left: 4px solid #FDF2CE;
+    border-radius: var(--data-table-radius);
+    text-align: left;
+}
+
+.mxcw-paneKey-LostPlants .mxcw-lost-review p {
+    margin: 0;
+    color: #d6e8ee;
+    font-size: var(--story-data);
+    line-height: 1.45;
+    text-align: left;
+    text-wrap: pretty;
+}
+
+/* pandoc sets an empty paragraph either side of the title, written as raw HTML, which would add gaps of their own */
+.mxcw-paneKey-LostPlants .mxcw-lost-review p:empty {
+    display: none;
+}
+
+.mxcw-paneKey-LostPlants .mxcw-lost-review p.mxcw-lost-review-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.25;
+    color: #FDF2CE;
+    font-size: var(--story-reading-text);
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.mxcw-paneKey-LostPlants .mxcw-lost-review-title::before {
+    content: "⚠";
+}
+
+.mxcw-paneKey-LostPlants .mxcw-lost-review a.mxcw-lost-review-cta {
+    display: block;
+    width: fit-content;
+    margin: 4px auto 0;
+    padding: 7px 18px;
+    color: #0d3040;
+    font-size: var(--story-data);
+    font-weight: 700;
+    text-decoration: none;
+    background: #FDF2CE;
+    border-radius: 999px;
+    transition: background 150ms;
+}
+
+.mxcw-paneKey-LostPlants .mxcw-lost-review a.mxcw-lost-review-cta:hover,
+.mxcw-paneKey-LostPlants .mxcw-lost-review a.mxcw-lost-review-cta:focus-visible {
+    background: #fff;
+}
+
+/* A link in the text to one of the gallery's tabs, set as a link though it is a button */
+.mxcw-paneKey-LostPlants .mxcw-lost-goto {
+    padding: 0;
+    font: inherit;
+    color: #FDF2CE;
+    text-decoration: underline;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
 .mxcw-paneKey-LostPlants :is(.mxcw-sectionColumn, .mxcw-lost-text) > p :is(strong, .mxcw-callout),
 .mxcw-paneKey-LostPlants :is(.mxcw-sectionColumn, .mxcw-lost-text) > p a {
     color: #FDF2CE;
@@ -1296,26 +1415,29 @@ community members on a search for the <a href="https://www.inaturalist.org/proje
 Plants of the Saanich Peninsula</a> project on iNaturalist.</p>
 </div>
 <div class="mxcw-lost-text" data-gallery="confirmed" hidden="hidden">
-<p>These native species were reported for the peninsula in the past, and
-have been seen again since 2000. They represent the enduring core of its
-native flora—though being found again is no promise of security, and
-some plants are known to occur in only one or two places.</p>
+<p>These native species were documented on the peninsula historically
+and have been observed again since 2000. Together, they form the
+enduring core of its native flora. Yet their continued presence does not
+guarantee their security: some remain known from just one or two
+locations.</p>
 <p><span class="mxcw-callout">Select a plant from the gallery</span> to
 read its curatorial notes, then explore its distribution on the <a href="#pane:Status">Atlas</a>, or add curatorial notes in <a href="#pane:Curation">Living Data</a>.</p>
 </div>
 <div class="mxcw-lost-text" data-gallery="new" hidden="hidden">
-<p>These native species were first reported for the Saanich Peninsula
-since 2000. Some were surely here all along, overlooked by earlier
-botanists or confused with their relatives; others may be new arrivals
-or newly recognized taxonomically.</p>
+<p>These native species were first documented on the Saanich Peninsula
+in 2000 or later. Some were likely present all along, overlooked by
+earlier botanists or mistaken for closely related species. Others may be
+more recent arrivals or species only recently recognized as
+distinct.</p>
 <p><span class="mxcw-callout">Select a plant from the gallery</span> to
 read its curatorial notes, then explore its distribution on the <a href="#pane:Status">Atlas</a>, or add curatorial notes in <a href="#pane:Curation">Living Data</a>.</p>
 </div>
 <div class="mxcw-lost-text" data-gallery="excluded" hidden="hidden">
-<p>Not every plant reported for the peninsula is an accepted part of its
-flora. Some plants have been excluded for various reasons: curators have
-judged some to be doubtful records, others to be garden escapes that
-persist without establishing, or to have been planted.</p>
+<p>Not every plant reported from the Saanich Peninsula is accepted as
+part of its flora. Some records have been excluded because curators
+consider them doubtful; others represent garden escapes that have
+persisted without becoming established, or plants that were deliberately
+planted.</p>
 <p><span class="mxcw-callout">Select a plant from the gallery</span> to
 read curatorial notes.</p>
 </div>
@@ -1325,6 +1447,15 @@ are evaluated and prioritized for review based on the weight of
 evidence.</p>
 <p><span class="mxcw-callout">Select a plant from the gallery</span> to
 read curatorial notes.</p>
+</div>
+<div class="mxcw-lost-review">
+<p></p><p class="mxcw-lost-review-title">Not every report is certain</p><p></p>
+<p>Some species reports may depend on misidentified or misplaced
+records. Some have been
+<button type="button" class="mxcw-lost-goto" data-gallery="excluded">excluded</button>,
+and many are still
+<button type="button" class="mxcw-lost-goto" data-gallery="underReview">under review</button>.</p>
+<p><a class="mxcw-lost-review-cta" href="#pane:Curation">Please help us review the data!</a></p>
 </div>
 <div class="mxcw-footnote">
 <p>Szczawinski and Harrison’s (1972) <em>Flora of the Saanich

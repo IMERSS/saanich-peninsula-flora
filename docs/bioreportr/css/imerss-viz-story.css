@@ -190,16 +190,18 @@
     --mxcw-records-header-height: 40px;
 }
 
-/* Collapsed, the header sits in its strip directly below the map, with no resize bar to count in the space above */
-/* Collapsed, the header is centred in its strip, as the Download list bar beside it is - see bioreportr-list.vue */
-.mxcw-records-collapsed .mxcw-obs-table-controls {
+/* Collapsed, the header is centred in its strip, as the Download list bar beside it is - see bioreportr-list.vue - on
+   the extirpation risk pane as on the others */
+.mxcw-records-collapsed .mxcw-obs-table-controls,
+.mxcw-solow-records-collapsed .mxcw-obs-table-controls {
     margin-top: 0;
     margin-bottom: 0;
     height: 100%;
     align-items: center;
 }
 
-.mxcw-records-collapsed .mxcw-obs-table-controls > .imerss-download-button {
+.mxcw-records-collapsed .mxcw-obs-table-controls > .imerss-download-button,
+.mxcw-solow-records-collapsed .mxcw-obs-table-controls > .imerss-download-button {
     align-self: center;
 }
 

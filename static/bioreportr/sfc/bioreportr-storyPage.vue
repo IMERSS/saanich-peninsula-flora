@@ -4,6 +4,8 @@
 <fluid-import src="bioreportr-dataPane.vue"></fluid-import>
 <fluid-import src="bioreportr-storyMap.vue"></fluid-import>
 <fluid-import src="bioreportr-statusFilter.vue"></fluid-import>
+<fluid-import src="bioreportr-checklistStatusFilter.vue"></fluid-import>
+<fluid-import src="bioreportr-taxonAttributeFilter.vue"></fluid-import>
 <fluid-import src="bioreportr-recordAndTaxaReporter.vue"></fluid-import>
 <fluid-import src="bioreportr-storyPageCuration.vue"></fluid-import>
 <fluid-import src="%imerss-bioinfo/src/client/sfc/filters/hortis-standardFilterControls.vue"></fluid-import>
@@ -142,18 +144,58 @@ fluid.def("bioreportr.storyPage", {
         }
     },
     filteredObs: "{self}.obsFilters.allOutput",
+    // Whether the story holds the taxa kept off its checklist, with their records - see scripts/prepare_set_aside.R
+    hasSetAside: "$compute:hortis.isValue({self}.excludedTaxaFile)",
+    // The checklist statuses of the records shown, beside the list's own, held in the URL - see
+    // bioreportr.checklistStatusFilter
+    checklistStatuses: "{hashManager}.hash.listing",
+    checklistStatusFilter: {
+        $component: {
+            $layers: "bioreportr.checklistStatusFilter"
+        }
+    },
+    // The filters of the records by attributes of their taxa, e.g. their introduction status - one for each record a
+    // story gives, by default its taxaFilterRecords, which define the extirpation risk pane's filters of its taxa too -
+    // see bioreportr-taxonAttributeFilter.vue
+    taxonAttributeFilterRecords: "{self}.taxaFilterRecords",
+    taxonAttributeFilters: {
+        $component: {
+            $layers: "bioreportr.taxonAttributeFilter",
+            $for: {
+                source: "{storyPage}.taxonAttributeFilterRecords",
+                valueAs: "record"
+            }
+        }
+    },
+    // The records of the list's own taxa, from which everything counted of the flora is counted, e.g. the totals of
+    // records - those of the taxa kept off the list are shown only when they are chosen through the filter above
+    listedPredicates: "$compute:bioreportr.storyPage.listedPredicates({self}.hasSetAside)",
+    allObs: "$compute:bioreportr.storyPage.listedObs({self}.pkg, {self}.listedPredicates)",
+    // Every record, of the taxa kept off the list too - from which the panel of a taxon chosen draws its records, so
+    // that one kept off the list shows its own
+    everyObs: "$compute:hortis.selectAllObs({self}.pkg)",
+    // The records of the checklist statuses the pane shown honours - the list's own alone, unless another status is
+    // chosen on a pane which honours it - the total of which the records shown are counted
+    shownStatusObs: "$compute:bioreportr.storyPage.listedObs({self}.pkg, {self}.checklistStatusFilter.predicates)",
     taxaFromObs: "$compute:hortis.taxaFromObs({self}.pkg, {self}.filteredObs, {self}.taxa.rowById)",
+    // The panes on which each filter of the records is shown, and applied, by the filter's name, e.g.
+    // {Rank: ["Status"]} - a filter not named is shown on every pane showing filters - see
+    // bioreportr.storyPage.filterShown
+    filterPanes: {},
+    // The classes of the filter panel hiding the filters not shown on the pane shown, whose own templates replace the
+    // panel's slots for them - see bioreportr.storyPage.hiddenFilterClasses
+    hiddenFilterClasses: "$compute:bioreportr.storyPage.hiddenFilterClasses({self}.filterPanes, {self}.activePaneKey)",
     statusFilter: {
         $component: {
             $layers: "bioreportr.statusFilter",
-            isActive: "{storyPage}.activePane.visibleFilters"
+            isActive: "$compute:bioreportr.storyPage.filterShown({storyPage}.filterPanes, {self}.filterName, {storyPage}.activePaneKey, {storyPage}.activePane.visibleFilters)"
         }
     },
     collectorFilter: {
         $component: {
             $layers: "hortis.collectorFilter",
             filterName: "Recorder",
-            isActive: "{storyPage}.activePane.visibleFilters"
+            isActive: "$compute:bioreportr.storyPage.filterShown({storyPage}.filterPanes, {self}.filterName, {storyPage}.activePaneKey, {storyPage}.activePane.visibleFilters)"
         }
     },
     map: {
@@ -166,14 +208,24 @@ fluid.def("bioreportr.storyPage", {
             $layers: "hortis.standardChecklist",
             label: "Plants",
             rootId: "47126", // Plantae
-            decorate: "hortis.blitzChecklistDecoration"
+            decorate: "hortis.blitzChecklistDecoration",
+            // In Living Data the search offers the taxa kept off the list too, marked by their status - see
+            // bioreportr.checklistStatusFilter.searchRows
+            search: {
+                $component: {
+                    rows: `$compute:bioreportr.checklistStatusFilter.searchRows({checklist}.idToEntry, {storyPage}.taxa.allRows,
+                        {storyPage}.activePaneKey, {storyPage}.checklistStatusFilter.curationPane)`,
+                    renderSuggestion: "bioreportr.checklistStatusFilter.suggestion"
+                }
+            }
         }
     },
     recordReporter: {
         $component: {
             $layers: "bioreportr.recordAndTaxaReporter",
             filtered: "{vizLoader}.finalFilteredObs",
-            all: "{vizLoader}.allObs",
+            // Of the checklist statuses shown, so that a choice of the taxa kept off the list counts them in the total
+            all: "{storyPage}.shownStatusObs",
             taxa: "{vizLoader}.taxaFromObs",
             rowById: "{vizLoader}.taxa.rowById"
         }
@@ -355,6 +407,15 @@ fluid.def("bioreportr.storyPage", {
     revealed: false,
     reveal: "$effect:bioreportr.storyPage.reveal({self}, {self}.loaded, {global})",
     filtersCollapsed: true,
+    // Closes the menu of any search box which opens while the box hasn't the focus - as each does when a taxon is
+    // chosen otherwise than through it, e.g. in the checklist, whose name is then written into the box - see
+    // bioreportr.storyPage.bindAutocompleteMenus
+    autocompleteMenus: {
+        $bindable: {
+            bind: "bioreportr.storyPage.bindAutocompleteMenus({global})",
+            unbind: "bioreportr.unbind({boundValue})"
+        }
+    },
     toggleFilters: "$method:bioreportr.storyPage.toggleFilters({self})",
     downloadObs: "$method:bioreportr.storyPage.downloadObs({self}.pkg, {self}.finalFilteredObs)",
     recordsExpanded: "$compute:hortis.negate({self}.recordsCollapsed)",
@@ -364,8 +425,8 @@ fluid.def("bioreportr.storyPage", {
 
 /**
  * Compute the classes of the parts of the story page which are shown or hidden according to the active pane. A pane
- * whose settings have foldVizControlsOnTaxon, e.g. the curation pane, folds away the checklist once a taxon, or a
- * record, is chosen.
+ * whose settings have foldVizControlsOnTaxon, e.g. the curation pane, folds away its filters and checklist once a taxon,
+ * or a record, is chosen, to a bar at the foot of the column whose button resets the filters, and so unfolds them.
  * @param {PaneSettings} pane - The active pane
  * @param {TaxonRow|null} chosenTaxon - The taxon chosen in the checklist's search, if any
  * @param {String|null} recordId - The id of the record selected, if any
@@ -373,10 +434,16 @@ fluid.def("bioreportr.storyPage", {
  */
 bioreportr.storyPage.classes = function (pane, chosenTaxon, recordId) {
     const hidden = visible => visible ? "" : "fl-hidden";
+    const folded = !!(pane.foldVizControlsOnTaxon && (chosenTaxon || hortis.isValue(recordId)));
     return {
         map: pane.visibleMap ? "" : "mxcw-hideMap",
-        vizControls: hidden(pane.visibleVizControls && !(pane.foldVizControlsOnTaxon && (chosenTaxon || hortis.isValue(recordId)))),
+        vizControls: hidden(pane.visibleVizControls),
+        checklist: hidden(!folded),
+        // Folded, the filters and checklist give way to a bar at the foot of the column, holding the button which resets
+        // the filters - which clears the taxon chosen too, so unfolding them again
+        folded: folded ? "mxcw-viz-folded" : "",
         obsFilters: hidden(pane.visibleObsFilters),
+        list: hidden(pane.visibleObsFilters && pane.visibleListDownload),
         filters: hidden(pane.visibleFilters),
         obsTable: hidden(pane.visibleObsTable),
         solow: hidden(pane.visibleSolow)
@@ -399,7 +466,7 @@ bioreportr.storyPage.renderedClasses = function (that) {
     };
     const classes = read(that.classes) || {};
     const leftPane = read(that.leftPaneClass);
-    const parts = ["map", "vizControls", "obsFilters", "filters", "obsTable", "solow"];
+    const parts = ["map", "vizControls", "checklist", "folded", "obsFilters", "list", "filters", "obsTable", "solow"];
     return {
         ...Object.fromEntries(parts.map(part => [part, typeof(classes[part]) === "string" ? classes[part] : ""])),
         leftPane: typeof(leftPane) === "string" ? leftPane : ""
@@ -492,26 +559,29 @@ bioreportr.storyPage.hasMarkup = markup => !!markup;
                         <div class="mxcw-content imerss-nodismiss-map" data-mxcw-startup-hidden @id="storyPanes"></div>
                     </div>
                     <div @id="contentResizeBar"></div>
-                    <div class="imerss-container @{renderedClasses.vizControls}" data-mxcw-startup-hidden>
+                    <div class="imerss-container @{renderedClasses.vizControls} @{renderedClasses.folded}" data-mxcw-startup-hidden>
                         <div class="imerss-filter-panel @{renderedClasses.obsFilters}" @class="imerss-filters-collapsed:@{filtersCollapsed}">
                             <div class="imerss-panel-label imerss-filters-header">
                                 <button type="button" class="imerss-filters-toggle" aria-expanded="@{filtersCollapsed}"
                                     aria-controls="imerss-main-filters" @onclick="{self}.toggleFilters()">Filters:</button>
+                                <span class="mxcw-folded-label" title="Reset the filters to return to the checklist">Checklist</span>
                                 <div @id="filterControls"></div>
                             </div>
-                            <div id="imerss-main-filters" class="imerss-filters imerss-main-filters @{renderedClasses.filters}">
+                            <div id="imerss-main-filters" class="imerss-filters imerss-main-filters @{renderedClasses.filters} @{hiddenFilterClasses}">
                                 <div class="imerss-filter"></div>
                                 <div class="imerss-status-filter imerss-filter" @id="statusFilter"></div>
+                                <div class="imerss-checklist-status-filter imerss-filter" @id="checklistStatusFilter"></div>
+                                <div class="imerss-taxon-attribute-filters" @id="taxonAttributeFilters"></div>
                                 <div class="imerss-collector-filter imerss-filter" @id="collectorFilter"></div>
                                 <!-- Filled only by a story defining these filters, as the Saanich story does -->
                                 <div class="imerss-locality-filter imerss-filter" @id="localityFilter"></div>
                                 <div class="imerss-time-filter imerss-filter" @id="timePeriodFilter"></div>
                             </div>
                             <div @id="recordReporter"></div>
-                            <div @id="checklist"></div>
+                            <div class="mxcw-checklist-holder @{renderedClasses.checklist}"><div @id="checklist"></div></div>
                         </div>
                         <!-- The Download list panel, filled by a story bearing bioreportr.atlasPanel - see bioreportr-list.vue -->
-                        <div class="mxcw-list-download-holder @{renderedClasses.obsFilters}" @id="list"></div>
+                        <div class="mxcw-list-download-holder @{renderedClasses.list}" @id="list"></div>
                         <div class="mxcw-solow-taxa @{renderedClasses.solow}" @id="solowTaxa"></div>
                     </div>
                 </div>

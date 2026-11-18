@@ -209,8 +209,18 @@ run_js <- function(js_file, args = character(), ...) {
 }
 
 # The id by which the site knows a taxon of a checklist which didn't reach its ultimate list - its iNaturalist id, or
-# "name:" and its name where it has none - see scripts/prepare_curation_history.R and scripts/prepare_excluded_taxa.R
+# where its list gives none, that which scripts/prepare_set_aside_taxa.R assigned it by its name, if the project names
+# that assignment as setAsideAssigned in bioreportr-prep.yaml and it has been made, or else "name:" and its name - see
+# scripts/prepare_curation_history.R and scripts/prepare_excluded_taxa.R
 set_aside_id <- function (link_taxon_id, taxon_name) {
   id <- as.character(link_taxon_id)
-  ifelse(is.na(id) | id == "" | id == "NA", paste0("name:", taxon_name), id)
+  missing <- is.na(id) | id == "" | id == "NA"
+  assigned_file <- if (exists("config") && !is.null(config$setAsideAssigned)) file.path("tabular_data", config$setAsideAssigned) else ""
+  if (any(missing) && file.exists(assigned_file)) {
+    assigned <- data.table::fread(assigned_file, colClasses = "character")
+    found <- assigned$iNaturalistTaxonId[match(taxon_name, assigned$scientificName)]
+    id <- ifelse(missing & !is.na(found) & found != "", found, id)
+    missing <- is.na(id) | id == "" | id == "NA"
+  }
+  ifelse(missing, paste0("name:", taxon_name), id)
 }

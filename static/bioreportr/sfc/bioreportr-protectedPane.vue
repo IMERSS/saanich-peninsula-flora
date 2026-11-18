@@ -259,9 +259,6 @@ bioreportr.protectedAreas.panelMarkup = function (taxon, records, region, status
 bioreportr.protectedAreas.choosePanel = (activePaneKey, atlasMarkup, protectedMarkup) =>
     activePaneKey === "Protected" ? protectedMarkup : atlasMarkup;
 
-// The panel is shown on the atlas and on this pane, while a plant with records is chosen
-bioreportr.protectedAreas.panelVisible = (markup, activePaneKey) => !!markup && (activePaneKey === "Status" || activePaneKey === "Protected");
-
 /**
  * Whether the Protected Areas pane is the one shown - read from the page, since the cards are shown from map events.
  * @param {Document} dokkument - The page

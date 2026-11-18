@@ -91,6 +91,7 @@ bioreportr.unbind = function (binding) {
  * @property {Boolean} [visibleFilters] - Whether the filters of observations are applied and shown
  * @property {Boolean} [visibleObsFilters] - Whether the panel of filters is shown
  * @property {Boolean} [visibleObsTable] - Whether the table of observations is shown
+ * @property {Boolean} [visibleListDownload] - Whether the Download list panel is shown beneath the filters' panel
  * @property {Boolean} [visibleVizControls] - Whether the filters and checklist are shown
  * @property {Boolean} [visibleSolow] - Whether the controls of the extirpation risk analysis are shown
  * @property {String} [regionField] - The field of the region indirection table whose regions the pane's map shows
@@ -106,6 +107,7 @@ bioreportr.paneLayerDefaults = {
         visibleFilters: true,
         visibleObsFilters: true,
         visibleObsTable: true,
+        visibleListDownload: true,
         visibleVizControls: true
     },
     "reknitr.solowPaneHandler": {
@@ -122,6 +124,7 @@ bioreportr.paneBaseSettings = {
     visibleFilters: false,
     visibleObsFilters: false,
     visibleObsTable: false,
+    visibleListDownload: false,
     visibleVizControls: false,
     visibleSolow: false,
     // Whether the filters and checklist fold away once a taxon is chosen, as on the curation pane
@@ -963,3 +966,97 @@ bioreportr.storyPane.click = function (storyPage, event) {
 bioreportr.storyMap.untrackSize = function (observer) {
     observer.disconnect();
 };
+
+/**
+ * The predicates of the records of the list's own taxa, for a story which holds the taxa kept off its checklist beside
+ * them - see bioreportr.checklistStatusFilter - and none for one which doesn't.
+ * @param {Boolean} hasSetAside - Whether the story holds the taxa kept off its checklist
+ * @return {Object[]} The predicates
+ */
+bioreportr.storyPage.listedPredicates = hasSetAside => hasSetAside ? [{field: "checklist", op: "in", value: ["listed"]}] : [];
+
+/**
+ * The records of the list's own taxa, or of the checklist statuses given, as a Selection - every record, for a story
+ * without taxa kept off its checklist, which has no such predicates.
+ * @param {VizPackage} pkg - The data package
+ * @param {Object[]} listedPredicates - The predicates of the records
+ * @return {Selection} The records
+ */
+bioreportr.storyPage.listedObs = (pkg, listedPredicates) => listedPredicates.length ?
+    hortis.selectObs(pkg, listedPredicates) : hortis.selectAllObs(pkg);
+
+/**
+ * Close the menu of any search box of the page - an accessible-autocomplete, as in the checklist, the extirpation risk
+ * pane and the Lost Plants gallery - which opens while its box hasn't the focus. A taxon chosen otherwise than through
+ * the box, e.g. in the checklist or by a link, has its name written into the box, which the widget takes as a query,
+ * opening its menu on the one taxon matching it and leaving it open, since the box is never left to close it. The
+ * widget closes its menu once its box is left, so the box is given the focus and left again, the focus returning to
+ * wherever it was. The widget is imerss-bioinfo's, so it is closed from here, rather than changed.
+ * @param {Window} window - The window holding the page
+ * @return {Object} The binding, to be disposed by bioreportr.unbind
+ */
+bioreportr.storyPage.bindAutocompleteMenus = function (window) {
+    const binding = bioreportr.binding();
+    const dokkument = window.document;
+    if (dokkument?.body && window.MutationObserver) {
+        let closing = false;
+        const close = menu => {
+            const input = dokkument.getElementById(menu.id.replace(/__listbox$/, ""));
+            if (input && dokkument.activeElement !== input && !closing) {
+                closing = true;
+                const previous = dokkument.activeElement;
+                input.focus({preventScroll: true});
+                input.blur();
+                previous?.focus?.({preventScroll: true});
+                closing = false;
+            }
+        };
+        const observer = new window.MutationObserver(mutations => mutations.forEach(mutation => {
+            const menu = mutation.target;
+            if (menu.classList?.contains("autocomplete__menu--visible")) {
+                close(menu);
+            }
+        }));
+        observer.observe(dokkument.body, {subtree: true, attributes: true, attributeFilter: ["class"]});
+        binding.onDispose(() => observer.disconnect());
+    }
+    return binding;
+};
+
+/**
+ * Whether a filter of the records is shown, and applied, on the pane shown - on any pane showing filters, unless the
+ * story's filterPanes names the panes on which it is shown, e.g. {Rank: ["Status"]} for a filter of use only on the
+ * atlas. A filter not shown is not applied, so that nothing filters the records which can't be seen to.
+ * @param {Object<String, String[]>} filterPanes - The panes on which each filter is shown, by its name
+ * @param {String} filterName - The filter's name
+ * @param {String} activePaneKey - The key of the pane shown
+ * @param {Boolean} visibleFilters - Whether the pane shows filters at all
+ * @return {Boolean} Whether the filter is shown
+ */
+bioreportr.storyPage.filterShown = function (filterPanes, filterName, activePaneKey, visibleFilters) {
+    const panes = fluid.unwrapProxy(filterPanes)?.[filterName];
+    return !!visibleFilters && (!panes || panes.includes(activePaneKey));
+};
+
+// The class of the filter panel hiding each filter which a story may show on some panes only, by the filter's name - the
+// filters of taxon attributes hide themselves - see the rules for them in imerss-story.css
+bioreportr.storyPage.filterHidingClasses = {
+    "Status": "mxcw-hide-status",
+    "Checklist": "mxcw-hide-checklist",
+    "Recorder": "mxcw-hide-recorder",
+    "Locality": "mxcw-hide-locality",
+    "Time period": "mxcw-hide-time-period"
+};
+
+/**
+ * The classes of the filter panel hiding the filters which the story's filterPanes doesn't show on the pane shown.
+ * @param {Object<String, String[]>} filterPanes - The panes on which each filter is shown, by its name
+ * @param {String} activePaneKey - The key of the pane shown
+ * @return {String} The classes
+ */
+bioreportr.storyPage.hiddenFilterClasses = function (filterPanes, activePaneKey) {
+    const panes = fluid.unwrapProxy(filterPanes) || {};
+    return Object.entries(bioreportr.storyPage.filterHidingClasses)
+        .filter(([name]) => panes[name] && !panes[name].includes(activePaneKey)).map(([, hiding]) => hiding).join(" ");
+};
+

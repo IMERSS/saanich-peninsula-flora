@@ -108,6 +108,12 @@ bioreportr.listInvite.draw = function (that, storyPage) {
     margin: 0 0 8px;
 }
 
+/* The link to the Protected Areas pane, whose areas may be listed too */
+.mxcw-list-invite .mxcw-list-invite-link {
+    color: #FDF2CE;
+    text-decoration: underline;
+}
+
 .mxcw-list-invite-close {
     position: absolute;
     top: 6px;
@@ -157,9 +163,9 @@ bioreportr.listInvite.draw = function (that, storyPage) {
     <div class="mxcw-list-invite" @class="fl-hidden:!@{shown}" role="dialog" aria-label="Make a plant list">
         <button type="button" class="mxcw-list-invite-close" title="Close" aria-label="Close" @onclick="{self}.close()">×</button>
         <h3>Make a plant list!</h3>
-        <p>Draw an area with the shape tool at the top left of the map, double-clicking to finish—or click a grid cell. The
-            plants you selected will be listed in the checklist bottom right. Download the formatted checklist to aid your
-            searches.</p>
+        <p>Draw an area with the shape tool at the top left of the map, double-clicking to finish—or click a grid cell. You
+            can also make lists for <a class="mxcw-list-invite-link" href="#pane:Protected">protected areas</a>. Plants
+            selected by area can be downloaded as checklists from the bottom right panel.</p>
         <button type="button" class="mxcw-list-invite-draw" @onclick="{self}.draw()">Draw an area</button>
     </div>
     </div>

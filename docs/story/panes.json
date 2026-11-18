@@ -102,6 +102,7 @@
     "weight": 6,
     "paneComponent": "bioreportr.curationPane",
     "foldVizControlsOnTaxon": true,
+    "visibleListDownload": false,
     "paneKey": "Curation",
     "file": null,
     "dataFile": null,

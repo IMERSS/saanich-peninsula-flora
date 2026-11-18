@@ -8,6 +8,8 @@ paneComponent: bioreportr.curationPane
 paneHandlerLayers: ["reknitr.obsMapPaneHandler"]
 # The checklist folds away once a taxon is chosen for curation, leaving the curation form
 foldVizControlsOnTaxon: true
+# The Download list panel is left to the Atlas and Protected Areas panes, a list being of no use while curating
+visibleListDownload: false
 ---
 
 ## Community Curation

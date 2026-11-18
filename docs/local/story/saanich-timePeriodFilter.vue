@@ -2,7 +2,8 @@
 <script>
 "use strict";
 
-// Filters the Atlas's records to a span of years chosen by a pair of sliders. A null state shows every record,
+// Filters the Atlas's records to a span of years chosen by the two handles of one slider, the earliest year on its left
+// and the latest on its right, the span between them highlighted. A null state shows every record,
 // including any without a date. The limits of the sliders are the first and last years of the records
 fluid.def("saanich.timePeriodFilter", {
     $layers: "hortis.obsDrivenFilter",
@@ -55,9 +56,16 @@ saanich.timePeriodFilter.display = function (bounds, state, dragging) {
 
 saanich.timePeriodFilter.placeHandles = function (display, dokkument) {
     const min = dokkument.querySelector(".saanich-time-min"), max = dokkument.querySelector(".saanich-time-max");
+    const fill = dokkument.querySelector(".saanich-time-fill");
     if (min && max) {
         min.value = display.minPosition;
         max.value = display.maxPosition;
+    }
+    // The span chosen is highlighted on the track between the handles
+    if (fill) {
+        const scale = saanich.timePeriodFilter.scale;
+        fill.style.left = `${display.minPosition / scale * 100}%`;
+        fill.style.right = `${100 - display.maxPosition / scale * 100}%`;
     }
 };
 
@@ -118,44 +126,112 @@ saanich.timePeriodFilter.reset = function (that) {
 <template>
     <div class="imerss-time-filter" @oninput="saanich.timePeriodFilter.input({0}, {self})" @onchange="saanich.timePeriodFilter.change({0}, {self})">
         <div class="imerss-filter-title">@{filterName}:</div>
-        <div class="imerss-filter-body saanich-ep-range saanich-time-range">
-            <label><span>From</span><input type="range" class="saanich-time-min" min="0" max="1000" step="1"
-                value="0" aria-label="Earliest year"/><output>@{display.min}</output></label>
-            <label><span>To</span><input type="range" class="saanich-time-max" min="0" max="1000" step="1"
-                value="1000" aria-label="Latest year"/><output>@{display.max}</output></label>
+        <!-- One track with two handles - two range inputs laid over each other, each letting only its handle be dragged -
+             the earliest year shown at its left and the latest at its right -->
+        <div class="imerss-filter-body saanich-time-range">
+            <output class="saanich-time-year">@{display.min}</output>
+            <div class="saanich-time-track">
+                <div class="saanich-time-fill"></div>
+                <input type="range" class="saanich-time-min" min="0" max="1000" step="1" value="0" aria-label="Earliest year"/>
+                <input type="range" class="saanich-time-max" min="0" max="1000" step="1" value="1000" aria-label="Latest year"/>
+            </div>
+            <output class="saanich-time-year">@{display.max}</output>
         </div>
     </div>
 </template>
 
 <style>
-/* The time period filter's two sliders, each a row of its label, its range and its year - first set narrow, then laid out
-   within the filter panel */
-.saanich-time-range label span {
-    width: 2.6em;
-}
-
+/* The time period filter's slider: the earliest year, a single track holding both handles with the span between them
+   highlighted, and the latest year, on one line */
 #imerss-main-filters .saanich-time-range {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    align-items: stretch;
-    gap: 2px;
-}
-
-#imerss-main-filters .saanich-time-range label {
     display: grid;
-    grid-template-columns: 2.6em minmax(0, 1fr) 3em;
+    grid-template-columns: 2.8em minmax(0, 1fr) 2.8em;
     align-items: center;
     gap: 8px;
+    min-width: 0;
     font-size: var(--story-data);
 }
 
-#imerss-main-filters .saanich-time-range label span {
-    width: auto;
+#imerss-main-filters .saanich-time-year {
     color: #4b778f;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
 }
 
-#imerss-main-filters .saanich-time-range output {
-    text-align: right;
+.saanich-time-track {
+    position: relative;
+    height: 22px;
+}
+
+/* The track itself, beneath the handles, and the span chosen upon it */
+.saanich-time-track::before,
+.saanich-time-fill {
+    position: absolute;
+    top: 50%;
+    height: 4px;
+    border-radius: 2px;
+    transform: translateY(-50%);
+}
+
+.saanich-time-track::before {
+    content: "";
+    left: 0;
+    right: 0;
+    background: #d4dde2;
+}
+
+.saanich-time-fill {
+    left: 0;
+    right: 0;
+    background: #4b778f;
+}
+
+/* The two inputs lie over each other across the whole track, transparent but for their handles, which alone take the
+   pointer, so that either may be dragged wherever it stands */
+.saanich-time-track input[type="range"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    background: none;
+    pointer-events: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.saanich-time-track input[type="range"]::-webkit-slider-runnable-track {
+    background: none;
+}
+
+.saanich-time-track input[type="range"]::-moz-range-track {
+    background: none;
+}
+
+.saanich-time-track input[type="range"]::-webkit-slider-thumb {
+    width: 16px;
+    height: 16px;
+    background: #ffffff;
+    border: 2px solid #4b778f;
+    border-radius: 50%;
+    cursor: pointer;
+    pointer-events: auto;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.saanich-time-track input[type="range"]::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    background: #ffffff;
+    border: 2px solid #4b778f;
+    border-radius: 50%;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.saanich-time-track input[type="range"]:focus-visible::-webkit-slider-thumb {
+    outline: 2px solid #4b778f;
+    outline-offset: 2px;
 }
 </style>

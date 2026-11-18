@@ -13,6 +13,12 @@ data:
   # The BC Conservation Data Centre's table of rankings, assigned to the iNaturalist taxonomy, a file of big_data (not
   # checked in), from adfsimon-bioinfo/Howe_Sound/2026_synthesis/rankings, read by scripts/assign_conservation_status.R
   conservationRanks: bc-cdc_full_2026-04-10-assigned.csv
+  # The taxa kept off the list, prepared by scripts/prepare_set_aside_taxa.R, which assigns them to the iNaturalist taxonomy
+  # as assignBNames.js assigns the summary's: each with its iNaturalist id, and every taxon of the assignment with its
+  # parent. Read by scripts/prepare_set_aside.R
+  setAsideOrig: Saanich_Tracheophyta_set-aside-taxa_2026-11-15-orig.csv
+  setAsideAssigned: Saanich_Tracheophyta_set-aside-taxa_2026-11-15-assigned.csv
+  setAsideAssignedTaxa: Saanich_Tracheophyta_set-aside-taxa_2026-11-15-assigned-taxa.csv
   # The penultimate catalogue, the last stage before the list is reviewed, a file of big_data (not checked in), read by
   # scripts/prepare_excluded_taxa.R
   penultimateCatalogue: Saanich_Tracheophyta_penultimate-catalogue_2026-04-07.csv

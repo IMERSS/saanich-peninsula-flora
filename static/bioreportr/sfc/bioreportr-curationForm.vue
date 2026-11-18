@@ -22,12 +22,6 @@ fluid.def("bioreportr.curationForm", {
     model: `$compute:bioreportr.curationForm.model({self}.taxon, {self}.observation, {storyPage}.taxa.rowById, {storyPage}.curation.byTaxon,
         {storyPage}.curation.byObservation, {storyPage}.curation.viewer, {storyPage}.curation.connected, {storyPage}.curation.status,
         {self}.tab, {self}.correction)`,
-    image: {
-        $component: {
-            $layers: "hortis.verbatimSlot",
-            markup: "{curationForm}.model.image"
-        }
-    },
     recordLink: {
         $component: {
             $layers: "hortis.verbatimSlot",
@@ -180,7 +174,6 @@ bioreportr.curationForm.model = function (taxon, observation, rowById, byTaxon, 
         // As the taxon is named elsewhere - its scientific name, then its common name in brackets
         displayName: subjectTaxon ? hortis.rowToScientific(subjectTaxon) + (subjectTaxon.commonName ? ` (${subjectTaxon.commonName})` : "") : "",
         commonName: subjectTaxon?.commonName || "",
-        image: subjectTaxon ? hortis.renderTaxonImage(subjectTaxon.iNaturalistTaxonImage, subjectTaxon.id) : "",
         recordedBy: row?.recordedBy || "Unknown",
         eventDate: row?.eventDate || "Unknown",
         locality: row?.locality || "",
@@ -472,9 +465,10 @@ bioreportr.curationForm.resetPosition = function (that) {
     <div class="mxcw-curation-form-root">
     <div class="mxcw-curation-form" @class="fl-hidden:!@{model.hasSubject}">
         <div class="mxcw-curation-pending" @class="fl-hidden:!@{model.pending}">Your comment has been submitted and is being processed</div>
+        <!-- The taxon is named as on every tab, above the particulars of a record when one is chosen. Its picture is in the
+             panel of the taxon beneath the map, as on the atlas - see taxonPanelPanes in bioreportr-atlasPanel.vue - which
+             leaves this column the room for its notes -->
         <div class="mxcw-curation-taxon">
-            <div class="mxcw-curation-photo" @id="image"></div>
-            <!-- The taxon is named as on every tab, above the particulars of a record when one is chosen -->
             <div class="mxcw-taxon-name">@{model.displayName}</div>
         </div>
         <div class="mxcw-curation-tabs" role="tablist" aria-label="Type of note" @class="fl-hidden:!@{model.hasSubject}">

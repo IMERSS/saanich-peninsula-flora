@@ -23,12 +23,17 @@ fluid.registerNamespace("bioreportr.atlas");
 
 // The atlas's panel, a layer of the story page - it is shown on the atlas, and the Protected Areas pane shows its own
 // smaller one in its place, as chosen by bioreportr.protectedAreas.choosePanel
+// The label of each reporting status of the summary, by default - a status may be followed by a year, e.g. "new 2021",
+// shown after its label. Named here as well as in the panel's settings, so that a column formatter of a table, which is
+// given only a value and its row, may label statuses too - see bioreportr.atlas.formatStatus
+bioreportr.atlas.defaultStatusLabels = {confirmed: "Confirmed", reported: "Historical", unconfirmed: "Historical", new: "New"};
+
 fluid.def("bioreportr.atlasPanel", {
     $layers: "fluid.component",
     // Settings which a project may override:
     // The label of each reporting status of the summary. A status may be followed by a year, e.g. "new 2021", shown
     // after its label
-    statusLabels: {confirmed: "Confirmed", reported: "Historical", unconfirmed: "Historical", new: "New"},
+    statusLabels: bioreportr.atlas.defaultStatusLabels,
     // The predicates of the query description language by which a record is a sighting of its plant, giving a date at
     // which it was seen - by default every record. A project whose catalogue holds records which are not, such as a
     // species list entered as pseudo-records, overrides this - see notes/query-description-language.md in imerss-bioinfo
@@ -39,14 +44,19 @@ fluid.def("bioreportr.atlasPanel", {
     inatSpeciesQuery: null,
     // The plant or group chosen in the checklist, and its dated records
     checklistTaxon: "$compute:bioreportr.atlas.resolveTaxon({self}.taxa.rowById, {self}.checklist.search.filterState)",
-    atlasRecords: "$compute:bioreportr.atlas.taxonRecords({self}.pkg, {self}.allObs, {self}.checklistTaxon, {self}.sightingPredicates)",
+    // Drawn from every record, so that a taxon kept off the checklist, chosen through the Checklist status filter, shows
+    // its own - see bioreportr.checklistStatusFilter
+    atlasRecords: "$compute:bioreportr.atlas.taxonRecords({self}.pkg, {self}.everyObs, {self}.checklistTaxon, {self}.sightingPredicates)",
     atlasPanelMarkup: `$compute:bioreportr.atlas.panelMarkup({self}.checklistTaxon, {self}.atlasRecords,
         {self}.curation.historyById, {self}.curationHistorySources, {self}.curation.byTaxon, {self}.recordAnnotations, atlas, {self}.statusLabels)`,
     // Clicks within the panel - its invitation to add a note
     taxonPanelClick: "$method:bioreportr.atlas.panelClick({self}, {0}:event)",
     // The panel is shown on the atlas, while a plant with records is chosen - and on the Protected Areas pane, if the
     // story has one, see bioreportr.storyPageProtectedAreas
-    taxonPanelVisible: "$compute:bioreportr.atlas.panelVisible({self}.taxonPanel.markup, {self}.activePaneKey)",
+    // The panes which show the panel of the chosen taxon - the atlas, and Living Data, where it stands in for the
+    // curation form's own picture of the taxon, leaving the form the room for its notes
+    taxonPanelPanes: ["Status", "Curation"],
+    taxonPanelVisible: "$compute:bioreportr.atlas.panelVisible({self}.taxonPanel.markup, {self}.activePaneKey, {self}.taxonPanelPanes)",
     // The extirpation risk pane shows the same panel of its chosen plant, with its regional EP
     solowDatedObs: "$compute:bioreportr.atlas.datedObsOfTaxon({self}.pkg, {self}.solowTaxa.selectedTaxon, {self}.sightingPredicates)",
     // The populations mapped by the extirpation risk pane are drawn from dated sightings alone, since an undated record
@@ -112,7 +122,7 @@ fluid.def("bioreportr.atlasPanel", {
 });
 
 // The panel is shown only on the atlas, while a plant with records is chosen
-bioreportr.atlas.panelVisible = (markup, activePaneKey) => !!markup && activePaneKey === "Status";
+bioreportr.atlas.panelVisible = (markup, activePaneKey, panes = ["Status"]) => !!markup && panes.includes(activePaneKey);
 
 /**
  * Fit the map to the records with coordinates of the plant chosen in the extirpation risk pane.
@@ -562,6 +572,14 @@ bioreportr.atlas.resolveTaxon = function (rowById, search) {
  * @param {Object<String, String>} labels - The label of each status, by its first word - see the story page's statusLabels
  * @return {String|undefined} The label, if the status has one
  */
+/**
+ * Format the reporting status of a taxon in a table, as its label, e.g. "Historical" for "unconfirmed" - a column
+ * formatter, as for hortis.dataTable.
+ * @param {String} value - The status
+ * @return {String} The markup of its label
+ */
+bioreportr.atlas.formatStatus = value => hortis.dataTable.encode(bioreportr.atlas.statusLabel(value, bioreportr.atlas.defaultStatusLabels) || value || "");
+
 bioreportr.atlas.statusLabel = (status, labels) => {
     const [kind, year] = String(status || "").split(" ");
     const label = labels[kind];
@@ -577,19 +595,17 @@ bioreportr.atlas.provenanceLabels = {native: "Native", exotic: "Exotic", unknown
 /**
  * Render the provenance and conservation status of a taxon, as fields of its panel - its provenance, native or exotic,
  * from its introduction_status. Its conservation status is that
- * assigned by scripts/assign_conservation_status.R from the BC Conservation Data Centre's rankings: its provincial rank
- * and BC list, e.g. "S2S3 (2025), Blue", followed by its status under COSEWIC and the Species at Risk Act where it has
- * one - as the appendix tables of the Howe Sound synthesis give them.
+ * assigned by scripts/assign_conservation_status.R from the BC Conservation Data Centre's rankings: its provincial rank,
+ * e.g. "S2S3 (2025)", followed by its status under COSEWIC and the Species at Risk Act where it has one. Its BC list,
+ * e.g. Blue, which follows from that rank, is left out.
  * @param {TaxonRow} taxon - The taxon
  * @return {String} The markup of the fields, empty for a taxon which has neither
  */
 bioreportr.atlas.statusFields = function (taxon) {
     const encode = hortis.dataTable.encode;
     const provenance = bioreportr.atlas.provenanceLabels[String(taxon.introduction_status || "").trim()];
-    // The BC list's "Exotic" is left out, since the taxon's provenance already says it is introduced
-    const bcList = /^exotic$/i.test(String(taxon.bc_list || "").trim()) ? "" : taxon.bc_list;
-    const provincial = [taxon.provincial_status, bcList].filter(Boolean).join(", ");
-    const parts = [provincial,
+    // The BC list, e.g. Blue or Red, is left out, since it follows from the provincial rank given
+    const parts = [taxon.provincial_status,
         taxon.national_status && "COSEWIC: " + taxon.national_status,
         taxon.sara_status && "SARA: " + taxon.sara_status].filter(Boolean);
     const conservation = parts.length ? `<dt>Conservation status:</dt> <dd class="mxcw-taxon-status">${parts.map(part => `<span class="mxcw-taxon-status-part">${encode(part)}</span>`).join("")}</dd>` : "";
@@ -656,9 +672,7 @@ bioreportr.atlas.panelMarkup = function (taxon, records, historyById, sources, b
       </dl>
       ${bioreportr.georefNote(records)}
     </div>
-    ${context === "atlas" ? bioreportr.atlas.accountsMarkup(taxon, historyById, sources, byTaxon) : ""}
-    ${bioreportr.atlas.historyMarkup(records, context + "-" + taxon.id, context === "atlas" ? bioreportr.solowAnnotationNote(records, annotations) :
-        bioreportr.atlas.notesMarkup(taxon, records, historyById, sources, byTaxon, annotations))}
+    ${bioreportr.atlas.historyMarkup(records, context + "-" + taxon.id, bioreportr.atlas.notesMarkup(taxon, records, historyById, sources, byTaxon, annotations))}
   </div>
 </div>`;
     }
@@ -759,106 +773,13 @@ bioreportr.atlas.notesMarkup = function (taxon, records, historyById, sources, b
     return setAside + history;
 };
 
-/** A plant's line of accounts, with which the Atlas's panel leads **/
-
 // Encode any value as text for markup - hortis.encodeHTML accepts only strings, and a year or count may be a number
 bioreportr.atlas.html = value => hortis.encodeHTML(String(value ?? ""));
-
-/**
- * Render a plant's line of accounts, oldest first, as the Atlas's panel leads with it - each source's account opened to
- * its first sentence, then the community's notes, and an invitation to add one.
- * @param {TaxonRow} taxon - The plant
- * @param {Object<String, Object>} historyById - The history of the curatorial accounts of each taxon, by id
- * @param {Object[]} sources - The sources of the accounts
- * @param {Object<String, Object[]>} byTaxon - The community's notes on each taxon, by id
- * @return {String} The markup
- */
-bioreportr.atlas.accountsMarkup = function (taxon, historyById, sources, byTaxon) {
-    const html = bioreportr.atlas.html;
-    const linkify = text => bioreportr.curationForm?.linkify ? bioreportr.curationForm.linkify(text) : html(text);
-    const history = (fluid.unwrapProxy(historyById) || {})[taxon.id] || {};
-    const first = text => {
-        const match = /^(.{40,180}?[.;])\s/.exec(text);
-        return match ? match[1] : text.length > 180 ? text.substring(0, 177) + "…" : text;
-    };
-    const entry = (who, what, text) => {
-        const summary = first(text);
-        return summary === text ? `<div class="mxcw-atlas-account"><b>${html(who)}</b> <span>${html(what)}</span> <span class="mxcw-atlas-account-text">${linkify(text)}</span></div>` :
-            `<details class="mxcw-atlas-account"><summary><b>${html(who)}</b> <span>${html(what)}</span> <span class="mxcw-atlas-account-text">${html(summary)}</span></summary>
-            <div class="mxcw-atlas-account-full">${linkify(text)}</div></details>`;
-    };
-    const accounts = fluid.makeArray(fluid.unwrapProxy(sources)).filter(({field}) => String(history[field] || "").trim())
-        .map(source => entry(source.source, source.label + (source.year ? ", " + source.year : ""), String(history[source.field]).trim()));
-    const notes = fluid.makeArray((fluid.unwrapProxy(byTaxon) || {})[taxon.id]).slice().reverse().map(note => entry(note.author,
-        (note.type || "note") + ", " + bioreportr.eventDay(note.submitted) + (note.pending ? " (being processed)" : ""), note.comment ||
-        bioreportr.curation.questions.filter(([question]) => note[question]).map(([question, label]) => `${label}: ${note[question]}`).join(" · ")));
-    const reviewed = history.reviewedBy ? `<p class="mxcw-atlas-reviewed">Reviewed by ${html(history.reviewedBy)}</p>` : "";
-    const invite = `<p class="mxcw-atlas-invite">Know this plant? <button type="button" class="mxcw-atlas-invite-button" data-atlas-action="curate"
-        data-taxon="${html(taxon.id)}">Add your note</button> - it joins ${accounts.length + notes.length ? "the history above" : "the record of this plant"}.</p>`;
-    const body = accounts.length + notes.length ? accounts.join("") + notes.join("") + reviewed :
-        "<p class=\"mxcw-atlas-accounts-none\">No naturalist's account of this plant has been gathered yet.</p>";
-    return `<div class="mxcw-atlas-accounts"><div class="mxcw-atlas-accounts-head">What naturalists have said</div>${body}${invite}</div>`;
-};
 </script>
 
 <style>
-/* A plant's line of accounts, with which the Atlas's panel leads, and the invitation to add a note -
-   see bioreportr.atlas.accountsMarkup */
-/* Its colours are those of the rest of the panel, whose surface is pale */
-.mxcw-atlas-accounts {
-    margin: 4px 0 6px;
-    font-size: var(--story-small);
-    color: #1f2a30;
-}
-
-.mxcw-atlas-accounts-head {
-    color: #2f7f8f;
-    font-weight: 700;
-}
-
-.mxcw-atlas-account {
-    margin: 2px 0;
-}
-
-.mxcw-atlas-account summary {
-    cursor: pointer;
-}
-
-.mxcw-atlas-account span:not(.mxcw-atlas-account-text) {
-    color: #5a7680;
-}
-
-.mxcw-atlas-account-full {
-    margin: 2px 0 4px 1em;
-}
-
-.mxcw-atlas-account a,
-.mxcw-atlas-account-full a {
-    color: #2f7f8f;
-}
-
-.mxcw-atlas-reviewed,
-.mxcw-atlas-accounts-none {
-    margin: 2px 0;
-    color: #5a7680;
-}
-
-.mxcw-atlas-invite {
-    margin: 4px 0 0;
-}
-
-.mxcw-atlas-invite-button {
-    padding: 0 8px;
-    font: inherit;
-    color: #0b2430;
-    background: #FDF2CE;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-}
-
-/* The parts of a taxon's conservation status, each on a line of its own - its provincial rank and BC list, then any
-   COSEWIC and SARA status - see bioreportr.atlas.statusFields */
+/* The parts of a taxon's conservation status, each on a line of its own - its provincial rank, then any COSEWIC and SARA
+   status - see bioreportr.atlas.statusFields */
 .mxcw-taxon-status-part {
     display: block;
 }
@@ -876,13 +797,12 @@ bioreportr.atlas.accountsMarkup = function (taxon, historyById, sources, byTaxon
 .mxcw-atlas-taxon-pane .mxcw-taxon-info {
     display: grid;
     grid-template-columns: max-content minmax(0, 1fr);
-    grid-template-rows: auto auto auto;
-    grid-template-areas: "name name" "facts history" "accounts accounts";
+    grid-template-rows: auto auto;
+    grid-template-areas: "name name" "facts history";
     align-content: start;
     gap: 4px 20px;
     padding-right: var(--story-gap);
-    /* The facts, the chart and the naturalists' accounts beneath them may be taller than the panel, which then scrolls,
-       rather than any of them overlapping another */
+    /* The facts and the chart may be taller than the panel, which then scrolls, rather than either overlapping the other */
     overflow-y: auto;
 }
 
@@ -894,11 +814,6 @@ bioreportr.atlas.accountsMarkup = function (taxon, historyById, sources, byTaxon
     grid-area: history;
 }
 
-/* The naturalists' accounts run beneath the facts and chart, across the panel - see bioreportr.atlas.accountsMarkup */
-.mxcw-atlas-taxon-pane .mxcw-atlas-accounts {
-    grid-area: accounts;
-}
-
 .mxcw-atlas-taxon-pane .mxcw-taxon-name {
     grid-area: name;
     padding-bottom: 4px;
@@ -908,7 +823,7 @@ bioreportr.atlas.accountsMarkup = function (taxon, historyById, sources, byTaxon
     .mxcw-atlas-taxon-pane .mxcw-taxon-info {
         grid-template-columns: minmax(0, 1fr);
         grid-template-rows: auto;
-        grid-template-areas: "name" "facts" "history" "accounts";
+        grid-template-areas: "name" "facts" "history";
     }
 }
 
@@ -917,7 +832,7 @@ bioreportr.atlas.accountsMarkup = function (taxon, historyById, sources, byTaxon
     .mxcw-atlas-taxon-pane .mxcw-taxon-info {
         grid-template-columns: minmax(0, 1fr);
         grid-template-rows: auto;
-        grid-template-areas: "name" "facts" "history" "accounts";
+        grid-template-areas: "name" "facts" "history";
     }
 
     .mxcw-atlas-taxon-pane .mxcw-history-chart,
