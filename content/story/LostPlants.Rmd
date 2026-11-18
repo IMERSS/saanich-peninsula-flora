@@ -13,11 +13,13 @@ paneComponent: bioreportr.lostPlantsPane
 ## The lost plants of the W̱SÁNEĆ/Saanich Peninsula
 
 ::: {.mxcw-lost-text data-gallery="lost"}
-This gallery shows `<span class="mxcw-lost-count">@{count}</span>`{=html} native species once reported for the Saanich Peninsula, which have not been seen in recent decades. Some may be lost *to us*—overlooked, forgotten, or waiting to be rediscovered. Others may be lost *because of us*, through impacts like habitat change or the introduction of invasive species. Those found again since 2025 are marked with a green check ✓.
+This gallery shows `<span class="mxcw-lost-count">@{count}</span>`{=html} native species once reported for the Saanich Peninsula, which have not been seen in recent decades. Some may be lost *to us*—overlooked, forgotten, or waiting to be rediscovered. Others may be lost *because of us*, through impacts like habitat change or the introduction of invasive species.
 
 <span class="mxcw-callout">Select a plant from the gallery</span> to read its curatorial notes, then explore its distribution on the [Atlas](#pane:Status), or add curatorial notes in [Living Data](#pane:Curation). Then join local naturalists and community members on a search for the
 [“Lost” Plants of the Saanich Peninsula](https://www.inaturalist.org/projects/lost-plants-of-the-saanich-peninsula)
 project on iNaturalist.
+
+Lost plants found again since 2025 are marked with a green check `<span class="mxcw-lost-found-check">✓</span>`{=html}.
 :::
 
 ::: {.mxcw-lost-text data-gallery="confirmed" hidden="hidden"}
