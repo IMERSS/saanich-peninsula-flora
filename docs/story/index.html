@@ -10566,54 +10566,6 @@ bioreportr.curation.loadHistory = function (historyFile) {
 
 }).call(globalThis);
 //# sourceURL=../bioreportr/sfc/bioreportr-curation.vue</script>
-    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.recordReporter-1">(function () {
-"use strict";
-
-// Reports how many observations survive the filters and selections
-fluid.def("hortis.recordReporter", {
-    $layers: ["fluid.sfcLayer","fluid.component"],
-    // filtered: Selection - the observations shown
-    // all: Selection - every observation
-    counts: "$compute:hortis.recordReporter.renderModel({self}.filtered, {self}.all)",
-    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
-"template":{"sfcLayer":"hortis.recordReporter"}}}
-});
-
-/**
- * Render the counts of the observations shown and of all of them.
- * @param {Selection} filtered - The observations shown
- * @param {Selection} all - Every observation
- * @return {Object} Members `filteredRows` and `allRows`, the counts formatted
- */
-hortis.recordReporter.renderModel = function (filtered, all) {
-    return {
-        filteredRows: hortis.formatInt(filtered.count),
-        allRows: hortis.formatInt(all.count)
-    };
-};
-
-}).call(globalThis);
-//# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/core/hortis-recordReporter.vue</script>
-    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.filterControls-0">(function () {
-"use strict";
-
-// The button resetting every filter and checklist beneath the visualisation loader
-fluid.def("hortis.filterControls", {
-    $layers: ["fluid.sfcLayer","hortis.icons","fluid.component"],
-    filters: "{vizLoader hortis.filter}",
-    checklists: "{vizLoader hortis.checklist}",
-    resetAll: "$method:hortis.filterControls.resetAll({self}.filters, {self}.checklists)",
-    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
-"template":{"sfcLayer":"hortis.filterControls"}}}
-});
-
-hortis.filterControls.resetAll = function (filters, checklists) {
-    filters.forEach(filter => filter.reset());
-    checklists.forEach(checklist => checklist.reset());
-};
-
-}).call(globalThis);
-//# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/filters/hortis-filterControls.vue</script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.autocomplete-0" fluid-client="" fluid-src="../vendor/accessible-autocomplete/dist/accessible-autocomplete.min.js" src="../vendor/accessible-autocomplete/dist/accessible-autocomplete.min.js"></script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.autocomplete-1">(function () {
 "use strict";
@@ -10662,42 +10614,54 @@ hortis.autocomplete.bind = function (that, host, container, accessibleAutocomple
 }).call(globalThis);
 //# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/components/hortis-autocomplete.vue</script>
     <link data-fluid-indent="4" data-fluid-hydrated="" id="fl-style-hortis.autocomplete-0" href="../vendor/accessible-autocomplete/dist/accessible-autocomplete.min.css" rel="stylesheet">
-    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.epFilter-2">(function () {
+    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.recordReporter-1">(function () {
 "use strict";
 
-// Filters the taxa of the extirpation risk analysis by their range of extirpation probability, chosen by a pair of
-// sliders
-fluid.def("bioreportr.epFilter", {
-    $layers: ["fluid.sfcLayer","hortis.taxaFilter"],
-    filterName: "Extirpation probability (EP)",
-    // The range, between 0 and 1
-    filterState: {min: 0, max: 1},
-    display: "$compute:bioreportr.epFilter.display({self}.filterState)",
-    // The handles are placed from code: the renderer writes the value of a bound input back into what it is bound to,
-    // which left the readings stuck and the other handle out of place
-    placeHandles: "$effect:bioreportr.epFilter.placeHandles({self}.display, {global}.document)",
-    filterSummary: "$compute:bioreportr.epFilter.summarise({self}.filterState)",
-    doFilter: "$method:bioreportr.epFilter.doFilter({0}:rows, {1}:filterState)",
-    reset: "$method:bioreportr.epFilter.reset({self})",
+// Reports how many observations survive the filters and selections
+fluid.def("hortis.recordReporter", {
+    $layers: ["fluid.sfcLayer","fluid.component"],
+    // filtered: Selection - the observations shown
+    // all: Selection - every observation
+    counts: "$compute:hortis.recordReporter.renderModel({self}.filtered, {self}.all)",
     view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
-"template":{"sfcLayer":"bioreportr.epFilter"}}}
+"template":{"sfcLayer":"hortis.recordReporter"}}}
 });
 
 /**
- * Place the handles of the sliders at the range of the filter's state.
- * @param {Object} display - The range as percentages, with members `min` and `max`
- * @param {Document} dokkument - The document holding the filter
+ * Render the counts of the observations shown and of all of them.
+ * @param {Selection} filtered - The observations shown
+ * @param {Selection} all - Every observation
+ * @return {Object} Members `filteredRows` and `allRows`, the counts formatted
  */
-bioreportr.epFilter.placeHandles = function (display, dokkument) {
-    const min = dokkument.querySelector(".mxcw-ep-min"), max = dokkument.querySelector(".mxcw-ep-max");
-    if (min && max) {
-        min.value = display.min;
-        max.value = display.max;
-    }
+hortis.recordReporter.renderModel = function (filtered, all) {
+    return {
+        filteredRows: hortis.formatInt(filtered.count),
+        allRows: hortis.formatInt(all.count)
+    };
 };
 
 }).call(globalThis);
-//# sourceURL=../bioreportr/sfc/bioreportr-epFilter.vue</script>
+//# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/core/hortis-recordReporter.vue</script>
+    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.filterControls-0">(function () {
+"use strict";
+
+// The button resetting every filter and checklist beneath the visualisation loader
+fluid.def("hortis.filterControls", {
+    $layers: ["fluid.sfcLayer","hortis.icons","fluid.component"],
+    filters: "{vizLoader hortis.filter}",
+    checklists: "{vizLoader hortis.checklist}",
+    resetAll: "$method:hortis.filterControls.resetAll({self}.filters, {self}.checklists)",
+    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
+"template":{"sfcLayer":"hortis.filterControls"}}}
+});
+
+hortis.filterControls.resetAll = function (filters, checklists) {
+    filters.forEach(filter => filter.reset());
+    checklists.forEach(checklist => checklist.reset());
+};
+
+}).call(globalThis);
+//# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/filters/hortis-filterControls.vue</script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-hortis.valueFilter-2">(function () {
 "use strict";
 
@@ -10736,6 +10700,42 @@ fluid.def("hortis.valueFilter", {
 }).call(globalThis);
 //# sourceURL=../vendor/imerss-bioinfo/src/client/sfc/filters/hortis-valueFilter.vue</script>
     <link data-fluid-indent="4" data-fluid-hydrated="" id="fl-style-hortis.valueFilter-0" href="../vendor/pretty-checkbox/dist/pretty-checkbox.min.css" rel="stylesheet">
+    <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.epFilter-2">(function () {
+"use strict";
+
+// Filters the taxa of the extirpation risk analysis by their range of extirpation probability, chosen by a pair of
+// sliders
+fluid.def("bioreportr.epFilter", {
+    $layers: ["fluid.sfcLayer","hortis.taxaFilter"],
+    filterName: "Extirpation probability (EP)",
+    // The range, between 0 and 1
+    filterState: {min: 0, max: 1},
+    display: "$compute:bioreportr.epFilter.display({self}.filterState)",
+    // The handles are placed from code: the renderer writes the value of a bound input back into what it is bound to,
+    // which left the readings stuck and the other handle out of place
+    placeHandles: "$effect:bioreportr.epFilter.placeHandles({self}.display, {global}.document)",
+    filterSummary: "$compute:bioreportr.epFilter.summarise({self}.filterState)",
+    doFilter: "$method:bioreportr.epFilter.doFilter({0}:rows, {1}:filterState)",
+    reset: "$method:bioreportr.epFilter.reset({self})",
+    view: {"$component":{    $layers: ["fluid.sfcTemplateViewComponent"],
+"template":{"sfcLayer":"bioreportr.epFilter"}}}
+});
+
+/**
+ * Place the handles of the sliders at the range of the filter's state.
+ * @param {Object} display - The range as percentages, with members `min` and `max`
+ * @param {Document} dokkument - The document holding the filter
+ */
+bioreportr.epFilter.placeHandles = function (display, dokkument) {
+    const min = dokkument.querySelector(".mxcw-ep-min"), max = dokkument.querySelector(".mxcw-ep-max");
+    if (min && max) {
+        min.value = display.min;
+        max.value = display.max;
+    }
+};
+
+}).call(globalThis);
+//# sourceURL=../bioreportr/sfc/bioreportr-epFilter.vue</script>
     <script data-fluid-indent="4" data-fluid-hydrated="" id="fl-script-bioreportr.sectionTab-1">(function () {
 "use strict";
 
