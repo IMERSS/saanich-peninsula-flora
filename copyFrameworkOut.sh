@@ -161,6 +161,8 @@ FILES=(
     scripts/prepare_set_aside.R
     # The study area's boundary as KML, linked from the Atlas pane
     scripts/write_study_area_kml.R
+    # The lost plants found again, added to the Lost Plants gallery
+    scripts/prepare_rediscovered.R
 
     # Lint configuration
     .eslintrc.json

@@ -14,6 +14,7 @@ fluid.def("bioreportr.storyData", {
     curationHistoryFile: "../local/data/tabular/Saanich_Tracheophyta_curation-history_2026-11-15.csv",
     recordAnnotationsFile: "../local/data/tabular/Saanich_Tracheophyta_record-annotations_2026-11-15.csv",
     excludedTaxaFile: "../local/data/tabular/Saanich_Tracheophyta_excluded-taxa_2026-11-15.csv",
+    rediscoveredFile: "../local/data/tabular/Saanich_Tracheophyta_rediscovered_2026-11-18.csv",
     protectedMappedOnly: false
 });
 </script>

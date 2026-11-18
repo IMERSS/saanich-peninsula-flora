@@ -310,6 +310,9 @@ fluid.def("bioreportr.storyPage", {
     recordAnnotationsFile: null,
     // The taxa kept off the list by the curation workflow, shown by the Lost Plants gallery - see bioreportr-lostPlantsPane.vue
     excludedTaxaFile: null,
+    // The lost plants found again since the search for them began, marked so in the Lost Plants gallery - see
+    // scripts/prepare_rediscovered.R and bioreportr.lostPlants.select
+    rediscoveredFile: null,
     // The settings of the settings section of the project's bioreportr.yaml, which its R scripts read too, with their
     // defaults - see bioreportr.storyBuild.writeStoryData. Whether the Protected Areas pane keeps only the records
     // which can be mapped - see bioreportr.protectedAreas

@@ -338,6 +338,7 @@ bioreportr.storyBuild.writeStoryData = function (projectDir, outDir) {
         curationHistoryFile: file(data.curationHistory),
         recordAnnotationsFile: file(data.recordAnnotations),
         excludedTaxaFile: file(data.excludedTaxa),
+        rediscoveredFile: file(data.rediscovered),
         ...fluid.transform(settings, value => JSON.stringify(value))
     };
     const text = `<script>

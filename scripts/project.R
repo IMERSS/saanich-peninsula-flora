@@ -15,6 +15,12 @@ project <- list(
   summaryFile = file.path("tabular_data", config$summary),
   # The settings of the curation history and of the taxa kept off the checklist, read by scripts/prepare_curation_history.R
   # and scripts/prepare_excluded_taxa.R, from the lists of checklist-catalogue-alignment-workflow
+  # The lost plants found again, read by scripts/prepare_rediscovered.R: the iNaturalist project of the search for them,
+  # whose taxa are the plants counted as lost when it began, and the date from which an observation counts as a find
+  lostPlants = list(
+    inatProject = "lost-plants-of-the-saanich-peninsula",
+    foundSince = "2025-01-01"
+  ),
   curation = list(
     # The columns of the lists naming each taxon, and giving its iNaturalist id
     nameColumn = "taxon_name",

@@ -13,7 +13,7 @@ dir.create(dst_dir, recursive = TRUE, showWarnings = FALSE)
 # story page
 config <- yaml::read_yaml("bioreportr.yaml")$data
 files <- c(config$labels, config$regionIndirection, config$summary, config$curationHistory, config$recordAnnotations, config$excludedTaxa,
-           config$studyArea)
+           config$studyArea, config$rediscovered)
 
 for (f in files) {
   src <- file.path(src_dir, f)

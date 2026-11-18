@@ -41,6 +41,8 @@ fluid.def("bioreportr.lostPlants", {
     },
     // The taxa kept off the list
     excluded: "$compute:bioreportr.lostPlants.loadExcluded({storyPage}.excludedTaxaFile)",
+    // The lost plants found again since the search for them began - shown in the "lost" gallery too, marked as found
+    rediscovered: "$compute:bioreportr.lostPlants.loadExcluded({storyPage}.rediscoveredFile)",
     // The gallery shown
     gallery: "lost",
     // The pane to which a plant of a gallery marked `find` is followed - the extirpation risk analysis, where its
@@ -114,13 +116,14 @@ bioreportr.lostPlants.loadExcluded = function (file) {
  */
 bioreportr.lostPlants.plantsOnceShown = (storyPage, that, activatedPanes) => activatedPanes.LostPlants ?
     bioreportr.lostPlants.select(storyPage.taxa.allRows, storyPage.pkg, that, storyPage.recordAnnotations, storyPage.statusById,
-        storyPage.sightingPredicates, that.galleries, that.excluded) : {};
+        storyPage.sightingPredicates, that.galleries, that.excluded, that.rediscovered) : {};
 
 /**
  * Select the plants of each gallery from the site's data. The galleries of reporting statuses hold the native species
  * of their status - and the "lost" gallery, highest extirpation probability first, only those whose Solow EP is at
  * least `minEP` or which have no more than `maxRecords` records. A gallery with a `group` holds the excluded taxa of
- * that group, most recorded first.
+ * that group, most recorded first. The lost plants found again since the search for them began are added to the "lost"
+ * gallery, each marked by its row of the rediscovered file as `found`, though they are no longer of its status.
  * @param {TaxonRow[]} taxaRows - All taxa
  * @param {VizPackage} pkg - The data package
  * @param {Object} options - Members `minEP` and `maxRecords`
@@ -131,10 +134,11 @@ bioreportr.lostPlants.plantsOnceShown = (storyPage, that, activatedPanes) => act
  * @param {Object[]} sightingPredicates - The predicates of a sighting - see the story page's member sightingPredicates
  * @param {Object<String, Object>} galleries - The galleries, by key - see bioreportr.lostPlants
  * @param {Object[]} excluded - The taxa kept off the list - see bioreportr.lostPlants.loadExcluded
+ * @param {Object[]} [rediscovered] - The lost plants found again - see scripts/prepare_rediscovered.R
  * @return {Object<String, Object[]>} The plants of each gallery, by its key, each with members `taxon`, `nRecords`,
- * `nUnmapped` and `lastRecorded`, and for an excluded taxon `excluded`, its row
+ * `nUnmapped` and `lastRecorded`, for an excluded taxon `excluded`, its row, and for a plant found again `found`, its row
  */
-bioreportr.lostPlants.select = function (taxaRows, pkg, options, annotations, statusById, sightingPredicates, galleries, excluded) {
+bioreportr.lostPlants.select = function (taxaRows, pkg, options, annotations, statusById, sightingPredicates, galleries, excluded, rediscovered) {
     // The sightings of each taxon counted towards EP, how many of them can't be mapped, and the year of the last - by one
     // query grouping them by taxon
     const year = {year: "eventDate"};
@@ -151,9 +155,12 @@ bioreportr.lostPlants.select = function (taxaRows, pkg, options, annotations, st
             nRecords: result.measures.nRecords[g], nUnmapped: result.measures.nUnmapped[g], lastRecorded: result.measures.lastRecorded[g]
         });
     }
+    const withSightings = taxon => ({taxon, ...(sightings.get(taxon.id) || {nRecords: 0, nUnmapped: 0, lastRecorded: NaN})});
     const ofStatus = status => taxaRows
         .filter(taxon => taxon.inSummary && taxon.introduction_status === "native" && statusById[taxon.id] === status)
-        .map(taxon => ({taxon, ...(sightings.get(taxon.id) || {nRecords: 0, nUnmapped: 0, lastRecorded: NaN})}));
+        .map(withSightings);
+    const foundById = new Map(fluid.makeArray(fluid.unwrapProxy(rediscovered)).map(row => [String(row.id), row]));
+    const taxonById = new Map(taxaRows.map(taxon => [String(taxon.id), taxon]));
     const ofGroup = group => (excluded || []).filter(row => fluid.makeArray(group).includes(row.group)).map(row => ({
         taxon: {id: row.id, scientificName: row.scientificName, commonName: row.commonName},
         nRecords: +row.n_records || 0, nUnmapped: 0, lastRecorded: parseInt(row.last_record_date, 10), excluded: row
@@ -163,9 +170,17 @@ bioreportr.lostPlants.select = function (taxaRows, pkg, options, annotations, st
         if (order === "confidence") {
             return plants.sort(bioreportr.lostPlants.byConfidence);
         }
-        return key === "lost" ? plants
+        if (key !== "lost") {
+            return plants;
+        }
+        const lost = plants
             .filter(({taxon, nRecords}) => +taxon.solow_EP >= options.minEP || nRecords > 0 && nRecords <= options.maxRecords)
-            .sort((a, b) => +b.taxon.solow_EP - +a.taxon.solow_EP || a.taxon.scientificName.localeCompare(b.taxon.scientificName)) : plants;
+            .sort((a, b) => +b.taxon.solow_EP - +a.taxon.solow_EP || a.taxon.scientificName.localeCompare(b.taxon.scientificName))
+            .map(plant => foundById.has(String(plant.taxon.id)) ? {...plant, found: foundById.get(String(plant.taxon.id))} : plant);
+        const shown = new Set(lost.map(plant => String(plant.taxon.id)));
+        const found = [...foundById.values()].filter(row => !shown.has(String(row.id)) && taxonById.has(String(row.id)))
+            .map(row => ({...withSightings(taxonById.get(String(row.id))), found: row}));
+        return lost.concat(found);
     });
 };
 
@@ -214,16 +229,20 @@ bioreportr.lostPlants.renderCard = function (plant, photo) {
     const details = [plant.taxon.commonName, plant.lastRecorded && "last recorded " + plant.lastRecorded].filter(Boolean).join(" · ");
     const unmapped = !plant.excluded && plant.nRecords > 0 && plant.nUnmapped === plant.nRecords ? "<span class=\"mxcw-lost-unmapped\">⚠ no mapped records</span>" : "";
     const confidence = bioreportr.lostPlants.confidenceLabel(plant.excluded);
+    // A lost plant found again is marked with a check over its photo, and when it was found
+    const found = plant.found ? `<span class="mxcw-lost-found-mark" aria-hidden="true">✓</span>` : "";
+    const foundLine = plant.found ? `<span class="mxcw-lost-found">Found again ${encode(String(plant.found.last_found).slice(0, 4))}` +
+        `${plant.found.research_grade === "TRUE" || plant.found.research_grade === true ? "" : " · awaiting confirmation"}</span>` : "";
     const reason = plant.excluded ? `<span class="mxcw-lost-reason">${encode(plant.excluded.reason + (confidence ? " · " + confidence : ""))}</span>` : "";
     const credit = photo ? photo.attribution.replace(/, uploaded by .*$/, "").replace(", some rights reserved", "") : "";
     const image = photo ? `<img src="${encode(photo.medium_url)}" alt="${name}" loading="lazy">` : "<span class=\"mxcw-lost-noimage\" aria-hidden=\"true\"></span>";
     // The card turns over to show the plant's notes on its back, filled as it turns - see bioreportr.lostPlants.click
-    return `<div class="mxcw-lost-card" data-taxon-id="${encode(plant.taxon.id)}"><div class="mxcw-lost-flip">
-        <button type="button" class="mxcw-lost-front" aria-expanded="false">
-            ${image}
+    return `<div class="mxcw-lost-card${plant.found ? " mxcw-lost-card-found" : ""}" data-taxon-id="${encode(plant.taxon.id)}"><div class="mxcw-lost-flip">
+        <button type="button" class="mxcw-lost-front" aria-expanded="false"${plant.found ? " title=\"Found again since the search began\"" : ""}>
+            ${image}${found}
             <span class="mxcw-lost-name">${bioreportr.lostPlants.nameMarkup(plant.taxon.scientificName)}</span>
             <span class="mxcw-lost-details">${encode(details)}</span>
-            ${reason}${unmapped}
+            ${foundLine}${reason}${unmapped}
             <span class="mxcw-lost-credit">${encode(credit)}</span>
         </button>
         <div class="mxcw-lost-back" aria-hidden="true"></div>
@@ -857,7 +876,11 @@ bioreportr.lostPlants.showText = function (gallery, activePaneKey, window) {
 
 // Blank until the gallery of lost plants has loaded, so that the text reads "The gallery shows native species" rather
 // than a count of none
-bioreportr.lostPlants.count = cards => cards.lost?.complete && cards.lost.cards.length > 0 ? String(cards.lost.cards.length) : "";
+// The number of plants still lost - those found again, though shown in the gallery, are not counted
+bioreportr.lostPlants.count = function (cards) {
+    const lost = cards.lost?.complete ? cards.lost.cards.filter(card => !card.includes("mxcw-lost-card-found")) : [];
+    return lost.length > 0 ? String(lost.length) : "";
+};
 
 // The gallery is shown in the Lost Plants pane's data pane, in place of the map
 bioreportr.lostPlants.paneMarkup = galleryMarkup => ({LostPlants: galleryMarkup});
@@ -950,6 +973,36 @@ bioreportr.lostPlants.paneMarkup = galleryMarkup => ({LostPlants: galleryMarkup}
 .mxcw-lost-card:not(.mxcw-lost-flipped) .mxcw-lost-back {
     visibility: hidden;
     transition: visibility 0s 450ms;
+}
+
+/* A lost plant found again since the search began bears a green check over its photo - see bioreportr.lostPlants.renderCard */
+.mxcw-lost-card-found .mxcw-lost-front {
+    position: relative;
+}
+
+.mxcw-lost-found-mark {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0 !important;
+    color: #fff;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+    background: #2e9d4a;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.mxcw-lost-found {
+    color: #7fd88f;
+    font-size: var(--story-small);
+    font-weight: 700;
 }
 
 .mxcw-lost-front img {
@@ -1408,7 +1461,8 @@ native species once reported for the Saanich Peninsula, which have not
 been seen in recent decades. Some may be lost <em>to us</em>—overlooked,
 forgotten, or waiting to be rediscovered. Others may be lost <em>because
 of us</em>, through impacts like habitat change or the introduction of
-invasive species.</p>
+invasive species. Those found again since 2025 are marked with a green
+check ✓.</p>
 <p><span class="mxcw-callout">Select a plant from the gallery</span> to
 read its curatorial notes, then explore its distribution on the <a href="#pane:Status">Atlas</a>, or add curatorial notes in <a href="#pane:Curation">Living Data</a>. Then join local naturalists and
 community members on a search for the <a href="https://www.inaturalist.org/projects/lost-plants-of-the-saanich-peninsula">“Lost”
