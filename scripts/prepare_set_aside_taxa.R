@@ -58,6 +58,20 @@ setAside <- excluded %>%
   distinct(scientificName, .keep_all = TRUE) %>%
   select(scientificName, link_name, link_taxon_id, taxon_rank, introduction_status, checklist_status, phylum)
 
+# The taxa restored to the checklist, which scripts/prepare_excluded_taxa.R leaves out of the taxa kept off it, are
+# assigned as these are, from the working list, so that scripts/prepare_set_aside.R may add them - see
+# project$curation$restored
+restored <- if (is.null(working)) working else working %>%
+  filter(.data[[project$curation$nameColumn]] %in% project$curation$restored) %>%
+  transmute(scientificName = .data[[project$curation$nameColumn]],
+            link_name = ifelse(clean(link_name) == "", scientificName, clean(link_name)),
+            link_taxon_id = clean(as.character(.data[[project$curation$idColumn]])),
+            taxon_rank = rank_of(scientificName),
+            introduction_status = clean(introduction_status),
+            checklist_status = "listed",
+            phylum = "Tracheophyta")
+setAside <- bind_rows(setAside, restored) %>% distinct(scientificName, .keep_all = TRUE)
+
 timedWrite(setAside, file.path("tabular_data", config$setAsideOrig))
 
 # ── Assignment to the iNaturalist taxonomy ─────────────────

@@ -264,6 +264,23 @@ bioreportr.storyPage.revealLater = function (that, loaded, global) {
 };
 
 /**
+ * Decide whether a checklist row is displayed, as hortis.acceptChecklistRowAS does - a species with subspecies or
+ * varieties gives way to them - save that only the children which may themselves be displayed, those of rowFocus, count.
+ * The story's data holds the taxa kept off the list beside its own, so that a listed species may have a child which the
+ * checklist doesn't show unless the Checklist status filter chooses it - see bioreportr.checklistStatusFilter - and
+ * would otherwise vanish with it.
+ * TODO: offer upstream to imerss-bioinfo's checklist.js, and remove once its release holds it
+ * @param {TaxonRow} row - The row
+ * @param {String[]|false} filterRanks - The ranks displayed, or false for every rank
+ * @param {Object<String, Boolean>} rowFocus - The rows which may be displayed
+ * @return {Boolean} `true` if the row is displayed
+ */
+bioreportr.acceptChecklistRow = function (row, filterRanks, rowFocus) {
+    const displayedChildren = (row.children || []).filter(child => rowFocus[child.id]);
+    return hortis.acceptChecklistRowAS({...row, children: displayedChildren}, filterRanks, rowFocus);
+};
+
+/**
  * Decorate a checklist row with the icon of its taxon's reporting status, as hortis.blitzChecklistDecoration does, its
  * description borne as the icon's title attribute rather than an SVG <title> child - the page's tooltips, of
  * hortis.titleTooltips, show only titles borne as attributes, and the browser would otherwise show its own besides.

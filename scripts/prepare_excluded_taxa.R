@@ -59,6 +59,8 @@ flag_labels <- function (rows) {
 # a row flagged, or reviewed but not carried to the list, is excluded, and any other is still under review
 setAside <- workingList %>%
   filter(!(.data[[settings$nameColumn]] %in% rawList[[settings$nameColumn]])) %>%
+  # The taxa restored to the checklist, which are listed - see project$curation$restored
+  filter(!(.data[[settings$nameColumn]] %in% settings$restored)) %>%
   mutate(flags = flag_labels(.),
          group = ifelse(flags != "" | review_status == "complete", "excluded", "underReview"),
          reason = case_when(

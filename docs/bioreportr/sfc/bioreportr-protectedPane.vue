@@ -999,7 +999,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 </nav>
 <section class="mxcw-pa-card-summary" data-key="" style="--pa-colour: #eefaff">
 <h3 class="mxcw-pa-summary-title">All protected and conserved areas</h3>
-<p class="mxcw-pa-summary-text">Based on our current knowledge, 81 percent of the 670 native vascular plant species known to the peninsula have been reported within its protected and conserved areas, from national park reserve and ecological reserves to regional parks and lands held by conservancies. The other 128 have so far been recorded only outside them.</p>
+<p class="mxcw-pa-summary-text">Based on our current knowledge, 81 percent of the 674 native vascular plant species known to the peninsula have been reported within its protected and conserved areas, from national park reserve and ecological reserves to regional parks and lands held by conservancies. The other 131 have so far been recorded only outside them.</p>
 <div class="mxcw-pa-stats">
 <div class="mxcw-pa-stat">
 <b>43</b>
@@ -1010,26 +1010,26 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>hectares</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Protected areas · native species" role="button" tabindex="0">
-<b>542</b>
+<b>543</b>
 <span>native species · 81% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Protected areas · species of conservation concern" role="button" tabindex="0">
 <b>46</b>
-<span>of the 59 species of conservation concern</span>
+<span>of the 60 species of conservation concern</span>
 </div>
 </div>
 </section>
 <section class="mxcw-pa-card-summary" data-key="Unprotected native plant diversity" hidden style="--pa-colour: #e07a5f">
 <h3 class="mxcw-pa-summary-title">Unprotected native plant diversity</h3>
-<p class="mxcw-pa-summary-subtitle">128 species · 788 records</p>
-<p class="mxcw-pa-summary-text">128 native species, 19 percent of the native plant diversity known to the peninsula, have so far been reported only outside its protected and conserved areas. The map's grid shows where their records lie - the places where protection does not yet reach this part of the flora, or where it has yet to be looked for within the protected areas.</p>
+<p class="mxcw-pa-summary-subtitle">131 species · 793 records</p>
+<p class="mxcw-pa-summary-text">131 native species, 19 percent of the native plant diversity known to the peninsula, have so far been reported only outside its protected and conserved areas. The map's grid shows where their records lie - the places where protection does not yet reach this part of the flora, or where it has yet to be looked for within the protected areas.</p>
 <div class="mxcw-pa-stats">
 <div class="mxcw-pa-stat" data-select="Unprotected native plant diversity" role="button" tabindex="0">
-<b>128</b>
+<b>131</b>
 <span>native species · 19% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Unprotected native plant diversity · species of conservation concern" role="button" tabindex="0">
-<b>13</b>
+<b>14</b>
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Unprotected native plant diversity · within Key Biodiversity Areas" role="button" tabindex="0">
@@ -1041,10 +1041,10 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <section class="mxcw-pa-card-summary" data-key="National park reserve" hidden style="--pa-colour: #5a96d2">
 <h3 class="mxcw-pa-summary-title">National park reserve</h3>
 <p class="mxcw-pa-summary-subtitle">1 area · 1,296 hectares</p>
-<p class="mxcw-pa-summary-text">The national park reserve holds 29 percent of the native plant diversity known to the peninsula: 194 of its 670 native vascular plant species have been reported within it.</p>
+<p class="mxcw-pa-summary-text">The national park reserve holds 29 percent of the native plant diversity known to the peninsula: 195 of its 674 native vascular plant species have been reported within it.</p>
 <div class="mxcw-pa-stats">
 <div class="mxcw-pa-stat" data-select="National park reserve · native species" role="button" tabindex="0">
-<b>194</b>
+<b>195</b>
 <span>native species · 29% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="National park reserve · species of conservation concern" role="button" tabindex="0">
@@ -1056,7 +1056,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>species reported in no other category</span>
 </div>
 <div class="mxcw-pa-stat">
-<b>1,687</b>
+<b>1,688</b>
 <span>records of native species</span>
 </div>
 </div>
@@ -1064,10 +1064,10 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <section class="mxcw-pa-card-summary" data-key="Ecological reserve" hidden style="--pa-colour: #decb90">
 <h3 class="mxcw-pa-summary-title">Ecological reserves</h3>
 <p class="mxcw-pa-summary-subtitle">4 areas · 445 hectares</p>
-<p class="mxcw-pa-summary-text">Ecological reserves hold 26 percent of the native plant diversity known to the peninsula: 171 of its 670 native vascular plant species have been reported within them.</p>
+<p class="mxcw-pa-summary-text">Ecological reserves hold 26 percent of the native plant diversity known to the peninsula: 172 of its 674 native vascular plant species have been reported within them.</p>
 <div class="mxcw-pa-stats">
 <div class="mxcw-pa-stat" data-select="Ecological reserve · native species" role="button" tabindex="0">
-<b>171</b>
+<b>172</b>
 <span>native species · 26% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Ecological reserve · species of conservation concern" role="button" tabindex="0">
@@ -1079,7 +1079,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>species reported in no other category</span>
 </div>
 <div class="mxcw-pa-stat">
-<b>1,731</b>
+<b>1,732</b>
 <span>records of native species</span>
 </div>
 </div>
@@ -1088,7 +1088,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <ol class="mxcw-pa-richest">
 <li>
 <span class="mxcw-pa-link" data-select="Trial Islands Ecological Reserve" role="button" tabindex="0">Trial Islands Ecological Reserve</span>
-<b>123</b>
+<b>124</b>
 </li>
 <li>
 <span class="mxcw-pa-link" data-select="Oak Bay Islands Ecological Reserve" role="button" tabindex="0">Oak Bay Islands Ecological Reserve</span>
@@ -1104,10 +1104,10 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <section class="mxcw-pa-card-summary" data-key="Provincial park" hidden style="--pa-colour: #8cc084">
 <h3 class="mxcw-pa-summary-title">Provincial parks</h3>
 <p class="mxcw-pa-summary-subtitle">4 areas · 1,810 hectares</p>
-<p class="mxcw-pa-summary-text">Provincial parks hold 52 percent of the native plant diversity known to the peninsula: 347 of its 670 native vascular plant species have been reported within them.</p>
+<p class="mxcw-pa-summary-text">Provincial parks hold 52 percent of the native plant diversity known to the peninsula: 348 of its 674 native vascular plant species have been reported within them.</p>
 <div class="mxcw-pa-stats">
 <div class="mxcw-pa-stat" data-select="Provincial park · native species" role="button" tabindex="0">
-<b>347</b>
+<b>348</b>
 <span>native species · 52% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Provincial park · species of conservation concern" role="button" tabindex="0">
@@ -1119,7 +1119,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>species reported in no other category</span>
 </div>
 <div class="mxcw-pa-stat">
-<b>20,357</b>
+<b>20,360</b>
 <span>records of native species</span>
 </div>
 </div>
@@ -1144,10 +1144,10 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <section class="mxcw-pa-card-summary" data-key="Migratory bird sanctuary" hidden style="--pa-colour: #9fd0e0">
 <h3 class="mxcw-pa-summary-title">Migratory bird sanctuaries</h3>
 <p class="mxcw-pa-summary-subtitle">3 areas · 2,119 hectares</p>
-<p class="mxcw-pa-summary-text">Migratory bird sanctuaries hold 42 percent of the native plant diversity known to the peninsula: 284 of its 670 native vascular plant species have been reported within them.</p>
+<p class="mxcw-pa-summary-text">Migratory bird sanctuaries hold 42 percent of the native plant diversity known to the peninsula: 285 of its 674 native vascular plant species have been reported within them.</p>
 <div class="mxcw-pa-stats">
 <div class="mxcw-pa-stat" data-select="Migratory bird sanctuary · native species" role="button" tabindex="0">
-<b>284</b>
+<b>285</b>
 <span>native species · 42% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Migratory bird sanctuary · species of conservation concern" role="button" tabindex="0">
@@ -1159,7 +1159,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>species reported in no other category</span>
 </div>
 <div class="mxcw-pa-stat">
-<b>7,164</b>
+<b>7,170</b>
 <span>records of native species</span>
 </div>
 </div>
@@ -1168,7 +1168,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <ol class="mxcw-pa-richest">
 <li>
 <span class="mxcw-pa-link" data-select="Victoria Harbour Migratory Bird Sanctuary" role="button" tabindex="0">Victoria Harbour Migratory Bird Sanctuary</span>
-<b>253</b>
+<b>254</b>
 </li>
 <li>
 <span class="mxcw-pa-link" data-select="Esquimalt Lagoon Migratory Bird Sanctuary" role="button" tabindex="0">Esquimalt Lagoon Migratory Bird Sanctuary</span>
@@ -1184,11 +1184,11 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <section class="mxcw-pa-card-summary" data-key="Regional park" hidden style="--pa-colour: #4fae98">
 <h3 class="mxcw-pa-summary-title">Regional parks</h3>
 <p class="mxcw-pa-summary-subtitle">16 areas · 2,633 hectares</p>
-<p class="mxcw-pa-summary-text">Regional parks hold 66 percent of the native plant diversity known to the peninsula: 440 of its 670 native vascular plant species have been reported within them.</p>
+<p class="mxcw-pa-summary-text">Regional parks hold 65 percent of the native plant diversity known to the peninsula: 440 of its 674 native vascular plant species have been reported within them.</p>
 <div class="mxcw-pa-stats">
 <div class="mxcw-pa-stat" data-select="Regional park · native species" role="button" tabindex="0">
 <b>440</b>
-<span>native species · 66% of the native flora</span>
+<span>native species · 65% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Regional park · species of conservation concern" role="button" tabindex="0">
 <b>27</b>
@@ -1224,7 +1224,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <section class="mxcw-pa-card-summary" data-key="Private conservation land" hidden style="--pa-colour: #a593d8">
 <h3 class="mxcw-pa-summary-title">Private conservation lands</h3>
 <p class="mxcw-pa-summary-subtitle">15 areas · 309 hectares</p>
-<p class="mxcw-pa-summary-text">Private conservation lands hold 30 percent of the native plant diversity known to the peninsula: 200 of its 670 native vascular plant species have been reported within them.</p>
+<p class="mxcw-pa-summary-text">Private conservation lands hold 30 percent of the native plant diversity known to the peninsula: 200 of its 674 native vascular plant species have been reported within them.</p>
 <div class="mxcw-pa-stats">
 <div class="mxcw-pa-stat" data-select="Private conservation land · native species" role="button" tabindex="0">
 <b>200</b>
@@ -1377,11 +1377,11 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 </nav>
 <h3 class="mxcw-pa-summary-title">Devonian Regional Park</h3>
 <p class="mxcw-pa-summary-subtitle">Regional park · 14 hectares</p>
-<p class="mxcw-pa-summary-text">84 native species, 13 percent of the native plant diversity known to the peninsula, have been reported within Devonian Regional Park, the 11th richest of its 16 regional parks.</p>
+<p class="mxcw-pa-summary-text">84 native species, 12 percent of the native plant diversity known to the peninsula, have been reported within Devonian Regional Park, the 11th richest of its 16 regional parks.</p>
 <div class="mxcw-pa-stats">
 <div class="mxcw-pa-stat" data-select="Devonian Regional Park · native species" role="button" tabindex="0">
 <b>84</b>
-<span>native species · 13% of the native flora</span>
+<span>native species · 12% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat">
 <b>0</b>
@@ -1399,10 +1399,10 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 </nav>
 <h3 class="mxcw-pa-summary-title">Discovery Island Marine Park</h3>
 <p class="mxcw-pa-summary-subtitle">Provincial park · 68 hectares</p>
-<p class="mxcw-pa-summary-text">87 native species, 13 percent of the native plant diversity known to the peninsula, have been reported within Discovery Island Marine Park, the 4th richest of its 4 provincial parks.</p>
+<p class="mxcw-pa-summary-text">88 native species, 13 percent of the native plant diversity known to the peninsula, have been reported within Discovery Island Marine Park, the 4th richest of its 4 provincial parks.</p>
 <div class="mxcw-pa-stats">
 <div class="mxcw-pa-stat" data-select="Discovery Island Marine Park · native species" role="button" tabindex="0">
-<b>87</b>
+<b>88</b>
 <span>native species · 13% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Discovery Island Marine Park · species of conservation concern" role="button" tabindex="0">
@@ -1410,7 +1410,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
-<b>783</b>
+<b>786</b>
 <span>records of native species</span>
 </div>
 </div>
@@ -1597,10 +1597,10 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 </nav>
 <h3 class="mxcw-pa-summary-title">Gulf Islands National Park Reserve of Canada</h3>
 <p class="mxcw-pa-summary-subtitle">National park reserve · 1,296 hectares</p>
-<p class="mxcw-pa-summary-text">194 native species, 29 percent of the native plant diversity known to the peninsula, have been reported within Gulf Islands National Park Reserve of Canada.</p>
+<p class="mxcw-pa-summary-text">195 native species, 29 percent of the native plant diversity known to the peninsula, have been reported within Gulf Islands National Park Reserve of Canada.</p>
 <div class="mxcw-pa-stats">
 <div class="mxcw-pa-stat" data-select="Gulf Islands National Park Reserve of Canada · native species" role="button" tabindex="0">
-<b>194</b>
+<b>195</b>
 <span>native species · 29% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Gulf Islands National Park Reserve of Canada · species of conservation concern" role="button" tabindex="0">
@@ -1608,7 +1608,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
-<b>1,687</b>
+<b>1,688</b>
 <span>records of native species</span>
 </div>
 </div>
@@ -1927,11 +1927,11 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 </nav>
 <h3 class="mxcw-pa-summary-title">Rae-Leigh Place</h3>
 <p class="mxcw-pa-summary-subtitle">Private conservation land · BC Parks Foundation · 6 hectares</p>
-<p class="mxcw-pa-summary-text">37 native species, 6 percent of the native plant diversity known to the peninsula, have been reported within Rae-Leigh Place, the 6th richest of its 15 private conservation lands.</p>
+<p class="mxcw-pa-summary-text">37 native species, 5 percent of the native plant diversity known to the peninsula, have been reported within Rae-Leigh Place, the 6th richest of its 15 private conservation lands.</p>
 <div class="mxcw-pa-stats">
 <div class="mxcw-pa-stat" data-select="Rae-Leigh Place · native species" role="button" tabindex="0">
 <b>37</b>
-<span>native species · 6% of the native flora</span>
+<span>native species · 5% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat">
 <b>0</b>
@@ -2037,11 +2037,11 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 </nav>
 <h3 class="mxcw-pa-summary-title">Swan Lake - Christmas Hill</h3>
 <p class="mxcw-pa-summary-subtitle">Private conservation land · The Nature Trust of British Columbia · 2 hectares</p>
-<p class="mxcw-pa-summary-text">37 native species, 6 percent of the native plant diversity known to the peninsula, have been reported within Swan Lake - Christmas Hill, the 6th richest of its 15 private conservation lands.</p>
+<p class="mxcw-pa-summary-text">37 native species, 5 percent of the native plant diversity known to the peninsula, have been reported within Swan Lake - Christmas Hill, the 6th richest of its 15 private conservation lands.</p>
 <div class="mxcw-pa-stats">
 <div class="mxcw-pa-stat" data-select="Swan Lake - Christmas Hill · native species" role="button" tabindex="0">
 <b>37</b>
-<span>native species · 6% of the native flora</span>
+<span>native species · 5% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat">
 <b>0</b>
@@ -2103,10 +2103,10 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 </nav>
 <h3 class="mxcw-pa-summary-title">Trial Islands Ecological Reserve</h3>
 <p class="mxcw-pa-summary-subtitle">Ecological reserve · 8 hectares</p>
-<p class="mxcw-pa-summary-text">123 native species, 18 percent of the native plant diversity known to the peninsula, have been reported within Trial Islands Ecological Reserve, the richest of its 4 ecological reserves.</p>
+<p class="mxcw-pa-summary-text">124 native species, 18 percent of the native plant diversity known to the peninsula, have been reported within Trial Islands Ecological Reserve, the richest of its 4 ecological reserves.</p>
 <div class="mxcw-pa-stats">
 <div class="mxcw-pa-stat" data-select="Trial Islands Ecological Reserve · native species" role="button" tabindex="0">
-<b>123</b>
+<b>124</b>
 <span>native species · 18% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Trial Islands Ecological Reserve · species of conservation concern" role="button" tabindex="0">
@@ -2114,7 +2114,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
-<b>1,221</b>
+<b>1,222</b>
 <span>records of native species</span>
 </div>
 </div>
@@ -2125,10 +2125,10 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 </nav>
 <h3 class="mxcw-pa-summary-title">Victoria Harbour Migratory Bird Sanctuary</h3>
 <p class="mxcw-pa-summary-subtitle">Migratory bird sanctuary · 1,838 hectares</p>
-<p class="mxcw-pa-summary-text">253 native species, 38 percent of the native plant diversity known to the peninsula, have been reported within Victoria Harbour Migratory Bird Sanctuary, the richest of its 3 migratory bird sanctuaries.</p>
+<p class="mxcw-pa-summary-text">254 native species, 38 percent of the native plant diversity known to the peninsula, have been reported within Victoria Harbour Migratory Bird Sanctuary, the richest of its 3 migratory bird sanctuaries.</p>
 <div class="mxcw-pa-stats">
 <div class="mxcw-pa-stat" data-select="Victoria Harbour Migratory Bird Sanctuary · native species" role="button" tabindex="0">
-<b>253</b>
+<b>254</b>
 <span>native species · 38% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Victoria Harbour Migratory Bird Sanctuary · species of conservation concern" role="button" tabindex="0">
@@ -2136,7 +2136,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
-<b>5,906</b>
+<b>5,912</b>
 <span>records of native species</span>
 </div>
 </div>
@@ -2147,11 +2147,11 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 </nav>
 <h3 class="mxcw-pa-summary-title">Witty's Lagoon Regional Park</h3>
 <p class="mxcw-pa-summary-subtitle">Regional park · 59 hectares</p>
-<p class="mxcw-pa-summary-text">151 native species, 23 percent of the native plant diversity known to the peninsula, have been reported within Witty's Lagoon Regional Park, the 5th richest of its 16 regional parks.</p>
+<p class="mxcw-pa-summary-text">151 native species, 22 percent of the native plant diversity known to the peninsula, have been reported within Witty's Lagoon Regional Park, the 5th richest of its 16 regional parks.</p>
 <div class="mxcw-pa-stats">
 <div class="mxcw-pa-stat" data-select="Witty's Lagoon Regional Park · native species" role="button" tabindex="0">
 <b>151</b>
-<span>native species · 23% of the native flora</span>
+<span>native species · 22% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Witty's Lagoon Regional Park · species of conservation concern" role="button" tabindex="0">
 <b>4</b>
@@ -2210,10 +2210,10 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <section class="mxcw-pa-card-summary" data-key="Published Key Biodiversity Areas" hidden style="--pa-colour: #FDF2CE">
 <h3 class="mxcw-pa-summary-title">Key Biodiversity Areas</h3>
 <p class="mxcw-pa-summary-subtitle">14 published, 8 of them globally significant · 11 proposed · 781 hectares</p>
-<p class="mxcw-pa-summary-text">Key Biodiversity Areas mark the places that matter most for the persistence of species and ecosystems. The peninsula's Garry oak meadows, rocky headlands and islets hold 14 published Key Biodiversity Areas, most of them identified for their threatened plants, and 11 more are proposed. Together the published KBAs hold 55 percent of the native plant diversity known to the peninsula: 371 of its 670 native vascular plant species have been reported within them.</p>
+<p class="mxcw-pa-summary-text">Key Biodiversity Areas mark the places that matter most for the persistence of species and ecosystems. The peninsula's Garry oak meadows, rocky headlands and islets hold 14 published Key Biodiversity Areas, most of them identified for their threatened plants, and 11 more are proposed. Together the published KBAs hold 55 percent of the native plant diversity known to the peninsula: 372 of its 674 native vascular plant species have been reported within them.</p>
 <div class="mxcw-pa-stats">
 <div class="mxcw-pa-stat" data-select="Published Key Biodiversity Areas · native species" role="button" tabindex="0">
-<b>371</b>
+<b>372</b>
 <span>native species · 55% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Published Key Biodiversity Areas · species of conservation concern" role="button" tabindex="0">
@@ -2221,7 +2221,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
-<b>26,575</b>
+<b>26,605</b>
 <span>records of native species</span>
 </div>
 </div>
@@ -2230,7 +2230,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <ol class="mxcw-pa-richest">
 <li>
 <span class="mxcw-pa-link" data-select="Uplands Park - Cattle Point" role="button" tabindex="0">Uplands Park - Cattle Point</span>
-<b>223</b>
+<b>224</b>
 </li>
 <li>
 <span class="mxcw-pa-link" data-select="Fort Rodd Hill" role="button" tabindex="0">Fort Rodd Hill</span>
@@ -2238,7 +2238,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 </li>
 <li>
 <span class="mxcw-pa-link" data-select="Trial Islands" role="button" tabindex="0">Trial Islands</span>
-<b>149</b>
+<b>150</b>
 </li>
 </ol>
 </div>
@@ -2249,10 +2249,10 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 </nav>
 <h3 class="mxcw-pa-summary-title">Christmas Hill</h3>
 <p class="mxcw-pa-summary-subtitle">Key Biodiversity Area · Nationally significant for vascular plants · 14 hectares</p>
-<p class="mxcw-pa-summary-text">85 native species, 13 percent of the native plant diversity known to the peninsula, have been reported within Christmas Hill.</p>
+<p class="mxcw-pa-summary-text">86 native species, 13 percent of the native plant diversity known to the peninsula, have been reported within Christmas Hill.</p>
 <div class="mxcw-pa-stats">
 <div class="mxcw-pa-stat" data-select="Christmas Hill · native species" role="button" tabindex="0">
-<b>85</b>
+<b>86</b>
 <span>native species · 13% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Christmas Hill · species of conservation concern" role="button" tabindex="0">
@@ -2260,7 +2260,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
-<b>1,534</b>
+<b>1,535</b>
 <span>records of native species</span>
 </div>
 </div>
@@ -2315,10 +2315,10 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 </nav>
 <h3 class="mxcw-pa-summary-title">Gonzales Point</h3>
 <p class="mxcw-pa-summary-subtitle">Key Biodiversity Area · Globally significant for vascular plants · 2 hectares</p>
-<p class="mxcw-pa-summary-text">37 native species, 6 percent of the native plant diversity known to the peninsula, have been reported within Gonzales Point.</p>
+<p class="mxcw-pa-summary-text">38 native species, 6 percent of the native plant diversity known to the peninsula, have been reported within Gonzales Point.</p>
 <div class="mxcw-pa-stats">
 <div class="mxcw-pa-stat" data-select="Gonzales Point · native species" role="button" tabindex="0">
-<b>37</b>
+<b>38</b>
 <span>native species · 6% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Gonzales Point · species of conservation concern" role="button" tabindex="0">
@@ -2326,7 +2326,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
-<b>114</b>
+<b>115</b>
 <span>records of native species</span>
 </div>
 </div>
@@ -2337,10 +2337,10 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 </nav>
 <h3 class="mxcw-pa-summary-title">Harling Point</h3>
 <p class="mxcw-pa-summary-subtitle">Key Biodiversity Area · Globally significant for vascular plants · 2 hectares</p>
-<p class="mxcw-pa-summary-text">92 native species, 14 percent of the native plant diversity known to the peninsula, have been reported within Harling Point.</p>
+<p class="mxcw-pa-summary-text">93 native species, 14 percent of the native plant diversity known to the peninsula, have been reported within Harling Point.</p>
 <div class="mxcw-pa-stats">
 <div class="mxcw-pa-stat" data-select="Harling Point · native species" role="button" tabindex="0">
-<b>92</b>
+<b>93</b>
 <span>native species · 14% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Harling Point · species of conservation concern" role="button" tabindex="0">
@@ -2348,7 +2348,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
-<b>3,914</b>
+<b>3,927</b>
 <span>records of native species</span>
 </div>
 </div>
@@ -2359,10 +2359,10 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 </nav>
 <h3 class="mxcw-pa-summary-title">Kohweechela - Mary Tod Island</h3>
 <p class="mxcw-pa-summary-subtitle">Key Biodiversity Area · Nationally significant for vascular plants · 3 hectares</p>
-<p class="mxcw-pa-summary-text">64 native species, 10 percent of the native plant diversity known to the peninsula, have been reported within Kohweechela - Mary Tod Island.</p>
+<p class="mxcw-pa-summary-text">65 native species, 10 percent of the native plant diversity known to the peninsula, have been reported within Kohweechela - Mary Tod Island.</p>
 <div class="mxcw-pa-stats">
 <div class="mxcw-pa-stat" data-select="Kohweechela - Mary Tod Island · native species" role="button" tabindex="0">
-<b>64</b>
+<b>65</b>
 <span>native species · 10% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Kohweechela - Mary Tod Island · species of conservation concern" role="button" tabindex="0">
@@ -2370,7 +2370,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
-<b>363</b>
+<b>364</b>
 <span>records of native species</span>
 </div>
 </div>
@@ -2447,10 +2447,10 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 </nav>
 <h3 class="mxcw-pa-summary-title">Trial Islands</h3>
 <p class="mxcw-pa-summary-subtitle">Key Biodiversity Area · Globally significant for vascular plants · 19 hectares</p>
-<p class="mxcw-pa-summary-text">149 native species, 22 percent of the native plant diversity known to the peninsula, have been reported within Trial Islands.</p>
+<p class="mxcw-pa-summary-text">150 native species, 22 percent of the native plant diversity known to the peninsula, have been reported within Trial Islands.</p>
 <div class="mxcw-pa-stats">
 <div class="mxcw-pa-stat" data-select="Trial Islands · native species" role="button" tabindex="0">
-<b>149</b>
+<b>150</b>
 <span>native species · 22% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Trial Islands · species of conservation concern" role="button" tabindex="0">
@@ -2458,7 +2458,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
-<b>3,361</b>
+<b>3,362</b>
 <span>records of native species</span>
 </div>
 </div>
@@ -2491,10 +2491,10 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 </nav>
 <h3 class="mxcw-pa-summary-title">Uplands Park - Cattle Point</h3>
 <p class="mxcw-pa-summary-subtitle">Key Biodiversity Area · Globally significant for vascular plants · 39 hectares</p>
-<p class="mxcw-pa-summary-text">223 native species, 33 percent of the native plant diversity known to the peninsula, have been reported within Uplands Park - Cattle Point.</p>
+<p class="mxcw-pa-summary-text">224 native species, 33 percent of the native plant diversity known to the peninsula, have been reported within Uplands Park - Cattle Point.</p>
 <div class="mxcw-pa-stats">
 <div class="mxcw-pa-stat" data-select="Uplands Park - Cattle Point · native species" role="button" tabindex="0">
-<b>223</b>
+<b>224</b>
 <span>native species · 33% of the native flora</span>
 </div>
 <div class="mxcw-pa-stat" data-select="Uplands Park - Cattle Point · species of conservation concern" role="button" tabindex="0">
@@ -2502,7 +2502,7 @@ bioreportr.protectedAreas.showSelection = function (selectedRegion, baseRegion, 
 <span>species of conservation concern</span>
 </div>
 <div class="mxcw-pa-stat">
-<b>10,446</b>
+<b>10,459</b>
 <span>records of native species</span>
 </div>
 </div>

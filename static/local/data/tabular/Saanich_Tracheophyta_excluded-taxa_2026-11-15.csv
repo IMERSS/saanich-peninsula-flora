@@ -26,7 +26,6 @@ excluded,336005,Campanula poscharskyana,Trailing Bellflower,Campanulaceae,exotic
 excluded,63951,Pyrus communis,Common Pear,Rosaceae,exotic,planted,medium-low,49,6,1966-07-26,2021-06-20
 excluded,77719,Leucanthemum maximum,Max Chrysanthemum,Asteraceae,exotic,planted,medium-low,48,6,2020-09-13,2022-09-16
 excluded,56193,Acer campestre,Field Maple,Sapindaceae,unknown,planted,medium-low,46,35,1946-07-13,2024-11-05
-excluded,1452907,Aphanes occidentalis,Western Lady's Mantle,Rosaceae,native,"reviewed, not carried to the list",medium-high,45,14,1885-04-26,2025-03-13
 excluded,77966,Matthiola incana,Hoary Stock,Brassicaceae,exotic,persisting or waif,high,44,15,1993-09-13,2023-11-09
 excluded,167829,Rhus typhina,Staghorn Sumac,Anacardiaceae,exotic,planted,medium-high,41,26,2019-07-09,2024-09-11
 excluded,124544,Anthriscus sylvestris,Cow Parsley,Apiaceae,exotic,doubtful,medium-high,40,25,2019-05-13,2024-05-16
@@ -162,7 +161,6 @@ excluded,209478,Linum narbonense,,Linaceae,exotic,persisting or waif,medium-low,
 excluded,164712,Lolium temulentum,Darnel Ryegrass,Poaceae,exotic,doubtful,medium-low,2,2,2023-05-07,2023-05-07
 excluded,58202,Malva parviflora,Cheeseweed Mallow,Malvaceae,exotic,doubtful,medium-low,2,1,1940-04-27,1940-04-27
 excluded,242276,Plagiobothrys cusickii,Cusick's Popcornflower,Boraginaceae,native,doubtful,medium-low,2,1,1913-06-28,1913-06-28
-excluded,78623,Platanthera dilatata,,Orchidaceae,native,"reviewed, not carried to the list",medium-high,2,2,1912-05-19,1912-05-19
 excluded,167464,Prunus hortulana,,Rosaceae,unknown,doubtful; planted,low,2,2,1997-07-13,1997-07-13
 excluded,78923,Sagina saginoides,Alpine Pearlwort,Caryophyllaceae,native,doubtful,low,2,0,No known research grade record,No known research grade record
 excluded,168352,Salix pseudomonticola,,Salicaceae,native,doubtful,medium-high,2,2,1980-09-24,1980-09-24
@@ -171,8 +169,6 @@ excluded,79112,Silene noctiflora,,Caryophyllaceae,exotic,persisting or waif,medi
 excluded,79125,Sisymbrium loeselii,,Brassicaceae,exotic,persisting or waif,medium-high,2,2,1970-07-24,1970-07-24
 excluded,79203,Stellaria longipes ssp. longipes,,Caryophyllaceae,native,doubtful,medium-high,2,2,1919-06-21,1919-06-21
 excluded,170025,Trisetum flavescens,,Poaceae,unknown,planted,medium-low,2,2,1939-08-06,1939-08-06
-excluded,79484,Veratrum viride var. eschscholzianum,,Melanthiaceae,native,"reviewed, not carried to the list",medium-high,2,2,1941-08-27,1941-08-27
-excluded,1221600,Achnatherum nelsonii ssp. nelsonii,,Poaceae,native,"reviewed, not carried to the list",medium-low,1,1,1875-05-07,1875-05-07
 excluded,60522,Aconitum columbianum ssp. columbianum,,Ranunculaceae,native,planted,medium-low,1,1,1953,1953
 excluded,58364,Alopecurus saccatus,,Poaceae,native,doubtful,low,1,1,1972,1972
 excluded,75569,Arnica cordifolia,Heartleaf Arnica,Asteraceae,native,doubtful,low,1,0,No known research grade record,No known research grade record

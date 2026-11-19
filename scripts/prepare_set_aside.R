@@ -18,6 +18,10 @@ source("scripts/project.R")
 #      scripts/prepare_obs.R shapes the list's records. They are added to the prepared catalogue, each with its
 #      `checklist`, the status of its taxon, the list's own records being marked "listed". A record which the catalogue
 #      already holds under one of the list's taxa is left out, so that no record is counted twice.
+# The taxa restored to the checklist, named in project$curation$restored - reviewed and accepted on the working list,
+# but missing from the ultimate list - are added as the others, but listed: counted in the summary as its own, their
+# records marked "listed", and their reporting status assigned from their records as the curation workflow assigns it -
+# see restore_status below.
 # Run after scripts/prepare_summary_final.R and scripts/assign_conservation_status.R, which rewrite the summary, and
 # before scripts/intersectShapes.R, which labels the records with their regions. It may be run again, replacing what it
 # added before.
@@ -55,7 +59,14 @@ if (nrow(already) > 0) {
 setAside <- assigned %>%
   filter(!(id %in% listed_ids)) %>%
   distinct(id, .keep_all = TRUE) %>%
-  select(id, scientificName, taxon_rank, introduction_status, checklist_status)
+  select(id, scientificName, taxon_rank, introduction_status, checklist_status) %>%
+  # A taxon restored to the checklist is marked "listed", so that its records are added as the list's own
+  mutate(checklist_status = ifelse(scientificName %in% project$curation$restored, "listed", checklist_status))
+restored_ids <- setAside$id[setAside$checklist_status == "listed"]
+missing_restored <- setdiff(project$curation$restored, setAside$scientificName)
+if (length(missing_restored)) {
+  warning("Taxa to restore to the checklist which are not among the taxa set aside: ", paste(missing_restored, collapse = ", "))
+}
 
 # Every taxon of the assignment not already in the summary - the taxa kept off the list and their parents
 newTaxa <- assignedTaxa %>%
@@ -80,8 +91,7 @@ summaryOut <- summary %>%
   bind_rows(newTaxa)
 message("Added ", nrow(newTaxa), " taxa to the summary, of which ", sum(newTaxa$checklist_status != ""),
         " kept off the list and the rest their parents; marked ", sum(summaryOut$checklist_status != "" & summaryOut$id %in% summary$id),
-        " taxa already present")
-timedWrite(summaryOut, project$summaryFile)
+        " taxa already present; restored ", length(restored_ids), " to the checklist")
 
 # ── 2. Their records ───────────────────────────────────────
 
@@ -136,4 +146,36 @@ message("Added ", nrow(records), " records of ", n_distinct(records$iNaturalistT
         paste(names(table(records$checklist)), table(records$checklist), collapse = ", "))
 
 timedWrite(bind_rows(obs, records), project$obsFile)
+
+# ── 3. The taxa restored to the checklist ──────────────────
+
+# The reporting status of each, from the years of its records, as the curation workflow's assign_occurrence_status assigns
+# it - "confirmed" if recorded both before and since the baseline, "unconfirmed" if only before, "new" if only since -
+# counting, as its catalogue does, only research grade iNaturalist observations among the observations
+baseline <- 2000
+restore_status <- function (id) {
+  rows <- catalogue[!is.na(taxonId) & taxonId == id, ]
+  grade <- clean(rows$quality_grade)
+  # The year of a record, from its eventDate where its year is not given
+  years <- coalesce(suppressWarnings(as.integer(rows$year)), suppressWarnings(as.integer(substr(clean(rows$eventDate), 1, 4))))
+  years <- years[grade == "" | grade == "research"]
+  years <- years[!is.na(years)]
+  if (!length(years)) "unknown" else if (any(years < baseline) && any(years >= baseline)) "confirmed" else
+    if (any(years < baseline)) "unconfirmed" else "new"
+}
+summaryOut <- summaryOut %>%
+  mutate(restored = id %in% restored_ids,
+         inSummary = ifelse(restored, 1, inSummary),
+         reportingStatus = ifelse(restored, vapply(id, restore_status, ""), reportingStatus),
+         checklist_status = ifelse(restored, "", checklist_status),
+         # Its epithets, as the assignment to the iNaturalist taxonomy gives those of the list's own taxa - the species'
+         # epithet, and the full name at its own rank of a subspecies or variety - by which the checklist shows an
+         # infrataxon in place of its species
+         species = ifelse(restored & coalesce(species, "") == "", word(iNaturalistTaxonName, 2), species),
+         subspecies = ifelse(restored & rank == "subspecies" & coalesce(subspecies, "") == "", iNaturalistTaxonName, subspecies),
+         variety = ifelse(restored & rank == "variety" & coalesce(variety, "") == "", iNaturalistTaxonName, variety)) %>%
+  select(-restored)
+message("Restored to the checklist: ", paste(paste0(summaryOut$scientificName[summaryOut$id %in% restored_ids], " (",
+        summaryOut$reportingStatus[summaryOut$id %in% restored_ids], ")"), collapse = ", "))
+timedWrite(summaryOut, project$summaryFile)
 cat("Next: Rscript scripts/intersectShapes.R, then the build - R/build.R packs the records and taxa\n")

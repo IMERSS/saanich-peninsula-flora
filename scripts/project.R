@@ -22,6 +22,13 @@ project <- list(
     foundSince = "2025-01-01"
   ),
   curation = list(
+    # The taxa which the working list gives as reviewed and accepted - review complete, and flagged neither doubtful,
+    # persisting or waif, nor planted - but which are missing from the ultimate list, which was built from the working list
+    # before their review was recorded. They are restored to the checklist by scripts/prepare_set_aside.R, and left out of
+    # the taxa kept off it by scripts/prepare_excluded_taxa.R, until the ultimate list is built again. By their names on
+    # the working list
+    restored = c("Aphanes occidentalis", "Platanthera dilatata", "Veratrum viride var. eschscholzianum",
+                 "Achnatherum nelsonii ssp. nelsonii"),
     # The columns of the lists naming each taxon, and giving its iNaturalist id
     nameColumn = "taxon_name",
     idColumn = "link_taxon_id",

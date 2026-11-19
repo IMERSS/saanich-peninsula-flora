@@ -209,6 +209,7 @@ fluid.def("bioreportr.storyPage", {
             label: "Plants",
             rootId: "47126", // Plantae
             decorate: "bioreportr.checklistDecoration",
+            acceptRow: "bioreportr.acceptChecklistRow",
             // In Living Data the search offers the taxa kept off the list too, marked by their status - see
             // bioreportr.checklistStatusFilter.searchRows
             search: {
