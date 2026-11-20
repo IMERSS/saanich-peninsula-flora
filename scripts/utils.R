@@ -224,3 +224,22 @@ set_aside_id <- function (link_taxon_id, taxon_name) {
   }
   ifelse(missing, paste0("name:", taxon_name), id)
 }
+
+# The names of the taxa which the working list carries to the checklist by its own rules - reviewed and annotated
+# "complete", and flagged neither doubtful, persisting or waif, nor planted, as checklist-catalogue-alignment-workflow's
+# ultimize_list applies them - but which the ultimate list lacks, having been built from an earlier state of the working
+# list. They are restored to the checklist by scripts/prepare_set_aside.R, until the ultimate list is built again. By
+# their names on the working list, the files those of config, read by scripts/project.R
+working_list_restored <- function () {
+  if (is.null(config$workingList) || is.null(config$list)) {
+    return(character())
+  }
+  name <- project$curation$nameColumn
+  working <- timedFread(file.path("tabular_data", config$workingList))
+  listed <- timedFread(file.path("tabular_data", config$list))
+  blank_or_no <- function (flag) is.na(flag) | trimws(flag) %in% c("", "no")
+  carried <- working$review_status == "complete" & working$annotation_status == "complete" &
+    blank_or_no(working$is_doubtful) & blank_or_no(working$is_persisting_or_waif) & blank_or_no(working$is_planted) &
+    !is.na(working[[name]]) & working[[name]] != ""
+  setdiff(working[[name]][carried], listed[[name]])
+}

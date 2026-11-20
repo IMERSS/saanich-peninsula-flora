@@ -11,6 +11,9 @@ source("scripts/project.R")
 #   A - accepted but dropped: its review_status is "complete", and yet it was not carried to the list
 #   B - reviewed, not yet marked so: its review_status is still "in progress" or "remaining", and only needs marking
 #       "complete" to be carried to the list - its TO_REVIEW is given, since it may still ask for another look
+# Of these, shortlist marks those thoroughly reviewed and with ample evidence - initialled by two curators or more,
+# of "high" or "medium-high" confidence, regionally confirmed, and either vouchered or with five research grade records
+# or more - the obvious candidates to be marked reviewed.
 # A taxon is counted as on the list if the list holds its name, or its iNaturalist id. Any taxon of the list which shares
 # its species - its first two words, of its name or its iNaturalist name - is given as related_on_list, so that one held
 # on the list at another rank or under another name may be told apart from one truly missing.
@@ -38,15 +41,18 @@ candidates <- working %>%
   mutate(curators = sapply(str_split(coalesce(reviewed_by, ""), ",\\s*"),
                            function (x) paste(setdiff(str_trim(x), c("", "Automatic (EM)")), collapse = ", "))) %>%
   filter(!on_list, !flagged, curators != "") %>%
-  mutate(tier = ifelse(review_status == "complete", "A: accepted but dropped", "B: reviewed, not yet marked so")) %>%
+  mutate(tier = ifelse(review_status == "complete", "A: accepted but dropped", "B: reviewed, not yet marked so"),
+         shortlist = tier != "A: accepted but dropped" & lengths(str_split(curators, ",\\s*")) >= 2 &
+           confidence %in% c("high", "medium-high") & regionally_confirmed == "yes" &
+           (coalesce(n_preserved_specimen, 0L) > 0 | provenance_status == "voucher" | coalesce(n_research_grade, 0L) >= 5)) %>%
   rowwise() %>%
   mutate(related_on_list = related(taxon_name, link_name)) %>%
   ungroup() %>%
-  select(tier, taxon_name, link_name, link_taxon_id, family, review_status, TO_REVIEW, curators, reviewed_by, confidence, regionally_confirmed,
-         introduction_status, n_total, n_research_grade, n_preserved_specimen, first_record_date, last_record_date,
+  select(tier, shortlist, taxon_name, link_name, link_taxon_id, family, review_status, TO_REVIEW, curators, reviewed_by, confidence, regionally_confirmed,
+         introduction_status, provenance_status, n_total, n_research_grade, n_preserved_specimen, first_record_date, last_record_date,
          last_record_location, related_on_list, critical_comments) %>%
-  arrange(tier, review_status, taxon_name)
+  arrange(tier, desc(shortlist), review_status, taxon_name)
 
 out_file <- file.path("tabular_data", paste0("Saanich_Tracheophyta_inclusion-candidates_", Sys.Date(), ".csv"))
 timedWrite(candidates, out_file)
-print(table(candidates$tier))
+print(table(candidates$tier, candidates$shortlist))

@@ -163,6 +163,8 @@ FILES=(
     scripts/write_study_area_kml.R
     # The lost plants found again, added to the Lost Plants gallery
     scripts/prepare_rediscovered.R
+    # The reporting status of each taxon, assigned afresh from its records
+    scripts/assign_reporting_status.R
 
     # Lint configuration
     .eslintrc.json

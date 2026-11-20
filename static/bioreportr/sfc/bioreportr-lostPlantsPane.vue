@@ -122,7 +122,8 @@ bioreportr.lostPlants.plantsOnceShown = (storyPage, that, activatedPanes) => act
  * Select the plants of each gallery from the site's data. The galleries of reporting statuses hold the native species
  * of their status - and the "lost" gallery, highest extirpation probability first, only those whose Solow EP is at
  * least `minEP` or which have no more than `maxRecords` records. A gallery with a `group` holds the excluded taxa of
- * that group, most recorded first. The lost plants found again since the search for them began are added to the "lost"
+ * that group, most recorded first. The lost plants found again since the search for them began, by a find of research
+ * grade, are added to the "lost"
  * gallery, each marked by its row of the rediscovered file as `found`, though they are no longer of its status.
  * @param {TaxonRow[]} taxaRows - All taxa
  * @param {VizPackage} pkg - The data package
@@ -159,7 +160,10 @@ bioreportr.lostPlants.select = function (taxaRows, pkg, options, annotations, st
     const ofStatus = status => taxaRows
         .filter(taxon => taxon.inSummary && taxon.introduction_status === "native" && statusById[taxon.id] === status)
         .map(withSightings);
-    const foundById = new Map(fluid.makeArray(fluid.unwrapProxy(rediscovered)).map(row => [String(row.id), row]));
+    // Only a find confirmed by the community - of research grade - checks a plant off. Any other is left for the
+    // curators to review, its plant shown as still lost
+    const confirmed = row => row.research_grade === true || String(row.research_grade).toUpperCase() === "TRUE";
+    const foundById = new Map(fluid.makeArray(fluid.unwrapProxy(rediscovered)).filter(confirmed).map(row => [String(row.id), row]));
     const taxonById = new Map(taxaRows.map(taxon => [String(taxon.id), taxon]));
     const ofGroup = group => (excluded || []).filter(row => fluid.makeArray(group).includes(row.group)).map(row => ({
         taxon: {id: row.id, scientificName: row.scientificName, commonName: row.commonName},
@@ -231,8 +235,7 @@ bioreportr.lostPlants.renderCard = function (plant, photo) {
     const confidence = bioreportr.lostPlants.confidenceLabel(plant.excluded);
     // A lost plant found again is marked with a check over its photo, and when it was found
     const found = plant.found ? `<span class="mxcw-lost-found-mark" aria-hidden="true">✓</span>` : "";
-    const foundLine = plant.found ? `<span class="mxcw-lost-found">Found again ${encode(String(plant.found.last_found).slice(0, 4))}` +
-        `${plant.found.research_grade === "TRUE" || plant.found.research_grade === true ? "" : " · awaiting confirmation"}</span>` : "";
+    const foundLine = plant.found ? `<span class="mxcw-lost-found">Found again ${encode(String(plant.found.last_found).slice(0, 4))}</span>` : "";
     const reason = plant.excluded ? `<span class="mxcw-lost-reason">${encode(plant.excluded.reason + (confidence ? " · " + confidence : ""))}</span>` : "";
     const credit = photo ? photo.attribution.replace(/, uploaded by .*$/, "").replace(", some rights reserved", "") : "";
     const image = photo ? `<img src="${encode(photo.medium_url)}" alt="${name}" loading="lazy">` : "<span class=\"mxcw-lost-noimage\" aria-hidden=\"true\"></span>";

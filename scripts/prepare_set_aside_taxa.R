@@ -60,9 +60,9 @@ setAside <- excluded %>%
 
 # The taxa restored to the checklist, which scripts/prepare_excluded_taxa.R leaves out of the taxa kept off it, are
 # assigned as these are, from the working list, so that scripts/prepare_set_aside.R may add them - see
-# project$curation$restored
+# working_list_restored in scripts/utils.R
 restored <- if (is.null(working)) working else working %>%
-  filter(.data[[project$curation$nameColumn]] %in% project$curation$restored) %>%
+  filter(.data[[project$curation$nameColumn]] %in% working_list_restored()) %>%
   transmute(scientificName = .data[[project$curation$nameColumn]],
             link_name = ifelse(clean(link_name) == "", scientificName, clean(link_name)),
             link_taxon_id = clean(as.character(.data[[project$curation$idColumn]])),
